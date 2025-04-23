@@ -15,7 +15,7 @@ const getProductBySlug = (slug: string): Product | undefined => {
       description: "Smooth, rounded stones perfect for landscaping",
       price: 45.99,
       image: "/placeholder.svg",
-      category: "gravel"
+      category: "gravel" as "gravel"
     },
     {
       id: 2,
@@ -23,7 +23,7 @@ const getProductBySlug = (slug: string): Product | undefined => {
       description: "High-quality sand for construction and landscaping",
       price: 35.99,
       image: "/placeholder.svg",
-      category: "sand"
+      category: "sand" as "sand"
     },
     {
       id: 3,
@@ -31,7 +31,7 @@ const getProductBySlug = (slug: string): Product | undefined => {
       description: "Rich, organic soil for gardening",
       price: 29.99,
       image: "/placeholder.svg",
-      category: "dirt"
+      category: "dirt" as "dirt"
     },
   ];
 
