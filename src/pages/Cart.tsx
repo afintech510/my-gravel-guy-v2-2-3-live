@@ -1,21 +1,32 @@
-
 import React from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Plus, Minus, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Cart = () => {
   const { items, removeFromCart, updateQuantity, total } = useCart();
   const { toast } = useToast();
 
   const handleCheckout = async () => {
-    // We'll implement Stripe checkout here in the next step
-    toast({
-      title: "Coming soon",
-      description: "Checkout functionality will be implemented shortly.",
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: { items }
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Could not process checkout. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   if (items.length === 0) {
