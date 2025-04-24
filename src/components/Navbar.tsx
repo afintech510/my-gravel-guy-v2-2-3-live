@@ -1,10 +1,14 @@
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Menu, ShoppingCart } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useCart } from '../contexts/CartContext';
 
 const Navbar = () => {
+  const { items } = useCart();
+  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+
   const links = [
     { href: "/", label: "Home" },
     { href: "/products", label: "Products" },
@@ -33,6 +37,16 @@ const Navbar = () => {
                 {link.label}
               </Link>
             ))}
+            <Link to="/cart" className="relative">
+              <Button variant="ghost" size="icon">
+                <ShoppingCart className="h-6 w-6" />
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full w-5 h-5 text-xs flex items-center justify-center">
+                    {totalItems}
+                  </span>
+                )}
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Navigation */}
@@ -54,6 +68,13 @@ const Navbar = () => {
                     {link.label}
                   </Link>
                 ))}
+                <Link
+                  to="/cart"
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium flex items-center"
+                >
+                  <ShoppingCart className="h-5 w-5 mr-2" />
+                  Cart {totalItems > 0 && `(${totalItems})`}
+                </Link>
               </div>
             </SheetContent>
           </Sheet>
