@@ -1,31 +1,53 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { Plus, Minus, Trash2 } from "lucide-react";
+import { Plus, Minus, Trash2, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Cart = () => {
   const { items, removeFromCart, updateQuantity, total } = useCart();
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleCheckout = async () => {
+    if (items.length === 0) {
+      toast({
+        title: "Cart is empty",
+        description: "Please add items to your cart before checkout.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
+      setIsLoading(true);
+      setError(null);
+
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: { items }
       });
 
-      if (error) throw error;
-      if (data?.url) {
-        window.location.href = data.url;
-      }
+      if (error) throw new Error(error.message || "Failed to create checkout session");
+      
+      if (!data?.url) throw new Error("No checkout URL received from payment service");
+      
+      // Redirect to Stripe checkout
+      window.location.href = data.url;
     } catch (error) {
+      console.error("Checkout error:", error);
+      setError(error.message || "Could not process checkout. Please try again.");
       toast({
         title: "Error",
         description: "Could not process checkout. Please try again.",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -46,6 +68,12 @@ const Cart = () => {
     <div className="min-h-screen bg-white py-16 px-4">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
+        
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
         
         <div className="space-y-8">
           <Table>
@@ -105,8 +133,19 @@ const Cart = () => {
             <div className="text-2xl font-bold">
               Total: ${total.toFixed(2)}
             </div>
-            <Button onClick={handleCheckout} className="w-48">
-              Proceed to Checkout
+            <Button 
+              onClick={handleCheckout} 
+              className="w-48"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                "Proceed to Checkout"
+              )}
             </Button>
           </div>
         </div>

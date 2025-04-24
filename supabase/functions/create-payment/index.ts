@@ -16,17 +16,29 @@ serve(async (req) => {
 
   try {
     const { items } = await req.json();
-    const stripe = new Stripe(Deno.env.get("stripe") || "", { apiVersion: "2023-10-16" });
+    
+    // Access Stripe secret key and validate it exists
+    const stripeKey = Deno.env.get("stripe");
+    if (!stripeKey) {
+      throw new Error("Stripe secret key not found");
+    }
+    
+    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+
+    // Validate input
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      throw new Error("Invalid items data");
+    }
 
     // Create a Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
-      line_items: items.map((item: any) => ({
+      line_items: items.map((item) => ({
         price_data: {
           currency: "usd",
           product_data: {
             name: item.name,
-            images: [item.image],
+            images: item.image ? [item.image] : [],
           },
           unit_amount: Math.round(item.price * 100), // Convert to cents
         },
@@ -37,6 +49,7 @@ serve(async (req) => {
       cancel_url: `${req.headers.get("origin")}/cart`,
     });
 
+    // Return the checkout URL
     return new Response(
       JSON.stringify({ url: session.url }),
       {
@@ -45,8 +58,13 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    console.error("Checkout error:", error.message);
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: "An error occurred during the checkout process" 
+      }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
