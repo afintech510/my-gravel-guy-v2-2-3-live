@@ -15,25 +15,29 @@ serve(async (req) => {
   }
 
   try {
+    // Parse request body
     const { items } = await req.json();
     
     // Access Stripe secret key and validate it exists
     const stripeKey = Deno.env.get("stripe");
     if (!stripeKey) {
-      throw new Error("Stripe secret key not found");
+      throw new Error("Stripe secret key not found in environment variables");
     }
     
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
     // Validate input
     if (!items || !Array.isArray(items) || items.length === 0) {
-      throw new Error("Invalid items data");
+      throw new Error("Invalid or empty items array");
     }
 
-    // Create a Stripe checkout session
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: items.map((item) => ({
+    // Validate each item
+    const validatedLineItems = items.map((item) => {
+      if (!item.name || !item.price || !item.quantity) {
+        throw new Error(`Invalid item: ${JSON.stringify(item)}`);
+      }
+      
+      return {
         price_data: {
           currency: "usd",
           product_data: {
@@ -43,7 +47,13 @@ serve(async (req) => {
           unit_amount: Math.round(item.price * 100), // Convert to cents
         },
         quantity: item.quantity,
-      })),
+      };
+    });
+
+    // Create a Stripe checkout session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: validatedLineItems,
       mode: "payment",
       success_url: `${req.headers.get("origin")}/payment-success`,
       cancel_url: `${req.headers.get("origin")}/cart`,
@@ -58,12 +68,18 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Checkout error:", error.message);
+    console.error("Detailed Checkout Error:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      details: error.toString()
+    });
     
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        details: "An error occurred during the checkout process" 
+        details: "A detailed error occurred during the checkout process",
+        fullError: error.toString()
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

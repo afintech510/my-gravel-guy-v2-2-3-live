@@ -28,22 +28,37 @@ const Cart = () => {
       setIsLoading(true);
       setError(null);
 
+      // Detailed logging for debugging
+      console.log('Checkout Items:', items);
+
       const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: { items }
+        body: JSON.stringify({ items })
       });
 
-      if (error) throw new Error(error.message || "Failed to create checkout session");
+      if (error) {
+        console.error('Supabase Function Error:', error);
+        throw new Error(error.message || "Failed to create checkout session");
+      }
       
-      if (!data?.url) throw new Error("No checkout URL received from payment service");
+      if (!data?.url) {
+        console.error('No checkout URL received:', data);
+        throw new Error("No checkout URL received from payment service");
+      }
       
       // Redirect to Stripe checkout
       window.location.href = data.url;
     } catch (error) {
-      console.error("Checkout error:", error);
-      setError(error.message || "Could not process checkout. Please try again.");
+      console.error("Checkout Error:", error);
+      
+      // More informative error handling
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "Could not process checkout. Please try again.";
+      
+      setError(errorMessage);
       toast({
-        title: "Error",
-        description: "Could not process checkout. Please try again.",
+        title: "Checkout Error",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
