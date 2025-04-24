@@ -16,11 +16,15 @@ serve(async (req) => {
 
   try {
     // Parse request body
-    const { items } = await req.json();
+    const requestBody = await req.text();
+    console.log('Received request body:', requestBody);
+    
+    const { items } = JSON.parse(requestBody);
     
     // Access Stripe secret key and validate it exists
     const stripeKey = Deno.env.get("stripe");
     if (!stripeKey) {
+      console.error('Stripe secret key is missing');
       throw new Error("Stripe secret key not found in environment variables");
     }
     
@@ -28,12 +32,14 @@ serve(async (req) => {
 
     // Validate input
     if (!items || !Array.isArray(items) || items.length === 0) {
+      console.error('Invalid items array:', items);
       throw new Error("Invalid or empty items array");
     }
 
     // Validate each item
     const validatedLineItems = items.map((item) => {
       if (!item.name || !item.price || !item.quantity) {
+        console.error('Invalid item:', item);
         throw new Error(`Invalid item: ${JSON.stringify(item)}`);
       }
       
@@ -58,6 +64,8 @@ serve(async (req) => {
       success_url: `${req.headers.get("origin")}/payment-success`,
       cancel_url: `${req.headers.get("origin")}/cart`,
     });
+
+    console.log('Stripe checkout session created:', session.id);
 
     // Return the checkout URL
     return new Response(
