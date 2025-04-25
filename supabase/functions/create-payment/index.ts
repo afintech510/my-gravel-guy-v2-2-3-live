@@ -25,7 +25,15 @@ serve(async (req) => {
     const stripeKey = Deno.env.get("stripe");
     if (!stripeKey) {
       console.error('Stripe secret key is missing');
-      throw new Error("Stripe secret key not found in environment variables");
+      return new Response(
+        JSON.stringify({ 
+          error: "Stripe secret key not found in environment variables" 
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        }
+      );
     }
     
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
@@ -33,7 +41,13 @@ serve(async (req) => {
     // Validate input
     if (!items || !Array.isArray(items) || items.length === 0) {
       console.error('Invalid items array:', items);
-      throw new Error("Invalid or empty items array");
+      return new Response(
+        JSON.stringify({ error: "Invalid or empty items array" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
     }
 
     // Validate each item
@@ -96,3 +110,4 @@ serve(async (req) => {
     );
   }
 });
+
