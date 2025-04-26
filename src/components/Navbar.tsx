@@ -1,7 +1,7 @@
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, ShoppingCart, Notebook } from "lucide-react";
+import { Menu, ShoppingCart, Notebook, Calculator } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart } from '../contexts/CartContext';
 
@@ -12,7 +12,7 @@ const Navbar = () => {
   const links = [
     { href: "/", label: "Home" },
     { href: "/products", label: "Shop" },
-    { href: "/calculator", label: "Calculator" },
+    { href: "/calculator", label: "Calculator", icon: <Calculator className="h-4 w-4 mr-1" /> },
     { href: "/quiz", label: "Plan Project", icon: <Notebook className="h-4 w-4 mr-1" /> },
     { href: "/about", label: "About" },
     { href: "/contact", label: "Contact" },
