@@ -8,7 +8,7 @@ interface CalculationDisplayProps {
   estimatedCost: number;
 }
 
-const CalculationDisplay = ({ cubicYards, tons, estimatedCost }: CalculationDisplayProps) => {
+const CalculationDisplay = ({ totalArea, cubicYards, tons, estimatedCost }: CalculationDisplayProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4 border-t border-b">
        <div>
