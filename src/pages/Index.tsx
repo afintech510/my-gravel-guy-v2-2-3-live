@@ -1,7 +1,10 @@
+
 import React from 'react';
+import { Link } from 'react-router-dom';
 import ZipCodeSearch from '../components/ZipCodeSearch';
 import ProductGrid from '../components/ProductGrid';
 import MaterialCalculator from '../components/MaterialCalculator';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
   return (
@@ -15,7 +18,12 @@ const Index = () => {
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
             Get gravel, sand, and dirt delivered right to your location. Fast, reliable, and competitively priced.
           </p>
-          <ZipCodeSearch />
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+            <ZipCodeSearch />
+            <Link to="/quiz">
+              <Button variant="outline" size="lg">Take Our Material Quiz</Button>
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -32,6 +40,19 @@ const Index = () => {
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">Calculate Material Needs</h2>
           <MaterialCalculator />
+        </div>
+      </section>
+
+      {/* Quiz Section */}
+      <section className="py-16 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl font-bold mb-4">Not Sure What Material You Need?</h2>
+          <p className="text-lg text-gray-600 mb-8">
+            Take our quick material quiz and get personalized recommendations for your project.
+          </p>
+          <Link to="/quiz">
+            <Button size="lg">Take the Material Quiz</Button>
+          </Link>
         </div>
       </section>
 
