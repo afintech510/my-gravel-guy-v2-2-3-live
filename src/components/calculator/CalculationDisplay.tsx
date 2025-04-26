@@ -13,7 +13,7 @@ const CalculationDisplay = ({ cubicYards, tons, estimatedCost }: CalculationDisp
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4 border-t border-b">
        <div>
         <p className="text-sm text-muted-foreground">Total Area</p>
-        <p className="text-2xl font-bold">{cubicYards.toFixed(2)} sq. ft.</p>
+        <p className="text-2xl font-bold">{totalArea.toFixed(2)} sq. ft.</p>
       </div>
       <div>
         <p className="text-sm text-muted-foreground">Cubic Yards Needed</p>
