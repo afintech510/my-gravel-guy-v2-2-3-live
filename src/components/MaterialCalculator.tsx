@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Plus, Minus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -11,18 +10,14 @@ import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import { useCart } from '../contexts/CartContext';
 import { Product, getProducts } from '../services/productService';
-
-interface AreaInput {
-  length: number;
-  width: number;
-}
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
-  phone: z.string().min(10, 'Phone number must be at least 10 digits'),
+  phone: z.string().regex(/^(\+1|1)?[-. ]?\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/, 'Invalid phone number'),
   zipCode: z.string().min(5, 'ZIP code must be 5 digits'),
   consent: z.boolean().refine((val) => val === true, {
     message: 'You must agree to receive communications',
@@ -30,11 +25,15 @@ const formSchema = z.object({
 });
 
 const MaterialCalculator = () => {
-  const [areas, setAreas] = useState<AreaInput[]>([{ length: 10, width: 10 }]);
+  const [areas, setAreas] = useState<{ length: number; width: number }[]>([{ length: 10, width: 10 }]);
   const [depth, setDepth] = useState<number>(4);
+  const [extraPercentage, setExtraPercentage] = useState<number>(10);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<string>('');
+  const [showDiscountedPrice, setShowDiscountedPrice] = useState(false);
   const { toast } = useToast();
+  const { addToCart } = useCart();
+  const [cityState, setCityState] = useState<string>('');
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -62,6 +61,50 @@ const MaterialCalculator = () => {
     loadProducts();
   }, []);
 
+  const lookupCityState = async (zipCode: string) => {
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${zipCode}&key=REDACTED_GOOGLE_MAPS_KEY`
+      );
+      const data = await response.json();
+      
+      if (data.results && data.results[0]) {
+        const addressComponents = data.results[0].address_components;
+        const city = addressComponents.find((c: any) => c.types.includes('locality'))?.long_name || '';
+        const state = addressComponents.find((c: any) => c.types.includes('administrative_area_level_1'))?.long_name || '';
+        setCityState(city && state ? `${city}, ${state}` : '');
+      }
+    } catch (error) {
+      console.error('Failed to lookup location:', error);
+    }
+  };
+
+  const calculateTotalSquareFeet = (): number => {
+    return areas.reduce((total, area) => total + (area.length * area.width), 0);
+  };
+
+  const calculateCubicYards = (squareFeet: number): number => {
+    const cubicFeet = (squareFeet * depth) / 12; // Convert depth from inches to feet
+    const baseYards = cubicFeet / 27; // Convert cubic feet to cubic yards
+    return baseYards * (1 + extraPercentage / 100); // Add extra percentage
+  };
+
+  const calculateTotalTons = (cubicYards: number): number => {
+    const product = products.find(p => p.id.toString() === selectedProduct);
+    return product ? cubicYards * product.tonYardRatio : 0;
+  };
+
+  const calculateEstimatedCost = (tons: number): number => {
+    const product = products.find(p => p.id.toString() === selectedProduct);
+    return product ? tons * product.price : 0;
+  };
+
+  const totalSquareFeet = calculateTotalSquareFeet();
+  const totalCubicYards = calculateCubicYards(totalSquareFeet);
+  const totalTons = calculateTotalTons(totalCubicYards);
+  const estimatedCost = calculateEstimatedCost(totalTons);
+  const discountedCost = estimatedCost - 50;
+
   const updateAreaValue = (index: number, field: keyof AreaInput, value: string) => {
     const newValue = parseFloat(value) || 0;
     const newAreas = [...areas];
@@ -80,37 +123,11 @@ const MaterialCalculator = () => {
     }
   };
 
-  const calculateTotalSquareFeet = (): number => {
-    return areas.reduce((total, area) => total + (area.length * area.width), 0);
-  };
-
-  const calculateCubicYards = (squareFeet: number): number => {
-    const cubicFeet = (squareFeet * depth) / 12; // Convert depth from inches to feet
-    return cubicFeet / 27; // Convert cubic feet to cubic yards
-  };
-
-  const calculateEstimatedCost = (cubicYards: number): number => {
-    const product = products.find(p => p.id.toString() === selectedProduct);
-    return product ? cubicYards * product.price : 0;
-  };
-
-  const totalSquareFeet = calculateTotalSquareFeet();
-  const totalCubicYards = calculateCubicYards(totalSquareFeet);
-  const estimatedCost = calculateEstimatedCost(totalCubicYards);
-
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    setShowDiscountedPrice(true);
     toast({
-      title: "Quote Request Submitted",
-      description: "We'll contact you shortly with more information.",
-    });
-    console.log({
-      ...data,
-      areas,
-      depth,
-      selectedProduct,
-      totalSquareFeet,
-      totalCubicYards,
-      estimatedCost
+      title: "Quote Generated!",
+      description: "Your discounted price is now available. Click 'Add to Cart' to proceed.",
     });
   };
 
@@ -173,18 +190,32 @@ const MaterialCalculator = () => {
               ))}
             </div>
 
-            {/* Depth Slider */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Depth: {depth} inches
-              </label>
-              <Slider
-                value={[depth]}
-                onValueChange={([value]) => setDepth(value)}
-                min={1}
-                max={100}
-                step={1}
-              />
+            {/* Depth and Extra Percentage Sliders */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  Depth: {depth} inches
+                </label>
+                <Slider
+                  value={[depth]}
+                  onValueChange={([value]) => setDepth(value)}
+                  min={1}
+                  max={100}
+                  step={1}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  Extra Percentage: {extraPercentage}%
+                </label>
+                <Slider
+                  value={[extraPercentage]}
+                  onValueChange={([value]) => setExtraPercentage(value)}
+                  min={0}
+                  max={30}
+                  step={1}
+                />
+              </div>
             </div>
 
             {/* Material Selection */}
@@ -197,7 +228,7 @@ const MaterialCalculator = () => {
                 <SelectContent>
                   {products.map((product) => (
                     <SelectItem key={product.id} value={product.id.toString()}>
-                      {product.name} - ${product.price}/cubic yard
+                      {product.name} - ${product.price}/ton
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -207,12 +238,12 @@ const MaterialCalculator = () => {
             {/* Calculations Display */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4 border-t border-b">
               <div>
-                <p className="text-sm text-muted-foreground">Total Square Feet</p>
-                <p className="text-2xl font-bold">{totalSquareFeet.toFixed(2)}</p>
-              </div>
-              <div>
                 <p className="text-sm text-muted-foreground">Cubic Yards Needed</p>
                 <p className="text-2xl font-bold">{totalCubicYards.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Tons</p>
+                <p className="text-2xl font-bold">{totalTons.toFixed(2)}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Estimated Cost</p>
@@ -271,8 +302,20 @@ const MaterialCalculator = () => {
                   <FormItem>
                     <FormLabel>Delivery ZIP Code</FormLabel>
                     <FormControl>
-                      <Input {...field} maxLength={5} />
+                      <Input 
+                        {...field} 
+                        maxLength={5} 
+                        onChange={(e) => {
+                          field.onChange(e);
+                          if (e.target.value.length === 5) {
+                            lookupCityState(e.target.value);
+                          }
+                        }}
+                      />
                     </FormControl>
+                    {cityState && (
+                      <p className="text-sm text-muted-foreground mt-1">{cityState}</p>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -291,7 +334,7 @@ const MaterialCalculator = () => {
                     </FormControl>
                     <div className="space-y-1 leading-none">
                       <FormLabel className="text-sm text-muted-foreground">
-                        I agree to receive communications by text about my inquiry. You may opt-out by replying STOP or reply HELP for more information. Message frequency varies. Message and data rates may apply.
+                        I agree to receive communications about my inquiry
                       </FormLabel>
                     </div>
                   </FormItem>
@@ -299,9 +342,41 @@ const MaterialCalculator = () => {
               />
             </div>
 
-            <Button type="submit" className="w-full">
-              Request Quote
-            </Button>
+            <div className="space-y-4">
+              <Button type="submit" className="w-full">
+                Submit RFQ for at least $50 OFF est. cost!
+              </Button>
+              
+              {showDiscountedPrice && (
+                <div className="text-center space-y-4">
+                  <div className="text-2xl font-bold text-green-600">
+                    Discounted Price: ${discountedCost.toFixed(2)}
+                    <div className="text-sm font-normal text-green-700">
+                      You save: $50.00
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      const product = products.find(p => p.id.toString() === selectedProduct);
+                      if (product) {
+                        addToCart({
+                          ...product,
+                          price: discountedCost, // Use discounted price
+                        });
+                        toast({
+                          title: "Added to Cart",
+                          description: "Your discounted material has been added to the cart.",
+                        });
+                      }
+                    }}
+                    className="w-full"
+                  >
+                    Add to Cart
+                  </Button>
+                </div>
+              )}
+            </div>
           </form>
         </Form>
       </CardContent>
