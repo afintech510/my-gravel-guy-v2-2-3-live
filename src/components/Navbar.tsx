@@ -11,7 +11,7 @@ const Navbar = () => {
 
   const links = [
     { href: "/", label: "Home" },
-    { href: "/products", label: "Shop",, icon: <Store className="h-4 w-4 mr-1" /> },
+    { href: "/products", label: "Shop", icon: <Store className="h-4 w-4 mr-1" /> },
     { href: "/calculator", label: "Calculator", icon: <Calculator className="h-4 w-4 mr-1" /> },
     { href: "/quiz", label: "Plan Project", icon: <Notebook className="h-4 w-4 mr-1" /> },
     { href: "/about", label: "About" },
