@@ -1,7 +1,7 @@
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, ShoppingCart, Notebook, Calculator, Store } from "lucide-react";
+import { Menu, ShoppingCart, Notebook, Calculator, Store, ThumbsUp, Phone, House } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart } from '../contexts/CartContext';
 
@@ -10,12 +10,12 @@ const Navbar = () => {
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
   const links = [
-    { href: "/", label: "Home" },
+    { href: "/", label: "Home", icon: <House className="h-4 w-4 mr-1" /> },
     { href: "/products", label: "Shop", icon: <Store className="h-4 w-4 mr-1" /> },
     { href: "/calculator", label: "Calculator", icon: <Calculator className="h-4 w-4 mr-1" /> },
     { href: "/quiz", label: "Plan Project", icon: <Notebook className="h-4 w-4 mr-1" /> },
-    { href: "/about", label: "About" },
-    { href: "/contact", label: "Contact" },
+    { href: "/about", label: "About", icon: <ThumbsUp className="h-4 w-4 mr-1" /> },
+    { href: "/contact", label: "Contact", icon: <Phone className="h-4 w-4 mr-1" /> },
   ];
 
   return (
