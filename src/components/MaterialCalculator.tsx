@@ -131,7 +131,7 @@ const MaterialCalculator = () => {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">
-                  Extra Percentage: {extraPercentage}%
+                  Order Extra: {extraPercentage}%
                 </label>
                 <Slider
                   value={[extraPercentage]}
