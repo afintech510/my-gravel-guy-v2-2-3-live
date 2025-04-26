@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import { Product, getProducts } from '../services/productService';
@@ -47,7 +46,6 @@ const ProductGrid = () => {
         <p className="text-red-500 mb-4">{error}</p>
         <p>Showing sample products instead:</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-          {/* Fallback to sample products */}
           {sampleProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
@@ -71,7 +69,6 @@ const ProductGrid = () => {
   );
 };
 
-// Sample products as fallback
 const sampleProducts: Product[] = [
   {
     id: 1,
@@ -79,7 +76,8 @@ const sampleProducts: Product[] = [
     description: "Smooth, rounded stones perfect for landscaping",
     price: 45.99,
     image: "/placeholder.svg",
-    category: "gravel"
+    category: "gravel",
+    tonYardRatio: 1.5
   },
   {
     id: 2,
@@ -87,7 +85,8 @@ const sampleProducts: Product[] = [
     description: "High-quality sand for construction and landscaping",
     price: 35.99,
     image: "/placeholder.svg",
-    category: "sand"
+    category: "sand",
+    tonYardRatio: 1.2
   },
   {
     id: 3,
@@ -95,7 +94,8 @@ const sampleProducts: Product[] = [
     description: "Rich, organic soil for gardening",
     price: 29.99,
     image: "/placeholder.svg",
-    category: "dirt"
+    category: "dirt",
+    tonYardRatio: 1.0
   },
 ];
 

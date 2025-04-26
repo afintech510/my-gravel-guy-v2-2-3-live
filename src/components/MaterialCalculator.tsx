@@ -14,6 +14,11 @@ import { useToast } from '@/hooks/use-toast';
 import { useCart } from '../contexts/CartContext';
 import { Product, getProducts } from '../services/productService';
 
+type AreaInput = {
+  length: number;
+  width: number;
+};
+
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
@@ -25,7 +30,7 @@ const formSchema = z.object({
 });
 
 const MaterialCalculator = () => {
-  const [areas, setAreas] = useState<{ length: number; width: number }[]>([{ length: 10, width: 10 }]);
+  const [areas, setAreas] = useState<AreaInput[]>([{ length: 10, width: 10 }]);
   const [depth, setDepth] = useState<number>(4);
   const [extraPercentage, setExtraPercentage] = useState<number>(10);
   const [products, setProducts] = useState<Product[]>([]);
