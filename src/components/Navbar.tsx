@@ -1,7 +1,7 @@
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, ShoppingCart } from "lucide-react";
+import { Menu, ShoppingCart, Plan } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart } from '../contexts/CartContext';
 
@@ -11,8 +11,9 @@ const Navbar = () => {
 
   const links = [
     { href: "/", label: "Home" },
-    { href: "/products", label: "Products" },
-    { href: "/quiz", label: "Material Quiz" },
+    { href: "/products", label: "Shop" },
+    { href: "/calculator", label: "Calculator" },
+    { href: "/quiz", label: "Plan Project", icon: <Plan className="h-4 w-4 mr-1" /> },
     { href: "/about", label: "About" },
     { href: "/contact", label: "Contact" },
   ];
@@ -31,8 +32,9 @@ const Navbar = () => {
               <Link
                 key={link.href}
                 to={link.href}
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium inline-flex items-center"
               >
+                {link.icon}
                 {link.label}
               </Link>
             ))}
@@ -62,8 +64,9 @@ const Navbar = () => {
                   <Link
                     key={link.href}
                     to={link.href}
-                    className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                    className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium inline-flex items-center"
                   >
+                    {link.icon}
                     {link.label}
                   </Link>
                 ))}
