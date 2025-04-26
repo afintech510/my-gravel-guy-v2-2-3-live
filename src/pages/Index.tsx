@@ -1,7 +1,7 @@
-
 import React from 'react';
 import ZipCodeSearch from '../components/ZipCodeSearch';
 import ProductGrid from '../components/ProductGrid';
+import Calculator from '../components/Calculator';
 
 const Index = () => {
   return (
@@ -16,6 +16,16 @@ const Index = () => {
             Get gravel, sand, and dirt delivered right to your location. Fast, reliable, and competitively priced.
           </p>
           <ZipCodeSearch />
+        </div>
+      </section>
+
+      {/* Calculator Section */}
+      <section className="py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-8">Price Calculator</h2>
+          <div className="flex justify-center">
+            <Calculator />
+          </div>
         </div>
       </section>
 
