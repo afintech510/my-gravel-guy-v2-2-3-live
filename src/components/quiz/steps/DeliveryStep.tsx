@@ -29,17 +29,27 @@ const DeliveryStep: React.FC = () => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: state.deliveryInfo.name,
-      email: state.deliveryInfo.email,
-      phone: state.deliveryInfo.phone,
-      zipCode: state.deliveryInfo.zipCode,
-      address: state.deliveryInfo.address,
-      comments: state.deliveryInfo.comments,
+      name: state.deliveryInfo.name || "",
+      email: state.deliveryInfo.email || "",
+      phone: state.deliveryInfo.phone || "",
+      zipCode: state.deliveryInfo.zipCode || "",
+      address: state.deliveryInfo.address || "",
+      comments: state.deliveryInfo.comments || "",
     },
   });
   
   const onSubmit = (data: FormValues) => {
-    setDeliveryInfo(data);
+    // Ensure all required fields are present by providing empty strings as fallbacks
+    const deliveryInfo = {
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      zipCode: data.zipCode,
+      address: data.address || "",
+      comments: data.comments || "",
+    };
+    
+    setDeliveryInfo(deliveryInfo);
     nextStep();
   };
 
