@@ -3,8 +3,9 @@ import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
 import { Plus, Minus, Trash2, Loader2 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -97,7 +98,7 @@ const Cart = () => {
                 <TableHead className="w-[100px]">Product</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Price</TableHead>
-                <TableHead>Quantity</TableHead>
+                <TableHead>Quantity (tons)</TableHead>
                 <TableHead>Total</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -115,19 +116,27 @@ const Cart = () => {
                       <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        onClick={() => updateQuantity(item.id, +(item.quantity - 0.1).toFixed(1))}
                       >
                         <Minus className="h-4 w-4" />
                       </Button>
-                      <span>{item.quantity}</span>
+                      <Input
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => updateQuantity(item.id, +e.target.value)}
+                        step="0.1"
+                        min="0.1"
+                        className="w-20 text-center"
+                      />
                       <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        onClick={() => updateQuantity(item.id, +(item.quantity + 0.1).toFixed(1))}
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
+                    <span className="text-sm text-gray-500 mt-1 block">{item.quantity.toFixed(1)} tons</span>
                   </TableCell>
                   <TableCell>${(item.price * item.quantity).toFixed(2)}</TableCell>
                   <TableCell>
