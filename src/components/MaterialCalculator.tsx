@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -7,6 +8,8 @@ import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '../contexts/CartContext';
 import { Product, getProducts } from '../services/productService';
@@ -71,15 +74,12 @@ const MaterialCalculator = () => {
   const handleAddToCart = () => {
     const product = products.find(p => p.id.toString() === selectedProduct);
     if (product) {
-      const discountedProduct = {
+      // Add to cart with total tons as quantity and with a discounted price
+      addToCart({
         ...product,
         price: calculations.discountedCost / calculations.totalTons,
-      };
-      
-      addToCart({
-        ...discountedProduct,
         quantity: calculations.totalTons,
-      });
+      } as any);
       
       toast({
         title: "Added to Cart",
