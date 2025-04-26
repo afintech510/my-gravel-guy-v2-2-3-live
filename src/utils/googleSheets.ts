@@ -1,7 +1,4 @@
 
-// Utility for fetching data from Google Sheets
-// Note: This uses the public CSV export feature as it doesn't require authentication
-
 /**
  * Fetches data from a published Google Sheet in CSV format
  * @param sheetId - The ID of the Google Sheet
@@ -12,16 +9,28 @@ export async function fetchSheetData(sheetId: string, sheetName: string | number
   // Use the CSV export URL which is more reliable for programmatic access
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
   
+  console.log('Fetching sheet data from URL:', url);
+  
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`Failed to fetch sheet data: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
     const csvText = await response.text();
-    return parseCSV(csvText);
+    console.log('Raw CSV response:', csvText.substring(0, 200) + '...'); // Log first 200 chars
+    
+    const parsed = parseCSV(csvText);
+    console.log('Parsed CSV data (first 2 rows):', parsed.slice(0, 2));
+    
+    return parsed;
   } catch (error) {
-    console.error("Error fetching Google Sheet data:", error);
+    console.error("Error fetching Google Sheet data:", {
+      url,
+      sheetId,
+      sheetName,
+      error: error instanceof Error ? error.message : String(error)
+    });
     throw error;
   }
 }

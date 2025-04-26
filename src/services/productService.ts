@@ -1,8 +1,7 @@
-
 import { fetchSheetData } from "../utils/googleSheets";
 
 // The Google Sheet ID from your URL
-const SHEET_ID = "2PACX-1vQ_FdWkTMVu2baoUZNmn3oElofStCHD66qPk_N7EafydEAtot5Qufv575B6rTettL1Nih7EYx5T2Ukw";
+const SHEET_ID = "1f-9eFHdoSETcV79k1lkEFTNSZ9ZXCDJqPbRWquiZByI";
 
 export interface Product {
   id: number;
@@ -34,17 +33,21 @@ export async function getProducts(): Promise<Product[]> {
   }
 
   try {
+    console.log('Fetching products from Google Sheets...');
     const rawProducts = await fetchSheetData(SHEET_ID, "Products");
+    console.log('Raw products data:', rawProducts);
     
     // Transform raw data into Product objects
     const products: Product[] = rawProducts.map((row, index) => ({
-      id: index + 1, // Generate ID if not provided
+      id: index + 1,
       name: row.name || `Product ${index + 1}`,
       description: row.description || "",
       price: parseFloat(row.price) || 0,
       image: row.image || "/placeholder.svg",
       category: (row.category as 'gravel' | 'sand' | 'dirt') || 'gravel'
     }));
+    
+    console.log('Transformed products:', products);
     
     // Update cache
     productsCache = products;
@@ -53,6 +56,11 @@ export async function getProducts(): Promise<Product[]> {
     return products;
   } catch (error) {
     console.error("Failed to fetch products:", error);
+    console.error("Error details:", {
+      sheetId: SHEET_ID,
+      timestamp: new Date().toISOString(),
+      errorMessage: error instanceof Error ? error.message : String(error)
+    });
     
     // Return cache even if expired or fallback to empty array
     return productsCache || [];
@@ -85,7 +93,9 @@ export async function getZipCodePricingMap(): Promise<Map<string, number>> {
   }
 
   try {
+    console.log('Fetching ZIP code pricing data from Google Sheets...');
     const rawZipData = await fetchSheetData(SHEET_ID, "ZipCodeLookup");
+    console.log('Raw ZIP code pricing data:', rawZipData);
     
     // Transform raw data into a Map
     const zipPricingMap = new Map<string, number>();
@@ -99,12 +109,19 @@ export async function getZipCodePricingMap(): Promise<Map<string, number>> {
       }
     });
     
+    console.log('Transformed ZIP code pricing data:', zipPricingMap);
+    
     // Update cache
     zipCodePricingCache = zipPricingMap;
     
     return zipPricingMap;
   } catch (error) {
     console.error("Failed to fetch ZIP code pricing:", error);
+    console.error("Error details:", {
+      sheetId: SHEET_ID,
+      timestamp: new Date().toISOString(),
+      errorMessage: error instanceof Error ? error.message : String(error)
+    });
     
     // Return cache even if expired or fallback to empty map
     return zipCodePricingCache || new Map();
