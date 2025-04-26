@@ -59,7 +59,7 @@ const ProductCard = ({ product }: { product: Product }) => {
           />
         </div>
         <p className="text-gray-600 mb-2">{product.description}</p>
-        <p className="text-xl font-bold">starting at ${adjustedPrice.toFixed(2)} • ton</p>
+        <p className="text-xl font-bold"> ${adjustedPrice.toFixed(2)} • ton</p>
         {zipCode && product.price !== adjustedPrice && (
           <p className="text-sm text-gray-500">
             <span className={adjustedPrice > product.price ? "text-red-500" : "text-green-500"}>
