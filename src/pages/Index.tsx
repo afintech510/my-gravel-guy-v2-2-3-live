@@ -1,7 +1,7 @@
-
 import React from 'react';
 import ZipCodeSearch from '../components/ZipCodeSearch';
 import ProductGrid from '../components/ProductGrid';
+import MaterialCalculator from '../components/MaterialCalculator';
 
 const Index = () => {
   return (
@@ -24,6 +24,14 @@ const Index = () => {
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">Our Products</h2>
           <ProductGrid />
+        </div>
+      </section>
+
+      {/* Calculator Section */}
+      <section className="py-16 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-12">Calculate Material Needs</h2>
+          <MaterialCalculator />
         </div>
       </section>
 
