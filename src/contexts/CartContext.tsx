@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Product } from '../components/ProductCard';
+import { Product } from '../services/productService';
 
 interface CartItem extends Product {
   quantity: number;
