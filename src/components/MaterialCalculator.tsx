@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -74,7 +73,6 @@ const MaterialCalculator = () => {
   const handleAddToCart = () => {
     const product = products.find(p => p.id.toString() === selectedProduct);
     if (product) {
-      // Add to cart with total tons as quantity and with a discounted price
       addToCart({
         ...product,
         price: calculations.discountedCost / calculations.totalTons,
@@ -143,23 +141,8 @@ const MaterialCalculator = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Select Material</label>
-              <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a material" />
-                </SelectTrigger>
-                <SelectContent>
-                  {products.map((product) => (
-                    <SelectItem key={product.id} value={product.id.toString()}>
-                      {product.name} - ${product.price}/ton
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             <CalculationDisplay
+              totalArea={calculations.totalSquareFeet}
               cubicYards={calculations.totalCubicYards}
               tons={calculations.totalTons}
               estimatedCost={calculations.estimatedCost}
