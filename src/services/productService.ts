@@ -7,14 +7,10 @@ export interface Product {
   id: number;
   name: string;
   description: string;
-  price: number;
+  price: number; // price per ton
   image: string;
   category: 'gravel' | 'sand' | 'dirt';
-}
-
-export interface ZipCodePricing {
-  zipCode: string;
-  priceAdjustment: number; // Percentage adjustment (e.g., 10 for +10%, -5 for -5%)
+  tonYardRatio: number; // conversion factor from cubic yards to tons
 }
 
 // In-memory cache with expiry
@@ -44,7 +40,8 @@ export async function getProducts(): Promise<Product[]> {
       description: row.description || "",
       price: parseFloat(row.price) || 0,
       image: row.image || "/placeholder.svg",
-      category: (row.category as 'gravel' | 'sand' | 'dirt') || 'gravel'
+      category: (row.category as 'gravel' | 'sand' | 'dirt') || 'gravel',
+      tonYardRatio: parseFloat(row.tonYardRatio) || 1.5 // default ratio if not specified
     }));
     
     console.log('Transformed products:', products);
