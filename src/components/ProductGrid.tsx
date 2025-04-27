@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import { Product, getProducts } from '../services/productService';
@@ -10,15 +9,18 @@ interface ProductGridProps {
     sort: string;
     category: string;
   };
+  limit?: number; // New prop to limit number of products
 }
 
-const ProductGrid = ({ filters = { search: '', sort: 'nameAsc', category: 'all' } }: ProductGridProps) => {
+const ProductGrid = ({ 
+  filters = { search: '', sort: 'nameAsc', category: 'all' }, 
+  limit = 9 // Default to 9 products, matches home page requirement
+}: ProductGridProps) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
-  // Fetch products
   useEffect(() => {
     async function loadProducts() {
       try {
@@ -37,11 +39,9 @@ const ProductGrid = ({ filters = { search: '', sort: 'nameAsc', category: 'all' 
     loadProducts();
   }, []);
 
-  // Apply filters
   useEffect(() => {
     let result = [...products];
 
-    // Apply search filter
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase();
       result = result.filter(product => 
@@ -50,12 +50,10 @@ const ProductGrid = ({ filters = { search: '', sort: 'nameAsc', category: 'all' 
       );
     }
 
-    // Apply category filter
     if (filters.category !== 'all') {
       result = result.filter(product => product.category === filters.category);
     }
 
-    // Apply sorting
     result.sort((a, b) => {
       switch (filters.sort) {
         case 'nameDesc':
@@ -70,8 +68,9 @@ const ProductGrid = ({ filters = { search: '', sort: 'nameAsc', category: 'all' 
       }
     });
 
-    setFilteredProducts(result);
-  }, [products, filters]);
+    const limitedResult = limit ? result.slice(0, limit) : result;
+    setFilteredProducts(limitedResult);
+  }, [products, filters, limit]);
 
   if (loading) {
     return (
