@@ -69,6 +69,51 @@ const fallbackLocations: LocationData[] = [
   }
 ];
 
+// Add more locations to ensure we have at least 10 for demonstration purposes
+const extendedFallbackLocations: LocationData[] = [
+  ...fallbackLocations,
+  {
+    state: "Florida",
+    city: "Orlando",
+    region: "Central Florida",
+    slug: "orlando-fl",
+    title: "Gravel Delivery in Orlando, FL",
+    description: "Quality gravel delivery service in Orlando area. Ideal for landscaping and construction projects."
+  },
+  {
+    state: "Texas",
+    city: "Houston",
+    region: "Southeast Texas",
+    slug: "houston-tx",
+    title: "Gravel Delivery in Houston, TX",
+    description: "Reliable delivery of gravel and aggregates across Houston and surrounding suburbs."
+  },
+  {
+    state: "New York",
+    city: "New York",
+    region: "New York Metropolitan Area",
+    slug: "new-york-ny",
+    title: "Gravel Delivery in New York, NY",
+    description: "Professional gravel delivery services across all New York City boroughs and surrounding areas."
+  },
+  {
+    state: "Illinois",
+    city: "Chicago",
+    region: "Northern Illinois",
+    slug: "chicago-il",
+    title: "Gravel Delivery in Chicago, IL",
+    description: "Fast and reliable gravel delivery throughout Chicago and suburbs. Competitive rates for all project sizes."
+  },
+  {
+    state: "Arizona",
+    city: "Phoenix",
+    region: "Central Arizona",
+    slug: "phoenix-az",
+    title: "Gravel Delivery in Phoenix, AZ",
+    description: "Desert landscaping materials and gravel delivered across the Phoenix metropolitan area."
+  }
+];
+
 const LocationsIndex = () => {
   const [locations, setLocations] = useState<LocationData[]>([]);
   const [locationsByState, setLocationsByState] = useState<Record<string, LocationData[]>>({});
@@ -90,7 +135,7 @@ const LocationsIndex = () => {
           
           if (!Array.isArray(data) || data.length === 0) {
             console.log("No location data found, using fallback data");
-            processLocationData(fallbackLocations);
+            processLocationData(extendedFallbackLocations);
             return;
           }
           
@@ -98,7 +143,7 @@ const LocationsIndex = () => {
         } catch (fetchError) {
           console.error("Error fetching location data:", fetchError);
           console.log("Using fallback location data instead");
-          processLocationData(fallbackLocations);
+          processLocationData(extendedFallbackLocations);
         }
         
       } catch (err) {
