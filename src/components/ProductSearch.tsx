@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Search, Filter, SortAsc, SortDesc } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { ZipCodeSearch } from './ZipCodeSearch';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +13,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@/components/ui/toggle-group";
+import { Button } from "@/components/ui/button";
 
 interface ProductSearchProps {
   onSearch: (term: string) => void;
@@ -20,14 +26,9 @@ interface ProductSearchProps {
 }
 
 const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortOrder, setSortOrder] = useState('nameAsc');
-  const [category, setCategory] = useState('all');
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSearch(searchTerm);
-  };
+  const [sortOrder, setSortOrder] = React.useState('nameAsc');
+  const [category, setCategory] = React.useState('all');
+  const isMobile = useIsMobile();
 
   const handleSortChange = (value: string) => {
     setSortOrder(value);
@@ -41,35 +42,54 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
 
   return (
     <div className="w-full space-y-4">
-      <form onSubmit={handleSearch} className="flex gap-2">
+      <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-grow">
           <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
           <Input
             type="text"
             placeholder="Search products..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => onSearch(e.target.value)}
             className="pl-9"
           />
         </div>
         
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon">
-              <Filter className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuLabel>Category</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuRadioGroup value={category} onValueChange={handleCategoryChange}>
-              <DropdownMenuRadioItem value="all">All Products</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="gravel">Gravel</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="sand">Sand</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="dirt">Dirt</DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="w-full md:w-auto">
+          <ZipCodeSearch />
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+        {!isMobile ? (
+          <ToggleGroup
+            type="single"
+            value={category}
+            onValueChange={(value) => value && handleCategoryChange(value)}
+            className="justify-start"
+          >
+            <ToggleGroupItem value="all">All Products</ToggleGroupItem>
+            <ToggleGroupItem value="gravel">Gravel</ToggleGroupItem>
+            <ToggleGroupItem value="sand">Sand</ToggleGroupItem>
+            <ToggleGroupItem value="dirt">Dirt</ToggleGroupItem>
+          </ToggleGroup>
+        ) : (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Filter className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel>Category</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuRadioGroup value={category} onValueChange={handleCategoryChange}>
+                <DropdownMenuRadioItem value="all">All Products</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="gravel">Gravel</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="sand">Sand</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="dirt">Dirt</DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -92,7 +112,7 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>
         </DropdownMenu>
-      </form>
+      </div>
     </div>
   );
 };
