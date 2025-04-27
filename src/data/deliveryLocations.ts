@@ -1,4 +1,3 @@
-
 import { DeliveryLocation } from '@/components/DeliveryMap';
 
 // This is a fallback data source that can be used when the Google Sheet data is unavailable
@@ -110,5 +109,5 @@ export const deliveryLocations: DeliveryLocation[] = [
   }
 ];
 
-// Export the DeliveryLocation interface and the deliveryLocations array
-export { DeliveryLocation };
+// Change the export to use export type
+export type { DeliveryLocation };
