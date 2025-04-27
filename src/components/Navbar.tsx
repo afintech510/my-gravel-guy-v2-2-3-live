@@ -6,11 +6,13 @@ import { useCart } from '../contexts/CartContext';
 import { useZipCode } from '../contexts/ZipCodeContext';
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import ServiceAreaList from './ServiceAreaList';
+import { useState } from 'react';
 
 const Navbar = () => {
   const { items } = useCart();
   const { zipCode, zipCodeData, clearZipCode } = useZipCode();
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  const [isOpen, setIsOpen] = useState(false);
 
   const links = [
     { href: "/", label: "Home", icon: <House className="h-4 w-4 mr-1" /> },
@@ -20,6 +22,10 @@ const Navbar = () => {
     { href: "/about", label: "About", icon: <ThumbsUp className="h-4 w-4 mr-1" /> },
     { href: "/contact", label: "Contact", icon: <Phone className="h-4 w-4 mr-1" /> },
   ];
+
+  const handleMenuClick = () => {
+    setIsOpen(false);
+  };
 
   return (
     <nav className="border-b bg-white sticky top-0 z-50 shadow-sm">
@@ -33,7 +39,6 @@ const Navbar = () => {
             />
           </Link>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
             {zipCode && (
               <Dialog>
@@ -88,7 +93,6 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Mobile Navigation */}
           <div className="flex items-center md:hidden gap-2">
             <Link to="/cart" className="relative">
               <Button variant="ghost" size="icon">
@@ -100,7 +104,7 @@ const Navbar = () => {
                 )}
               </Button>
             </Link>
-            <Sheet>
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild className="md:hidden">
                 <Button variant="ghost" size="icon">
                   <Menu className="h-6 w-6" />
@@ -128,6 +132,7 @@ const Navbar = () => {
                       key={link.href}
                       to={link.href}
                       className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium inline-flex items-center"
+                      onClick={handleMenuClick}
                     >
                       {link.icon}
                       {link.label}
