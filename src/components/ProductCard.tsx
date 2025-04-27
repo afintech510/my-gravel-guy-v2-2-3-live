@@ -45,18 +45,20 @@ const ProductCard = ({ product }: { product: Product }) => {
     <Card className="w-full max-w-sm">
       <CardHeader>
         <CardTitle className="text-lg font-semibold">
-          <Link to={`/products/${product.slug}`}>
+          <Link to={`/products/${encodeURIComponent(product.slug)}`}>
             {product.name}
           </Link>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="aspect-square relative mb-4">
-          <img
-            src={product.image}
-            alt={product.name}
-            className="object-cover w-full h-full rounded-md"
-          />
+          <Link to={`/products/${encodeURIComponent(product.slug)}`}>
+            <img
+              src={product.image}
+              alt={product.name}
+              className="object-cover w-full h-full rounded-md"
+            />
+          </Link>
         </div>
         <p className="text-gray-600 mb-2 line-clamp-2">{product.description}</p>
         <p className="text-xl font-bold">${adjustedPrice.toFixed(2)} • ton</p>
