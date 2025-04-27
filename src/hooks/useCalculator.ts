@@ -29,7 +29,8 @@ export const useCalculator = (
   };
 
   const calculateTotalTons = (cubicYards: number): number => {
-    return +(cubicYards * 1.5).toFixed(1); // Default ton/yard ratio of 1.5
+    // Calculate tons but don't round here, let the component decide how to display
+    return +(cubicYards * 1.5).toFixed(1);
   };
 
   const calculateEstimatedCost = (tons: number): number => {
