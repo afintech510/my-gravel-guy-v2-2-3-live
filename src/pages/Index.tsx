@@ -13,7 +13,7 @@ const Index = () => {
       <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-            Local Gravel & Material Delivery
+            Get Your Local Gravel, Dirt, Sand, & Mulch!
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
             Get gravel, sand, and dirt delivered right to your location. Fast, reliable, and competitively priced.
