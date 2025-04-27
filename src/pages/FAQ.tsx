@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Search } from "lucide-react";
@@ -81,19 +80,24 @@ const FAQ = () => {
   const filterFAQs = () => {
     if (!searchQuery) return faqData;
 
-    const filtered: typeof faqData = {}; // Initialize with empty object but with the correct type
+    const filtered: typeof faqData = {
+      "Ordering & Delivery": [],
+      "Products & Materials": [],
+      "Pricing & Payment": []
+    };
     
-    // Now add the properties that match the search
     Object.entries(faqData).forEach(([category, items]) => {
       const filteredItems = items.filter(
         item =>
           item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
           item.answer.toLowerCase().includes(searchQuery.toLowerCase())
       );
+      
       if (filteredItems.length > 0) {
-        filtered[category] = filteredItems;
+        filtered[category as keyof typeof faqData] = filteredItems;
       }
     });
+    
     return filtered;
   };
 
@@ -107,7 +111,6 @@ const FAQ = () => {
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        {/* Breadcrumb */}
         <div className="container mx-auto px-4 py-4">
           <Breadcrumb>
             <BreadcrumbList>
@@ -122,7 +125,6 @@ const FAQ = () => {
           </Breadcrumb>
         </div>
 
-        {/* Hero Section */}
         <div className="bg-muted py-16">
           <div className="container mx-auto px-4 text-center">
             <h1 className="text-4xl font-bold mb-4">Frequently Asked Questions</h1>
@@ -130,7 +132,6 @@ const FAQ = () => {
               Find answers to common questions about our delivery services, products, and ordering process.
             </p>
             
-            {/* Search Bar */}
             <div className="max-w-md mx-auto relative">
               <Input
                 type="text"
@@ -144,7 +145,6 @@ const FAQ = () => {
           </div>
         </div>
 
-        {/* FAQ Content */}
         <div className="container mx-auto px-4 py-12">
           <div className="max-w-3xl mx-auto space-y-8">
             {Object.entries(filteredFAQs).map(([category, items]) => (
@@ -166,7 +166,6 @@ const FAQ = () => {
             ))}
           </div>
 
-          {/* Contact Section */}
           <div className="text-center mt-16 py-8 border-t">
             <h3 className="text-xl font-semibold mb-4">Still have questions?</h3>
             <p className="text-muted-foreground mb-6">
