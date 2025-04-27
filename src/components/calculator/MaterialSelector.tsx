@@ -21,29 +21,31 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
   }, {} as Record<string, Product[]>);
 
   return (
-    <div className="space-y-2">
-      <label className="text-sm font-medium text-gray-700">Select Material</label>
+    <div className="space-y-3 mb-8">
+      <label className="block text-base font-semibold text-gray-900">
+        What material do you need?
+      </label>
       <Select value={selectedProduct} onValueChange={onProductSelect}>
-        <SelectTrigger className="w-full h-12 text-left bg-white">
+        <SelectTrigger className="w-full h-14 text-left bg-white border-2 border-gray-200 hover:border-primary transition-colors">
           <SelectValue placeholder="Choose your material" />
         </SelectTrigger>
-        <SelectContent className="bg-white">
+        <SelectContent className="bg-white max-h-[400px]">
           {Object.entries(groupedProducts).map(([category, items]) => (
             <SelectGroup key={category}>
-              <SelectLabel className="font-semibold capitalize">
+              <SelectLabel className="font-semibold capitalize px-2 py-1.5 text-sm bg-gray-50">
                 {category}
               </SelectLabel>
               {items.map((product) => (
                 <SelectItem
                   key={product.id}
                   value={product.id.toString()}
-                  className="py-3"
+                  className="py-3 hover:bg-gray-50 cursor-pointer"
                 >
                   <div className="flex items-center justify-between w-full">
-                    <span>{product.name}</span>
+                    <span className="font-medium">{product.name}</span>
                     <span className={cn(
-                      "ml-2 px-2 py-1 rounded text-sm",
-                      "bg-gray-100 text-gray-700"
+                      "ml-2 px-3 py-1 rounded-full text-sm",
+                      "bg-primary/10 text-primary font-medium"
                     )}>
                       ${product.price}/ton
                     </span>
@@ -54,6 +56,9 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
           ))}
         </SelectContent>
       </Select>
+      <p className="text-sm text-gray-500">
+        Select the material you need for your project. Prices are per ton.
+      </p>
     </div>
   );
 };
