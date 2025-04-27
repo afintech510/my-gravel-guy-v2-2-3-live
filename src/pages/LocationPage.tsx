@@ -26,6 +26,49 @@ type LocationData = {
   faqs?: string;
 };
 
+// Fallback location data in case the API is not available
+const fallbackLocationData: Record<string, LocationData> = {
+  'austin-tx': {
+    state: 'Texas',
+    city: 'Austin',
+    region: 'Central Texas',
+    slug: 'austin-tx',
+    title: 'Gravel Delivery in Austin, TX',
+    description: 'Fast and reliable gravel delivery throughout Austin and surrounding areas. Same or next day delivery available.',
+    meta_description: 'Order gravel, sand, and dirt delivery in Austin, TX with same-day options. Best prices and reliable service.',
+    service_area: 'Downtown Austin, North Austin, South Austin, Round Rock, Cedar Park, Pflugerville, Lakeway',
+    local_info: 'Austin homeowners and contractors trust our premium gravel delivery service for landscaping and construction projects. We serve all neighborhoods with prompt delivery and great prices.',
+    delivery_info: 'We deliver throughout the Austin area 7 days a week. Most orders can be delivered same-day when ordered before noon, or next-day for orders placed later.',
+    image_url: 'https://images.unsplash.com/photo-1557434440-d4d48e6578b5'
+  },
+  'dallas-tx': {
+    state: 'Texas',
+    city: 'Dallas',
+    region: 'North Texas',
+    slug: 'dallas-tx',
+    title: 'Gravel Delivery in Dallas, TX',
+    description: 'Premium gravel and material delivery throughout Dallas and surrounding suburbs.',
+    meta_description: 'Order gravel, sand, and dirt delivery in Dallas, TX. Fast service for residential and commercial projects.',
+    service_area: 'Downtown Dallas, North Dallas, Richardson, Plano, Frisco, Garland, Mesquite, Irving',
+    local_info: 'Dallas residents and businesses rely on our extensive selection of materials for landscapes, driveways, and commercial projects. We provide top-quality products at competitive prices.',
+    delivery_info: 'We deliver throughout Dallas and surrounding areas with flexible scheduling options. Standard delivery is available Monday through Saturday.',
+    image_url: 'https://images.unsplash.com/photo-1545402131-87158652882e'
+  },
+  'los-angeles-ca': {
+    state: 'California',
+    city: 'Los Angeles',
+    region: 'Southern California',
+    slug: 'los-angeles-ca',
+    title: 'Gravel Delivery in Los Angeles, CA',
+    description: 'Professional gravel delivery across Los Angeles county, serving residential and commercial projects.',
+    meta_description: 'Order gravel, sand, and construction materials in Los Angeles with reliable delivery service.',
+    service_area: 'Downtown LA, Hollywood, Santa Monica, Long Beach, Pasadena, Glendale, Burbank',
+    local_info: 'Los Angeles property owners choose us for quality landscape and construction materials. Our extensive inventory includes decorative gravels perfect for Southern California landscape designs.',
+    delivery_info: 'We provide delivery throughout Los Angeles County with flexible scheduling. Most areas can receive delivery within 2 business days.',
+    image_url: 'https://images.unsplash.com/photo-1506190503914-c9c7b96c2be9'
+  }
+};
+
 const LocationPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const [location, setLocation] = useState<LocationData | null>(null);
@@ -42,61 +85,93 @@ const LocationPage = () => {
         const sheetId = '1g6vVui0lG54_iFX9CLJoWAHUh-UePQygm15Kq7z3noI';
         const sheetName = 'Locations';
         
-        const data = await fetchSheetData(sheetId, sheetName);
-        
-        // Find the location that matches the slug
-        const locationData = data.find((loc: any) => 
-          loc.slug?.toLowerCase() === slug?.toLowerCase()
-        );
+        try {
+          const data = await fetchSheetData(sheetId, sheetName);
+          
+          // Find the location that matches the slug
+          const locationData = data.find((loc: any) => 
+            loc.slug?.toLowerCase() === slug?.toLowerCase()
+          );
 
-        if (!locationData) {
-          setError('Location not found');
-          setLoading(false);
-          return;
-        }
-
-        setLocation(locationData as LocationData);
-
-        // Process nearby locations if any
-        if (locationData.nearby_locations) {
-          const nearby = locationData.nearby_locations.split(',').map(nearby => 
-            data.find((loc: any) => loc.slug.trim() === nearby.trim())
-          ).filter(Boolean);
-          setNearbyLocations(nearby as LocationData[]);
-        }
-
-        // Process FAQs if any
-        if (locationData.faqs) {
-          try {
-            const faqsData = JSON.parse(locationData.faqs);
-            setFaqs(faqsData);
-          } catch (e) {
-            console.error("Error parsing FAQs:", e);
-          }
-        } else {
-          // Default FAQs if none provided
-          setFaqs([
-            {
-              question: "How soon can you deliver?",
-              answer: "Most deliveries arrive within 24-48 hours of order confirmation."
-            },
-            {
-              question: "What's your minimum order?",
-              answer: "Our minimum order is typically 1 cubic yard for most materials."
-            },
-            {
-              question: "Do you offer delivery on weekends?", 
-              answer: "Yes, we offer weekend delivery in most service areas for a small additional fee."
+          if (!locationData) {
+            // If no data found from API, check fallback data
+            if (slug && fallbackLocationData[slug]) {
+              console.log("Using fallback data for location:", slug);
+              setLocation(fallbackLocationData[slug]);
+              processNearbyAndFaqs(fallbackLocationData[slug]);
+              setLoading(false);
+              return;
             }
-          ]);
+            
+            setError('Location not found');
+            setLoading(false);
+            return;
+          }
+
+          setLocation(locationData as LocationData);
+          processNearbyAndFaqs(locationData as LocationData);
+          
+        } catch (fetchError) {
+          console.error("Error fetching location data:", fetchError);
+          // Use fallback data if available
+          if (slug && fallbackLocationData[slug]) {
+            console.log("Using fallback data after fetch error for:", slug);
+            setLocation(fallbackLocationData[slug]);
+            processNearbyAndFaqs(fallbackLocationData[slug]);
+          } else {
+            setError('Error loading location data');
+          }
         }
         
       } catch (err) {
-        console.error("Error fetching location data:", err);
-        setError('Error loading location data');
+        console.error("Error in location processing:", err);
+        setError('Error processing location data');
       } finally {
         setLoading(false);
       }
+    };
+
+    const processNearbyAndFaqs = (locationData: LocationData) => {
+      // Process nearby locations if any
+      if (locationData.nearby_locations) {
+        const nearbySlugs = locationData.nearby_locations.split(',').map(s => s.trim());
+        const nearby = nearbySlugs
+          .map(nearbySlug => fallbackLocationData[nearbySlug])
+          .filter(Boolean);
+        setNearbyLocations(nearby);
+      }
+
+      // Process FAQs if any
+      if (locationData.faqs) {
+        try {
+          const faqsData = JSON.parse(locationData.faqs);
+          setFaqs(faqsData);
+        } catch (e) {
+          console.error("Error parsing FAQs:", e);
+          // Default FAQs if parsing fails
+          setDefaultFaqs();
+        }
+      } else {
+        // Default FAQs if none provided
+        setDefaultFaqs();
+      }
+    };
+
+    const setDefaultFaqs = () => {
+      setFaqs([
+        {
+          question: "How soon can you deliver?",
+          answer: "Most deliveries arrive within 24-48 hours of order confirmation."
+        },
+        {
+          question: "What's your minimum order?",
+          answer: "Our minimum order is typically 1 cubic yard for most materials."
+        },
+        {
+          question: "Do you offer delivery on weekends?", 
+          answer: "Yes, we offer weekend delivery in most service areas for a small additional fee."
+        }
+      ]);
     };
 
     if (slug) {
