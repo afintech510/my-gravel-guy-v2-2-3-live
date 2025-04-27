@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
@@ -51,7 +52,7 @@ const ProductDetail = () => {
   }, [slug, zipCode]);
 
   const productPrice = adjustedPrice !== undefined ? adjustedPrice : (product?.price || 0);
-  const totalPrice = productPrice * Number(selectedTons);
+  const totalPrice = productPrice * parseInt(selectedTons);
 
   const handleAddToCart = () => {
     if (!product || !deliveryDate) {
@@ -63,12 +64,15 @@ const ProductDetail = () => {
       return;
     }
 
-    addToCart({
+    // Create a new product object with the adjusted price and quantity
+    const productToAdd = {
       ...product,
       price: productPrice,
-      quantity: Number(selectedTons),
-      deliveryDate: deliveryDate,
-    });
+      quantity: parseInt(selectedTons),
+      deliveryDate: deliveryDate
+    };
+
+    addToCart(productToAdd);
     
     toast({
       title: "Added to cart",
@@ -115,8 +119,8 @@ const ProductDetail = () => {
           <div>
             <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
               <img 
-                src={product.image} 
-                alt={product.name} 
+                src={product?.image} 
+                alt={product?.name} 
                 className="w-full h-full object-cover"
               />
             </div>
@@ -124,12 +128,12 @@ const ProductDetail = () => {
           
           <div className="space-y-8">
             <div>
-              <h1 className="text-4xl font-bold mb-4">{product.name}</h1>
+              <h1 className="text-4xl font-bold mb-4">{product?.name}</h1>
               <p className="text-2xl font-bold text-gray-900 mb-2">
                 ${productPrice.toFixed(2)}/ton
               </p>
               
-              {adjustedPrice !== undefined && adjustedPrice !== product.price && zipCode && (
+              {adjustedPrice !== undefined && product && adjustedPrice !== product.price && zipCode && (
                 <p className="text-sm mb-6">
                   <span className={adjustedPrice > product.price ? "text-red-500" : "text-green-500"}>
                     {adjustedPrice > product.price ? "+" : "-"}
@@ -174,7 +178,7 @@ const ProductDetail = () => {
 
             <MiniCalculator
               pricePerTon={productPrice}
-              onQuantityCalculated={(tons) => setSelectedTons(tons.toString())}
+              onQuantityCalculated={(tons) => setSelectedTons(Math.round(tons).toString())}
             />
           </div>
         </div>

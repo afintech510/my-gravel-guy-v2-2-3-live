@@ -23,7 +23,8 @@ const MiniCalculator = ({ onQuantityCalculated, pricePerTon }: MiniCalculatorPro
   );
 
   const handleCalculate = () => {
-    onQuantityCalculated(totalTons);
+    // Round to integer value
+    onQuantityCalculated(Math.round(totalTons));
   };
 
   return (
@@ -65,7 +66,7 @@ const MiniCalculator = ({ onQuantityCalculated, pricePerTon }: MiniCalculatorPro
 
       {totalTons > 0 && (
         <p className="text-sm">
-          Estimated amount needed: <strong>{totalTons.toFixed(1)} tons</strong>
+          Estimated amount needed: <strong>{Math.round(totalTons)} tons</strong>
         </p>
       )}
 

@@ -116,27 +116,27 @@ const Cart = () => {
                       <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => updateQuantity(item.id, +(item.quantity - 0.1).toFixed(1))}
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        disabled={item.quantity <= 1}
                       >
                         <Minus className="h-4 w-4" />
                       </Button>
                       <Input
                         type="number"
                         value={item.quantity}
-                        onChange={(e) => updateQuantity(item.id, +e.target.value)}
-                        step="0.1"
-                        min="0.1"
+                        onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 1)}
+                        min="1"
                         className="w-20 text-center"
                       />
                       <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => updateQuantity(item.id, +(item.quantity + 0.1).toFixed(1))}
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
-                    <span className="text-sm text-gray-500 mt-1 block">{item.quantity.toFixed(1)} tons</span>
+                    <span className="text-sm text-gray-500 mt-1 block">{item.quantity} tons</span>
                   </TableCell>
                   <TableCell>${(item.price * item.quantity).toFixed(2)}</TableCell>
                   <TableCell>
