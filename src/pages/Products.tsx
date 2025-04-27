@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import ProductGrid from '../components/ProductGrid';
 import ProductSearch from '../components/ProductSearch';
-import { Product } from '../services/productService';
 
 const Products = () => {
   const [filters, setFilters] = useState({
@@ -24,8 +23,8 @@ const Products = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white py-16 px-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-white py-8 px-4">
+      <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold text-center mb-8">Our Products</h1>
         <div className="mb-8">
           <ProductSearch
