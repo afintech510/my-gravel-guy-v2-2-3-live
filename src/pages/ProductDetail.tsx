@@ -1,20 +1,19 @@
-
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { getProductBySlug, getPriceAdjustmentForZipCode, applyZipCodeAdjustment } from '../services/productService';
-import { Product } from '../services/productTypes';
 import { useZipCode } from '../contexts/ZipCodeContext';
 import { useCart } from '../contexts/CartContext';
 import { Skeleton } from "@/components/ui/skeleton";
-import ZipCodeSearch from '@/components/ZipCodeSearch';
 import { Button } from '@/components/ui/button';
+import ZipCodeSearch from '@/components/ZipCodeSearch';
 import ProductImages from '@/components/products/ProductImages';
 import ProductHeader from '@/components/products/ProductHeader';
 import ProductActions from '@/components/products/ProductActions';
 import ProductTabs from '@/components/products/ProductTabs';
 import MiniCalculator from '@/components/products/MiniCalculator';
+import { useProduct } from '@/hooks/useProduct';
+import { Product } from '@/services/productTypes';
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -22,34 +21,7 @@ const ProductDetail = () => {
   const { zipCode } = useZipCode();
   const { addToCart } = useCart();
   
-  const [product, setProduct] = useState<Product | undefined>(undefined);
-  const [adjustedPrice, setAdjustedPrice] = useState<number | undefined>(undefined);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadProduct() {
-      if (!slug) return;
-      
-      try {
-        setLoading(true);
-        const fetchedProduct = await getProductBySlug(slug);
-        setProduct(fetchedProduct);
-        
-        if (fetchedProduct && zipCode) {
-          const adjustment = await getPriceAdjustmentForZipCode(zipCode);
-          setAdjustedPrice(applyZipCodeAdjustment(fetchedProduct.price, adjustment));
-        } else if (fetchedProduct) {
-          setAdjustedPrice(fetchedProduct.price);
-        }
-      } catch (error) {
-        console.error('Error loading product:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    loadProduct();
-  }, [slug, zipCode]);
+  const { product, adjustedPrice, loading, error } = useProduct(slug, zipCode);
 
   if (loading) {
     return (
@@ -69,7 +41,7 @@ const ProductDetail = () => {
     );
   }
 
-  if (!product) {
+  if (error || !product) {
     return (
       <div className="min-h-screen bg-white py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
