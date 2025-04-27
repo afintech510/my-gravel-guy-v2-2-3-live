@@ -25,8 +25,25 @@ export interface Product {
   }>;
 }
 
+export interface ZipCodeData {
+  zip: string;
+  lat: number;
+  lng: number;
+  city: string;
+  state_id: string;
+  state_name: string;
+  population: number;
+  density: number;
+  county_fips: string;
+  county_name: string;
+  county_names_all: string;
+  county_fips_all: string;
+  timezone: string;
+}
+
 export type MaterialCategory = Product['category'];
 export type MaterialUsage = NonNullable<Product['usage']>;
 export type MaterialSubtype = NonNullable<Product['subtype']>;
 export type MaterialSize = NonNullable<Product['size']>;
 export type MaterialColor = NonNullable<Product['color']>;
+
