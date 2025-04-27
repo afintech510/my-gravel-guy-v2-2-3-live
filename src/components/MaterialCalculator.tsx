@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -114,6 +113,27 @@ const MaterialCalculator = () => {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(() => setShowDiscountedPrice(true))} className="space-y-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Select Material</label>
+                <Select
+                  value={selectedProduct}
+                  onValueChange={setSelectedProduct}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a material" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {products.map((product) => (
+                      <SelectItem key={product.id} value={product.id.toString()}>
+                        {product.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <AreaInputs areas={areas} onAreaChange={setAreas} />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
