@@ -16,7 +16,9 @@ export const useProduct = (slug: string | undefined, zipCode?: string) => {
       try {
         setLoading(true);
         setError(null);
-        const fetchedProduct = await getProductBySlug(slug);
+        // Decode the URL-encoded slug before fetching
+        const decodedSlug = decodeURIComponent(slug);
+        const fetchedProduct = await getProductBySlug(decodedSlug);
         setProduct(fetchedProduct);
         
         if (fetchedProduct && zipCode) {
@@ -38,4 +40,3 @@ export const useProduct = (slug: string | undefined, zipCode?: string) => {
 
   return { product, adjustedPrice, loading, error };
 };
-
