@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Product, MaterialCategory, MaterialUsage, MaterialSubtype, MaterialSize, MaterialColor } from '@/services/productTypes';
@@ -41,6 +40,89 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
     setSelectedSubtype('');
     setSelectedSize('');
     setSelectedColor('');
+  };
+
+  const getSandSubtypes = () => [
+    { value: 'mason-sand', label: 'Mason Sand' },
+    { value: 'playground-sand', label: 'Playground Sand' },
+    { value: 'beach-sand', label: 'Beach Sand' },
+    { value: 'washed-sand', label: 'Washed Sand' }
+  ];
+
+  const getDirtSubtypes = () => [
+    { value: 'top-soil', label: 'Topsoil' },
+    { value: 'compost', label: 'Compost' },
+    { value: 'fill-dirt', label: 'Fill Dirt' },
+    { value: 'loam', label: 'Loam' },
+    { value: 'sandy-loam', label: 'Sandy Loam' }
+  ];
+
+  const getBaseSubtypes = () => [
+    { value: 'road-base', label: 'Road Base' },
+    { value: 'concrete-rca', label: 'Concrete (RCA)' },
+    { value: 'crusher-base', label: 'Crusher Base' }
+  ];
+
+  const renderSubtypeSelector = () => {
+    let subtypes = [];
+    
+    switch (selectedCategory) {
+      case 'sand':
+        subtypes = getSandSubtypes();
+        break;
+      case 'dirt':
+        subtypes = getDirtSubtypes();
+        break;
+      case 'base':
+        subtypes = getBaseSubtypes();
+        break;
+      case 'gravel':
+        return (
+          <div className="space-y-2 mt-4">
+            <label className="text-sm font-medium">Type</label>
+            <ToggleGroup
+              type="single"
+              value={selectedSubtype}
+              onValueChange={(value) => setSelectedSubtype(value as MaterialSubtype)}
+              className="justify-start gap-2"
+            >
+              {['crushed', 'round', 'natural', 'concrete'].map((type) => (
+                <ToggleGroupItem
+                  key={type}
+                  value={type}
+                  className="flex-1 py-3 data-[state=on]:bg-primary/10 data-[state=on]:text-primary"
+                >
+                  <span className="capitalize">{type.replace('-', ' ')}</span>
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </div>
+        );
+      default:
+        return null;
+    }
+
+    return (
+      <div className="space-y-2 mt-4">
+        <label className="text-sm font-medium">Type</label>
+        <ToggleGroup
+          type="single"
+          value={selectedSubtype}
+          onValueChange={(value) => setSelectedSubtype(value as MaterialSubtype)}
+          className="justify-start gap-2 flex-wrap"
+        >
+          {subtypes.map(({ value, label }) => (
+            <ToggleGroupItem
+              key={value}
+              value={value}
+              className="flex-1 py-3 data-[state=on]:bg-primary/10 data-[state=on]:text-primary"
+            >
+              <span className="capitalize">{label}</span>
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      </div>
+    );
   };
 
   return (
@@ -92,26 +174,6 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
           </ToggleGroup>
 
           <div className="space-y-2 mt-4">
-            <label className="text-sm font-medium">Type</label>
-            <ToggleGroup
-              type="single"
-              value={selectedSubtype}
-              onValueChange={(value) => setSelectedSubtype(value as MaterialSubtype)}
-              className="justify-start gap-2"
-            >
-              {['crushed', 'round', 'natural', 'concrete'].map((type) => (
-                <ToggleGroupItem
-                  key={type}
-                  value={type}
-                  className="flex-1 py-3 data-[state=on]:bg-primary/10 data-[state=on]:text-primary"
-                >
-                  <span className="capitalize">{type.replace('-', ' ')}</span>
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-          </div>
-
-          <div className="space-y-2 mt-4">
             <label className="text-sm font-medium">Size</label>
             <ToggleGroup
               type="single"
@@ -154,6 +216,8 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
           </ToggleGroup>
         </div>
       )}
+
+      {selectedCategory && renderSubtypeSelector()}
 
       {filteredProducts.length > 0 && (
         <div className="space-y-3 border rounded-lg p-4">
