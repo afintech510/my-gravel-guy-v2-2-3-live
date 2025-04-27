@@ -1,13 +1,24 @@
+
 import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import { Product, getProducts } from '../services/productService';
 import { Skeleton } from "@/components/ui/skeleton";
 
-const ProductGrid = () => {
+interface ProductGridProps {
+  filters?: {
+    search: string;
+    sort: string;
+    category: string;
+  };
+}
+
+const ProductGrid = ({ filters = { search: '', sort: 'nameAsc', category: 'all' } }: ProductGridProps) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
+  // Fetch products
   useEffect(() => {
     async function loadProducts() {
       try {
@@ -26,6 +37,42 @@ const ProductGrid = () => {
     loadProducts();
   }, []);
 
+  // Apply filters
+  useEffect(() => {
+    let result = [...products];
+
+    // Apply search filter
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      result = result.filter(product => 
+        product.name.toLowerCase().includes(searchTerm) ||
+        product.description.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    // Apply category filter
+    if (filters.category !== 'all') {
+      result = result.filter(product => product.category === filters.category);
+    }
+
+    // Apply sorting
+    result.sort((a, b) => {
+      switch (filters.sort) {
+        case 'nameDesc':
+          return b.name.localeCompare(a.name);
+        case 'priceAsc':
+          return a.price - b.price;
+        case 'priceDesc':
+          return b.price - a.price;
+        case 'nameAsc':
+        default:
+          return a.name.localeCompare(b.name);
+      }
+    });
+
+    setFilteredProducts(result);
+  }, [products, filters]);
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -43,60 +90,26 @@ const ProductGrid = () => {
   if (error) {
     return (
       <div className="text-center py-8">
-        <p className="text-red-500 mb-4">{error}</p>
-        <p>Showing sample products instead:</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-          {sampleProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
+
+  if (filteredProducts.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-500">No products found matching your criteria.</p>
       </div>
     );
   }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {products.length > 0 ? (
-        products.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))
-      ) : (
-        <div className="col-span-3 text-center py-8">
-          <p>No products found.</p>
-        </div>
-      )}
+      {filteredProducts.map((product) => (
+        <ProductCard key={product.id} product={product} />
+      ))}
     </div>
   );
 };
-
-const sampleProducts: Product[] = [
-  {
-    id: 1,
-    name: "River Rock Gravel",
-    description: "Smooth, rounded stones perfect for landscaping",
-    price: 45.99,
-    image: "/placeholder.svg",
-    category: "gravel",
-    tonYardRatio: 1.5
-  },
-  {
-    id: 2,
-    name: "Fine Sand",
-    description: "High-quality sand for construction and landscaping",
-    price: 35.99,
-    image: "/placeholder.svg",
-    category: "sand",
-    tonYardRatio: 1.2
-  },
-  {
-    id: 3,
-    name: "Premium Topsoil",
-    description: "Rich, organic soil for gardening",
-    price: 29.99,
-    image: "/placeholder.svg",
-    category: "dirt",
-    tonYardRatio: 1.0
-  },
-];
 
 export default ProductGrid;
