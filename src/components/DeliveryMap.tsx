@@ -59,7 +59,7 @@ const DeliveryMap = () => {
     };
   }, []);
 
-  // Add markers when map is initialized
+  // Add markers when map is initialized - optimized for larger dataset
   useEffect(() => {
     console.log("Checking for markers", { mapInitialized, locationCount: deliveryLocations.length });
     if (!map.current || !mapInitialized) return;
@@ -70,6 +70,9 @@ const DeliveryMap = () => {
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
     
+    // Create bounds to fit all markers
+    const bounds = new mapboxgl.LngLatBounds();
+    
     // Add markers for each location
     deliveryLocations.forEach((location: DeliveryLocation) => {
       if (!location.lat || !location.lng) {
@@ -77,6 +80,10 @@ const DeliveryMap = () => {
         return;
       }
       
+      // Extend bounds with each valid location
+      bounds.extend([location.lng, location.lat]);
+      
+      // Create popup but don't add it to marker until clicked (for performance)
       const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
         <div class="p-2">
           <h3 class="font-semibold">${location.product_name || 'Unknown Product'}</h3>
@@ -92,17 +99,13 @@ const DeliveryMap = () => {
       markersRef.current.push(marker);
     });
     
-    // Fit map to markers
-    if (deliveryLocations.length > 0) {
-      const bounds = new mapboxgl.LngLatBounds();
-      
-      // Extend bounds with each marker
-      markersRef.current.forEach(marker => {
-        bounds.extend(marker.getLngLat());
+    // Fit map to markers if we have valid bounds
+    if (!bounds.isEmpty()) {
+      map.current.fitBounds(bounds, { 
+        padding: 50, 
+        maxZoom: 7,
+        duration: 1500 // Smoother animation
       });
-      
-      // Fit the map to the bounds with padding
-      map.current.fitBounds(bounds, { padding: 50, maxZoom: 10 });
     }
     
   }, [mapInitialized]);
