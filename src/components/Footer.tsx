@@ -52,9 +52,9 @@ const Footer = () => {
     <footer className="bg-background border-t mt-auto">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-          <FooterSection title="Legal" links={legalLinks} />
-          <FooterSection title="Help" links={helpLinks} />
           <FooterSection title="Navigation" links={navLinks} />
+          <FooterSection title="Help" links={helpLinks} />
+          <FooterSection title="Legal" links={legalLinks} />
         </div>
         <Separator className="my-8" />
         <div className="text-center text-sm text-muted-foreground">
