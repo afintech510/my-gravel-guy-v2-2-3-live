@@ -1,25 +1,9 @@
 
-import { Product } from './productTypes';
+import { Product, ZipCodeData } from './productTypes';
 import { fetchSheetData } from "../utils/googleSheets";
 
 // The Google Sheet ID from your URL
 const SHEET_ID = "1f-9eFHdoSETcV79k1lkEFTNSZ9ZXCDJqPbRWquiZByI";
-
-export interface ZipCodeData {
-  zip: string;
-  lat: number;
-  lng: number;
-  city: string;
-  state_id: string;
-  state_name: string;
-  population: number;
-  density: number;
-  county_fips: string;
-  county_name: string;
-  county_names_all: string;
-  county_fips_all: string;
-  timezone: string;
-}
 
 // In-memory cache with expiry
 let productsCache: Product[] | null = null;
@@ -333,3 +317,5 @@ export async function getServiceAreasByState(): Promise<Record<string, ZipCodeDa
   return serviceAreas;
 }
 
+// Re-export types from productTypes for convenience
+export { type Product, type ZipCodeData };
