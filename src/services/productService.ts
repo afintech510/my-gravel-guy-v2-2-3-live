@@ -1,4 +1,3 @@
-
 import { Product } from './productTypes';
 import { fetchSheetData } from "../utils/googleSheets";
 
@@ -104,6 +103,8 @@ export async function getProductBySlug(slug: string): Promise<Product> {
   
   return product;
 }
+
+export { ZipCodeData };
 
 /**
  * Fetch ZIP code pricing data
@@ -332,3 +333,9 @@ export async function getServiceAreasByState(): Promise<Record<string, ZipCodeDa
   
   return serviceAreas;
 }
+
+export {
+  getPriceAdjustmentForZipCode,
+  applyZipCodeAdjustment,
+  getServiceAreasByState
+};
