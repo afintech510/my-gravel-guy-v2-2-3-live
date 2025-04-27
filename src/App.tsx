@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Quiz from "./pages/Quiz";
 import Calculator from "./pages/Calculator";
+import DeliveryMap from "./pages/DeliveryMap";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/quiz" element={<Quiz />} />
                 <Route path="/calculator" element={<Calculator />} />
+                <Route path="/delivery-map" element={<DeliveryMap />} />
                 <Route path="/payment-success" element={<PaymentSuccess />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
