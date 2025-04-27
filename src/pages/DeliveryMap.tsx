@@ -1,8 +1,10 @@
 
+import React from 'react';
 import DeliveryMap from '@/components/DeliveryMap';
-import { Helmet } from 'react-helmet';
+import { Helmet } from 'react-helmet-async';
 
 const DeliveryMapPage = () => {
+  console.log("Rendering DeliveryMapPage");
   return (
     <div className="container mx-auto py-8 px-4">
       <Helmet>

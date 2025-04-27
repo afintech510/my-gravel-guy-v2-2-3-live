@@ -14,6 +14,8 @@ const DeliveryMap = () => {
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const [mapInitialized, setMapInitialized] = useState(false);
+  
+  console.log("DeliveryMap component rendering");
 
   const { data: locations, isLoading, error } = useQuery({
     queryKey: ['deliveryLocations'],
@@ -21,9 +23,11 @@ const DeliveryMap = () => {
   });
 
   useEffect(() => {
+    console.log("Map container ref:", mapContainer.current);
     if (!mapContainer.current) return;
     
     try {
+      console.log("Setting up Mapbox with token");
       mapboxgl.accessToken = MAPBOX_TOKEN;
       
       if (!map.current) {
@@ -56,6 +60,7 @@ const DeliveryMap = () => {
     return () => {
       // Cleanup
       if (map.current) {
+        console.log("Cleaning up map instance");
         map.current.remove();
         map.current = null;
       }
@@ -64,6 +69,7 @@ const DeliveryMap = () => {
 
   // Add markers when map is initialized and data is loaded
   useEffect(() => {
+    console.log("Checking for markers", { mapInitialized, locationsAvailable: !!locations, locationCount: locations?.length });
     if (!map.current || !mapInitialized || !locations || locations.length === 0) return;
     
     console.log(`Adding ${locations.length} markers to map`);
@@ -110,10 +116,12 @@ const DeliveryMap = () => {
   }, [locations, mapInitialized]);
 
   if (isLoading) {
+    console.log("Map data is loading...");
     return <Skeleton className="w-full h-[600px] rounded-lg" />;
   }
 
   if (error) {
+    console.error("Error in delivery map:", error);
     return (
       <div className="p-4 border border-red-200 bg-red-50 rounded-lg">
         <p className="text-red-700">Error loading delivery locations</p>
@@ -121,6 +129,7 @@ const DeliveryMap = () => {
     );
   }
 
+  console.log("Rendering map with", locations?.length, "locations");
   return (
     <div className="rounded-lg border shadow-sm overflow-hidden">
       <div className="p-2 bg-gray-50 border-b flex justify-between items-center">

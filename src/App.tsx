@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,40 +18,43 @@ import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Quiz from "./pages/Quiz";
 import Calculator from "./pages/Calculator";
-import DeliveryMap from "./pages/DeliveryMap";
+import DeliveryMapPage from "./pages/DeliveryMap"; // Make sure it uses the correct import name
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ZipCodeProvider>
-      <CartProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <div className="min-h-screen bg-gray-50">
-              <Navbar />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/products" element={<Products />} />
-                <Route path="/products/:slug" element={<ProductDetail />} />
-                <Route path="/locations/:slug" element={<LocationPage />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/quiz" element={<Quiz />} />
-                <Route path="/calculator" element={<Calculator />} />
-                <Route path="/delivery-map" element={<DeliveryMap />} />
-                <Route path="/payment-success" element={<PaymentSuccess />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </div>
-          </BrowserRouter>
-        </TooltipProvider>
-      </CartProvider>
-    </ZipCodeProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  console.log("App rendering with routes");
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ZipCodeProvider>
+        <CartProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <div className="min-h-screen bg-gray-50">
+                <Navbar />
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/products/:slug" element={<ProductDetail />} />
+                  <Route path="/locations/:slug" element={<LocationPage />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/cart" element={<Cart />} />
+                  <Route path="/quiz" element={<Quiz />} />
+                  <Route path="/calculator" element={<Calculator />} />
+                  <Route path="/delivery-map" element={<DeliveryMapPage />} /> {/* Ensure the correct component is used here */}
+                  <Route path="/payment-success" element={<PaymentSuccess />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </div>
+            </BrowserRouter>
+          </TooltipProvider>
+        </CartProvider>
+      </ZipCodeProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
