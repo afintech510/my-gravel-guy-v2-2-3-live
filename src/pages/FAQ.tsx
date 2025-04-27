@@ -81,7 +81,9 @@ const FAQ = () => {
   const filterFAQs = () => {
     if (!searchQuery) return faqData;
 
-    const filtered: typeof faqData = {};
+    const filtered: typeof faqData = {}; // Initialize with empty object but with the correct type
+    
+    // Now add the properties that match the search
     Object.entries(faqData).forEach(([category, items]) => {
       const filteredItems = items.filter(
         item =>

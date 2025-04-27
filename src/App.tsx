@@ -22,6 +22,7 @@ import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Quiz from "./pages/Quiz";
 import Calculator from "./pages/Calculator";
+import FAQ from "./pages/FAQ"; // Add this import
 
 // Add imports for legal pages
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
