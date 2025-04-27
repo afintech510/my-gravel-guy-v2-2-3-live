@@ -89,49 +89,54 @@ const Navbar = () => {
           </div>
 
           {/* Mobile Navigation */}
-          <Sheet>
-            <SheetTrigger asChild className="md:hidden">
+          <div className="flex items-center md:hidden gap-2">
+            <Link to="/cart" className="relative">
               <Button variant="ghost" size="icon">
-                <Menu className="h-6 w-6" />
-                <span className="sr-only">Toggle menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[300px]">
-              <div className="flex flex-col space-y-4 mt-4">
-                {zipCode && (
-                  <div className="px-3 py-2 flex items-center text-sm">
-                    <MapPin className="h-4 w-4 mr-2" />
-                    <div>
-                      <div className="font-medium">Delivery ZIP: {zipCode}</div>
-                      {zipCodeData && (
-                        <div className="text-xs text-gray-500">
-                          {zipCodeData.city}, {zipCodeData.state_id}
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                <ShoppingCart className="h-6 w-6" />
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full w-5 h-5 text-xs flex items-center justify-center">
+                    {totalItems}
+                  </span>
                 )}
-                
-                {links.map((link) => (
-                  <Link
-                    key={link.href}
-                    to={link.href}
-                    className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium inline-flex items-center"
-                  >
-                    {link.icon}
-                    {link.label}
-                  </Link>
-                ))}
-                <Link
-                  to="/cart"
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium flex items-center"
-                >
-                  <ShoppingCart className="h-5 w-5 mr-2" />
-                  Cart {totalItems > 0 && `(${totalItems})`}
-                </Link>
-              </div>
-            </SheetContent>
-          </Sheet>
+              </Button>
+            </Link>
+            <Sheet>
+              <SheetTrigger asChild className="md:hidden">
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-6 w-6" />
+                  <span className="sr-only">Toggle menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px]">
+                <div className="flex flex-col space-y-4 mt-4">
+                  {zipCode && (
+                    <div className="px-3 py-2 flex items-center text-sm">
+                      <MapPin className="h-4 w-4 mr-2" />
+                      <div>
+                        <div className="font-medium">Delivery ZIP: {zipCode}</div>
+                        {zipCodeData && (
+                          <div className="text-xs text-gray-500">
+                            {zipCodeData.city}, {zipCodeData.state_id}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {links.map((link) => (
+                    <Link
+                      key={link.href}
+                      to={link.href}
+                      className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium inline-flex items-center"
+                    >
+                      {link.icon}
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </div>
     </nav>
