@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Product, MaterialCategory, MaterialUsage, MaterialSubtype, MaterialSize, MaterialColor } from '@/services/productTypes';
 import { cn } from '@/lib/utils';
-import { Package, Sand, Leaf, TreeDeciduous, Hammer } from 'lucide-react';
+import { Package, BrickWall, Leaf, TreeDeciduous, Hammer } from 'lucide-react';
 
 interface MaterialSelectorProps {
   products: Product[];
@@ -13,7 +13,7 @@ interface MaterialSelectorProps {
 
 const CategoryIcons = {
   gravel: Package,
-  sand: Sand,
+  sand: BrickWall,
   dirt: Leaf,
   mulch: TreeDeciduous,
   base: Hammer,
