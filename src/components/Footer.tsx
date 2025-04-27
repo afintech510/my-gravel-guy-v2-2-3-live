@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, HelpCircle, Blog, Truck, Users, Mail, ShoppingCart, Calculator, NotebookPen, Star, Quote } from 'lucide-react';
+import { FileText, HelpCircle, BookOpen, Truck, Users, Mail, ShoppingCart, Calculator, NotebookPen, Star, Quote } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 const FooterSection = ({ title, links }: { title: string, links: { label: string, href: string, icon: React.ReactNode }[] }) => (
@@ -32,7 +32,7 @@ const Footer = () => {
 
   const helpLinks = [
     { label: 'FAQ', href: '/faq', icon: <HelpCircle className="h-4 w-4" /> },
-    { label: 'Blog', href: '/blog', icon: <Blog className="h-4 w-4" /> },
+    { label: 'Blog', href: '/blog', icon: <BookOpen className="h-4 w-4" /> },
     { label: 'Delivery', href: '/delivery', icon: <Truck className="h-4 w-4" /> },
     { label: 'About Us', href: '/about', icon: <Users className="h-4 w-4" /> },
     { label: 'Contact Us', href: '/contact', icon: <Mail className="h-4 w-4" /> },
