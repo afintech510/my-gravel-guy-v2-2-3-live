@@ -7,7 +7,7 @@ export interface Product {
   image: string;
   category: 'gravel' | 'sand' | 'dirt';
   slug: string;
-  tonYardRatio: number; // Added this required field
+  tonYardRatio: number;
   specifications?: {
     density?: string;
     size?: string;
@@ -20,3 +20,4 @@ export interface Product {
     answer: string;
   }>;
 }
+
