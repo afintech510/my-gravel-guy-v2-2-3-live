@@ -1,7 +1,7 @@
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, ShoppingCart, NotebookPen, Calculator, Store, ThumbsUp, Phone, House, MapPin } from "lucide-react";
+import { Menu, ShoppingCart, NotebookPen, Calculator, Store, ThumbsUp, Phone, House, MapPin, Map } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart } from '../contexts/CartContext';
 import { useZipCode } from '../contexts/ZipCodeContext';
@@ -18,6 +18,7 @@ const Navbar = () => {
     { href: "/products", label: "Shop", icon: <Store className="h-4 w-4 mr-1" /> },
     { href: "/calculator", label: "Calculator", icon: <Calculator className="h-4 w-4 mr-1" /> },
     { href: "/quiz", label: "Plan Project", icon: <NotebookPen className="h-4 w-4 mr-1" /> },
+    { href: "/delivery-map", label: "Delivery Map", icon: <Map className="h-4 w-4 mr-1" /> },
     { href: "/about", label: "About", icon: <ThumbsUp className="h-4 w-4 mr-1" /> },
     { href: "/contact", label: "Contact", icon: <Phone className="h-4 w-4 mr-1" /> },
   ];
