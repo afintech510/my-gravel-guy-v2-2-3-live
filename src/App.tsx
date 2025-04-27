@@ -20,11 +20,7 @@ import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Quiz from "./pages/Quiz";
 import Calculator from "./pages/Calculator";
-import DeliveryMapPage from "./pages/DeliveryMap";
-
-import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
-import TermsOfService from "./pages/legal/TermsOfService";
-import RefundPolicy from "./pages/legal/RefundPolicy";
+// Removed DeliveryMapPage import
 
 const queryClient = new QueryClient();
 
@@ -51,7 +47,7 @@ const App = () => {
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/quiz" element={<Quiz />} />
                   <Route path="/calculator" element={<Calculator />} />
-                  <Route path="/delivery-map" element={<DeliveryMapPage />} />
+                  {/* Removed delivery-map route */}
                   <Route path="/payment-success" element={<PaymentSuccess />} />
                   <Route path="/privacy" element={<PrivacyPolicy />} />
                   <Route path="/terms" element={<TermsOfService />} />
