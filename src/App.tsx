@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "./contexts/CartContext";
 import { ZipCodeProvider } from "./contexts/ZipCodeContext";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
@@ -18,7 +18,11 @@ import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Quiz from "./pages/Quiz";
 import Calculator from "./pages/Calculator";
-import DeliveryMapPage from "./pages/DeliveryMap"; // Make sure it uses the correct import name
+import DeliveryMapPage from "./pages/DeliveryMap";
+
+import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
+import TermsOfService from "./pages/legal/TermsOfService";
+import RefundPolicy from "./pages/legal/RefundPolicy";
 
 const queryClient = new QueryClient();
 
@@ -32,7 +36,7 @@ const App = () => {
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <div className="min-h-screen bg-gray-50">
+              <div className="min-h-screen bg-gray-50 flex flex-col">
                 <Navbar />
                 <Routes>
                   <Route path="/" element={<Index />} />
@@ -44,10 +48,14 @@ const App = () => {
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/quiz" element={<Quiz />} />
                   <Route path="/calculator" element={<Calculator />} />
-                  <Route path="/delivery-map" element={<DeliveryMapPage />} /> {/* Ensure the correct component is used here */}
+                  <Route path="/delivery-map" element={<DeliveryMapPage />} />
                   <Route path="/payment-success" element={<PaymentSuccess />} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/terms" element={<TermsOfService />} />
+                  <Route path="/refund" element={<RefundPolicy />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+                <Footer />
               </div>
             </BrowserRouter>
           </TooltipProvider>
