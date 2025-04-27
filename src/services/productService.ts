@@ -1,18 +1,9 @@
+
 import { Product } from './productTypes';
 import { fetchSheetData } from "../utils/googleSheets";
 
 // The Google Sheet ID from your URL
 const SHEET_ID = "1f-9eFHdoSETcV79k1lkEFTNSZ9ZXCDJqPbRWquiZByI";
-
-export interface Product {
-  id: number;
-  name: string;
-  description: string;
-  price: number; // price per ton
-  image: string;
-  category: 'gravel' | 'sand' | 'dirt';
-  tonYardRatio: number; // conversion factor from cubic yards to tons
-}
 
 export interface ZipCodeData {
   zip: string;
@@ -59,7 +50,16 @@ export async function getProducts(): Promise<Product[]> {
       price: parseFloat(row.price) || 0,
       image: row.image || "/placeholder.svg",
       category: (row.category as 'gravel' | 'sand' | 'dirt') || 'gravel',
-      tonYardRatio: parseFloat(row.tonYardRatio) || 1.5 // default ratio if not specified
+      tonYardRatio: parseFloat(row.tonYardRatio) || 1.5, // default ratio if not specified
+      slug: row.slug || row.name?.toLowerCase().replace(/\s+/g, '-') || `product-${index + 1}`,
+      specifications: {
+        density: row.density || "",
+        size: row.size || "",
+        color: row.color || "",
+        coverage: row.coverage || ""
+      },
+      uses: row.uses ? row.uses.split(',').map((use: string) => use.trim()) : [],
+      faqs: []
     }));
     
     console.log('Transformed products:', products);

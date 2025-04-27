@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,7 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '../contexts/CartContext';
-import { Product, getProducts } from '../services/productService';
+import { getProducts } from '../services/productService';
+import { Product } from '../services/productTypes';
 import AreaInputs from './calculator/AreaInputs';
 import CalculationDisplay from './calculator/CalculationDisplay';
 import { useCalculator } from '../hooks/useCalculator';

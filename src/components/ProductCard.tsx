@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,7 +6,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { useCart } from '../contexts/CartContext';
 import { Link } from 'react-router-dom';
 import { useZipCode } from '../contexts/ZipCodeContext';
-import { Product, getPriceAdjustmentForZipCode, applyZipCodeAdjustment } from '../services/productService';
+import { getPriceAdjustmentForZipCode, applyZipCodeAdjustment } from '../services/productService';
+import { Product } from '../services/productTypes';
 
 const ProductCard = ({ product }: { product: Product }) => {
   const { addToCart } = useCart();

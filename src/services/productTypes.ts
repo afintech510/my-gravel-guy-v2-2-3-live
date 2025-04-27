@@ -5,8 +5,9 @@ export interface Product {
   description: string;
   price: number;
   image: string;
-  category: string;
+  category: 'gravel' | 'sand' | 'dirt';
   slug: string;
+  tonYardRatio: number; // Added this required field
   specifications?: {
     density?: string;
     size?: string;
