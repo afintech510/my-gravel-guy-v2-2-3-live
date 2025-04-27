@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -10,22 +9,17 @@ import { Search, MapPin, ArrowRight, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { DeliveryLocation } from '@/components/DeliveryMap';
 
-type LocationData = {
-  state: string;
-  city: string;
-  region: string;
-  slug: string;
-  title: string;
-  description: string;
-  meta_description?: string;
-  service_area?: string;
-  local_info?: string;
-  delivery_info?: string;
-  image_url?: string;
-};
+// Consistent with the DeliveryMap component
+const SHEET_ID = "1f-9eFHdoSETcV79k1lkEFTNSZ9ZXCDJqPbRWquiZByI";
+const SHEET_NAME = "Locations"; // Make sure this matches your sheet name
 
-// Fallback location data to display when the API is not available
+// Converted DeliveryLocation to LocationData interface for easier integration
+type LocationData = DeliveryLocation;
+
+// Fallback location data in case of API failure
 const fallbackLocations: LocationData[] = [
   {
     state: "Texas",
@@ -33,7 +27,9 @@ const fallbackLocations: LocationData[] = [
     region: "Central Texas",
     slug: "austin-tx",
     title: "Gravel Delivery in Austin, TX",
-    description: "Fast gravel and material delivery throughout Austin and surrounding areas. Same day and next day options available."
+    description: "Fast gravel and material delivery throughout Austin and surrounding areas. Same day and next day options available.",
+    lat: 30.2672,
+    lng: -97.7431
   },
   {
     state: "Texas",
@@ -41,7 +37,9 @@ const fallbackLocations: LocationData[] = [
     region: "North Texas",
     slug: "dallas-tx",
     title: "Gravel Delivery in Dallas, TX",
-    description: "Premium gravel, sand, and dirt delivery to all Dallas neighborhoods with competitive pricing."
+    description: "Premium gravel, sand, and dirt delivery to all Dallas neighborhoods with competitive pricing.",
+    lat: 32.7767,
+    lng: -96.7970
   },
   {
     state: "California",
@@ -49,7 +47,9 @@ const fallbackLocations: LocationData[] = [
     region: "Southern California",
     slug: "los-angeles-ca",
     title: "Gravel Delivery in Los Angeles, CA",
-    description: "Professional gravel delivery across Los Angeles county, serving residential and commercial projects."
+    description: "Professional gravel delivery across Los Angeles county, serving residential and commercial projects.",
+    lat: 34.0522,
+    lng: -118.2437
   },
   {
     state: "California",
@@ -57,7 +57,9 @@ const fallbackLocations: LocationData[] = [
     region: "Northern California",
     slug: "san-francisco-ca",
     title: "Gravel Delivery in San Francisco, CA",
-    description: "Reliable material delivery solutions for San Francisco and the Bay Area. Bulk discounts available."
+    description: "Reliable material delivery solutions for San Francisco and the Bay Area. Bulk discounts available.",
+    lat: 37.7749,
+    lng: -122.4194
   },
   {
     state: "Florida",
@@ -65,11 +67,13 @@ const fallbackLocations: LocationData[] = [
     region: "South Florida",
     slug: "miami-fl",
     title: "Gravel Delivery in Miami, FL",
-    description: "Fast and affordable gravel delivery services throughout Miami-Dade county. Perfect for landscaping projects."
+    description: "Fast and affordable gravel delivery services throughout Miami-Dade county. Perfect for landscaping projects.",
+    lat: 25.7617,
+    lng: -80.1918
   }
 ];
 
-// Add more locations to ensure we have at least 10 for demonstration purposes
+// Extend the fallback locations for testing
 const extendedFallbackLocations: LocationData[] = [
   ...fallbackLocations,
   {
@@ -78,7 +82,9 @@ const extendedFallbackLocations: LocationData[] = [
     region: "Central Florida",
     slug: "orlando-fl",
     title: "Gravel Delivery in Orlando, FL",
-    description: "Quality gravel delivery service in Orlando area. Ideal for landscaping and construction projects."
+    description: "Quality gravel delivery service in Orlando area. Ideal for landscaping and construction projects.",
+    lat: 28.5383,
+    lng: -81.3792
   },
   {
     state: "Texas",
@@ -86,7 +92,9 @@ const extendedFallbackLocations: LocationData[] = [
     region: "Southeast Texas",
     slug: "houston-tx",
     title: "Gravel Delivery in Houston, TX",
-    description: "Reliable delivery of gravel and aggregates across Houston and surrounding suburbs."
+    description: "Reliable delivery of gravel and aggregates across Houston and surrounding suburbs.",
+    lat: 29.7604,
+    lng: -95.3698
   },
   {
     state: "New York",
@@ -94,7 +102,9 @@ const extendedFallbackLocations: LocationData[] = [
     region: "New York Metropolitan Area",
     slug: "new-york-ny",
     title: "Gravel Delivery in New York, NY",
-    description: "Professional gravel delivery services across all New York City boroughs and surrounding areas."
+    description: "Professional gravel delivery services across all New York City boroughs and surrounding areas.",
+    lat: 40.7128,
+    lng: -74.0060
   },
   {
     state: "Illinois",
@@ -102,7 +112,9 @@ const extendedFallbackLocations: LocationData[] = [
     region: "Northern Illinois",
     slug: "chicago-il",
     title: "Gravel Delivery in Chicago, IL",
-    description: "Fast and reliable gravel delivery throughout Chicago and suburbs. Competitive rates for all project sizes."
+    description: "Fast and reliable gravel delivery throughout Chicago and suburbs. Competitive rates for all project sizes.",
+    lat: 41.8781,
+    lng: -87.6298
   },
   {
     state: "Arizona",
@@ -110,7 +122,9 @@ const extendedFallbackLocations: LocationData[] = [
     region: "Central Arizona",
     slug: "phoenix-az",
     title: "Gravel Delivery in Phoenix, AZ",
-    description: "Desert landscaping materials and gravel delivered across the Phoenix metropolitan area."
+    description: "Desert landscaping materials and gravel delivered across the Phoenix metropolitan area.",
+    lat: 33.4484,
+    lng: -112.0740
   }
 ];
 
@@ -126,29 +140,37 @@ const LocationsIndex = () => {
     const fetchLocations = async () => {
       try {
         setLoading(true);
-        // Replace with your actual Google Sheet ID and tab name
-        const sheetId = '1g6vVui0lG54_iFX9CLJoWAHUh-UePQygm15Kq7z3noI';
-        const sheetName = 'Locations';
+        console.log("Fetching locations from sheet:", SHEET_ID, SHEET_NAME);
+        const data = await fetchSheetData(SHEET_ID, SHEET_NAME);
         
-        try {
-          const data = await fetchSheetData(sheetId, sheetName);
-          
-          if (!Array.isArray(data) || data.length === 0) {
-            console.log("No location data found, using fallback data");
-            processLocationData(extendedFallbackLocations);
-            return;
-          }
-          
-          processLocationData(data as LocationData[]);
-        } catch (fetchError) {
-          console.error("Error fetching location data:", fetchError);
+        if (!Array.isArray(data) || data.length === 0) {
+          console.error("No location data found or invalid data format");
           console.log("Using fallback location data instead");
           processLocationData(extendedFallbackLocations);
+          return;
         }
         
+        // Transform the data to ensure all fields are properly formatted
+        const processedLocations: LocationData[] = data.map((row: any) => ({
+          city: row.city || "Unknown City",
+          state: row.state || "Unknown State",
+          product_name: row.product_name || "Gravel Delivery",
+          lat: parseFloat(row.lat) || 0,
+          lng: parseFloat(row.lng) || 0,
+          region: row.region || "",
+          slug: row.slug || `${row.city?.toLowerCase().replace(/\s+/g, '-')}-${row.state?.toLowerCase()}`,
+          title: row.title || `Gravel Delivery in ${row.city || 'Unknown City'}, ${row.state || 'Unknown State'}`,
+          description: row.description || `Fast and reliable gravel delivery services in ${row.city || 'Unknown City'}.`
+        }));
+        
+        console.log("Fetched locations:", processedLocations);
+        processLocationData(processedLocations);
+        
       } catch (err) {
-        console.error("Error in location processing:", err);
-        setError('Error processing locations');
+        console.error("Error fetching locations:", err);
+        console.log("Using fallback location data instead");
+        processLocationData(extendedFallbackLocations);
+        setError('Error loading locations. Showing fallback data.');
       } finally {
         setLoading(false);
       }
@@ -231,8 +253,17 @@ const LocationsIndex = () => {
           <h2 className="text-3xl font-bold mb-8">Browse Delivery Locations</h2>
           
           {loading ? (
-            <div className="text-center py-8">
-              <p className="text-xl">Loading locations...</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Card key={i}>
+                  <CardContent className="p-6">
+                    <Skeleton className="h-6 w-2/3 mb-2" />
+                    <Skeleton className="h-4 w-1/3 mb-4" />
+                    <Skeleton className="h-20 w-full mb-4" />
+                    <Skeleton className="h-8 w-1/2" />
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           ) : error ? (
             <Alert variant="destructive" className="mb-6">
@@ -295,9 +326,9 @@ const LocationsIndex = () => {
                                 </Button>
                               </div>
                               <p className="text-sm line-clamp-3">
-                                {location.description.length > 120 
+                                {location.description && location.description.length > 120 
                                   ? `${location.description.substring(0, 120)}...` 
-                                  : location.description
+                                  : location.description || "Fast and reliable gravel delivery services."
                                 }
                               </p>
                               <Button asChild variant="link" className="p-0 h-auto mt-4">
