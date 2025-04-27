@@ -1,6 +1,5 @@
-
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import ProductGrid from '../components/ProductGrid';
 import ZipCodeSearch from '../components/ZipCodeSearch';
@@ -9,6 +8,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { MapPin, TruckIcon, Clock, Phone, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { toast } from '@/components/ui/use-toast';
+import { deliveryLocations } from '@/data/locations';
 
 type LocationData = {
   state: string;
@@ -167,11 +168,42 @@ const LocationPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [nearbyLocations, setNearbyLocations] = useState<LocationData[]>([]);
   const [faqs, setFaqs] = useState<{question: string, answer: string}[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchLocation = async () => {
       try {
         setLoading(true);
+        
+        // First check if the location exists in our local data
+        if (slug) {
+          const localLocation = deliveryLocations.find(loc => 
+            loc.slug?.toLowerCase() === slug.toLowerCase()
+          );
+          
+          if (localLocation) {
+            console.log("Found location in local data:", localLocation);
+            // Convert to LocationData format
+            const locationData: LocationData = {
+              city: localLocation.city,
+              state: localLocation.state,
+              region: localLocation.region || `${localLocation.state} Region`,
+              slug: localLocation.slug || slug,
+              title: localLocation.title || `Gravel Delivery in ${localLocation.city}, ${localLocation.state}`,
+              description: localLocation.description || `Fast and reliable gravel delivery in ${localLocation.city}, ${localLocation.state}`,
+              service_area: `${localLocation.city} and surrounding areas`,
+              local_info: `${localLocation.city} homeowners and contractors trust our premium gravel delivery service for landscaping and construction projects.`,
+              delivery_info: `We deliver throughout the ${localLocation.city} area 7 days a week. Most orders can be delivered same-day when ordered before noon, or next-day for orders placed later.`,
+              image_url: `https://images.unsplash.com/photo-${Math.floor(Math.random()*1000000000)}`
+            };
+            
+            setLocation(locationData);
+            processNearbyAndFaqs(locationData);
+            setLoading(false);
+            return;
+          }
+        }
+
         // Replace with your actual Google Sheet ID and tab name
         const sheetId = '1g6vVui0lG54_iFX9CLJoWAHUh-UePQygm15Kq7z3noI';
         const sheetName = 'Locations';
@@ -194,6 +226,17 @@ const LocationPage = () => {
               return;
             }
             
+            toast({
+              title: "Location not found",
+              description: `We couldn't find information for ${slug}. Redirecting to locations page.`,
+              variant: "destructive"
+            });
+            
+            // Wait a moment before redirecting
+            setTimeout(() => {
+              navigate('/locations');
+            }, 2000);
+            
             setError('Location not found');
             setLoading(false);
             return;
@@ -210,13 +253,57 @@ const LocationPage = () => {
             setLocation(fallbackLocationData[slug]);
             processNearbyAndFaqs(fallbackLocationData[slug]);
           } else {
-            setError('Error loading location data');
+            // Try to find it in our local data again as a last resort
+            const localLocation = deliveryLocations.find(loc => 
+              loc.slug?.toLowerCase() === slug?.toLowerCase() || 
+              (loc.city.toLowerCase() + '-' + loc.state.toLowerCase().substring(0, 2)) === slug?.toLowerCase()
+            );
+            
+            if (localLocation) {
+              const locationData: LocationData = {
+                city: localLocation.city,
+                state: localLocation.state,
+                region: localLocation.region || `${localLocation.state} Region`,
+                slug: localLocation.slug || slug || '',
+                title: localLocation.title || `Gravel Delivery in ${localLocation.city}, ${localLocation.state}`,
+                description: localLocation.description || `Fast and reliable gravel delivery in ${localLocation.city}, ${localLocation.state}`,
+                service_area: `${localLocation.city} and surrounding areas`,
+                local_info: `${localLocation.city} homeowners and contractors trust our premium gravel delivery service for landscaping and construction projects.`,
+                delivery_info: `We deliver throughout the ${localLocation.city} area 7 days a week. Most orders can be delivered same-day when ordered before noon, or next-day for orders placed later.`,
+                image_url: `https://images.unsplash.com/photo-${Math.floor(Math.random()*1000000000)}`
+              };
+              
+              setLocation(locationData);
+              processNearbyAndFaqs(locationData);
+            } else {
+              toast({
+                title: "Location data error",
+                description: "Error loading location data. Redirecting to all locations.",
+                variant: "destructive"
+              });
+              
+              setTimeout(() => {
+                navigate('/locations');
+              }, 2000);
+              
+              setError('Error loading location data');
+            }
           }
         }
         
       } catch (err) {
         console.error("Error in location processing:", err);
         setError('Error processing location data');
+        
+        toast({
+          title: "Error",
+          description: "Something went wrong loading this location. Please try again.",
+          variant: "destructive"
+        });
+        
+        setTimeout(() => {
+          navigate('/locations');
+        }, 2000);
       } finally {
         setLoading(false);
       }
@@ -282,7 +369,7 @@ const LocationPage = () => {
     if (slug) {
       fetchLocation();
     }
-  }, [slug]);
+  }, [slug, navigate]);
 
   if (loading) {
     return (
@@ -311,11 +398,11 @@ const LocationPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <Helmet>
-        <title>{location.title || `Gravel Delivery in ${location.city}, ${location.state}`}</title>
-        <meta name="description" content={location.meta_description || location.description} />
-        <meta property="og:title" content={location.title || `Gravel Delivery in ${location.city}, ${location.state}`} />
-        <meta property="og:description" content={location.meta_description || location.description} />
-        {location.image_url && <meta property="og:image" content={location.image_url} />}
+        <title>{location?.title || `Gravel Delivery Location`}</title>
+        <meta name="description" content={location?.meta_description || location?.description || "Gravel delivery information for this location."} />
+        <meta property="og:title" content={location?.title || `Gravel Delivery Location`} />
+        <meta property="og:description" content={location?.meta_description || location?.description || "Gravel delivery information for this location."} />
+        {location?.image_url && <meta property="og:image" content={location.image_url} />}
       </Helmet>
       
       <div className="relative py-20 px-4 bg-gray-800 text-white">

@@ -10,16 +10,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DeliveryLocation } from '@/components/DeliveryMap';
+import { DeliveryLocation, generateLocationSlug } from '@/types/location.types';
+import { deliveryLocations } from '@/data/locations';
 
-// Consistent with the DeliveryMap component
 const SHEET_ID = "1f-9eFHdoSETcV79k1lkEFTNSZ9ZXCDJqPbRWquiZByI";
-const SHEET_NAME = "Locations"; // Make sure this matches your sheet name
+const SHEET_NAME = "Locations";
 
-// Converted DeliveryLocation to LocationData interface for easier integration
 type LocationData = DeliveryLocation;
 
-// Fallback location data in case of API failure
 const fallbackLocations: LocationData[] = [
   {
     state: "Texas",
@@ -73,7 +71,6 @@ const fallbackLocations: LocationData[] = [
   }
 ];
 
-// Extend the fallback locations for testing
 const extendedFallbackLocations: LocationData[] = [
   ...fallbackLocations,
   {
@@ -146,22 +143,26 @@ const LocationsIndex = () => {
         if (!Array.isArray(data) || data.length === 0) {
           console.error("No location data found or invalid data format");
           console.log("Using fallback location data instead");
-          processLocationData(extendedFallbackLocations);
+          processLocationData(deliveryLocations);
           return;
         }
         
-        // Transform the data to ensure all fields are properly formatted
-        const processedLocations: LocationData[] = data.map((row: any) => ({
-          city: row.city || "Unknown City",
-          state: row.state || "Unknown State",
-          product_name: row.product_name || "Gravel Delivery",
-          lat: parseFloat(row.lat) || 0,
-          lng: parseFloat(row.lng) || 0,
-          region: row.region || "",
-          slug: row.slug || `${row.city?.toLowerCase().replace(/\s+/g, '-')}-${row.state?.toLowerCase()}`,
-          title: row.title || `Gravel Delivery in ${row.city || 'Unknown City'}, ${row.state || 'Unknown State'}`,
-          description: row.description || `Fast and reliable gravel delivery services in ${row.city || 'Unknown City'}.`
-        }));
+        const processedLocations: DeliveryLocation[] = data.map((row: any) => {
+          const city = row.city || "Unknown City";
+          const state = row.state || "Unknown State";
+          
+          return {
+            city,
+            state,
+            product_name: row.product_name || "Gravel Delivery",
+            lat: parseFloat(row.lat) || 0,
+            lng: parseFloat(row.lng) || 0,
+            region: row.region || "",
+            slug: row.slug || generateLocationSlug(city, state),
+            title: row.title || `Gravel Delivery in ${city}, ${state}`,
+            description: row.description || `Fast and reliable gravel delivery services in ${city}.`
+          };
+        });
         
         console.log("Fetched locations:", processedLocations);
         processLocationData(processedLocations);
@@ -169,19 +170,17 @@ const LocationsIndex = () => {
       } catch (err) {
         console.error("Error fetching locations:", err);
         console.log("Using fallback location data instead");
-        processLocationData(extendedFallbackLocations);
+        processLocationData(deliveryLocations);
         setError('Error loading locations. Showing fallback data.');
       } finally {
         setLoading(false);
       }
     };
     
-    // Helper function to process location data
-    const processLocationData = (data: LocationData[]) => {
+    const processLocationData = (data: DeliveryLocation[]) => {
       setLocations(data);
       
-      // Group locations by state
-      const groupedByState: Record<string, LocationData[]> = {};
+      const groupedByState: Record<string, DeliveryLocation[]> = {};
       data.forEach((location: any) => {
         const state = location.state || 'Other';
         if (!groupedByState[state]) {
@@ -190,7 +189,6 @@ const LocationsIndex = () => {
         groupedByState[state].push(location);
       });
       
-      // Sort locations within each state by city name
       Object.keys(groupedByState).forEach(state => {
         groupedByState[state].sort((a, b) => a.city.localeCompare(b.city));
       });
@@ -202,7 +200,6 @@ const LocationsIndex = () => {
     fetchLocations();
   }, []);
   
-  // Filter locations based on search term
   const filteredStates = searchTerm 
     ? Object.keys(locationsByState).reduce((acc, state) => {
         const filteredLocations = locationsByState[state].filter(location => 

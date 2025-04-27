@@ -10,3 +10,10 @@ export interface DeliveryLocation {
   title?: string;
   description?: string;
 }
+
+/**
+ * Helper function to generate a consistent slug from city and state
+ */
+export function generateLocationSlug(city: string, state: string): string {
+  return `${city.toLowerCase().replace(/\s+/g, '-')}-${state.toLowerCase().substring(0, 2)}`;
+}
