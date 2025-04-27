@@ -1,4 +1,4 @@
-
+import { Product } from './productTypes';
 import { fetchSheetData } from "../utils/googleSheets";
 
 // The Google Sheet ID from your URL
@@ -93,9 +93,16 @@ export async function getProductById(id: number): Promise<Product | undefined> {
 /**
  * Get product by slug
  */
-export async function getProductBySlug(slug: string): Promise<Product | undefined> {
+export async function getProductBySlug(slug: string): Promise<Product> {
+  // This is a mock implementation. Replace with actual API call when ready
   const products = await getProducts();
-  return products.find(p => p.name.toLowerCase().replace(/\s+/g, '-') === slug);
+  const product = products.find(p => p.slug === slug);
+  
+  if (!product) {
+    throw new Error('Product not found');
+  }
+  
+  return product;
 }
 
 /**
