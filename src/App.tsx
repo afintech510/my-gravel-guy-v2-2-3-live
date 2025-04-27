@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -26,6 +25,7 @@ import Calculator from "./pages/Calculator";
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import TermsOfService from "./pages/legal/TermsOfService";
 import RefundPolicy from "./pages/legal/RefundPolicy";
+import DeliveryMap from "./pages/DeliveryMap";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +56,7 @@ const App = () => {
                   <Route path="/privacy" element={<PrivacyPolicy />} />
                   <Route path="/terms" element={<TermsOfService />} />
                   <Route path="/refund" element={<RefundPolicy />} />
+                  <Route path="/delivery-map" element={<DeliveryMap />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <Footer />
@@ -69,4 +70,3 @@ const App = () => {
 };
 
 export default App;
-
