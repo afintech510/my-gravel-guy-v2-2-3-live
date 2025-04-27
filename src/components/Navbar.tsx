@@ -1,3 +1,4 @@
+
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu, ShoppingCart, NotebookPen, Calculator, Store, ThumbsUp, Phone, House, MapPin } from "lucide-react";
@@ -25,8 +26,12 @@ const Navbar = () => {
     <nav className="border-b bg-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="font-bold text-xl">
-            My Gravel Guy
+          <Link to="/" className="flex items-center">
+            <img 
+              src="/lovable-uploads/6699f86e-637e-4e5c-a6af-130238db0a3f.png" 
+              alt="My Gravel Guy Logo" 
+              className="h-10 w-auto" 
+            />
           </Link>
 
           {/* Desktop Navigation */}
