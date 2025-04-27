@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { DeliveryLocation, deliveryLocations } from '@/data/deliveryLocations';
+import { toast } from '@/components/ui/sonner';
 
 const MAPBOX_TOKEN = 'pk.eyJ1IjoiZWFzdGVybmxtNTEiLCJhIjoiY205eXpwaXN5MW1kazJrbXc1emF2eHk2ZSJ9.DHFlpCAMAaVuL7jU4m9ugQ';
 
@@ -41,12 +42,12 @@ const DeliveryMap = () => {
         
         map.current.on('error', (e) => {
           console.error("Map error:", e);
-          toast.error("There was an error loading the map");
+          toast("There was an error loading the map");
         });
       }
     } catch (err) {
       console.error("Error initializing map:", err);
-      toast.error("Failed to initialize map");
+      toast("Failed to initialize map");
     }
 
     return () => {
