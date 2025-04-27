@@ -2,18 +2,19 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { getProductBySlug, getPriceAdjustmentForZipCode, applyZipCodeAdjustment } from '../services/productService';
 import { Product } from '../services/productTypes';
 import { useZipCode } from '../contexts/ZipCodeContext';
 import { useCart } from '../contexts/CartContext';
 import { Skeleton } from "@/components/ui/skeleton";
-import TonSelector from '@/components/products/TonSelector';
-import DeliveryDatePicker from '@/components/products/DeliveryDatePicker';
-import MiniCalculator from '@/components/products/MiniCalculator';
 import ZipCodeSearch from '@/components/ZipCodeSearch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from '@/components/ui/button';
+import ProductImages from '@/components/products/ProductImages';
+import ProductHeader from '@/components/products/ProductHeader';
+import ProductActions from '@/components/products/ProductActions';
+import ProductTabs from '@/components/products/ProductTabs';
+import MiniCalculator from '@/components/products/MiniCalculator';
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -24,8 +25,6 @@ const ProductDetail = () => {
   const [product, setProduct] = useState<Product | undefined>(undefined);
   const [adjustedPrice, setAdjustedPrice] = useState<number | undefined>(undefined);
   const [loading, setLoading] = useState(true);
-  const [selectedTons, setSelectedTons] = useState("3");
-  const [deliveryDate, setDeliveryDate] = useState<Date>();
 
   useEffect(() => {
     async function loadProduct() {
@@ -51,35 +50,6 @@ const ProductDetail = () => {
     
     loadProduct();
   }, [slug, zipCode]);
-
-  const productPrice = adjustedPrice !== undefined ? adjustedPrice : (product?.price || 0);
-  const totalPrice = productPrice * parseInt(selectedTons);
-
-  const handleAddToCart = () => {
-    if (!product || !deliveryDate) {
-      toast({
-        title: "Please select a delivery date",
-        description: "A delivery date is required to continue.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Create a new product object with the adjusted price and quantity
-    const productToAdd = {
-      ...product,
-      price: productPrice,
-      quantity: parseInt(selectedTons),
-      deliveryDate: deliveryDate
-    };
-
-    addToCart(productToAdd);
-    
-    toast({
-      title: "Added to cart",
-      description: `${product.name} has been added to your cart for delivery on ${deliveryDate.toLocaleDateString()}.`,
-    });
-  };
 
   if (loading) {
     return (
@@ -113,37 +83,27 @@ const ProductDetail = () => {
     );
   }
 
+  const handleAddToCart = (productToAdd: Product & { quantity: number, deliveryDate: Date }) => {
+    addToCart(productToAdd);
+    
+    toast({
+      title: "Added to cart",
+      description: `${product.name} has been added to your cart for delivery on ${productToAdd.deliveryDate.toLocaleDateString()}.`,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-white py-16 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          <div>
-            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-              <img 
-                src={product?.image} 
-                alt={product?.name} 
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
+          <ProductImages product={product} />
           
           <div className="space-y-8">
-            <div>
-              <h1 className="text-4xl font-bold mb-4">{product?.name}</h1>
-              <p className="text-2xl font-bold text-gray-900 mb-2">
-                ${productPrice.toFixed(2)}/ton
-              </p>
-              
-              {adjustedPrice !== undefined && product && adjustedPrice !== product.price && zipCode && (
-                <p className="text-sm mb-6">
-                  <span className={adjustedPrice > product.price ? "text-red-500" : "text-green-500"}>
-                    {adjustedPrice > product.price ? "+" : "-"}
-                    {Math.abs(((adjustedPrice - product.price) / product.price) * 100).toFixed(0)}%
-                  </span>
-                  {" "}price adjusted for ZIP {zipCode}
-                </p>
-              )}
-            </div>
+            <ProductHeader 
+              product={product}
+              adjustedPrice={adjustedPrice ?? product.price}
+              zipCode={zipCode}
+            />
 
             {!zipCode && (
               <Card className="bg-gray-50">
@@ -154,65 +114,20 @@ const ProductDetail = () => {
               </Card>
             )}
 
-            <TonSelector 
-              value={selectedTons} 
-              onValueChange={setSelectedTons} 
+            <ProductActions 
+              product={product}
+              adjustedPrice={adjustedPrice ?? product.price}
+              onAddToCart={handleAddToCart}
             />
-
-            <DeliveryDatePicker 
-              selectedDate={deliveryDate}
-              onDateSelect={setDeliveryDate}
-            />
-
-            <div className="space-y-4">
-              <p className="text-2xl font-bold">
-                Total: ${totalPrice.toFixed(2)}
-              </p>
-              <Button 
-                onClick={handleAddToCart} 
-                size="lg" 
-                className="w-full"
-              >
-                Add to Cart
-              </Button>
-            </div>
 
             <MiniCalculator
-              pricePerTon={productPrice}
-              onQuantityCalculated={(tons) => setSelectedTons(Math.round(tons).toString())}
+              pricePerTon={adjustedPrice ?? product.price}
+              onQuantityCalculated={(tons) => console.log(tons)}
             />
           </div>
         </div>
 
-        <div className="mt-16">
-          <Tabs defaultValue="details">
-            <TabsList className="w-full justify-start">
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="specifications">Specifications</TabsTrigger>
-              <TabsTrigger value="delivery">Delivery Info</TabsTrigger>
-              <TabsTrigger value="faq">FAQ</TabsTrigger>
-            </TabsList>
-            <TabsContent value="details" className="prose max-w-none">
-              <h3 className="text-xl font-semibold mb-4">Product Details</h3>
-              <p className="text-gray-600">{product.description}</p>
-            </TabsContent>
-            <TabsContent value="specifications">
-              <h3 className="text-xl font-semibold mb-4">Specifications</h3>
-            </TabsContent>
-            <TabsContent value="delivery">
-              <h3 className="text-xl font-semibold mb-4">Delivery Information</h3>
-              <ul className="list-disc list-inside space-y-2 text-gray-600">
-                <li>Minimum 72-hour lead time required for all deliveries</li>
-                <li>Delivery available Monday through Friday</li>
-                <li>Morning (8am-12pm) and afternoon (12pm-4pm) delivery windows</li>
-                <li>Someone must be present to accept delivery</li>
-              </ul>
-            </TabsContent>
-            <TabsContent value="faq">
-              <h3 className="text-xl font-semibold mb-4">Frequently Asked Questions</h3>
-            </TabsContent>
-          </Tabs>
-        </div>
+        <ProductTabs product={product} />
       </div>
     </div>
   );
