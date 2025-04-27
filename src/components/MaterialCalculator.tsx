@@ -1,8 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '../contexts/CartContext';
@@ -14,6 +12,7 @@ import { PriceDisplay } from './calculator/PriceDisplay';
 import AreaInputs from './calculator/AreaInputs';
 import CalculationDisplay from './calculator/CalculationDisplay';
 import { useCalculator } from '../hooks/useCalculator';
+import MaterialSelector from './calculator/MaterialSelector';
 
 const MaterialCalculator = () => {
   const [areas, setAreas] = useState<AreaInput[]>([{ length: 10, width: 10 }]);
@@ -85,26 +84,11 @@ const MaterialCalculator = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Select Material</label>
-              <Select
-                value={selectedProduct}
-                onValueChange={setSelectedProduct}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a material" />
-                </SelectTrigger>
-                <SelectContent>
-                  {products.map((product) => (
-                    <SelectItem key={product.id} value={product.id.toString()}>
-                      {product.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <MaterialSelector
+            products={products}
+            selectedProduct={selectedProduct}
+            onProductSelect={setSelectedProduct}
+          />
 
           <AreaInputs areas={areas} onAreaChange={setAreas} />
 
