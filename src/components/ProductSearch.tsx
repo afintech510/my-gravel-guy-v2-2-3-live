@@ -3,7 +3,7 @@ import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Search, Filter, SortAsc, SortDesc } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { ZipCodeSearch } from './ZipCodeSearch';
+import ZipCodeSearch from '@/components/ZipCodeSearch'; // Fixed import
 import {
   DropdownMenu,
   DropdownMenuContent,
