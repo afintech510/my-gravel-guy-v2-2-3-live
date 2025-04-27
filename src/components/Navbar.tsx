@@ -1,6 +1,7 @@
+
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, ShoppingCart, NotebookPen, Calculator, Store, ThumbsUp, Phone, House, Map } from "lucide-react";
+import { Menu, ShoppingCart, NotebookPen, Calculator, Store, ThumbsUp, Phone, House, Map, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart } from '../contexts/CartContext';
 import { useZipCode } from '../contexts/ZipCodeContext';
