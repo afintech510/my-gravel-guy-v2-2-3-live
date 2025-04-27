@@ -1,6 +1,6 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Product, getProducts } from "../services/productService";
+import { getProducts } from "../services/productService";
+import { Product } from "../services/productTypes";
 
 // Quiz step types
 export type QuizStep = 
