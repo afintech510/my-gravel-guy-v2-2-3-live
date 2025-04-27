@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -22,13 +21,12 @@ import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Quiz from "./pages/Quiz";
 import Calculator from "./pages/Calculator";
-import FAQ from "./pages/FAQ"; // Add this import
-
-// Add imports for legal pages
+import FAQ from "./pages/FAQ";
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import TermsOfService from "./pages/legal/TermsOfService";
 import RefundPolicy from "./pages/legal/RefundPolicy";
 import DeliveryMap from "./pages/DeliveryMap";
+import DeliveryInfo from "./pages/DeliveryInfo";
 
 const queryClient = new QueryClient();
 
@@ -61,7 +59,8 @@ const App = () => {
                   <Route path="/terms" element={<TermsOfService />} />
                   <Route path="/refund" element={<RefundPolicy />} />
                   <Route path="/delivery-map" element={<DeliveryMap />} />
-                  <Route path="/faq" element={<FAQ />} /> {/* Add this line */}
+                  <Route path="/faq" element={<FAQ />} />
+                  <Route path="/delivery" element={<DeliveryInfo />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <Footer />
