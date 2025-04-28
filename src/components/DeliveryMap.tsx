@@ -35,7 +35,6 @@ const DeliveryMap = () => {
           dragRotate: false, // Disable rotation
           touchPitch: false, // Disable pitch on mobile
           dragPan: false, // Disable single finger/mouse drag
-          touchZoomRotate: true // Enable two finger interactions
         });
         
         // Add navigation controls
@@ -48,8 +47,12 @@ const DeliveryMap = () => {
         map.current.dragPan.enable();
         map.current.touchZoomRotate.enable({
           around: 'center',
-          pinchRotate: false // Disable rotation via pinch
         });
+        
+        // Disable rotation via pinch using the correct property
+        if (map.current.touchZoomRotate) {
+          map.current.touchZoomRotate.disableRotation();
+        }
         
         map.current.on('load', () => {
           setMapInitialized(true);
@@ -155,4 +158,3 @@ const DeliveryMap = () => {
 };
 
 export default DeliveryMap;
-
