@@ -1,4 +1,3 @@
-
 import { DeliveryLocation } from '@/types/location.types';
 
 export const southeastLocations: DeliveryLocation[] = [
@@ -29,5 +28,26 @@ export const southeastLocations: DeliveryLocation[] = [
     product_name: "Bayou Gravel",
     lat: 29.9511,
     lng: -90.0715
+  },
+  {
+    city: "Charlotte",
+    state: "North Carolina",
+    product_name: "Carolina Crush",
+    lat: 35.2271,
+    lng: -80.8431
+  },
+  {
+    city: "Birmingham",
+    state: "Alabama",
+    product_name: "Southern Stone",
+    lat: 33.5207,
+    lng: -86.8025
+  },
+  {
+    city: "Jacksonville",
+    state: "Florida",
+    product_name: "Beach Gravel",
+    lat: 30.3322,
+    lng: -81.6557
   }
 ];

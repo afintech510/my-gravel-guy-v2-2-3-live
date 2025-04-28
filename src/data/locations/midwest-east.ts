@@ -1,4 +1,3 @@
-
 import { DeliveryLocation, generateLocationSlug } from '@/types/location.types';
 
 export const midwestEastLocations: DeliveryLocation[] = [
@@ -31,5 +30,26 @@ export const midwestEastLocations: DeliveryLocation[] = [
     slug: "boston-ma",
     title: "Gravel Delivery in Boston, MA",
     description: "Quality gravel and stone delivery throughout Boston and the greater Massachusetts area."
+  },
+  {
+    city: "Detroit",
+    state: "Michigan",
+    product_name: "Lake Effect Stone",
+    lat: 42.3314,
+    lng: -83.0458
+  },
+  {
+    city: "Indianapolis",
+    state: "Indiana",
+    product_name: "Racing Gravel",
+    lat: 39.7684,
+    lng: -86.1581
+  },
+  {
+    city: "Columbus",
+    state: "Ohio",
+    product_name: "Buckeye Stone",
+    lat: 39.9612,
+    lng: -82.9988
   }
 ];

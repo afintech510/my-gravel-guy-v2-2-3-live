@@ -1,4 +1,3 @@
-
 import { DeliveryLocation } from '@/types/location.types';
 
 export const texasLocations: DeliveryLocation[] = [
@@ -29,5 +28,26 @@ export const texasLocations: DeliveryLocation[] = [
     product_name: "Crushed Stone",
     lat: 29.4241,
     lng: -98.4936
+  },
+  {
+    city: "Fort Worth",
+    state: "Texas",
+    product_name: "Decorative Gravel",
+    lat: 32.7555,
+    lng: -97.3308
+  },
+  {
+    city: "El Paso",
+    state: "Texas",
+    product_name: "Desert Rock",
+    lat: 31.7619,
+    lng: -106.4850
+  },
+  {
+    city: "Arlington",
+    state: "Texas",
+    product_name: "Recycled Concrete",
+    lat: 32.7357,
+    lng: -97.1081
   }
 ];
