@@ -5,6 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
+import { Send } from 'lucide-react';
 import { CalculatorFormValues, calculatorFormSchema } from './types';
 
 interface CalculatorFormProps {
@@ -114,6 +116,15 @@ export const CalculatorForm = ({ onSubmit, onZipCodeChange }: CalculatorFormProp
             </FormItem>
           )}
         />
+
+        <Button 
+          type="submit" 
+          className="w-full"
+          disabled={!form.formState.isValid}
+        >
+          <Send className="w-4 h-4 mr-2" />
+          Get Discounted Price
+        </Button>
       </form>
     </Form>
   );
