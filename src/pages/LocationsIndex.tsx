@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -13,7 +14,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DeliveryLocation, generateLocationSlug } from '@/types/location.types';
 import { deliveryLocations } from '@/data/locations';
 
-const SHEET_ID = "1f-9eFHdoSETcV79k1lkEFTNSZ9ZXCDJqPbRWquiZByI";
+// Make sure we use the same Sheet ID as LocationPage.tsx for consistency
+const SHEET_ID = "1g6vVui0lG54_iFX9CLJoWAHUh-UePQygm15Kq7z3noI";
 const SHEET_NAME = "Locations";
 
 type LocationData = DeliveryLocation;
@@ -151,6 +153,11 @@ const LocationsIndex = () => {
           const city = row.city || "Unknown City";
           const state = row.state || "Unknown State";
           
+          // IMPORTANT: Prioritize the slug from the Google Sheet if available
+          const slug = row.slug || generateLocationSlug(city, state);
+          
+          console.log(`Processing location: ${city}, ${state} with slug: ${slug}`);
+          
           return {
             city,
             state,
@@ -158,7 +165,7 @@ const LocationsIndex = () => {
             lat: parseFloat(row.lat) || 0,
             lng: parseFloat(row.lng) || 0,
             region: row.region || "",
-            slug: row.slug || generateLocationSlug(city, state),
+            slug: slug,
             title: row.title || `Gravel Delivery in ${city}, ${state}`,
             description: row.description || `Fast and reliable gravel delivery services in ${city}.`
           };
@@ -179,10 +186,14 @@ const LocationsIndex = () => {
     
     const processLocationData = (data: DeliveryLocation[]) => {
       const processedLocations = data.map(location => {
+        // If slug is not already defined, generate one
         if (!location.slug) {
-          const stateAbbr = location.state.substring(0, 2).toUpperCase();
+          // Use two-letter state abbreviation
+          const stateAbbr = location.state.length === 2 ? location.state : location.state.substring(0, 2).toUpperCase();
           location.slug = generateLocationSlug(location.city, stateAbbr);
         }
+        
+        console.log(`Location processed: ${location.city}, ${location.state}, slug: ${location.slug}`);
         return location;
       });
       
@@ -312,6 +323,7 @@ const LocationsIndex = () => {
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredStates[state].map((location, index) => {
+                          // Ensure we use the location's slug directly when available
                           const locationSlug = location.slug || generateLocationSlug(location.city, location.state.substring(0, 2));
                           
                           return (
@@ -320,7 +332,7 @@ const LocationsIndex = () => {
                               to={`/locations/${locationSlug}`}
                               className="block transition-transform hover:scale-[1.02]"
                             >
-                              <Card className="h-full hover:shadow-md transition-shadow">
+                              <Card className="h-full hover:shadow-md transition-shadow border border-transparent hover:border-primary/20">
                                 <CardContent className="p-6 h-full flex flex-col">
                                   <div className="flex items-start justify-between">
                                     <div>
@@ -332,8 +344,8 @@ const LocationsIndex = () => {
                                         <span>{location.state}</span>
                                       </div>
                                     </div>
-                                    <div className="rounded-full bg-gray-100 p-1 hover:bg-gray-200 transition-colors">
-                                      <ArrowRight className="h-5 w-5" />
+                                    <div className="rounded-full bg-gray-100 p-1 hover:bg-primary/10 transition-colors">
+                                      <ArrowRight className="h-5 w-5 text-primary" />
                                     </div>
                                   </div>
                                   <p className="text-sm line-clamp-3">

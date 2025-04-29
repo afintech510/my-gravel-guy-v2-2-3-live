@@ -4,7 +4,7 @@ import { DeliveryLocation, generateLocationSlug } from '@/types/location.types';
 export const southeastLocations: DeliveryLocation[] = [
   {
     city: "Miami",
-    state: "Florida",
+    state: "FL",
     product_name: "Beach Pebbles",
     lat: 25.7617,
     lng: -80.1918,
@@ -12,7 +12,7 @@ export const southeastLocations: DeliveryLocation[] = [
   },
   {
     city: "Atlanta",
-    state: "Georgia",
+    state: "GA",
     product_name: "Red Clay Gravel",
     lat: 33.7490,
     lng: -84.3880,
@@ -20,7 +20,7 @@ export const southeastLocations: DeliveryLocation[] = [
   },
   {
     city: "Nashville",
-    state: "Tennessee",
+    state: "TN",
     product_name: "Limestone Chips",
     lat: 36.1627,
     lng: -86.7816,
@@ -28,7 +28,7 @@ export const southeastLocations: DeliveryLocation[] = [
   },
   {
     city: "New Orleans",
-    state: "Louisiana",
+    state: "LA",
     product_name: "Bayou Gravel",
     lat: 29.9511,
     lng: -90.0715,
@@ -36,7 +36,7 @@ export const southeastLocations: DeliveryLocation[] = [
   },
   {
     city: "Charlotte",
-    state: "North Carolina",
+    state: "NC",
     product_name: "Carolina Crush",
     lat: 35.2271,
     lng: -80.8431,
@@ -44,7 +44,7 @@ export const southeastLocations: DeliveryLocation[] = [
   },
   {
     city: "Birmingham",
-    state: "Alabama",
+    state: "AL",
     product_name: "Southern Stone",
     lat: 33.5207,
     lng: -86.8025,
@@ -52,7 +52,7 @@ export const southeastLocations: DeliveryLocation[] = [
   },
   {
     city: "Jacksonville",
-    state: "Florida",
+    state: "FL",
     product_name: "Beach Gravel",
     lat: 30.3322,
     lng: -81.6557,

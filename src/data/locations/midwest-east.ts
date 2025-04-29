@@ -1,9 +1,10 @@
+
 import { DeliveryLocation, generateLocationSlug } from '@/types/location.types';
 
 export const midwestEastLocations: DeliveryLocation[] = [
   {
     city: "Chicago",
-    state: "Illinois",
+    state: "IL",
     product_name: "Granite Gravel",
     lat: 41.8781,
     lng: -87.6298,
@@ -13,7 +14,7 @@ export const midwestEastLocations: DeliveryLocation[] = [
   },
   {
     city: "New York",
-    state: "New York",
+    state: "NY",
     product_name: "Premium Gravel Mix",
     lat: 40.7128,
     lng: -74.0060,
@@ -23,7 +24,7 @@ export const midwestEastLocations: DeliveryLocation[] = [
   },
   {
     city: "Boston",
-    state: "Massachusetts",
+    state: "MA",
     product_name: "New England Stone",
     lat: 42.3601,
     lng: -71.0589,
@@ -33,23 +34,26 @@ export const midwestEastLocations: DeliveryLocation[] = [
   },
   {
     city: "Detroit",
-    state: "Michigan",
+    state: "MI",
     product_name: "Lake Effect Stone",
     lat: 42.3314,
-    lng: -83.0458
+    lng: -83.0458,
+    slug: generateLocationSlug("Detroit", "MI")
   },
   {
     city: "Indianapolis",
-    state: "Indiana",
+    state: "IN",
     product_name: "Racing Gravel",
     lat: 39.7684,
-    lng: -86.1581
+    lng: -86.1581,
+    slug: generateLocationSlug("Indianapolis", "IN")
   },
   {
     city: "Columbus",
-    state: "Ohio",
+    state: "OH",
     product_name: "Buckeye Stone",
     lat: 39.9612,
-    lng: -82.9988
+    lng: -82.9988,
+    slug: generateLocationSlug("Columbus", "OH")
   }
 ];
