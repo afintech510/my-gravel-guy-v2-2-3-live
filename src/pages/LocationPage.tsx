@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -28,8 +29,8 @@ type LocationData = {
   faqs?: string;
 };
 
-// Google Sheet ID and name - must match LocationsIndex.tsx
-const SHEET_ID = "1g6vVui0lG54_iFX9CLJoWAHUh-UePQygm15Kq7z3noI";
+// Updated Sheet ID to match the correct one from LocationsIndex.tsx
+const SHEET_ID = "1f-9eFHdoSETcV79k1lkEFTNSZ9ZXCDJqPbRWquiZByI";
 const SHEET_NAME = "Locations";
 
 // Fallback location data in case the API is not available
