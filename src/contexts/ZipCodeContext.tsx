@@ -1,12 +1,17 @@
 
-import React, { createContext, useContext, useState } from 'react';
-import { ZipCodeData } from '../services/productService';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { ZipCodeData } from '../services/productTypes';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ZipCodeContextType {
   zipCode: string | null;
   zipCodeData: ZipCodeData | null;
   setZipCode: (zipCode: string | null, data?: ZipCodeData | null) => void;
   clearZipCode: () => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  isSearchLocked: boolean;
+  setIsSearchLocked: (locked: boolean) => void;
 }
 
 const ZipCodeContext = createContext<ZipCodeContextType | undefined>(undefined);
@@ -33,6 +38,40 @@ export function ZipCodeProvider({ children }: { children: React.ReactNode }) {
   
   const [zipCode, setZipCodeState] = useState<string | null>(initialZipCode);
   const [zipCodeData, setZipCodeData] = useState<ZipCodeData | null>(initialZipCodeData);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isSearchLocked, setIsSearchLocked] = useState<boolean>(!!initialZipCode);
+
+  // Auto-detect user's location on initial load if no zipCode is set
+  useEffect(() => {
+    if (!zipCode) {
+      const detectLocation = async () => {
+        try {
+          const response = await fetch('https://ipapi.co/json/');
+          const data = await response.json();
+          
+          if (data.postal && data.city && data.region) {
+            console.log("Auto-detected location:", data);
+            
+            // Check if the detected zip code is in our service area
+            const { data: zipData } = await supabase
+              .from('service_zip_codes')
+              .select('*')
+              .eq('zip', data.postal)
+              .single();
+              
+            if (zipData) {
+              setZipCode(data.postal, zipData);
+              setIsSearchLocked(true);
+            }
+          }
+        } catch (error) {
+          console.error("Error detecting location:", error);
+        }
+      };
+      
+      detectLocation();
+    }
+  }, []);
 
   const setZipCode = (newZipCode: string | null, data?: ZipCodeData | null) => {
     setZipCodeState(newZipCode);
@@ -50,16 +89,61 @@ export function ZipCodeProvider({ children }: { children: React.ReactNode }) {
     // Save to localStorage for persistence
     if (newZipCode) {
       localStorage.setItem('userZipCode', newZipCode);
+      // When setting a zipCode, also lock the search
+      setIsSearchLocked(true);
     } else {
       localStorage.removeItem('userZipCode');
+      setIsSearchLocked(false);
+    }
+    
+    // Save search to location_search table
+    if (newZipCode) {
+      saveLocationSearch({
+        search_text: newZipCode,
+        zipcode: newZipCode,
+        city: data?.city || null,
+        state: data?.state_id || null,
+      });
     }
   };
   
   const clearZipCode = () => {
     setZipCodeState(null);
     setZipCodeData(null);
+    setIsSearchLocked(false);
     localStorage.removeItem('userZipCode');
     localStorage.removeItem('userZipCodeData');
+  };
+
+  // Function to save location search to the database
+  const saveLocationSearch = async (searchData: {
+    search_text: string;
+    zipcode?: string | null;
+    city?: string | null;
+    state?: string | null;
+  }) => {
+    try {
+      // Get IP address using ipify API
+      const ipResponse = await fetch('https://api.ipify.org?format=json');
+      const ipData = await ipResponse.json();
+      const ip_address = ipData.ip;
+      
+      // Get user agent
+      const user_agent = navigator.userAgent;
+      
+      // Insert into location_search table
+      await supabase.from('location_search').insert([{
+        search_text: searchData.search_text,
+        ip_address,
+        user_agent,
+        zipcode: searchData.zipcode || null,
+        city: searchData.city || null,
+        state: searchData.state || null,
+      }]);
+      
+    } catch (error) {
+      console.error("Error saving location search:", error);
+    }
   };
 
   return (
@@ -68,7 +152,11 @@ export function ZipCodeProvider({ children }: { children: React.ReactNode }) {
         zipCode, 
         zipCodeData, 
         setZipCode, 
-        clearZipCode 
+        clearZipCode,
+        searchQuery,
+        setSearchQuery,
+        isSearchLocked,
+        setIsSearchLocked
       }}
     >
       {children}
