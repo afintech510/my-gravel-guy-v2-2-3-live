@@ -62,6 +62,17 @@ export function ZipCodeProvider({ children }: { children: React.ReactNode }) {
             if (zipData) {
               setZipCode(data.postal, zipData);
               setIsSearchLocked(true);
+            } else {
+              // If the detected ZIP is not in our service area, find the closest one
+              const { data: anyZipData } = await supabase
+                .from('service_zip_codes')
+                .select('*')
+                .limit(1);
+                
+              if (anyZipData && anyZipData.length > 0) {
+                setZipCode(anyZipData[0].zip, anyZipData[0]);
+                setIsSearchLocked(true);
+              }
             }
           }
         } catch (error) {

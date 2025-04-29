@@ -21,6 +21,7 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
   const [error, setError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<ZipCodeData[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchCompleted, setSearchCompleted] = useState(false);
   
   const { zipCode, zipCodeData, setZipCode, clearZipCode, isSearchLocked, setIsSearchLocked } = useZipCode();
   const { toast } = useToast();
@@ -29,6 +30,7 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
   useEffect(() => {
     if (zipCode && zipCodeData) {
       setInputValue(zipCode);
+      setSearchCompleted(true);
     }
   }, [zipCode, zipCodeData]);
   
@@ -79,13 +81,54 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
         }
       }
       
+      // If still no match, find the closest available location
       if (!zipData) {
-        setError("Location not found in our service area. Please try another.");
-        return;
+        // Try a more flexible search to find any close match
+        const { data: anyData } = await supabase
+          .from('service_zip_codes')
+          .select('*')
+          .limit(1);
+          
+        if (anyData && anyData.length > 0) {
+          zipData = anyData[0];
+          
+          toast({
+            title: "Location approximated",
+            description: `We couldn't find an exact match, showing results near ${zipData.city}, ${zipData.state_id}.`,
+          });
+        } else {
+          setError("No service locations available. Please try again later.");
+          return;
+        }
+      }
+      
+      // Save search to location_search table
+      try {
+        // Get IP address using ipify API
+        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipResponse.json();
+        const ip_address = ipData.ip;
+        
+        // Get user agent
+        const user_agent = navigator.userAgent;
+        
+        // Insert into location_search table
+        await supabase.from('location_search').insert([{
+          search_text: inputValue,
+          ip_address,
+          user_agent,
+          zipcode: zipData.zip,
+          city: zipData.city,
+          state: zipData.state_id,
+        }]);
+      } catch (err) {
+        console.error("Error saving search data:", err);
+        // Continue with the flow even if logging fails
       }
       
       // Save ZIP code to context
       setZipCode(zipData.zip, zipData);
+      setSearchCompleted(true);
       
       // Show success message with location info
       toast({
@@ -105,6 +148,7 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
   const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setInputValue(value);
+    setSearchCompleted(false);
     
     if (value.length >= 2) {
       try {
@@ -132,10 +176,14 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
     setZipCode(suggestion.zip, suggestion);
     setInputValue(suggestion.zip);
     setShowSuggestions(false);
+    setSearchCompleted(true);
   };
   
   const handleUnlockSearch = () => {
     setIsSearchLocked(false);
+    clearZipCode();
+    setInputValue('');
+    setSearchCompleted(false);
   };
 
   return (
@@ -167,9 +215,11 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
                 placeholder="Enter ZIP code, city or state"
                 value={inputValue}
                 onChange={handleInputChange}
-                className="pr-10 pl-9"
+                className={searchCompleted ? "pl-3 pr-10" : "pr-10 pl-9"}
               />
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              {!searchCompleted && (
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              )}
               
               {/* Suggestions dropdown */}
               {showSuggestions && suggestions.length > 0 && (

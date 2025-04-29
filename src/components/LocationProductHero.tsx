@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useZipCode } from '../contexts/ZipCodeContext';
 import { getProducts, getPriceAdjustmentForZipCode, applyZipCodeAdjustment } from '../services/productService';
@@ -73,14 +74,19 @@ const LocationProductHero = () => {
     });
   };
   
+  // Always show the component, even if there's no exact match
   if (!zipCode || !zipCodeData) return null;
+  
+  const locationText = zipCodeData ? 
+    `${zipCodeData.city}, ${zipCodeData.state_id}` : 
+    "Your Location";
   
   return (
     <div className="bg-gradient-to-b from-primary/5 to-transparent py-6 px-4 rounded-lg border">
       <div className="flex items-center mb-4">
         <MapPin className="h-5 w-5 text-primary mr-2" />
         <h2 className="text-xl font-semibold">
-          Products Available in {zipCodeData.city}, {zipCodeData.state_id}
+          Products Available in {locationText}
         </h2>
       </div>
       
