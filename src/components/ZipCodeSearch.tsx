@@ -55,7 +55,7 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
         .from('service_zip_codes')
         .select('*')
         .eq('zip', inputValue)
-        .single();
+        .maybeSingle();
       
       // If no zip match, try city
       if (!zipData) {
@@ -81,9 +81,9 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
         }
       }
       
-      // If still no match, find the closest available location
+      // If still no match, find any available location
       if (!zipData) {
-        // Try a more flexible search to find any close match
+        // Try a more flexible search to find any location
         const { data: anyData } = await supabase
           .from('service_zip_codes')
           .select('*')
@@ -94,10 +94,11 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
           
           toast({
             title: "Location approximated",
-            description: `We couldn't find an exact match, showing results near ${zipData.city}, ${zipData.state_id}.`,
+            description: `No exact match found. Showing results near ${anyData[0].city}, ${anyData[0].state_id}.`,
           });
         } else {
-          setError("No service locations available. Please try again later.");
+          setError("Please try a different location.");
+          setLoading(false);
           return;
         }
       }
@@ -129,6 +130,7 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
       // Save ZIP code to context
       setZipCode(zipData.zip, zipData);
       setSearchCompleted(true);
+      setInputValue(zipData.zip); // Update the input with the found ZIP code
       
       // Show success message with location info
       toast({
@@ -149,6 +151,7 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
     const value = e.target.value;
     setInputValue(value);
     setSearchCompleted(false);
+    setError(null);
     
     if (value.length >= 2) {
       try {
@@ -159,9 +162,12 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
           .or(`zip.ilike.${value}%,city.ilike.${value}%,state_id.ilike.${value}%,state_name.ilike.${value}%`)
           .limit(5);
           
-        if (data) {
+        if (data && data.length > 0) {
           setSuggestions(data);
           setShowSuggestions(true);
+        } else {
+          setSuggestions([]);
+          setShowSuggestions(false);
         }
       } catch (err) {
         console.error("Error fetching suggestions:", err);
@@ -177,6 +183,7 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
     setInputValue(suggestion.zip);
     setShowSuggestions(false);
     setSearchCompleted(true);
+    setError(null);
   };
   
   const handleUnlockSearch = () => {
@@ -184,6 +191,7 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
     clearZipCode();
     setInputValue('');
     setSearchCompleted(false);
+    setError(null);
   };
 
   return (
@@ -215,7 +223,7 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
                 placeholder="Enter ZIP code, city or state"
                 value={inputValue}
                 onChange={handleInputChange}
-                className={searchCompleted ? "pl-3 pr-10" : "pr-10 pl-9"}
+                className={searchCompleted ? "pl-3" : "pl-9"}
               />
               {!searchCompleted && (
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -242,7 +250,11 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
                 </div>
               )}
               
-              {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+              {error && (
+                <div className="text-red-500 text-xs mt-1 absolute bottom-[-20px] left-0 w-full">
+                  {error}
+                </div>
+              )}
             </div>
             <Button type="submit" disabled={loading} className={variant === 'minimal' ? 'px-3' : ''}>
               {loading ? (
@@ -258,10 +270,7 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
                   {variant === 'minimal' ? (
                     <Search className="h-4 w-4" />
                   ) : (
-                    <>
-                      <Search className="h-4 w-4 mr-1" />
-                      {zipCode ? 'Update Location' : 'Check Availability'}
-                    </>
+                    'Check Availability'
                   )}
                 </>
               )}

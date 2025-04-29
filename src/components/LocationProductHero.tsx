@@ -20,13 +20,15 @@ const LocationProductHero = () => {
   const [otherProducts, setOtherProducts] = useState<Product[]>([]);
   
   useEffect(() => {
-    if (!zipCode) return;
-    
     const fetchProducts = async () => {
       setLoading(true);
       try {
         const allProducts = await getProducts();
-        const adjustment = await getPriceAdjustmentForZipCode(zipCode);
+        let adjustment = 0;
+        
+        if (zipCode) {
+          adjustment = await getPriceAdjustmentForZipCode(zipCode);
+        }
         
         // Apply price adjustments based on ZIP code
         const productsWithAdjustedPrices = allProducts.map(product => ({
@@ -35,7 +37,6 @@ const LocationProductHero = () => {
         }));
         
         // Determine regional products based on ZIP code region
-        // This is a simplified logic - in reality you'd have more specific regional matching
         const region = zipCodeData?.state_name || '';
         
         // For demo purposes - consider products as regional if they match the state or have specific keywords
@@ -74,19 +75,20 @@ const LocationProductHero = () => {
     });
   };
   
-  // Always show the component, even if there's no exact match
-  if (!zipCode || !zipCodeData) return null;
-  
+  // Always show the component with appropriate messaging if no location is set
   const locationText = zipCodeData ? 
     `${zipCodeData.city}, ${zipCodeData.state_id}` : 
-    "Your Location";
+    "Your Area";
+  
+  // If products are available but no location is set, use "Near You" wording
+  const titlePrefix = zipCodeData ? "Products Available in" : "Products Available Near";
   
   return (
     <div className="bg-gradient-to-b from-primary/5 to-transparent py-6 px-4 rounded-lg border">
       <div className="flex items-center mb-4">
         <MapPin className="h-5 w-5 text-primary mr-2" />
         <h2 className="text-xl font-semibold">
-          Products Available in {locationText}
+          {titlePrefix} {locationText}
         </h2>
       </div>
       

@@ -53,30 +53,53 @@ export function ZipCodeProvider({ children }: { children: React.ReactNode }) {
             console.log("Auto-detected location:", data);
             
             // Check if the detected zip code is in our service area
-            const { data: zipData } = await supabase
+            const { data: zipData, error } = await supabase
               .from('service_zip_codes')
               .select('*')
               .eq('zip', data.postal)
-              .single();
+              .maybeSingle();
               
             if (zipData) {
+              // Found exact match for ZIP code
               setZipCode(data.postal, zipData);
               setIsSearchLocked(true);
             } else {
-              // If the detected ZIP is not in our service area, find the closest one
-              const { data: anyZipData } = await supabase
+              // Try to find by city name
+              const { data: cityData, error: cityError } = await supabase
                 .from('service_zip_codes')
                 .select('*')
+                .ilike('city', `${data.city}%`)
                 .limit(1);
                 
-              if (anyZipData && anyZipData.length > 0) {
-                setZipCode(anyZipData[0].zip, anyZipData[0]);
+              if (cityData && cityData.length > 0) {
+                setZipCode(cityData[0].zip, cityData[0]);
                 setIsSearchLocked(true);
+              } else {
+                // If no matches, just get any service location as fallback
+                const { data: anyZipData, error: anyError } = await supabase
+                  .from('service_zip_codes')
+                  .select('*')
+                  .limit(1);
+                  
+                if (anyZipData && anyZipData.length > 0) {
+                  setZipCode(anyZipData[0].zip, anyZipData[0]);
+                  setIsSearchLocked(true);
+                }
               }
             }
           }
         } catch (error) {
           console.error("Error detecting location:", error);
+          // Fallback to any available service location
+          const { data: anyZipData } = await supabase
+            .from('service_zip_codes')
+            .select('*')
+            .limit(1);
+            
+          if (anyZipData && anyZipData.length > 0) {
+            setZipCode(anyZipData[0].zip, anyZipData[0]);
+            setIsSearchLocked(true);
+          }
         }
       };
       
