@@ -53,6 +53,7 @@ function parseCSV(csv: string): Record<string, string>[] {
   
   try {
     const headers = parseCSVLine(lines[0]);
+    console.log('CSV Headers:', headers);
     
     return lines.slice(1).map((line, index) => {
       if (!line.trim()) {
@@ -64,6 +65,7 @@ function parseCSV(csv: string): Record<string, string>[] {
       const obj: Record<string, string> = {};
       
       headers.forEach((header, i) => {
+        // Make sure to handle both empty values and trim all values
         obj[header.trim()] = values[i] ? values[i].trim() : '';
       });
       
