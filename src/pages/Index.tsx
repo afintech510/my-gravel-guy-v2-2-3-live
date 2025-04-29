@@ -42,6 +42,9 @@ const Index = () => {
             <Link to="/quiz">
               <Button variant="outline" size="lg">Take Our Material Quiz</Button>
             </Link>
+            <Link to="/blog">
+              <Button variant="secondary" size="lg">Read Our Blog</Button>
+            </Link>
           </div>
         </div>
       </section>
