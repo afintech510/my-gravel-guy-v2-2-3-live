@@ -13,14 +13,117 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DeliveryLocation, generateLocationSlug } from '@/types/location.types';
 import { deliveryLocations } from '@/data/locations';
 
-// Updated to use the Products sheet ID which is known to work
 const SHEET_ID = "1f-9eFHdoSETcV79k1lkEFTNSZ9ZXCDJqPbRWquiZByI";
 const SHEET_NAME = "Locations";
 
 type LocationData = DeliveryLocation;
 
-// Fallback locations from our static data files
-const fallbackLocations = deliveryLocations;
+const fallbackLocations: LocationData[] = [
+  {
+    state: "Texas",
+    city: "Austin",
+    region: "Central Texas",
+    slug: "austin-tx",
+    title: "Gravel Delivery in Austin, TX",
+    description: "Fast gravel and material delivery throughout Austin and surrounding areas. Same day and next day options available.",
+    lat: 30.2672,
+    lng: -97.7431
+  },
+  {
+    state: "Texas",
+    city: "Dallas",
+    region: "North Texas",
+    slug: "dallas-tx",
+    title: "Gravel Delivery in Dallas, TX",
+    description: "Premium gravel, sand, and dirt delivery to all Dallas neighborhoods with competitive pricing.",
+    lat: 32.7767,
+    lng: -96.7970
+  },
+  {
+    state: "California",
+    city: "Los Angeles",
+    region: "Southern California",
+    slug: "los-angeles-ca",
+    title: "Gravel Delivery in Los Angeles, CA",
+    description: "Professional gravel delivery across Los Angeles county, serving residential and commercial projects.",
+    lat: 34.0522,
+    lng: -118.2437
+  },
+  {
+    state: "California",
+    city: "San Francisco",
+    region: "Northern California",
+    slug: "san-francisco-ca",
+    title: "Gravel Delivery in San Francisco, CA",
+    description: "Reliable material delivery solutions for San Francisco and the Bay Area. Bulk discounts available.",
+    lat: 37.7749,
+    lng: -122.4194
+  },
+  {
+    state: "Florida",
+    city: "Miami",
+    region: "South Florida",
+    slug: "miami-fl",
+    title: "Gravel Delivery in Miami, FL",
+    description: "Fast and affordable gravel delivery services throughout Miami-Dade county. Perfect for landscaping projects.",
+    lat: 25.7617,
+    lng: -80.1918
+  }
+];
+
+const extendedFallbackLocations: LocationData[] = [
+  ...fallbackLocations,
+  {
+    state: "Florida",
+    city: "Orlando",
+    region: "Central Florida",
+    slug: "orlando-fl",
+    title: "Gravel Delivery in Orlando, FL",
+    description: "Quality gravel delivery service in Orlando area. Ideal for landscaping and construction projects.",
+    lat: 28.5383,
+    lng: -81.3792
+  },
+  {
+    state: "Texas",
+    city: "Houston",
+    region: "Southeast Texas",
+    slug: "houston-tx",
+    title: "Gravel Delivery in Houston, TX",
+    description: "Reliable delivery of gravel and aggregates across Houston and surrounding suburbs.",
+    lat: 29.7604,
+    lng: -95.3698
+  },
+  {
+    state: "New York",
+    city: "New York",
+    region: "New York Metropolitan Area",
+    slug: "new-york-ny",
+    title: "Gravel Delivery in New York, NY",
+    description: "Professional gravel delivery services across all New York City boroughs and surrounding areas.",
+    lat: 40.7128,
+    lng: -74.0060
+  },
+  {
+    state: "Illinois",
+    city: "Chicago",
+    region: "Northern Illinois",
+    slug: "chicago-il",
+    title: "Gravel Delivery in Chicago, IL",
+    description: "Fast and reliable gravel delivery throughout Chicago and suburbs. Competitive rates for all project sizes.",
+    lat: 41.8781,
+    lng: -87.6298
+  },
+  {
+    state: "Arizona",
+    city: "Phoenix",
+    region: "Central Arizona",
+    slug: "phoenix-az",
+    title: "Gravel Delivery in Phoenix, AZ",
+    description: "Desert landscaping materials and gravel delivered across the Phoenix metropolitan area.",
+    lat: 33.4484,
+    lng: -112.0740
+  }
+];
 
 const LocationsIndex = () => {
   const [locations, setLocations] = useState<LocationData[]>([]);
@@ -40,23 +143,13 @@ const LocationsIndex = () => {
         if (!Array.isArray(data) || data.length === 0) {
           console.error("No location data found or invalid data format");
           console.log("Using fallback location data instead");
-          processLocationData(fallbackLocations);
+          processLocationData(deliveryLocations);
           return;
         }
         
         const processedLocations: DeliveryLocation[] = data.map((row: any) => {
           const city = row.city || "Unknown City";
           const state = row.state || "Unknown State";
-          
-          // IMPORTANT: Always use the slug from the Google Sheet if available
-          // Otherwise generate one as a fallback
-          let slug = row.slug;
-          if (!slug || slug.trim() === '') {
-            slug = generateLocationSlug(city, state);
-            console.log(`No slug found in sheet for ${city}, ${state}. Generated: ${slug}`);
-          } else {
-            console.log(`Using sheet slug for ${city}, ${state}: ${slug}`);
-          }
           
           return {
             city,
@@ -65,24 +158,20 @@ const LocationsIndex = () => {
             lat: parseFloat(row.lat) || 0,
             lng: parseFloat(row.lng) || 0,
             region: row.region || "",
-            slug: slug,
+            slug: row.slug || generateLocationSlug(city, state),
             title: row.title || `Gravel Delivery in ${city}, ${state}`,
-            description: row.description || `Fast and reliable gravel delivery services in ${city}.`,
-            meta_description: row.meta_description || `Professional gravel delivery in ${city}, ${state} with competitive pricing and reliable service.`,
-            local_info: row.local_info || `${city} homeowners and contractors trust our premium gravel delivery service for landscaping and construction projects.`,
-            delivery_info: row.delivery_info || `We deliver throughout the ${city} area 7 days a week. Most orders can be delivered same-day when ordered before noon, or next-day for orders placed later.`,
-            service_area: row.service_area || `${city} and surrounding areas`
+            description: row.description || `Fast and reliable gravel delivery services in ${city}.`
           };
         });
         
-        console.log("Fetched locations from Google Sheet:", processedLocations.length);
+        console.log("Fetched locations:", processedLocations);
         processLocationData(processedLocations);
         
       } catch (err) {
         console.error("Error fetching locations:", err);
         console.log("Using fallback location data instead");
-        processLocationData(fallbackLocations);
-        setError('Using local location data. Google Sheet data unavailable.');
+        processLocationData(deliveryLocations);
+        setError('Error loading locations. Showing fallback data.');
       } finally {
         setLoading(false);
       }
@@ -90,16 +179,10 @@ const LocationsIndex = () => {
     
     const processLocationData = (data: DeliveryLocation[]) => {
       const processedLocations = data.map(location => {
-        // If slug is not already defined, generate one
         if (!location.slug) {
-          // Ensure we have a valid state abbreviation
-          const stateAbbr = location.state.length === 2 ? location.state : location.state.substring(0, 2).toUpperCase();
+          const stateAbbr = location.state.substring(0, 2).toUpperCase();
           location.slug = generateLocationSlug(location.city, stateAbbr);
-          console.log(`Generated slug for location: ${location.city}, ${location.state} -> ${location.slug}`);
-        } else {
-          console.log(`Using existing slug for ${location.city}, ${location.state}: ${location.slug}`);
         }
-        
         return location;
       });
       
@@ -188,9 +271,9 @@ const LocationsIndex = () => {
               ))}
             </div>
           ) : error ? (
-            <Alert className="mb-6">
+            <Alert variant="destructive" className="mb-6">
               <Info className="h-4 w-4" />
-              <AlertTitle>Note</AlertTitle>
+              <AlertTitle>Error</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           ) : (
@@ -213,7 +296,7 @@ const LocationsIndex = () => {
                 </div>
               ) : (
                 <Tabs defaultValue={filteredStatesList[0]}>
-                  <TabsList className="flex flex-wrap mb-6 overflow-x-auto">
+                  <TabsList className="flex flex-wrap mb-6">
                     {filteredStatesList.map(state => (
                       <TabsTrigger key={state} value={state} className="mb-2">
                         {state}
@@ -229,21 +312,19 @@ const LocationsIndex = () => {
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredStates[state].map((location, index) => {
-                          // Make sure we have a valid slug
-                          const locationSlug = location.slug || generateLocationSlug(location.city, location.state);
+                          const locationSlug = location.slug || generateLocationSlug(location.city, location.state.substring(0, 2));
                           
                           return (
                             <Link 
                               key={index} 
                               to={`/locations/${locationSlug}`}
-                              className="block transition-all duration-200 hover:scale-[1.02]"
-                              aria-label={`View details for ${location.city}, ${location.state}`}
+                              className="block transition-transform hover:scale-[1.02]"
                             >
-                              <Card className="h-full hover:shadow-lg transition-shadow border border-transparent hover:border-primary/20 group">
+                              <Card className="h-full hover:shadow-md transition-shadow">
                                 <CardContent className="p-6 h-full flex flex-col">
                                   <div className="flex items-start justify-between">
                                     <div>
-                                      <h4 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">
+                                      <h4 className="text-lg font-semibold mb-2">
                                         {location.city}
                                       </h4>
                                       <div className="flex items-center text-sm text-gray-600 mb-4">
@@ -251,8 +332,8 @@ const LocationsIndex = () => {
                                         <span>{location.state}</span>
                                       </div>
                                     </div>
-                                    <div className="rounded-full bg-gray-100 p-1 group-hover:bg-primary/10 transition-colors">
-                                      <ArrowRight className="h-5 w-5 text-primary" />
+                                    <div className="rounded-full bg-gray-100 p-1 hover:bg-gray-200 transition-colors">
+                                      <ArrowRight className="h-5 w-5" />
                                     </div>
                                   </div>
                                   <p className="text-sm line-clamp-3">
@@ -262,7 +343,7 @@ const LocationsIndex = () => {
                                     }
                                   </p>
                                   <div className="mt-auto pt-4">
-                                    <span className="text-sm font-medium text-primary group-hover:underline transition-colors">
+                                    <span className="text-sm font-medium text-primary">
                                       View Delivery Information
                                     </span>
                                   </div>

@@ -4,7 +4,7 @@ import { DeliveryLocation, generateLocationSlug } from '@/types/location.types';
 export const centralLocations: DeliveryLocation[] = [
   {
     city: "Kansas City",
-    state: "MO",
+    state: "Missouri",
     product_name: "Heartland Rock",
     lat: 39.0997,
     lng: -94.5786,
@@ -12,7 +12,7 @@ export const centralLocations: DeliveryLocation[] = [
   },
   {
     city: "Omaha",
-    state: "NE",
+    state: "Nebraska",
     product_name: "Prairie Gravel",
     lat: 41.2565,
     lng: -95.9345,
@@ -20,7 +20,7 @@ export const centralLocations: DeliveryLocation[] = [
   },
   {
     city: "Des Moines",
-    state: "IA",
+    state: "Iowa",
     product_name: "Field Stone",
     lat: 41.5868,
     lng: -93.6250,

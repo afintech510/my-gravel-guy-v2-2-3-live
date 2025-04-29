@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/components/ui/use-toast';
 import { deliveryLocations } from '@/data/locations';
-import { DeliveryLocation as LocationType } from '@/types/location.types';
 
 type LocationData = {
   state: string;
@@ -27,10 +26,6 @@ type LocationData = {
   nearby_locations?: string;
   faqs?: string;
 };
-
-// Google Sheet ID and name - must match LocationsIndex.tsx
-const SHEET_ID = "1g6vVui0lG54_iFX9CLJoWAHUh-UePQygm15Kq7z3noI";
-const SHEET_NAME = "Locations";
 
 // Fallback location data in case the API is not available
 const fallbackLocationData: Record<string, LocationData> = {
@@ -176,98 +171,126 @@ const LocationPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("LocationPage: Received slug parameter:", slug);
     const fetchLocation = async () => {
-      if (!slug) {
-        console.error("No slug provided!");
-        setError('No location specified');
-        setLoading(false);
-        return;
-      }
-
       try {
         setLoading(true);
         
-        // Try to fetch the location data from Google Sheet first
-        try {
-          console.log("Fetching location data from Google Sheet for slug:", slug);
-          const data = await fetchSheetData(SHEET_ID, SHEET_NAME);
+        // First check if the location exists in our local data
+        if (slug) {
+          const localLocation = deliveryLocations.find(loc => 
+            loc.slug?.toLowerCase() === slug.toLowerCase()
+          );
           
-          if (Array.isArray(data) && data.length > 0) {
-            console.log("Sheet data received, entries:", data.length);
+          if (localLocation) {
+            console.log("Found location in local data:", localLocation);
+            // Convert to LocationData format
+            const locationData: LocationData = {
+              city: localLocation.city,
+              state: localLocation.state,
+              region: localLocation.region || `${localLocation.state} Region`,
+              slug: localLocation.slug || slug,
+              title: localLocation.title || `Gravel Delivery in ${localLocation.city}, ${localLocation.state}`,
+              description: localLocation.description || `Fast and reliable gravel delivery in ${localLocation.city}, ${localLocation.state}`,
+              service_area: `${localLocation.city} and surrounding areas`,
+              local_info: `${localLocation.city} homeowners and contractors trust our premium gravel delivery service for landscaping and construction projects.`,
+              delivery_info: `We deliver throughout the ${localLocation.city} area 7 days a week. Most orders can be delivered same-day when ordered before noon, or next-day for orders placed later.`,
+              image_url: `https://images.unsplash.com/photo-${Math.floor(Math.random()*1000000000)}`
+            };
             
-            // Find the location that matches the slug
-            const locationData = data.find((loc: any) => 
-              loc.slug?.toLowerCase() === slug.toLowerCase()
-            );
+            setLocation(locationData);
+            processNearbyAndFaqs(locationData);
+            setLoading(false);
+            return;
+          }
+        }
 
-            if (locationData) {
-              console.log("Found matching location in sheet data:", locationData);
-              setLocation(locationData as LocationData);
-              processNearbyAndFaqs(locationData as LocationData);
+        // Replace with your actual Google Sheet ID and tab name
+        const sheetId = '1g6vVui0lG54_iFX9CLJoWAHUh-UePQygm15Kq7z3noI';
+        const sheetName = 'Locations';
+        
+        try {
+          const data = await fetchSheetData(sheetId, sheetName);
+          
+          // Find the location that matches the slug
+          const locationData = data.find((loc: any) => 
+            loc.slug?.toLowerCase() === slug?.toLowerCase()
+          );
+
+          if (!locationData) {
+            // If no data found from API, check fallback data
+            if (slug && fallbackLocationData[slug]) {
+              console.log("Using fallback data for location:", slug);
+              setLocation(fallbackLocationData[slug]);
+              processNearbyAndFaqs(fallbackLocationData[slug]);
               setLoading(false);
               return;
-            } else {
-              console.log(`Location with slug '${slug}' not found in sheet data`);
             }
-          } else {
-            console.log("No data or invalid format from sheet");
+            
+            toast({
+              title: "Location not found",
+              description: `We couldn't find information for ${slug}. Redirecting to locations page.`,
+              variant: "destructive"
+            });
+            
+            // Wait a moment before redirecting
+            setTimeout(() => {
+              navigate('/locations');
+            }, 2000);
+            
+            setError('Location not found');
+            setLoading(false);
+            return;
           }
-        } catch (sheetError) {
-          console.error("Error fetching from Google Sheet:", sheetError);
-        }
-        
-        // Second, check local delivery locations
-        console.log("Checking local delivery locations...");
-        const localLocation = deliveryLocations.find(loc => 
-          loc.slug?.toLowerCase() === slug.toLowerCase()
-        );
-        
-        if (localLocation) {
-          console.log("Found location in local data:", localLocation);
-          // Convert to LocationData format
-          const locationData: LocationData = {
-            city: localLocation.city,
-            state: localLocation.state,
-            region: localLocation.region || `${localLocation.state} Region`,
-            slug: localLocation.slug || slug,
-            title: localLocation.title || `Gravel Delivery in ${localLocation.city}, ${localLocation.state}`,
-            description: localLocation.description || `Fast and reliable gravel delivery in ${localLocation.city}, ${localLocation.state}`,
-            service_area: localLocation.service_area || `${localLocation.city} and surrounding areas`,
-            local_info: localLocation.local_info || `${localLocation.city} homeowners and contractors trust our premium gravel delivery service for landscaping and construction projects.`,
-            delivery_info: localLocation.delivery_info || `We deliver throughout the ${localLocation.city} area 7 days a week. Most orders can be delivered same-day when ordered before noon, or next-day for orders placed later.`,
-            image_url: `https://images.unsplash.com/photo-${Math.floor(Math.random()*1000000000)}`
-          };
+
+          setLocation(locationData as LocationData);
+          processNearbyAndFaqs(locationData as LocationData);
           
-          setLocation(locationData);
-          processNearbyAndFaqs(locationData);
-          setLoading(false);
-          return;
+        } catch (fetchError) {
+          console.error("Error fetching location data:", fetchError);
+          // Use fallback data if available
+          if (slug && fallbackLocationData[slug]) {
+            console.log("Using fallback data after fetch error for:", slug);
+            setLocation(fallbackLocationData[slug]);
+            processNearbyAndFaqs(fallbackLocationData[slug]);
+          } else {
+            // Try to find it in our local data again as a last resort
+            const localLocation = deliveryLocations.find(loc => 
+              loc.slug?.toLowerCase() === slug?.toLowerCase() || 
+              (loc.city.toLowerCase() + '-' + loc.state.toLowerCase().substring(0, 2)) === slug?.toLowerCase()
+            );
+            
+            if (localLocation) {
+              const locationData: LocationData = {
+                city: localLocation.city,
+                state: localLocation.state,
+                region: localLocation.region || `${localLocation.state} Region`,
+                slug: localLocation.slug || slug || '',
+                title: localLocation.title || `Gravel Delivery in ${localLocation.city}, ${localLocation.state}`,
+                description: localLocation.description || `Fast and reliable gravel delivery in ${localLocation.city}, ${localLocation.state}`,
+                service_area: `${localLocation.city} and surrounding areas`,
+                local_info: `${localLocation.city} homeowners and contractors trust our premium gravel delivery service for landscaping and construction projects.`,
+                delivery_info: `We deliver throughout the ${localLocation.city} area 7 days a week. Most orders can be delivered same-day when ordered before noon, or next-day for orders placed later.`,
+                image_url: `https://images.unsplash.com/photo-${Math.floor(Math.random()*1000000000)}`
+              };
+              
+              setLocation(locationData);
+              processNearbyAndFaqs(locationData);
+            } else {
+              toast({
+                title: "Location data error",
+                description: "Error loading location data. Redirecting to all locations.",
+                variant: "destructive"
+              });
+              
+              setTimeout(() => {
+                navigate('/locations');
+              }, 2000);
+              
+              setError('Error loading location data');
+            }
+          }
         }
         
-        // Finally, check fallback data
-        if (fallbackLocationData[slug]) {
-          console.log("Using fallback data for location:", slug);
-          setLocation(fallbackLocationData[slug]);
-          processNearbyAndFaqs(fallbackLocationData[slug]);
-          setLoading(false);
-          return;
-        }
-        
-        // If we get here, we couldn't find the location
-        console.error("Location not found in any data sources:", slug);
-        toast({
-          title: "Location not found",
-          description: `We couldn't find information for ${slug}. Redirecting to locations page.`,
-          variant: "destructive"
-        });
-        
-        // Wait a moment before redirecting
-        setTimeout(() => {
-          navigate('/locations');
-        }, 2000);
-        
-        setError('Location not found');
       } catch (err) {
         console.error("Error in location processing:", err);
         setError('Error processing location data');
@@ -295,7 +318,7 @@ const LocationPage = () => {
           .filter(Boolean);
         setNearbyLocations(nearby);
       } else {
-        // Find other locations in the same state
+        // Add some default nearby locations based on state
         const sameStateLocations = Object.values(fallbackLocationData)
           .filter(loc => 
             loc.state === locationData.state && 
@@ -343,7 +366,9 @@ const LocationPage = () => {
       ]);
     };
 
-    fetchLocation();
+    if (slug) {
+      fetchLocation();
+    }
   }, [slug, navigate]);
 
   if (loading) {
@@ -351,9 +376,6 @@ const LocationPage = () => {
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-3xl font-bold mb-4">Loading...</h1>
-          <div className="flex justify-center">
-            <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-          </div>
         </div>
       </div>
     );
@@ -498,7 +520,7 @@ const LocationPage = () => {
           
           <div className="space-y-6">
             {faqs.map((faq, index) => (
-              <div key={index} className="bg-gray-50 p-6 rounded-lg">
+              <div key={index}>
                 <h3 className="text-xl font-semibold mb-2">{faq.question}</h3>
                 <p className="text-gray-600">{faq.answer}</p>
               </div>
