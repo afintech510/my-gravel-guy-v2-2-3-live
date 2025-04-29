@@ -115,7 +115,7 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
             <ToggleGroupItem
               key={value}
               value={value}
-              className="flex-1 py-3 data-[state=on]:bg-primary/10 data-[state=on]:text-primary"
+              className="flex-1 py-10 data-[state=on]:bg-primary/10 data-[state=on]:text-primary"
             >
               <span className="capitalize">{label}</span>
             </ToggleGroupItem>
