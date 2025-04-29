@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import ZipCodeSearch from '../components/ZipCodeSearch';
 import ProductGrid from '../components/ProductGrid';
 import MaterialCalculator from '../components/MaterialCalculator';
+import HowItWorks from '../components/HowItWorks';
 import { Button } from '@/components/ui/button';
 
 const Index = () => {
@@ -26,6 +27,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* How It Works Section */}
+      <HowItWorks />
 
       {/* Products Section */}
       <section className="py-16 px-4 bg-white">
