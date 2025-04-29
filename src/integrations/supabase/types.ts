@@ -86,6 +86,48 @@ export type Database = {
           },
         ]
       }
+      delivery_locations: {
+        Row: {
+          city: string
+          created_at: string | null
+          description: string | null
+          id: string
+          lat: number
+          lng: number
+          product_name: string | null
+          region: string | null
+          slug: string | null
+          state: string
+          title: string | null
+        }
+        Insert: {
+          city: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          lat: number
+          lng: number
+          product_name?: string | null
+          region?: string | null
+          slug?: string | null
+          state: string
+          title?: string | null
+        }
+        Update: {
+          city?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          lat?: number
+          lng?: number
+          product_name?: string | null
+          region?: string | null
+          slug?: string | null
+          state?: string
+          title?: string | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category: string | null

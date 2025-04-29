@@ -1,10 +1,10 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { toast } from '@/components/ui/sonner';
 import { Skeleton } from "@/components/ui/skeleton";
-import { deliveryLocations } from '@/data/locations';
+import { supabase } from '@/integrations/supabase/client';
+import { DeliveryLocation } from '@/types/location.types';
 
 const MAPBOX_TOKEN = 'pk.eyJ1IjoiZWFzdGVybmxtNTEiLCJhIjoiY205eXpwaXN5MW1kazJrbXc1emF2eHk2ZSJ9.DHFlpCAMAaVuL7jU4m9ugQ';
 
@@ -14,8 +14,45 @@ const DeliveryMap = () => {
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const [mapInitialized, setMapInitialized] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [locations, setLocations] = useState<DeliveryLocation[]>([]);
+  const [error, setError] = useState<string | null>(null);
   
   console.log("DeliveryMap component rendering");
+
+  // Fetch locations from Supabase
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        setLoading(true);
+        console.log("Fetching delivery locations from Supabase");
+        
+        const { data, error } = await supabase
+          .from('delivery_locations')
+          .select('*');
+          
+        if (error) {
+          console.error("Error fetching delivery locations:", error);
+          setError("Failed to load delivery locations");
+          toast.error("Failed to load delivery locations");
+          return;
+        }
+        
+        console.log(`Fetched ${data.length} delivery locations from Supabase`);
+        setLocations(data as DeliveryLocation[]);
+      } catch (err) {
+        console.error("Unexpected error fetching locations:", err);
+        setError("An unexpected error occurred");
+        toast.error("Failed to load delivery locations");
+      } finally {
+        // We'll keep loading true until the map initializes
+        if (mapInitialized) {
+          setLoading(false);
+        }
+      }
+    };
+    
+    fetchLocations();
+  }, []);
 
   useEffect(() => {
     console.log("Map container ref:", mapContainer.current);
@@ -62,12 +99,12 @@ const DeliveryMap = () => {
         
         map.current.on('error', (e) => {
           console.error("Map error:", e);
-          toast("There was an error loading the map");
+          toast.error("There was an error loading the map");
         });
       }
     } catch (err) {
       console.error("Error initializing map:", err);
-      toast("Failed to initialize map");
+      toast.error("Failed to initialize map");
       setLoading(false);
     }
 
@@ -80,12 +117,12 @@ const DeliveryMap = () => {
     };
   }, []);
 
-  // Add markers when map is initialized
+  // Add markers when map is initialized and locations are loaded
   useEffect(() => {
-    console.log("Checking for markers", { mapInitialized });
-    if (!map.current || !mapInitialized) return;
+    console.log("Checking for markers", { mapInitialized, locationsCount: locations.length });
+    if (!map.current || !mapInitialized || locations.length === 0) return;
     
-    console.log(`Adding ${deliveryLocations.length} markers to map`);
+    console.log(`Adding ${locations.length} markers to map`);
     
     // Clear existing markers
     markersRef.current.forEach(marker => marker.remove());
@@ -95,7 +132,7 @@ const DeliveryMap = () => {
     const bounds = new mapboxgl.LngLatBounds();
     
     // Add markers for each location
-    deliveryLocations.forEach((location) => {
+    locations.forEach((location) => {
       if (!location.lat || !location.lng) {
         console.warn("Skip location with invalid coordinates:", location);
         return;
@@ -129,7 +166,7 @@ const DeliveryMap = () => {
       });
     }
     
-  }, [mapInitialized]);
+  }, [mapInitialized, locations]);
 
   return (
     <div className="rounded-lg border shadow-sm overflow-hidden">
@@ -137,8 +174,10 @@ const DeliveryMap = () => {
         <div className="text-sm font-medium">
           {loading ? (
             <Skeleton className="h-5 w-64" />
+          ) : error ? (
+            <span className="text-red-500">Error loading locations</span>
           ) : (
-            `Showing ${deliveryLocations.length} delivery locations`
+            `Showing ${locations.length} delivery locations`
           )}
         </div>
       </div>
@@ -148,6 +187,25 @@ const DeliveryMap = () => {
             <div className="text-center">
               <Skeleton className="h-40 w-40 rounded-full mx-auto mb-4" />
               <p className="text-sm text-muted-foreground">Loading map data...</p>
+            </div>
+          </div>
+        )}
+        {error && !loading && (
+          <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+            <div className="text-center p-6 max-w-md">
+              <div className="bg-red-100 p-3 rounded-full mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+                <span className="text-red-500 text-2xl">!</span>
+              </div>
+              <h3 className="text-lg font-medium mb-2">Failed to load delivery locations</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                There was a problem fetching the delivery location data. Please try again later.
+              </p>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
+              >
+                Retry
+              </button>
             </div>
           </div>
         )}

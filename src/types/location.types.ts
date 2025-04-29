@@ -1,5 +1,6 @@
 
 export interface DeliveryLocation {
+  id?: string;
   city: string;
   state: string;
   product_name?: string;
@@ -9,6 +10,7 @@ export interface DeliveryLocation {
   slug?: string;
   title?: string;
   description?: string;
+  created_at?: string;
 }
 
 /**
