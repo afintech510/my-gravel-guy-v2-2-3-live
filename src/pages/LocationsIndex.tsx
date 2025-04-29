@@ -13,120 +13,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DeliveryLocation, generateLocationSlug } from '@/types/location.types';
 import { deliveryLocations } from '@/data/locations';
 
-// Make sure we use the same Sheet ID as LocationPage.tsx for consistency
-const SHEET_ID = "1g6vVui0lG54_iFX9CLJoWAHUh-UePQygm15Kq7z3noI";
+// Updated to use the Products sheet ID which is known to work
+const SHEET_ID = "1f-9eFHdoSETcV79k1lkEFTNSZ9ZXCDJqPbRWquiZByI";
 const SHEET_NAME = "Locations";
 
 type LocationData = DeliveryLocation;
 
-// Fallback locations in case the API is unavailable
-const fallbackLocations: LocationData[] = [
-  {
-    state: "Texas",
-    city: "Austin",
-    region: "Central Texas",
-    slug: "austin-tx",
-    title: "Gravel Delivery in Austin, TX",
-    description: "Fast gravel and material delivery throughout Austin and surrounding areas. Same day and next day options available.",
-    lat: 30.2672,
-    lng: -97.7431
-  },
-  {
-    state: "Texas",
-    city: "Dallas",
-    region: "North Texas",
-    slug: "dallas-tx",
-    title: "Gravel Delivery in Dallas, TX",
-    description: "Premium gravel, sand, and dirt delivery to all Dallas neighborhoods with competitive pricing.",
-    lat: 32.7767,
-    lng: -96.7970
-  },
-  {
-    state: "California",
-    city: "Los Angeles",
-    region: "Southern California",
-    slug: "los-angeles-ca",
-    title: "Gravel Delivery in Los Angeles, CA",
-    description: "Professional gravel delivery across Los Angeles county, serving residential and commercial projects.",
-    lat: 34.0522,
-    lng: -118.2437
-  },
-  {
-    state: "California",
-    city: "San Francisco",
-    region: "Northern California",
-    slug: "san-francisco-ca",
-    title: "Gravel Delivery in San Francisco, CA",
-    description: "Reliable material delivery solutions for San Francisco and the Bay Area. Bulk discounts available.",
-    lat: 37.7749,
-    lng: -122.4194
-  },
-  {
-    state: "Florida",
-    city: "Miami",
-    region: "South Florida",
-    slug: "miami-fl",
-    title: "Gravel Delivery in Miami, FL",
-    description: "Fast and affordable gravel delivery services throughout Miami-Dade county. Perfect for landscaping projects.",
-    lat: 25.7617,
-    lng: -80.1918
-  }
-];
-
-// Extended fallback locations
-const extendedFallbackLocations: LocationData[] = [
-  ...fallbackLocations,
-  {
-    state: "Florida",
-    city: "Orlando",
-    region: "Central Florida",
-    slug: "orlando-fl",
-    title: "Gravel Delivery in Orlando, FL",
-    description: "Quality gravel delivery service in Orlando area. Ideal for landscaping and construction projects.",
-    lat: 28.5383,
-    lng: -81.3792
-  },
-  {
-    state: "Texas",
-    city: "Houston",
-    region: "Southeast Texas",
-    slug: "houston-tx",
-    title: "Gravel Delivery in Houston, TX",
-    description: "Reliable delivery of gravel and aggregates across Houston and surrounding suburbs.",
-    lat: 29.7604,
-    lng: -95.3698
-  },
-  {
-    state: "New York",
-    city: "New York",
-    region: "New York Metropolitan Area",
-    slug: "new-york-ny",
-    title: "Gravel Delivery in New York, NY",
-    description: "Professional gravel delivery services across all New York City boroughs and surrounding areas.",
-    lat: 40.7128,
-    lng: -74.0060
-  },
-  {
-    state: "Illinois",
-    city: "Chicago",
-    region: "Northern Illinois",
-    slug: "chicago-il",
-    title: "Gravel Delivery in Chicago, IL",
-    description: "Fast and reliable gravel delivery throughout Chicago and suburbs. Competitive rates for all project sizes.",
-    lat: 41.8781,
-    lng: -87.6298
-  },
-  {
-    state: "Arizona",
-    city: "Phoenix",
-    region: "Central Arizona",
-    slug: "phoenix-az",
-    title: "Gravel Delivery in Phoenix, AZ",
-    description: "Desert landscaping materials and gravel delivered across the Phoenix metropolitan area.",
-    lat: 33.4484,
-    lng: -112.0740
-  }
-];
+// Fallback locations from our static data files
+const fallbackLocations = deliveryLocations;
 
 const LocationsIndex = () => {
   const [locations, setLocations] = useState<LocationData[]>([]);
@@ -146,7 +40,7 @@ const LocationsIndex = () => {
         if (!Array.isArray(data) || data.length === 0) {
           console.error("No location data found or invalid data format");
           console.log("Using fallback location data instead");
-          processLocationData(deliveryLocations);
+          processLocationData(fallbackLocations);
           return;
         }
         
@@ -181,14 +75,14 @@ const LocationsIndex = () => {
           };
         });
         
-        console.log("Fetched locations:", processedLocations.length);
+        console.log("Fetched locations from Google Sheet:", processedLocations.length);
         processLocationData(processedLocations);
         
       } catch (err) {
         console.error("Error fetching locations:", err);
         console.log("Using fallback location data instead");
-        processLocationData(deliveryLocations);
-        setError('Error loading locations. Showing fallback data.');
+        processLocationData(fallbackLocations);
+        setError('Using local location data. Google Sheet data unavailable.');
       } finally {
         setLoading(false);
       }
@@ -294,9 +188,9 @@ const LocationsIndex = () => {
               ))}
             </div>
           ) : error ? (
-            <Alert variant="destructive" className="mb-6">
+            <Alert className="mb-6">
               <Info className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
+              <AlertTitle>Note</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           ) : (

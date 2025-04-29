@@ -7,7 +7,7 @@
  */
 export async function fetchSheetData(sheetId: string, sheetName: string | number) {
   // Use the CSV export URL which is more reliable for programmatic access
-  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&sheet=${encodeURIComponent(sheetName)}`;
   
   console.log('Fetching sheet data from URL:', url);
   
