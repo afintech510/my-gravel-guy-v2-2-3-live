@@ -16,6 +16,7 @@ export type Database = {
           description: string | null
           id: string
           image: string | null
+          metadata: string | null
           name: string
           price: number
           ton_yard_ratio: string | null
@@ -27,6 +28,7 @@ export type Database = {
           description?: string | null
           id?: string
           image?: string | null
+          metadata?: string | null
           name: string
           price: number
           ton_yard_ratio?: string | null
@@ -38,6 +40,7 @@ export type Database = {
           description?: string | null
           id?: string
           image?: string | null
+          metadata?: string | null
           name?: string
           price?: number
           ton_yard_ratio?: string | null

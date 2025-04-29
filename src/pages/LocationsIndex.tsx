@@ -178,10 +178,18 @@ const LocationsIndex = () => {
     };
     
     const processLocationData = (data: DeliveryLocation[]) => {
-      setLocations(data);
+      const processedLocations = data.map(location => {
+        if (!location.slug) {
+          const stateAbbr = location.state.substring(0, 2).toUpperCase();
+          location.slug = generateLocationSlug(location.city, stateAbbr);
+        }
+        return location;
+      });
+      
+      setLocations(processedLocations);
       
       const groupedByState: Record<string, DeliveryLocation[]> = {};
-      data.forEach((location: any) => {
+      processedLocations.forEach((location: any) => {
         const state = location.state || 'Other';
         if (!groupedByState[state]) {
           groupedByState[state] = [];
@@ -303,39 +311,47 @@ const LocationsIndex = () => {
                       </h3>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredStates[state].map((location, index) => (
-                          <Card key={index}>
-                            <CardContent className="p-6">
-                              <div className="flex items-start justify-between">
-                                <div>
-                                  <h4 className="text-lg font-semibold mb-2">
-                                    {location.city}
-                                  </h4>
-                                  <div className="flex items-center text-sm text-gray-600 mb-4">
-                                    <MapPin className="h-4 w-4 mr-1" />
-                                    <span>{location.state}</span>
+                        {filteredStates[state].map((location, index) => {
+                          const locationSlug = location.slug || generateLocationSlug(location.city, location.state.substring(0, 2));
+                          
+                          return (
+                            <Link 
+                              key={index} 
+                              to={`/locations/${locationSlug}`}
+                              className="block transition-transform hover:scale-[1.02]"
+                            >
+                              <Card className="h-full hover:shadow-md transition-shadow">
+                                <CardContent className="p-6 h-full flex flex-col">
+                                  <div className="flex items-start justify-between">
+                                    <div>
+                                      <h4 className="text-lg font-semibold mb-2">
+                                        {location.city}
+                                      </h4>
+                                      <div className="flex items-center text-sm text-gray-600 mb-4">
+                                        <MapPin className="h-4 w-4 mr-1" />
+                                        <span>{location.state}</span>
+                                      </div>
+                                    </div>
+                                    <div className="rounded-full bg-gray-100 p-1 hover:bg-gray-200 transition-colors">
+                                      <ArrowRight className="h-5 w-5" />
+                                    </div>
                                   </div>
-                                </div>
-                                <Button asChild variant="ghost" size="icon">
-                                  <Link to={`/locations/${location.slug}`}>
-                                    <ArrowRight className="h-5 w-5" />
-                                  </Link>
-                                </Button>
-                              </div>
-                              <p className="text-sm line-clamp-3">
-                                {location.description && location.description.length > 120 
-                                  ? `${location.description.substring(0, 120)}...` 
-                                  : location.description || "Fast and reliable gravel delivery services."
-                                }
-                              </p>
-                              <Button asChild variant="link" className="p-0 h-auto mt-4">
-                                <Link to={`/locations/${location.slug}`}>
-                                  View Delivery Information
-                                </Link>
-                              </Button>
-                            </CardContent>
-                          </Card>
-                        ))}
+                                  <p className="text-sm line-clamp-3">
+                                    {location.description && location.description.length > 120 
+                                      ? `${location.description.substring(0, 120)}...` 
+                                      : location.description || "Fast and reliable gravel delivery services."
+                                    }
+                                  </p>
+                                  <div className="mt-auto pt-4">
+                                    <span className="text-sm font-medium text-primary">
+                                      View Delivery Information
+                                    </span>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </Link>
+                          );
+                        })}
                       </div>
                     </TabsContent>
                   ))}
