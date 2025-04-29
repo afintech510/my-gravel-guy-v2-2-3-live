@@ -141,7 +141,7 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
               <ToggleGroupItem
                 key={category}
                 value={category}
-                className="flex-1 py-10 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                className="flex-1 py-8 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
               >
                 <div className="flex flex-col items-center gap-2">
                   <Icon className="h-6 w-6" />
