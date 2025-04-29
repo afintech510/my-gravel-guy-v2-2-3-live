@@ -26,8 +26,16 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
   const { zipCode, zipCodeData, setZipCode, clearZipCode, isSearchLocked, setIsSearchLocked } = useZipCode();
   const { toast } = useToast();
   
+  // Debug logs for initial state
+  useEffect(() => {
+    console.log('ZipCodeSearch mounted');
+    console.log('Initial zipCode:', zipCode);
+    console.log('Initial zipCodeData:', zipCodeData);
+  }, []);
+  
   // Initialize input value with zip code if available
   useEffect(() => {
+    console.log('ZipCode or zipCodeData changed:', { zipCode, zipCodeData });
     if (zipCode && zipCodeData) {
       setInputValue(zipCode);
       setSearchCompleted(true);
@@ -48,94 +56,107 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
     }
     
     try {
+      console.log('Searching for:', inputValue);
       setLoading(true);
       
       // First try exact match on zip code
-      let { data: zipData } = await supabase
+      let { data: zipData, error: zipError } = await supabase
         .from('service_zip_codes')
         .select('*')
         .eq('zip', inputValue)
         .maybeSingle();
       
+      console.log('ZIP exact match result:', { zipData, zipError });
+      
       // If no zip match, try city
       if (!zipData) {
-        const { data: cityData } = await supabase
+        const { data: cityData, error: cityError } = await supabase
           .from('service_zip_codes')
           .select('*')
           .ilike('city', `${inputValue}%`)
           .limit(1);
           
+        console.log('City search result:', { cityData, cityError });
+        
         if (cityData && cityData.length > 0) {
           zipData = cityData[0];
         } else {
           // Try state as last resort
-          const { data: stateData } = await supabase
+          const { data: stateData, error: stateError } = await supabase
             .from('service_zip_codes')
             .select('*')
             .or(`state_id.ilike.${inputValue}%,state_name.ilike.${inputValue}%`)
             .limit(1);
             
+          console.log('State search result:', { stateData, stateError });
+          
           if (stateData && stateData.length > 0) {
             zipData = stateData[0];
           }
         }
       }
       
-      // If still no match, find any available location
-      if (!zipData) {
-        // Try a more flexible search to find any location
-        const { data: anyData } = await supabase
-          .from('service_zip_codes')
-          .select('*')
-          .limit(1);
-          
-        if (anyData && anyData.length > 0) {
-          zipData = anyData[0];
-          
-          toast({
-            title: "Location approximated",
-            description: `No exact match found. Showing results near ${anyData[0].city}, ${anyData[0].state_id}.`,
-          });
-        } else {
-          setError("Please try a different location.");
-          setLoading(false);
-          return;
-        }
+      // If we've found a match, use it
+      if (zipData) {
+        console.log('Found match:', zipData);
+        // Save ZIP code to context
+        setZipCode(zipData.zip, zipData);
+        setSearchCompleted(true);
+        setInputValue(zipData.zip); // Update the input with the found ZIP code
+        
+        // Show success message with location info
+        toast({
+          title: "Location Found!",
+          description: `We deliver to ${zipData.city}, ${zipData.state_id}. Browse our products below.`,
+        });
+        return;
       }
       
-      // Save search to location_search table
-      try {
-        // Get IP address using ipify API
-        const ipResponse = await fetch('https://api.ipify.org?format=json');
-        const ipData = await ipResponse.json();
-        const ip_address = ipData.ip;
+      // If no match found at all, check if there are any ZIP codes in the database
+      const { count, error: countError } = await supabase
+        .from('service_zip_codes')
+        .select('*', { count: 'exact', head: true });
         
-        // Get user agent
-        const user_agent = navigator.userAgent;
+      console.log('ZIP codes count in DB:', { count, countError });
+      
+      // If the table is empty, use demo mode
+      if (count === 0) {
+        console.log('No ZIP codes in database. Using demo mode.');
         
-        // Insert into location_search table
-        await supabase.from('location_search').insert([{
-          search_text: inputValue,
-          ip_address,
-          user_agent,
-          zipcode: zipData.zip,
-          city: zipData.city,
-          state: zipData.state_id,
-        }]);
-      } catch (err) {
-        console.error("Error saving search data:", err);
-        // Continue with the flow even if logging fails
+        // Create a mock ZIP code data for demo purposes
+        const demoZipData: ZipCodeData = {
+          zip: '90210',
+          city: 'Beverly Hills',
+          state_id: 'CA',
+          state_name: 'California',
+          lat: 34.0901,
+          lng: -118.4065,
+          timezone: 'America/Los_Angeles',
+          population: 20000,
+          density: 1000,
+          county_fips: '123',
+          county_name: 'Los Angeles',
+          county_names_all: 'Los Angeles',
+          county_fips_all: '123',
+        };
+        
+        setZipCode(demoZipData.zip, demoZipData);
+        setSearchCompleted(true);
+        setInputValue(demoZipData.zip);
+        
+        toast({
+          title: "Demo Mode",
+          description: `Using demo location: ${demoZipData.city}, ${demoZipData.state_id}. This is because no ZIP codes are in the database yet.`,
+        });
+        return;
       }
       
-      // Save ZIP code to context
-      setZipCode(zipData.zip, zipData);
-      setSearchCompleted(true);
-      setInputValue(zipData.zip); // Update the input with the found ZIP code
-      
-      // Show success message with location info
+      // If no specific match but there are ZIP codes in DB, show a general error
+      setError("Location not found. Please try a different search term.");
       toast({
-        title: "Location Found!",
-        description: `We deliver to ${zipData.city}, ${zipData.state_id}. Browse our products below.`,
+        title: "Location Not Found",
+        description: "We couldn't find that location. Please try a different ZIP code, city, or state.",
+        variant: "destructive"
       });
       
     } catch (error) {
@@ -155,22 +176,76 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
     
     if (value.length >= 2) {
       try {
+        console.log('Searching for suggestions:', value);
         // Search for suggestions in zip codes, cities, and states
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('service_zip_codes')
           .select('*')
           .or(`zip.ilike.${value}%,city.ilike.${value}%,state_id.ilike.${value}%,state_name.ilike.${value}%`)
           .limit(5);
           
+        console.log('Suggestions result:', { data, error });
+        
         if (data && data.length > 0) {
           setSuggestions(data);
           setShowSuggestions(true);
+        } else if (value.length >= 3) {
+          // If no suggestions found but table has data, check if we have any data at all
+          const { count } = await supabase
+            .from('service_zip_codes')
+            .select('*', { count: 'exact', head: true });
+          
+          console.log('ZIP codes count for suggestions:', count);
+          
+          if (count === 0) {
+            // If table is empty, use demo suggestions
+            const demoSuggestions: ZipCodeData[] = [
+              {
+                zip: '90210',
+                city: 'Beverly Hills',
+                state_id: 'CA',
+                state_name: 'California',
+                lat: 34.0901,
+                lng: -118.4065,
+                timezone: 'America/Los_Angeles',
+                population: 20000,
+                density: 1000,
+                county_fips: '123',
+                county_name: 'Los Angeles',
+                county_names_all: 'Los Angeles',
+                county_fips_all: '123',
+              },
+              {
+                zip: '10001',
+                city: 'New York',
+                state_id: 'NY',
+                state_name: 'New York',
+                lat: 40.7128,
+                lng: -74.006,
+                timezone: 'America/New_York',
+                population: 8000000,
+                density: 10000,
+                county_fips: '456',
+                county_name: 'New York',
+                county_names_all: 'New York',
+                county_fips_all: '456',
+              }
+            ];
+            
+            setSuggestions(demoSuggestions);
+            setShowSuggestions(true);
+          } else {
+            setSuggestions([]);
+            setShowSuggestions(false);
+          }
         } else {
           setSuggestions([]);
           setShowSuggestions(false);
         }
       } catch (err) {
         console.error("Error fetching suggestions:", err);
+        setSuggestions([]);
+        setShowSuggestions(false);
       }
     } else {
       setSuggestions([]);
@@ -179,11 +254,17 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
   };
   
   const handleSuggestionClick = (suggestion: ZipCodeData) => {
+    console.log('Selected suggestion:', suggestion);
     setZipCode(suggestion.zip, suggestion);
     setInputValue(suggestion.zip);
     setShowSuggestions(false);
     setSearchCompleted(true);
     setError(null);
+    
+    toast({
+      title: "Location Selected",
+      description: `${suggestion.city}, ${suggestion.state_id} selected.`,
+    });
   };
   
   const handleUnlockSearch = () => {
