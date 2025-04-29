@@ -115,7 +115,7 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
             <ToggleGroupItem
               key={value}
               value={value}
-              className="flex-1 py-10 data-[state=on]:bg-primary/10 data-[state=on]:text-primary"
+              className="flex-1 py-3 data-[state=on]:bg-primary/10 data-[state=on]:text-primary"
             >
               <span className="capitalize">{label}</span>
             </ToggleGroupItem>
@@ -141,7 +141,7 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
               <ToggleGroupItem
                 key={category}
                 value={category}
-                className="flex-1 py-6 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                className="flex-1 py-10 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
               >
                 <div className="flex flex-col items-center gap-2">
                   <Icon className="h-6 w-6" />
