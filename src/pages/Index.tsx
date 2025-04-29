@@ -2,16 +2,35 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import ZipCodeSearch from '../components/ZipCodeSearch';
+import LocationProductHero from '../components/LocationProductHero';
 import ProductGrid from '../components/ProductGrid';
 import MaterialCalculator from '../components/MaterialCalculator';
 import HowItWorks from '../components/HowItWorks';
 import { Button } from '@/components/ui/button';
+import { useZipCode } from '../contexts/ZipCodeContext';
 
 const Index = () => {
+  const { zipCode } = useZipCode();
+  
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+      {/* ZIP Code Search - Prominent placement under navigation */}
+      <section className="py-6 px-4 bg-white border-b shadow-sm">
+        <div className="max-w-lg mx-auto text-center">
+          <h2 className="text-xl font-semibold mb-3">Check Delivery to Your Location</h2>
+          <ZipCodeSearch />
+        </div>
+      </section>
+      
+      {/* Location Product Hero - Shows after ZIP search */}
+      <section className="py-6 px-4">
+        <div className="max-w-6xl mx-auto">
+          <LocationProductHero />
+        </div>
+      </section>
+
       {/* Hero Section */}
-      <section className="py-20 px-4">
+      <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
             Local Rock & Dirt Delivery
@@ -20,7 +39,6 @@ const Index = () => {
             Get gravel, sand, and dirt delivered right to your location. Fast, reliable, and competitively priced.
           </p>
           <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-            <ZipCodeSearch />
             <Link to="/quiz">
               <Button variant="outline" size="lg">Take Our Material Quiz</Button>
             </Link>
@@ -35,7 +53,12 @@ const Index = () => {
       <section className="py-16 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">Our Products</h2>
-          <ProductGrid />
+          <ProductGrid limit={6} />
+          <div className="text-center mt-8">
+            <Link to="/products">
+              <Button>View All Products</Button>
+            </Link>
+          </div>
         </div>
       </section>
 

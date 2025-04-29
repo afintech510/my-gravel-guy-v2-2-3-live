@@ -128,6 +128,39 @@ export type Database = {
         }
         Relationships: []
       }
+      location_search: {
+        Row: {
+          city: string | null
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          search_text: string
+          state: string | null
+          user_agent: string | null
+          zipcode: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          search_text: string
+          state?: string | null
+          user_agent?: string | null
+          zipcode?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          search_text?: string
+          state?: string | null
+          user_agent?: string | null
+          zipcode?: string | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category: string | null

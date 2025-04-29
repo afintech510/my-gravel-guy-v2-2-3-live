@@ -1,16 +1,16 @@
+
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu, ShoppingCart, NotebookPen, Calculator, Store, ThumbsUp, Phone, House, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart } from '../contexts/CartContext';
 import { useZipCode } from '../contexts/ZipCodeContext';
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import ServiceAreaList from './ServiceAreaList';
+import ZipCodeSearch from './ZipCodeSearch';
 import { useState } from 'react';
 
 const Navbar = () => {
   const { items } = useCart();
-  const { zipCode, zipCodeData, clearZipCode } = useZipCode();
+  const { zipCode, zipCodeData, clearZipCode, isSearchLocked } = useZipCode();
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -40,35 +40,11 @@ const Navbar = () => {
           </Link>
 
           <div className="hidden md:flex items-center space-x-4">
-            {zipCode && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm" className="text-xs">
-                    <MapPin className="h-3 w-3 mr-1" />
-                    {zipCodeData ? `${zipCodeData.city}, ${zipCodeData.state_id}` : zipCode}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h2 className="text-lg font-semibold mb-1">Your Delivery Location</h2>
-                        <p className="text-sm text-gray-500">
-                          {zipCodeData ? (
-                            <>ZIP {zipCode} - {zipCodeData.city}, {zipCodeData.state_name}</>
-                          ) : (
-                            <>ZIP {zipCode}</>
-                          )}
-                        </p>
-                      </div>
-                      <Button variant="outline" size="sm" onClick={clearZipCode}>
-                        Change
-                      </Button>
-                    </div>
-                    <ServiceAreaList />
-                  </div>
-                </DialogContent>
-              </Dialog>
+            {zipCode && zipCodeData && !isSearchLocked && (
+              <Button variant="ghost" size="sm" className="text-xs mr-2">
+                <MapPin className="h-3 w-3 mr-1" />
+                {zipCodeData.city}, {zipCodeData.state_id}
+              </Button>
             )}
             
             {links.map((link) => (
@@ -113,19 +89,19 @@ const Navbar = () => {
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px]">
                 <div className="flex flex-col space-y-4 mt-4">
-                  {zipCode && (
-                    <div className="px-3 py-2 flex items-center text-sm">
-                      <MapPin className="h-4 w-4 mr-2" />
+                  {zipCode && zipCodeData && (
+                    <div className="px-3 py-2 rounded-md bg-primary/5 flex items-center text-sm mb-2">
+                      <MapPin className="h-4 w-4 mr-2 text-primary" />
                       <div>
-                        <div className="font-medium">Delivery ZIP: {zipCode}</div>
-                        {zipCodeData && (
-                          <div className="text-xs text-gray-500">
-                            {zipCodeData.city}, {zipCodeData.state_id}
-                          </div>
-                        )}
+                        <div className="font-medium">{zipCodeData.city}, {zipCodeData.state_id}</div>
+                        <div className="text-xs text-gray-500">ZIP: {zipCode}</div>
                       </div>
                     </div>
                   )}
+                  
+                  <div className="px-3 py-2">
+                    <ZipCodeSearch variant="minimal" />
+                  </div>
                   
                   {links.map((link) => (
                     <Link
