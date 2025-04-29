@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -77,7 +76,6 @@ const LocationsIndex = () => {
         });
         
         console.log("Fetched locations from Google Sheet:", processedLocations.length);
-        console.log("Sample location slugs:", processedLocations.slice(0, 5).map(l => l.slug));
         processLocationData(processedLocations);
         
       } catch (err) {
@@ -241,7 +239,7 @@ const LocationsIndex = () => {
                               className="block transition-all duration-200 hover:scale-[1.02]"
                               aria-label={`View details for ${location.city}, ${location.state}`}
                             >
-                              <Card className="h-full hover:shadow-lg transition-shadow border border-transparent hover:border-primary/20 group cursor-pointer">
+                              <Card className="h-full hover:shadow-lg transition-shadow border border-transparent hover:border-primary/20 group">
                                 <CardContent className="p-6 h-full flex flex-col">
                                   <div className="flex items-start justify-between">
                                     <div>

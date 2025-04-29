@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -29,8 +28,8 @@ type LocationData = {
   faqs?: string;
 };
 
-// Updated Sheet ID to match the correct one from LocationsIndex.tsx
-const SHEET_ID = "1f-9eFHdoSETcV79k1lkEFTNSZ9ZXCDJqPbRWquiZByI";
+// Google Sheet ID and name - must match LocationsIndex.tsx
+const SHEET_ID = "1g6vVui0lG54_iFX9CLJoWAHUh-UePQygm15Kq7z3noI";
 const SHEET_NAME = "Locations";
 
 // Fallback location data in case the API is not available
@@ -196,17 +195,11 @@ const LocationPage = () => {
           
           if (Array.isArray(data) && data.length > 0) {
             console.log("Sheet data received, entries:", data.length);
-            console.log("Looking for slug:", slug);
-            console.log("Available slugs:", data.map((loc: any) => loc.slug).join(', '));
             
-            // Find the location that matches the slug - normalize comparison to lowercase
-            const locationData = data.find((loc: any) => {
-              // Debug each location's slug to find why matching isn't working
-              if (loc.slug) {
-                console.log(`Comparing location slug '${loc.slug.toLowerCase()}' with requested '${slug.toLowerCase()}'`);
-              }
-              return loc.slug?.toLowerCase() === slug.toLowerCase();
-            });
+            // Find the location that matches the slug
+            const locationData = data.find((loc: any) => 
+              loc.slug?.toLowerCase() === slug.toLowerCase()
+            );
 
             if (locationData) {
               console.log("Found matching location in sheet data:", locationData);
