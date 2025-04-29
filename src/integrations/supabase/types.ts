@@ -9,59 +9,93 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      chat_messages: {
+      products: {
         Row: {
-          content: string
-          created_at: string
+          category: string | null
+          created_at: string | null
+          description: string | null
           id: string
-          role: string
-          session_id: string
+          image: string | null
+          name: string
+          price: number
+          ton_yard_ratio: string | null
+          zip_code_ratio: string | null
         }
         Insert: {
-          content: string
-          created_at?: string
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
           id?: string
-          role: string
-          session_id: string
+          image?: string | null
+          name: string
+          price: number
+          ton_yard_ratio?: string | null
+          zip_code_ratio?: string | null
         }
         Update: {
-          content?: string
-          created_at?: string
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
           id?: string
-          role?: string
-          session_id?: string
+          image?: string | null
+          name?: string
+          price?: number
+          ton_yard_ratio?: string | null
+          zip_code_ratio?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "chat_messages_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "chat_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
-      chat_sessions: {
+      service_zip_codes: {
         Row: {
-          created_at: string
+          city: string | null
+          county_fips: string | null
+          county_fips_all: string | null
+          county_name: string | null
+          county_names_all: string | null
+          created_at: string | null
+          density: number | null
           id: string
-          session_date: string
-          subject: string | null
-          user_ip: string
+          lat: number | null
+          lng: number | null
+          population: number | null
+          state_id: string | null
+          state_name: string | null
+          timezone: string | null
+          zip: string
         }
         Insert: {
-          created_at?: string
+          city?: string | null
+          county_fips?: string | null
+          county_fips_all?: string | null
+          county_name?: string | null
+          county_names_all?: string | null
+          created_at?: string | null
+          density?: number | null
           id?: string
-          session_date?: string
-          subject?: string | null
-          user_ip: string
+          lat?: number | null
+          lng?: number | null
+          population?: number | null
+          state_id?: string | null
+          state_name?: string | null
+          timezone?: string | null
+          zip: string
         }
         Update: {
-          created_at?: string
+          city?: string | null
+          county_fips?: string | null
+          county_fips_all?: string | null
+          county_name?: string | null
+          county_names_all?: string | null
+          created_at?: string | null
+          density?: number | null
           id?: string
-          session_date?: string
-          subject?: string | null
-          user_ip?: string
+          lat?: number | null
+          lng?: number | null
+          population?: number | null
+          state_id?: string | null
+          state_name?: string | null
+          timezone?: string | null
+          zip?: string
         }
         Relationships: []
       }
