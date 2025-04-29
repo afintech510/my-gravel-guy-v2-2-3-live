@@ -196,11 +196,17 @@ const LocationPage = () => {
           
           if (Array.isArray(data) && data.length > 0) {
             console.log("Sheet data received, entries:", data.length);
+            console.log("Looking for slug:", slug);
+            console.log("Available slugs:", data.map((loc: any) => loc.slug).join(', '));
             
-            // Find the location that matches the slug
-            const locationData = data.find((loc: any) => 
-              loc.slug?.toLowerCase() === slug.toLowerCase()
-            );
+            // Find the location that matches the slug - normalize comparison to lowercase
+            const locationData = data.find((loc: any) => {
+              // Debug each location's slug to find why matching isn't working
+              if (loc.slug) {
+                console.log(`Comparing location slug '${loc.slug.toLowerCase()}' with requested '${slug.toLowerCase()}'`);
+              }
+              return loc.slug?.toLowerCase() === slug.toLowerCase();
+            });
 
             if (locationData) {
               console.log("Found matching location in sheet data:", locationData);

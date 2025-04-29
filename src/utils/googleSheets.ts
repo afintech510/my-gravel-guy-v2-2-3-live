@@ -12,7 +12,13 @@ export async function fetchSheetData(sheetId: string, sheetName: string | number
   console.log('Fetching sheet data from URL:', url);
   
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      cache: 'no-store', // Prevent caching to ensure we get fresh data
+      headers: {
+        'Cache-Control': 'no-cache'
+      }
+    });
+    
     if (!response.ok) {
       console.error(`HTTP error! status: ${response.status}`);
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -89,6 +95,7 @@ function parseCSVLine(line: string): string[] {
   const result: string[] = [];
   let startPos = 0;
   let inQuotes = false;
+  let currentValue = '';
   
   for (let i = 0; i < line.length; i++) {
     if (line[i] === '"') {
