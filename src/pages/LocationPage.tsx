@@ -205,7 +205,7 @@ const LocationPage = () => {
         }
 
         // Replace with your actual Google Sheet ID and tab name
-        const sheetId = '1g6vVui0lG54_iFX9CLJoWAHUh-UePQygm15Kq7z3noI';
+        const sheetId = '1f-9eFHdoSETcV79k1lkEFTNSZ9ZXCDJqPbRWquiZByI';
         const sheetName = 'Locations';
         
         try {
