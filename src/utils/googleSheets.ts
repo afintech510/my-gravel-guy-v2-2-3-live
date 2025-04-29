@@ -14,11 +14,16 @@ export async function fetchSheetData(sheetId: string, sheetName: string | number
   try {
     const response = await fetch(url);
     if (!response.ok) {
+      console.error(`HTTP error! status: ${response.status}`);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
     const csvText = await response.text();
-    console.log('Raw CSV response:', csvText.substring(0, 200) + '...'); // Log first 200 chars
+    console.log('Raw CSV response length:', csvText.length);
+    if (csvText.length < 10) {
+      console.error('Empty or very short CSV response:', csvText);
+      throw new Error('Empty or invalid CSV response');
+    }
     
     const parsed = parseCSV(csvText);
     console.log('Parsed CSV data (first 2 rows):', parsed.slice(0, 2));
@@ -41,25 +46,45 @@ export async function fetchSheetData(sheetId: string, sheetName: string | number
  */
 function parseCSV(csv: string): Record<string, string>[] {
   const lines = csv.split('\n');
-  const headers = parseCSVLine(lines[0]);
+  if (lines.length < 2) {
+    console.error('Not enough lines in CSV:', lines);
+    return [];
+  }
   
-  return lines.slice(1).map(line => {
-    const values = parseCSVLine(line);
-    const obj: Record<string, string> = {};
+  try {
+    const headers = parseCSVLine(lines[0]);
     
-    headers.forEach((header, i) => {
-      obj[header] = values[i] || '';
-    });
-    
-    return obj;
-  });
+    return lines.slice(1).map((line, index) => {
+      if (!line.trim()) {
+        console.log(`Skipping empty line at index ${index + 1}`);
+        return {} as Record<string, string>;
+      }
+      
+      const values = parseCSVLine(line);
+      const obj: Record<string, string> = {};
+      
+      headers.forEach((header, i) => {
+        obj[header.trim()] = values[i] ? values[i].trim() : '';
+      });
+      
+      return obj;
+    }).filter(obj => Object.keys(obj).length > 0);
+  } catch (error) {
+    console.error('Error parsing CSV:', error);
+    return [];
+  }
 }
 
 /**
  * Parse a single CSV line, handling quoted values
  */
 function parseCSVLine(line: string): string[] {
-  const result = [];
+  // Handle empty lines
+  if (!line || !line.trim()) {
+    return [];
+  }
+  
+  const result: string[] = [];
   let startPos = 0;
   let inQuotes = false;
   
