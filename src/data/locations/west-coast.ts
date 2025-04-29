@@ -4,7 +4,7 @@ import { DeliveryLocation, generateLocationSlug } from '@/types/location.types';
 export const westCoastLocations: DeliveryLocation[] = [
   {
     city: "Phoenix",
-    state: "AZ",
+    state: "Arizona",
     product_name: "Desert Cobble",
     lat: 33.4484,
     lng: -112.0740,
@@ -12,7 +12,7 @@ export const westCoastLocations: DeliveryLocation[] = [
   },
   {
     city: "Los Angeles",
-    state: "CA",
+    state: "California",
     product_name: "Decorative Gravel",
     lat: 34.0522,
     lng: -118.2437,
@@ -20,7 +20,7 @@ export const westCoastLocations: DeliveryLocation[] = [
   },
   {
     city: "San Francisco",
-    state: "CA",
+    state: "California",
     product_name: "Drainage Rock",
     lat: 37.7749,
     lng: -122.4194,
@@ -28,7 +28,7 @@ export const westCoastLocations: DeliveryLocation[] = [
   },
   {
     city: "Seattle",
-    state: "WA",
+    state: "Washington",
     product_name: "River Pebbles",
     lat: 47.6062,
     lng: -122.3321,
@@ -36,7 +36,7 @@ export const westCoastLocations: DeliveryLocation[] = [
   },
   {
     city: "Denver",
-    state: "CO",
+    state: "Colorado",
     product_name: "Mountain Stone",
     lat: 39.7392,
     lng: -104.9903,
@@ -44,7 +44,7 @@ export const westCoastLocations: DeliveryLocation[] = [
   },
   {
     city: "Portland",
-    state: "OR",
+    state: "Oregon",
     product_name: "River Rock",
     lat: 45.5155,
     lng: -122.6789,
@@ -52,7 +52,7 @@ export const westCoastLocations: DeliveryLocation[] = [
   },
   {
     city: "Sacramento",
-    state: "CA",
+    state: "California",
     product_name: "Gold Rush Gravel",
     lat: 38.5816,
     lng: -121.4944,
@@ -60,7 +60,7 @@ export const westCoastLocations: DeliveryLocation[] = [
   },
   {
     city: "Salt Lake City",
-    state: "UT",
+    state: "Utah",
     product_name: "Mountain Gravel",
     lat: 40.7608,
     lng: -111.8910,

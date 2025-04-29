@@ -4,7 +4,7 @@ import { DeliveryLocation, generateLocationSlug } from '@/types/location.types';
 export const texasLocations: DeliveryLocation[] = [
   {
     city: "Austin",
-    state: "TX",
+    state: "Texas",
     product_name: "River Rock",
     lat: 30.2672,
     lng: -97.7431,
@@ -12,7 +12,7 @@ export const texasLocations: DeliveryLocation[] = [
   },
   {
     city: "Dallas",
-    state: "TX", 
+    state: "Texas", 
     product_name: "Limestone Gravel",
     lat: 32.7767,
     lng: -96.7970,
@@ -20,7 +20,7 @@ export const texasLocations: DeliveryLocation[] = [
   },
   {
     city: "Houston",
-    state: "TX",
+    state: "Texas",
     product_name: "Pea Gravel",
     lat: 29.7604,
     lng: -95.3698,
@@ -28,7 +28,7 @@ export const texasLocations: DeliveryLocation[] = [
   },
   {
     city: "San Antonio",
-    state: "TX",
+    state: "Texas",
     product_name: "Crushed Stone",
     lat: 29.4241,
     lng: -98.4936,
@@ -36,7 +36,7 @@ export const texasLocations: DeliveryLocation[] = [
   },
   {
     city: "Fort Worth",
-    state: "TX",
+    state: "Texas",
     product_name: "Decorative Gravel",
     lat: 32.7555,
     lng: -97.3308,
@@ -44,7 +44,7 @@ export const texasLocations: DeliveryLocation[] = [
   },
   {
     city: "El Paso",
-    state: "TX",
+    state: "Texas",
     product_name: "Desert Rock",
     lat: 31.7619,
     lng: -106.4850,
@@ -52,7 +52,7 @@ export const texasLocations: DeliveryLocation[] = [
   },
   {
     city: "Arlington",
-    state: "TX",
+    state: "Texas",
     product_name: "Recycled Concrete",
     lat: 32.7357,
     lng: -97.1081,
