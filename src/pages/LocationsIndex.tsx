@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -20,6 +19,7 @@ const SHEET_NAME = "Locations";
 
 type LocationData = DeliveryLocation;
 
+// Fallback locations in case the API is unavailable
 const fallbackLocations: LocationData[] = [
   {
     state: "Texas",
@@ -73,6 +73,7 @@ const fallbackLocations: LocationData[] = [
   }
 ];
 
+// Extended fallback locations
 const extendedFallbackLocations: LocationData[] = [
   ...fallbackLocations,
   {
@@ -153,10 +154,15 @@ const LocationsIndex = () => {
           const city = row.city || "Unknown City";
           const state = row.state || "Unknown State";
           
-          // IMPORTANT: Prioritize the slug from the Google Sheet if available
-          const slug = row.slug || generateLocationSlug(city, state);
-          
-          console.log(`Processing location: ${city}, ${state} with slug: ${slug}`);
+          // IMPORTANT: Always use the slug from the Google Sheet if available
+          // Otherwise generate one as a fallback
+          let slug = row.slug;
+          if (!slug || slug.trim() === '') {
+            slug = generateLocationSlug(city, state);
+            console.log(`No slug found in sheet for ${city}, ${state}. Generated: ${slug}`);
+          } else {
+            console.log(`Using sheet slug for ${city}, ${state}: ${slug}`);
+          }
           
           return {
             city,
@@ -167,11 +173,15 @@ const LocationsIndex = () => {
             region: row.region || "",
             slug: slug,
             title: row.title || `Gravel Delivery in ${city}, ${state}`,
-            description: row.description || `Fast and reliable gravel delivery services in ${city}.`
+            description: row.description || `Fast and reliable gravel delivery services in ${city}.`,
+            meta_description: row.meta_description || `Professional gravel delivery in ${city}, ${state} with competitive pricing and reliable service.`,
+            local_info: row.local_info || `${city} homeowners and contractors trust our premium gravel delivery service for landscaping and construction projects.`,
+            delivery_info: row.delivery_info || `We deliver throughout the ${city} area 7 days a week. Most orders can be delivered same-day when ordered before noon, or next-day for orders placed later.`,
+            service_area: row.service_area || `${city} and surrounding areas`
           };
         });
         
-        console.log("Fetched locations:", processedLocations);
+        console.log("Fetched locations:", processedLocations.length);
         processLocationData(processedLocations);
         
       } catch (err) {
@@ -188,12 +198,14 @@ const LocationsIndex = () => {
       const processedLocations = data.map(location => {
         // If slug is not already defined, generate one
         if (!location.slug) {
-          // Use two-letter state abbreviation
+          // Ensure we have a valid state abbreviation
           const stateAbbr = location.state.length === 2 ? location.state : location.state.substring(0, 2).toUpperCase();
           location.slug = generateLocationSlug(location.city, stateAbbr);
+          console.log(`Generated slug for location: ${location.city}, ${location.state} -> ${location.slug}`);
+        } else {
+          console.log(`Using existing slug for ${location.city}, ${location.state}: ${location.slug}`);
         }
         
-        console.log(`Location processed: ${location.city}, ${location.state}, slug: ${location.slug}`);
         return location;
       });
       
@@ -307,7 +319,7 @@ const LocationsIndex = () => {
                 </div>
               ) : (
                 <Tabs defaultValue={filteredStatesList[0]}>
-                  <TabsList className="flex flex-wrap mb-6">
+                  <TabsList className="flex flex-wrap mb-6 overflow-x-auto">
                     {filteredStatesList.map(state => (
                       <TabsTrigger key={state} value={state} className="mb-2">
                         {state}
@@ -323,20 +335,21 @@ const LocationsIndex = () => {
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredStates[state].map((location, index) => {
-                          // Ensure we use the location's slug directly when available
-                          const locationSlug = location.slug || generateLocationSlug(location.city, location.state.substring(0, 2));
+                          // Make sure we have a valid slug
+                          const locationSlug = location.slug || generateLocationSlug(location.city, location.state);
                           
                           return (
                             <Link 
                               key={index} 
                               to={`/locations/${locationSlug}`}
-                              className="block transition-transform hover:scale-[1.02]"
+                              className="block transition-all duration-200 hover:scale-[1.02]"
+                              aria-label={`View details for ${location.city}, ${location.state}`}
                             >
-                              <Card className="h-full hover:shadow-md transition-shadow border border-transparent hover:border-primary/20">
+                              <Card className="h-full hover:shadow-lg transition-shadow border border-transparent hover:border-primary/20 group">
                                 <CardContent className="p-6 h-full flex flex-col">
                                   <div className="flex items-start justify-between">
                                     <div>
-                                      <h4 className="text-lg font-semibold mb-2">
+                                      <h4 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">
                                         {location.city}
                                       </h4>
                                       <div className="flex items-center text-sm text-gray-600 mb-4">
@@ -344,7 +357,7 @@ const LocationsIndex = () => {
                                         <span>{location.state}</span>
                                       </div>
                                     </div>
-                                    <div className="rounded-full bg-gray-100 p-1 hover:bg-primary/10 transition-colors">
+                                    <div className="rounded-full bg-gray-100 p-1 group-hover:bg-primary/10 transition-colors">
                                       <ArrowRight className="h-5 w-5 text-primary" />
                                     </div>
                                   </div>
@@ -355,7 +368,7 @@ const LocationsIndex = () => {
                                     }
                                   </p>
                                   <div className="mt-auto pt-4">
-                                    <span className="text-sm font-medium text-primary">
+                                    <span className="text-sm font-medium text-primary group-hover:underline transition-colors">
                                       View Delivery Information
                                     </span>
                                   </div>
