@@ -16,6 +16,9 @@ const DeliveryMapPage = () => {
           View our recent successful deliveries across the United States. Each marker represents
           a location where we've delivered gravel, sand, or dirt.
         </p>
+        <p className="text-sm text-gray-500 mt-2">
+          Data sourced from our delivery database in real-time.
+        </p>
       </div>
       <DeliveryMap />
     </div>
