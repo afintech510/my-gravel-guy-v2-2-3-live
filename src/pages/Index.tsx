@@ -6,6 +6,7 @@ import LocationProductHero from '../components/LocationProductHero';
 import ProductGrid from '../components/ProductGrid';
 import MaterialCalculator from '../components/MaterialCalculator';
 import HowItWorks from '../components/HowItWorks';
+import TestQueryButton from '../components/TestQueryButton';
 import { Button } from '@/components/ui/button';
 import { useZipCode } from '../contexts/ZipCodeContext';
 
@@ -19,6 +20,13 @@ const Index = () => {
         <div className="max-w-lg mx-auto text-center">
           <h2 className="text-xl font-semibold mb-3">Check Delivery to Your Location</h2>
           <ZipCodeSearch />
+        </div>
+      </section>
+      
+      {/* Test Query Button - Temporary addition for testing */}
+      <section className="py-6 px-4 bg-blue-50 border-b">
+        <div className="max-w-4xl mx-auto">
+          <TestQueryButton />
         </div>
       </section>
       
