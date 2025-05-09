@@ -99,8 +99,26 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
       // If we've found a match, use it
       if (zipData) {
         console.log('Found match:', zipData);
+        
+        // Convert Supabase data to ZipCodeData format
+        const zipCodeData: ZipCodeData = {
+          zip: zipData.zip,
+          lat: zipData.lat,
+          lng: zipData.lng,
+          city: zipData.city,
+          state_id: zipData.state_id,
+          state_name: zipData.state_name,
+          population: zipData.population,
+          density: zipData.density,
+          county_fips: zipData.county_fips,
+          county_name: zipData.county_name,
+          county_names_all: zipData.county_names_all,
+          county_fips_all: zipData.county_fips_all,
+          timezone: zipData.timezone
+        };
+        
         // Save ZIP code to context
-        setZipCode(zipData.zip, zipData);
+        setZipCode(zipData.zip, zipCodeData);
         setSearchCompleted(true);
         setInputValue(zipData.zip); // Update the input with the found ZIP code
         
@@ -187,7 +205,24 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
         console.log('Suggestions result:', { data, error });
         
         if (data && data.length > 0) {
-          setSuggestions(data);
+          // Convert to ZipCodeData format
+          const zipCodeSuggestions: ZipCodeData[] = data.map(item => ({
+            zip: item.zip,
+            lat: item.lat,
+            lng: item.lng,
+            city: item.city,
+            state_id: item.state_id,
+            state_name: item.state_name,
+            population: item.population,
+            density: item.density,
+            county_fips: item.county_fips,
+            county_name: item.county_name,
+            county_names_all: item.county_names_all,
+            county_fips_all: item.county_fips_all,
+            timezone: item.timezone
+          }));
+          
+          setSuggestions(zipCodeSuggestions);
           setShowSuggestions(true);
         } else if (value.length >= 3) {
           // If no suggestions found but table has data, check if we have any data at all

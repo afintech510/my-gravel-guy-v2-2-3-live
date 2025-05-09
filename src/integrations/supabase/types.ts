@@ -213,6 +213,7 @@ export type Database = {
           lat: number | null
           lng: number | null
           population: number | null
+          price_adjustment: number | null
           state_id: string | null
           state_name: string | null
           timezone: string | null
@@ -230,6 +231,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           population?: number | null
+          price_adjustment?: number | null
           state_id?: string | null
           state_name?: string | null
           timezone?: string | null
@@ -247,6 +249,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           population?: number | null
+          price_adjustment?: number | null
           state_id?: string | null
           state_name?: string | null
           timezone?: string | null
