@@ -23,6 +23,11 @@ const TopBanner = ({ className }: TopBannerProps) => {
   // Use the city name from zipCodeData if available
   const cityName = zipCodeData?.city || 'Your Area';
   
+  // Callback to close the dialog when a ZIP code is selected
+  const handleZipCodeSelected = () => {
+    setDialogOpen(false);
+  };
+  
   return (
     <div className={cn(
       "bg-primary text-primary-foreground py-2 px-4 text-center relative", 
@@ -46,7 +51,11 @@ const TopBanner = ({ className }: TopBannerProps) => {
                 <p className="text-sm text-muted-foreground mb-4">
                   Enter your ZIP code to see delivery options and pricing for your area.
                 </p>
-                <ZipCodeSearch variant="minimal" className="w-full" />
+                <ZipCodeSearch 
+                  variant="minimal" 
+                  className="w-full" 
+                  onZipCodeSelected={handleZipCodeSelected}
+                />
               </div>
             </DialogContent>
           </Dialog>
