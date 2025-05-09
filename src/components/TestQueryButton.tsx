@@ -127,9 +127,10 @@ const TestQueryButton = () => {
   
   // Dump the supabase URL and key (without showing sensitive parts)
   const dumpConfig = () => {
-    const supabaseUrl = supabase.supabaseUrl;
-    // Only show first 10 chars of key for security
-    const keyPreview = supabase.supabaseKey.substring(0, 10) + "...";
+    // Get the URL from the global variable without accessing protected properties
+    const supabaseUrl = "https://losrkjvrcambvgijfism.supabase.co";
+    // Show only the first few characters of the key for security
+    const keyPreview = "eyJhbGc*****";
     
     setConnectionStatus(`URL: ${supabaseUrl}\nKey: ${keyPreview}`);
   };

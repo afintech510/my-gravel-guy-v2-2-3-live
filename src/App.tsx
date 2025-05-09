@@ -32,6 +32,7 @@ import DeliveryInfo from "./pages/DeliveryInfo";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import BlogCategory from "./pages/BlogCategory";
+import StripeTest from "./pages/StripeTest";
 
 const queryClient = new QueryClient();
 
@@ -70,6 +71,7 @@ const App = () => {
                     <Route path="/blog" element={<Blog />} />
                     <Route path="/blog/:slug" element={<BlogPost />} />
                     <Route path="/blog/category/:slug" element={<BlogCategory />} />
+                    <Route path="/stripe-test" element={<StripeTest />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                   <Footer />
