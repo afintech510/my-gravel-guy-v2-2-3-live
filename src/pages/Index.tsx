@@ -74,10 +74,10 @@ const Index = () => {
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-4">Not Sure What Material You Need?</h2>
           <p className="text-lg text-gray-600 mb-8">
-            Take our quick material quiz and get personalized recommendations for your project.
+            Step through our project planner and get FREE personalized recommendations for your project.
           </p>
           <Link to="/quiz">
-            <Button size="lg">Take the Material Quiz</Button>
+            <Button size="lg">Build a Project Plan</Button>
           </Link>
         </div>
       </section>
