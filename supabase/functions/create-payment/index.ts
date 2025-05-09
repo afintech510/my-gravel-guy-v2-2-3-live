@@ -70,6 +70,8 @@ serve(async (req) => {
 
     // Validate and transform each item with detailed error logging
     const validatedLineItems = [];
+    let orderMetadata = {};
+    
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       try {
@@ -93,6 +95,37 @@ serve(async (req) => {
             // Don't include the image if the URL is invalid, don't throw an error
           }
         }
+
+        // Add this item's metadata to the order metadata
+        if (item.metadata) {
+          orderMetadata[`item_${i+1}_id`] = item.id;
+          orderMetadata[`item_${i+1}_name`] = cleanName;
+          
+          if (item.metadata.deliveryDate) {
+            orderMetadata[`item_${i+1}_delivery_date`] = item.metadata.deliveryDate;
+          }
+          
+          if (item.metadata.deliveryAddress) {
+            const address = JSON.parse(item.metadata.deliveryAddress);
+            orderMetadata[`item_${i+1}_address`] = 
+              `${address.street}, ${address.city}, ${address.state} ${address.zip}`;
+          }
+          
+          if (item.metadata.contactPhone) {
+            orderMetadata[`item_${i+1}_phone`] = item.metadata.contactPhone;
+          }
+          
+          if (item.metadata.deliveryTimePreference) {
+            orderMetadata[`item_${i+1}_time_preference`] = item.metadata.deliveryTimePreference;
+          }
+          
+          if (item.metadata.deliveryInstructions) {
+            // Truncate long instructions for metadata limits
+            const instructions = item.metadata.deliveryInstructions;
+            orderMetadata[`item_${i+1}_instructions`] = 
+              instructions.length > 100 ? instructions.substring(0, 97) + '...' : instructions;
+          }
+        }
         
         validatedLineItems.push({
           price_data: {
@@ -112,6 +145,7 @@ serve(async (req) => {
     }
 
     console.log('Creating Stripe checkout session with items:', validatedLineItems);
+    console.log('Order metadata:', orderMetadata);
 
     // Get origin for success/cancel URLs
     const origin = req.headers.get("origin") || "http://localhost:3000";
@@ -123,6 +157,10 @@ serve(async (req) => {
       mode: "payment",
       success_url: `${origin}/payment-success`,
       cancel_url: `${origin}/cart`,
+      metadata: orderMetadata,
+      payment_intent_data: {
+        metadata: orderMetadata
+      }
     });
 
     console.log('Stripe checkout session created:', session.id);
