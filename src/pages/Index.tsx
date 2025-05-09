@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import ZipCodeSearch from '../components/ZipCodeSearch';
+import ZipCodeSearch from '../components/zip-code/ZipCodeSearch';
 import LocationProductHero from '../components/LocationProductHero';
 import ProductGrid from '../components/ProductGrid';
 import MaterialCalculator from '../components/MaterialCalculator';
