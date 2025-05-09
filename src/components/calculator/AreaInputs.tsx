@@ -59,7 +59,7 @@ const AreaInputs = ({ areas, onAreaChange }: AreaInputsProps) => {
             />
           </div>
           <div className="flex gap-2">
-            {areas.length > 1 && (
+            {areas.length > 1 && index !== 0 && (
               <Button
                 variant="outline"
                 size="icon"
