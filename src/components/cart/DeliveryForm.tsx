@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,7 +9,6 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Upload, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 const deliverySchema = z.object({
   street: z.string().min(1, "Street address is required"),
@@ -44,38 +44,6 @@ const DeliveryForm = ({ initialData, zipCode, onSubmit }: DeliveryFormProps) => 
       deliveryInstructions: initialData?.deliveryInstructions || ''
     }
   });
-
-  // Auto-populate city and state when ZIP code changes
-  useEffect(() => {
-    const zipValue = form.watch('zip');
-    
-    // Only query if ZIP is at least 5 characters and has changed
-    if (zipValue && zipValue.length >= 5 && zipValue !== initialData?.zip && zipValue !== zipCode) {
-      const fetchLocationData = async () => {
-        const { data, error } = await supabase
-          .from('service_zip_codes')
-          .select('city, state_id')
-          .eq('zip', zipValue)
-          .maybeSingle();
-          
-        if (data && !error) {
-          // Auto-fill city and state without overwriting if user has already entered values
-          const currentCity = form.getValues('city');
-          const currentState = form.getValues('state');
-          
-          if (!currentCity || currentCity === initialData?.city) {
-            form.setValue('city', data.city || '');
-          }
-          
-          if (!currentState || currentState === initialData?.state) {
-            form.setValue('state', data.state_id || '');
-          }
-        }
-      };
-      
-      fetchLocationData();
-    }
-  }, [form.watch('zip')]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -120,22 +88,6 @@ const DeliveryForm = ({ initialData, zipCode, onSubmit }: DeliveryFormProps) => 
           
           <FormField
             control={form.control}
-            name="zip"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>ZIP Code</FormLabel>
-                <FormControl>
-                  <Input placeholder="ZIP" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
             name="city"
             render={({ field }) => (
               <FormItem>
@@ -147,7 +99,9 @@ const DeliveryForm = ({ initialData, zipCode, onSubmit }: DeliveryFormProps) => 
               </FormItem>
             )}
           />
-          
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="state"
@@ -156,6 +110,20 @@ const DeliveryForm = ({ initialData, zipCode, onSubmit }: DeliveryFormProps) => 
                 <FormLabel>State</FormLabel>
                 <FormControl>
                   <Input placeholder="State" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="zip"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>ZIP Code</FormLabel>
+                <FormControl>
+                  <Input placeholder="ZIP" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
