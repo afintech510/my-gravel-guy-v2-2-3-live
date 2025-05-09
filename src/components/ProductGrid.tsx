@@ -53,7 +53,21 @@ const ProductGrid = ({
     }
 
     if (filters.category !== 'all') {
-      result = result.filter(product => product.category === filters.category);
+      result = result.filter(product => {
+        // Check if the product has the category either in the main category or in the categories array
+        if (product.category === filters.category) {
+          return true;
+        }
+        
+        // Check in the categories array if available
+        if (product.categories && Array.isArray(product.categories)) {
+          return product.categories.some(cat => 
+            cat.toLowerCase() === filters.category.toLowerCase()
+          );
+        }
+        
+        return false;
+      });
     }
 
     result.sort((a, b) => {
