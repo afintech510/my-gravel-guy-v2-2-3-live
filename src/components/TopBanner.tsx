@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog";
-import ZipCodeSearch from './ZipCodeSearch';
+import ZipCodeSearch from './zip-code/ZipCodeSearch';
 import { cn } from '@/lib/utils';
 
 interface TopBannerProps {
