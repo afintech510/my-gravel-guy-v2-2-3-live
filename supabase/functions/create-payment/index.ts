@@ -81,12 +81,25 @@ serve(async (req) => {
         // Use a clean name for Stripe (no special chars)
         const cleanName = String(item.name).replace(/['"\\]/g, '');
         
+        // Process image URL
+        let imageArray = [];
+        if (item.image) {
+          try {
+            // Validate that the image URL is properly formatted
+            const url = new URL(item.image);
+            imageArray = [item.image];
+          } catch (urlError) {
+            console.warn(`Invalid image URL for item ${i}: ${item.image}. Skipping image.`);
+            // Don't include the image if the URL is invalid, don't throw an error
+          }
+        }
+        
         validatedLineItems.push({
           price_data: {
             currency: "usd",
             product_data: {
               name: cleanName,
-              images: item.image ? [item.image] : [],
+              images: imageArray,
             },
             unit_amount: Math.round(item.price * 100), // Convert to cents
           },
