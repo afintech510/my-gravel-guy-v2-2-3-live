@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +12,7 @@ import ProductHeader from '@/components/products/ProductHeader';
 import ProductActions from '@/components/products/ProductActions';
 import ProductTabs from '@/components/products/ProductTabs';
 import MiniCalculator from '@/components/products/MiniCalculator';
-import TrustBuildingSection from '@/components/products/TrustBuildingSection';
+import TrustBanner from '@/components/products/trust/TrustBanner';
 import { useProduct } from '@/hooks/useProduct';
 import { Product } from '@/services/productTypes';
 
@@ -103,7 +102,11 @@ const ProductDetail = () => {
 
         <ProductTabs product={product} />
         
-        <TrustBuildingSection />
+        <TrustBanner 
+          badgeSize="normal"
+          title="Why Choose My Gravel Guy" 
+          className="mt-16 mb-12"
+        />
       </div>
     </div>
   );
