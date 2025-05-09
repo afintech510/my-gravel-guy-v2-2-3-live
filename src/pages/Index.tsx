@@ -35,7 +35,7 @@ const Index = () => {
           </p>
           <div className="flex flex-col md:flex-row items-center justify-center gap-4">
             <Link to="/quiz">
-              <Button variant="outline" size="lg">Use our Project Planner</Button>
+              <Button variant="outline" size="lg">Build a Project Plan</Button>
             </Link>
             <Link to="/calculator">
               <Button variant="secondary" size="lg">Gravel Guy Calculator</Button>
