@@ -5,17 +5,20 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const StripeTest = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [requestDetails, setRequestDetails] = useState<any>(null);
   const { toast } = useToast();
 
   const testStripeFunction = async () => {
     setIsLoading(true);
     setError(null);
     setResult(null);
+    setRequestDetails(null);
 
     try {
       console.log('Testing Stripe checkout function...');
@@ -29,9 +32,13 @@ const StripeTest = () => {
         image: 'https://placehold.co/400x400'
       };
 
+      const requestBody = { items: [testItem] };
+      setRequestDetails(requestBody);
+      console.log('Request body:', requestBody);
+
       // Call the create-payment edge function
       const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: JSON.stringify({ items: [testItem] })
+        body: JSON.stringify(requestBody)
       });
 
       console.log('Edge function response:', data, error);
@@ -94,10 +101,21 @@ const StripeTest = () => {
           )}
         </Button>
 
-        {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm mt-4">
-            <strong>Error:</strong> {error}
+        {requestDetails && (
+          <div className="p-3 bg-slate-50 border border-slate-200 rounded text-sm mt-4">
+            <strong>Request Details:</strong>
+            <pre className="mt-2 text-xs overflow-auto max-h-28 p-2 bg-slate-100">
+              {JSON.stringify(requestDetails, null, 2)}
+            </pre>
           </div>
+        )}
+
+        {error && (
+          <Alert variant="destructive" className="mt-4">
+            <AlertDescription className="break-all">
+              <strong>Error:</strong> {error}
+            </AlertDescription>
+          </Alert>
         )}
 
         {result && (
@@ -119,6 +137,12 @@ const StripeTest = () => {
         <div className="text-xs text-gray-500 mt-4">
           <p>This test will attempt to create a Stripe checkout session using the <code>create-payment</code> edge function.</p>
           <p>Check the console for detailed logs.</p>
+          <p className="mt-2 font-medium">Troubleshooting:</p>
+          <ul className="list-disc list-inside space-y-1 pl-2">
+            <li>Verify Stripe secret is correctly set in Supabase</li>
+            <li>Ensure Edge Function is properly deployed</li>
+            <li>Check CORS configuration in the Edge Function</li>
+          </ul>
         </div>
       </CardContent>
     </Card>
