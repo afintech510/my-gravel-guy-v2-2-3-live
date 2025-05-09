@@ -10,9 +10,10 @@ import ZipCodeDisplay from './ZipCodeDisplay';
 interface ZipCodeSearchProps {
   className?: string;
   variant?: 'default' | 'minimal';
+  onZipCodeSelected?: () => void; // New callback prop
 }
 
-const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) => {
+const ZipCodeSearch = ({ className, variant = 'default', onZipCodeSelected }: ZipCodeSearchProps) => {
   const {
     inputValue,
     loading,
@@ -28,7 +29,7 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
     handleSuggestionClick,
     handleUnlockSearch,
     setShowSuggestions
-  } = useZipCodeSearch();
+  } = useZipCodeSearch(onZipCodeSelected); // Pass the callback to the hook
   
   const suggestionsRef = React.useRef<HTMLDivElement>(null);
 

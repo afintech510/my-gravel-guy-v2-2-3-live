@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { ZipCodeData } from '../services/productTypes';
 import { useZipCode } from '../contexts/ZipCodeContext';
 
-export const useZipCodeSearch = () => {
+export const useZipCodeSearch = (onZipCodeSelected?: () => void) => {
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -106,6 +105,12 @@ export const useZipCodeSearch = () => {
           title: "Location Found!",
           description: `We deliver to ${zipData.city}, ${zipData.state_id}. Browse our products below.`,
         });
+        
+        // Call the callback if provided to close the dialog
+        if (onZipCodeSelected) {
+          onZipCodeSelected();
+        }
+        
         return;
       }
       
@@ -145,6 +150,12 @@ export const useZipCodeSearch = () => {
           title: "Demo Mode",
           description: `Using demo location: ${demoZipData.city}, ${demoZipData.state_id}. This is because no ZIP codes are in the database yet.`,
         });
+        
+        // Call the callback if provided to close the dialog
+        if (onZipCodeSelected) {
+          onZipCodeSelected();
+        }
+        
         return;
       }
       
@@ -279,6 +290,11 @@ export const useZipCodeSearch = () => {
       title: "Location Selected",
       description: `${suggestion.city}, ${suggestion.state_id} selected.`,
     });
+    
+    // Call the callback if provided to close the dialog
+    if (onZipCodeSelected) {
+      onZipCodeSelected();
+    }
   };
   
   const handleUnlockSearch = () => {
