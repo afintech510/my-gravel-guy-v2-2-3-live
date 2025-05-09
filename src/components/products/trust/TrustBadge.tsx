@@ -20,25 +20,25 @@ const TrustBadge: React.FC<TrustBadgeProps> = ({
 }) => {
   const sizes = {
     compact: {
-      container: "flex items-center p-2 gap-2",
+      container: "flex items-center p-2.5 gap-3",
       icon: "h-4 w-4",
       title: "text-sm font-medium",
       description: "hidden",
-      iconWrapper: "w-7 h-7"
+      iconWrapper: "min-w-7 h-7"
     },
     normal: {
       container: "flex items-center p-3 gap-3",
       icon: "h-5 w-5",
       title: "text-base font-medium",
       description: "text-xs mt-1",
-      iconWrapper: "w-9 h-9"
+      iconWrapper: "min-w-9 h-9"
     },
     large: {
       container: "flex items-center p-4 gap-4",
       icon: "h-6 w-6",
       title: "text-lg font-semibold",
       description: "text-sm mt-1.5",
-      iconWrapper: "w-12 h-12"
+      iconWrapper: "min-w-12 h-12"
     }
   };
 
@@ -52,7 +52,7 @@ const TrustBadge: React.FC<TrustBadgeProps> = ({
       )}>
         <Icon className={cn("text-primary", sizeConfig.icon)} />
       </div>
-      <div>
+      <div className="flex-1">
         <h4 className={sizeConfig.title}>{title}</h4>
         {description && size !== 'compact' && (
           <p className={cn("text-gray-600", sizeConfig.description)}>{description}</p>

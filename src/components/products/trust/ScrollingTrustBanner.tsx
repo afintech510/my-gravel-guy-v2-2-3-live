@@ -37,22 +37,19 @@ const ScrollingTrustBanner: React.FC<ScrollingTrustBannerProps> = ({
     const interval = setInterval(() => {
       if (carouselRef.current) {
         const carousel = carouselRef.current;
-        // Only auto-scroll on smaller screens
-        if (window.innerWidth < 768) {
-          const scrollPosition = carousel.scrollLeft;
-          const itemWidth = carousel.offsetWidth;
-          const maxScroll = carousel.scrollWidth - itemWidth;
-          
-          // If at end, go back to start
-          if (scrollPosition >= maxScroll - 10) {
-            carousel.scrollTo({ left: 0, behavior: 'smooth' });
-          } else {
-            // Otherwise scroll to next item
-            carousel.scrollTo({ 
-              left: scrollPosition + itemWidth / 2, 
-              behavior: 'smooth' 
-            });
-          }
+        const scrollPosition = carousel.scrollLeft;
+        const itemWidth = carousel.offsetWidth;
+        const maxScroll = carousel.scrollWidth - itemWidth;
+        
+        // If at end, go back to start
+        if (scrollPosition >= maxScroll - 10) {
+          carousel.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          // Otherwise scroll to next item
+          carousel.scrollTo({ 
+            left: scrollPosition + itemWidth / 2, 
+            behavior: 'smooth' 
+          });
         }
       }
     }, 3000); // Scroll every 3 seconds
@@ -80,7 +77,7 @@ const ScrollingTrustBanner: React.FC<ScrollingTrustBannerProps> = ({
           {items.map((item, index) => (
             <CarouselItem 
               key={index} 
-              className="md:basis-1/2 lg:basis-1/3 pl-2 pr-2"
+              className="min-w-[180px] max-w-[350px] flex-grow pl-2 pr-2"
             >
               <TrustBadge
                 icon={item.icon}
