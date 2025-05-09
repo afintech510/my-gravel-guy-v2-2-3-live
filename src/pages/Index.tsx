@@ -17,16 +17,13 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       
-      
       {/* Test Query Button - Temporary addition for testing */}
       <section className="py-6 px-4 bg-blue-50 border-b">
         <div className="max-w-4xl mx-auto">
           <TestQueryButton />
         </div>
       </section>
-      
- 
-
+    
       {/* Hero Section */}
       <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto text-center">
@@ -40,7 +37,7 @@ const Index = () => {
             <Link to="/quiz">
               <Button variant="outline" size="lg">Use our Project Planner</Button>
             </Link>
-            <Link to="/blog">
+            <Link to="/calculator">
               <Button variant="secondary" size="lg">Gravel Guy Calculator</Button>
             </Link>
           </div>
