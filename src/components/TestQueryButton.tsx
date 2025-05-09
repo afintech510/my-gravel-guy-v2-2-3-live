@@ -26,7 +26,7 @@ const TestQueryButton = () => {
       const { data, error } = await supabase
         .from('service_zip_codes')
         .select('id')
-        .limit(1);
+        .limit(10);
       
       if (error) {
         throw new Error(`Connection error: ${error.message}`);
