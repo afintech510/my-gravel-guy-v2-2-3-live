@@ -1,8 +1,9 @@
 
 import { Product, ZipCodeData } from './productTypes';
 import { fetchSheetData } from "../utils/googleSheets";
+import { supabase } from '@/integrations/supabase/client';
 
-// The Google Sheet ID from your URL
+// The Google Sheet ID from your URL - will only be used for product data now
 const SHEET_ID = "1f-9eFHdoSETcV79k1lkEFTNSZ9ZXCDJqPbRWquiZByI";
 
 // In-memory cache with expiry
@@ -90,7 +91,7 @@ export async function getProductBySlug(slug: string): Promise<Product> {
 }
 
 /**
- * Fetch ZIP code pricing data
+ * Fetch ZIP code pricing data from Supabase
  */
 export async function getZipCodePricingMap(): Promise<Map<string, number>> {
   // Check cache first
@@ -99,16 +100,24 @@ export async function getZipCodePricingMap(): Promise<Map<string, number>> {
   }
 
   try {
-    console.log('Fetching ZIP code pricing data from Google Sheets...');
-    const rawZipData = await fetchSheetData(SHEET_ID, "ZipCodeLookup");
-    console.log('Raw ZIP code pricing data:', rawZipData);
+    console.log('Fetching ZIP code pricing data from Supabase...');
+    
+    const { data: zipData, error } = await supabase
+      .from('service_zip_codes')
+      .select('zip, price_adjustment');
+      
+    if (error) {
+      throw error;
+    }
+    
+    console.log('Raw ZIP code pricing data from Supabase:', zipData);
     
     // Transform raw data into a Map
     const zipPricingMap = new Map<string, number>();
     
-    rawZipData.forEach(row => {
-      const zipCode = row.zipCode?.trim();
-      const adjustment = parseFloat(row.priceAdjustment || "0");
+    zipData.forEach(row => {
+      const zipCode = row.zip?.trim();
+      const adjustment = parseFloat(row.price_adjustment || "0");
       
       if (zipCode && !isNaN(adjustment)) {
         zipPricingMap.set(zipCode, adjustment);
@@ -119,12 +128,12 @@ export async function getZipCodePricingMap(): Promise<Map<string, number>> {
     
     // Update cache
     zipCodePricingCache = zipPricingMap;
+    lastFetchTimestamp = Date.now();
     
     return zipPricingMap;
   } catch (error) {
     console.error("Failed to fetch ZIP code pricing:", error);
     console.error("Error details:", {
-      sheetId: SHEET_ID,
       timestamp: new Date().toISOString(),
       errorMessage: error instanceof Error ? error.message : String(error)
     });
@@ -139,8 +148,23 @@ export async function getZipCodePricingMap(): Promise<Map<string, number>> {
  * @returns Percentage adjustment (e.g., 10 for +10%, -5 for -5%)
  */
 export async function getPriceAdjustmentForZipCode(zipCode: string): Promise<number> {
-  const pricingMap = await getZipCodePricingMap();
-  return pricingMap.get(zipCode) || 0; // Default to 0% adjustment if ZIP not found
+  try {
+    const { data, error } = await supabase
+      .from('service_zip_codes')
+      .select('price_adjustment')
+      .eq('zip', zipCode)
+      .maybeSingle();
+      
+    if (error) {
+      console.error("Error fetching price adjustment:", error);
+      return 0;
+    }
+    
+    return data?.price_adjustment || 0; // Default to 0% adjustment if ZIP not found
+  } catch (error) {
+    console.error("Error fetching price adjustment:", error);
+    return 0;
+  }
 }
 
 /**
@@ -153,7 +177,7 @@ export function applyZipCodeAdjustment(basePrice: number, adjustment: number): n
 }
 
 /**
- * Fetch ZIP codes data from Google Sheets
+ * Fetch ZIP codes data from Supabase
  */
 export async function getZipCodes(): Promise<ZipCodeData[]> {
   // Check cache first
@@ -162,12 +186,20 @@ export async function getZipCodes(): Promise<ZipCodeData[]> {
   }
 
   try {
-    console.log('Fetching ZIP codes data from Google Sheets...');
-    const rawZipData = await fetchSheetData(SHEET_ID, "Zipcodes");
-    console.log('Raw ZIP codes data:', rawZipData.slice(0, 3)); // Log just first few for brevity
+    console.log('Fetching ZIP codes data from Supabase...');
+    
+    const { data: zipData, error } = await supabase
+      .from('service_zip_codes')
+      .select('*');
+      
+    if (error) {
+      throw error;
+    }
+    
+    console.log('Raw ZIP codes data from Supabase:', zipData.slice(0, 3)); // Log just first few for brevity
     
     // Transform raw data into ZipCodeData objects
-    const zipCodes: ZipCodeData[] = rawZipData.map(row => ({
+    const zipCodes: ZipCodeData[] = zipData.map(row => ({
       zip: row.zip || "",
       lat: parseFloat(row.lat) || 0,
       lng: parseFloat(row.lng) || 0,
@@ -193,7 +225,6 @@ export async function getZipCodes(): Promise<ZipCodeData[]> {
   } catch (error) {
     console.error("Failed to fetch ZIP codes:", error);
     console.error("Error details:", {
-      sheetId: SHEET_ID,
       timestamp: new Date().toISOString(),
       errorMessage: error instanceof Error ? error.message : String(error)
     });
@@ -214,25 +245,47 @@ export async function validateZipCode(zipCode: string): Promise<{
   priceAdjustment?: number;
 }> {
   try {
-    // Check if ZIP code is in our service area pricing
-    const priceAdjustment = await getPriceAdjustmentForZipCode(zipCode);
-    const inPricingTable = priceAdjustment !== 0 || zipCode === "00000"; // Special case for demo
-    
-    // Get ZIP code data for additional info
-    const allZipCodes = await getZipCodes();
-    const zipData = allZipCodes.find(z => z.zip === zipCode);
+    // Get the ZIP code data directly from Supabase
+    const { data: zipData, error } = await supabase
+      .from('service_zip_codes')
+      .select('*')
+      .eq('zip', zipCode)
+      .maybeSingle();
+      
+    if (error) {
+      throw error;
+    }
     
     // ZIP is valid if it exists in our database
     const valid = !!zipData;
     
-    // For now, we consider a ZIP to be in our service area if it has pricing info
-    // This can be expanded based on other criteria
-    const inServiceArea = inPricingTable;
+    // For now, we consider a ZIP to be in our service area if it has data in the service_zip_codes table
+    const inServiceArea = valid;
+    
+    // Get price adjustment if the ZIP is in our service area
+    let priceAdjustment: number | undefined = undefined;
+    if (inServiceArea) {
+      priceAdjustment = zipData?.price_adjustment || 0;
+    }
     
     return {
       valid,
       inServiceArea,
-      zipData,
+      zipData: zipData ? {
+        zip: zipData.zip,
+        lat: zipData.lat,
+        lng: zipData.lng,
+        city: zipData.city,
+        state_id: zipData.state_id,
+        state_name: zipData.state_name,
+        population: zipData.population,
+        density: zipData.density,
+        county_fips: zipData.county_fips,
+        county_name: zipData.county_name,
+        county_names_all: zipData.county_names_all,
+        county_fips_all: zipData.county_fips_all,
+        timezone: zipData.timezone
+      } : undefined,
       priceAdjustment: inServiceArea ? priceAdjustment : undefined
     };
   } catch (error) {
@@ -295,26 +348,50 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
  * Get service areas grouped by state
  */
 export async function getServiceAreasByState(): Promise<Record<string, ZipCodeData[]>> {
-  const pricingMap = await getZipCodePricingMap();
-  const zipCodes = await getZipCodes();
-  
-  // Filter and group by state
-  const serviceAreas: Record<string, ZipCodeData[]> = {};
-  
-  zipCodes.forEach(zip => {
-    // Only include ZIP codes that are in our pricing table
-    if (pricingMap.has(zip.zip)) {
-      const state = zip.state_name || 'Other';
+  try {
+    // Fetch all service ZIP codes from Supabase
+    const { data: zipData, error } = await supabase
+      .from('service_zip_codes')
+      .select('*');
+      
+    if (error) {
+      throw error;
+    }
+    
+    // Transform and group by state
+    const serviceAreas: Record<string, ZipCodeData[]> = {};
+    
+    zipData.forEach(row => {
+      const zipCodeData: ZipCodeData = {
+        zip: row.zip || "",
+        lat: parseFloat(row.lat) || 0,
+        lng: parseFloat(row.lng) || 0,
+        city: row.city || "",
+        state_id: row.state_id || "",
+        state_name: row.state_name || "",
+        population: parseInt(row.population) || 0,
+        density: parseFloat(row.density) || 0,
+        county_fips: row.county_fips || "",
+        county_name: row.county_name || "",
+        county_names_all: row.county_names_all || "",
+        county_fips_all: row.county_fips_all || "",
+        timezone: row.timezone || ""
+      };
+      
+      const state = zipCodeData.state_name || 'Other';
       
       if (!serviceAreas[state]) {
         serviceAreas[state] = [];
       }
       
-      serviceAreas[state].push(zip);
-    }
-  });
-  
-  return serviceAreas;
+      serviceAreas[state].push(zipCodeData);
+    });
+    
+    return serviceAreas;
+  } catch (error) {
+    console.error("Error fetching service areas by state:", error);
+    return {};
+  }
 }
 
 // Re-export types from productTypes for convenience

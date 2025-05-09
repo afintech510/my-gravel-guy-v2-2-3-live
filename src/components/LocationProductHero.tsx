@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useZipCode } from '../contexts/ZipCodeContext';
 import { getProducts, getPriceAdjustmentForZipCode, applyZipCodeAdjustment } from '../services/productService';
@@ -7,6 +8,7 @@ import { useCart } from '../contexts/CartContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/use-toast';
 import { MapPin } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const LocationProductHero = () => {
   const { zipCode, zipCodeData } = useZipCode();
