@@ -32,7 +32,7 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
   
   const suggestionsRef = React.useRef<HTMLDivElement>(null);
 
-  // Use the hook but provide our own ref
+  // Use the hook with our ref
   useClickOutside(() => {
     setShowSuggestions(false);
   }, suggestionsRef);
