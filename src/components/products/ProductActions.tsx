@@ -9,7 +9,7 @@ import { Product } from '@/services/productTypes';
 interface ProductActionsProps {
   product: Product;
   adjustedPrice: number;
-  onAddToCart: (product: Product & { quantity: number, deliveryDate: Date }) => void;
+  onAddToCart: (product: Product & { tons: number, deliveryDate: Date }) => void;
 }
 
 const ProductActions = ({ product, adjustedPrice, onAddToCart }: ProductActionsProps) => {
@@ -32,7 +32,7 @@ const ProductActions = ({ product, adjustedPrice, onAddToCart }: ProductActionsP
     onAddToCart({
       ...product,
       price: adjustedPrice,
-      quantity: parseInt(selectedTons),
+      tons: parseInt(selectedTons),
       deliveryDate
     });
   };
@@ -42,6 +42,7 @@ const ProductActions = ({ product, adjustedPrice, onAddToCart }: ProductActionsP
       <TonSelector 
         value={selectedTons} 
         onValueChange={setSelectedTons} 
+        tonYardRatio={product.tonYardRatio}
       />
 
       <DeliveryDatePicker 
@@ -50,9 +51,21 @@ const ProductActions = ({ product, adjustedPrice, onAddToCart }: ProductActionsP
       />
 
       <div className="space-y-4">
-        <p className="text-2xl font-bold">
-          Total: ${totalPrice.toFixed(2)}
-        </p>
+        <div className="border-t border-b py-4 space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-sm">Price per ton:</span>
+            <span className="font-medium">${adjustedPrice.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm">Amount:</span>
+            <span className="font-medium">{selectedTons} tons</span>
+          </div>
+          <div className="flex justify-between items-center text-lg font-bold">
+            <span>Total:</span>
+            <span>${totalPrice.toFixed(2)}</span>
+          </div>
+        </div>
+        
         <Button 
           onClick={handleAddToCart} 
           size="lg" 

@@ -2,15 +2,14 @@
 import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from "@/components/ui/button";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Plus, Minus, Trash2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, CheckCircle2 } from "lucide-react";
+import CartItemCard from '@/components/cart/CartItemCard';
 
 const Cart = () => {
-  const { items, removeFromCart, updateQuantity, total } = useCart();
+  const { items, removeFromCart, updateDeliveryDetails, total, isDeliveryInfoComplete } = useCart();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,13 +27,24 @@ const Cart = () => {
         imageUrl = `${origin}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
       }
       
-      // Return sanitized item with absolute image URL
+      // Build a descriptive name with delivery info
+      const deliveryDate = item.deliveryDate ? ` - Delivery on ${item.deliveryDate.toLocaleDateString()}` : '';
+      const productName = `${String(item.name).replace(/['"\\]/g, '')} (${item.tons} tons${item.yards ? ` / ${item.yards.toFixed(1)} yards` : ''})${deliveryDate}`;
+      
+      // Return sanitized item with absolute image URL and enhanced metadata
       return {
         id: item.id,
-        name: String(item.name).replace(/['"\\]/g, ''), // Remove quotes and backslashes
+        name: productName,
         price: parseFloat(item.price),
-        quantity: item.quantity,
-        image: imageUrl
+        quantity: item.tons, // Use tons as the quantity
+        image: imageUrl,
+        metadata: {
+          deliveryDate: item.deliveryDate ? item.deliveryDate.toISOString() : null,
+          deliveryAddress: item.deliveryAddress ? JSON.stringify(item.deliveryAddress) : null,
+          contactPhone: item.contactPhone || null,
+          deliveryTimePreference: item.deliveryTimePreference || null,
+          deliveryInstructions: item.deliveryInstructions || null
+        }
       };
     });
   };
@@ -49,6 +59,17 @@ const Cart = () => {
       return;
     }
 
+    // Check if all items have complete delivery information
+    const incompleteItems = items.filter(item => !isDeliveryInfoComplete(item));
+    if (incompleteItems.length > 0) {
+      toast({
+        title: "Missing delivery information",
+        description: "Please complete delivery information for all items before checkout.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
@@ -56,7 +77,6 @@ const Cart = () => {
       // Sanitize product data for Stripe
       const sanitizedItems = sanitizeProductData(items);
       
-      // Detailed logging for debugging
       console.log('Checkout with sanitized items:', sanitizedItems);
 
       const { data, error } = await supabase.functions.invoke('create-payment', {
@@ -107,10 +127,14 @@ const Cart = () => {
     );
   }
 
+  // Count how many items have complete delivery info
+  const completeItems = items.filter(item => isDeliveryInfoComplete(item)).length;
+  const totalItems = items.length;
+
   return (
     <div className="min-h-screen bg-white py-16 px-4">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
+        <h1 className="text-3xl font-bold mb-8">Delivery Orders</h1>
         
         {error && (
           <Alert variant="destructive" className="mb-6">
@@ -118,86 +142,76 @@ const Cart = () => {
           </Alert>
         )}
         
-        <div className="space-y-8">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[100px]">Product</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Quantity (tons)</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>
-                    <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded" />
-                  </TableCell>
-                  <TableCell>{item.name}</TableCell>
-                  <TableCell>${item.price.toFixed(2)}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        disabled={item.quantity <= 1}
-                      >
-                        <Minus className="h-4 w-4" />
-                      </Button>
-                      <Input
-                        type="number"
-                        value={item.quantity}
-                        onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 1)}
-                        min="1"
-                        className="w-20 text-center"
-                      />
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <span className="text-sm text-gray-500 mt-1 block">{item.quantity} tons</span>
-                  </TableCell>
-                  <TableCell>${(item.price * item.quantity).toFixed(2)}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => removeFromCart(item.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-
-          <div className="flex flex-col items-end space-y-4">
-            <div className="text-2xl font-bold">
-              Total: ${total.toFixed(2)}
-            </div>
-            <Button 
-              onClick={handleCheckout} 
-              className="w-48"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
-                </>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="md:col-span-2 space-y-6">
+            {items.map((item) => (
+              <CartItemCard
+                key={`${item.id}-${item.deliveryDate?.getTime()}`}
+                item={item}
+                onRemove={removeFromCart}
+                onUpdateDelivery={updateDeliveryDetails}
+              />
+            ))}
+          </div>
+          
+          <div className="md:col-span-1">
+            <div className="bg-gray-50 p-6 rounded-lg sticky top-24">
+              <h2 className="text-xl font-bold mb-4">Order Summary</h2>
+              
+              <div className="space-y-2 border-b pb-4 mb-4">
+                {items.map((item) => (
+                  <div key={`summary-${item.id}-${item.deliveryDate?.getTime()}`} className="flex justify-between">
+                    <span>{item.name} ({item.tons} tons)</span>
+                    <span>${(item.price * item.tons).toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex justify-between text-lg font-bold mb-6">
+                <span>Total</span>
+                <span>${total.toFixed(2)}</span>
+              </div>
+              
+              {completeItems < totalItems ? (
+                <div className="bg-amber-50 border border-amber-200 rounded p-3 mb-4 text-sm">
+                  <p className="font-semibold text-amber-800">
+                    Please complete delivery information for all items
+                  </p>
+                  <p className="text-amber-700 mt-1">
+                    {completeItems} of {totalItems} items ready for checkout
+                  </p>
+                </div>
               ) : (
-                "Proceed to Checkout"
+                <div className="bg-green-50 border border-green-200 rounded p-3 mb-4 text-sm">
+                  <div className="flex items-center">
+                    <CheckCircle2 className="h-4 w-4 text-green-600 mr-2" />
+                    <p className="font-semibold text-green-800">
+                      All delivery information complete
+                    </p>
+                  </div>
+                </div>
               )}
-            </Button>
+              
+              <Button 
+                onClick={handleCheckout} 
+                className="w-full mb-2"
+                disabled={isLoading || completeItems < totalItems}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  "Proceed to Checkout"
+                )}
+              </Button>
+              
+              <p className="text-xs text-gray-500 text-center mt-2">
+                Each item will be delivered as a separate order. 
+                Please ensure delivery information is accurate.
+              </p>
+            </div>
           </div>
         </div>
       </div>

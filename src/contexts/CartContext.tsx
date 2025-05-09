@@ -2,18 +2,35 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Product } from '../services/productTypes';
 
-interface CartItem extends Product {
-  quantity: number;
+export interface DeliveryAddress {
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+}
+
+export interface CartItem extends Product {
+  tons: number; // Renamed from quantity for clarity
+  yards?: number; // Calculated based on tonYardRatio
   deliveryDate?: Date;
+  deliveryAddress?: DeliveryAddress;
+  contactPhone?: string;
+  deliveryTimePreference?: 'morning' | 'afternoon';
+  deliveryInstructions?: string;
+  locationPhotoUrl?: string;
 }
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (product: Product & { quantity?: number, deliveryDate?: Date }) => void;
+  addToCart: (product: Product & { tons?: number, deliveryDate?: Date }) => void;
   removeFromCart: (productId: number) => void;
-  updateQuantity: (productId: number, quantity: number) => void;
+  updateDeliveryDetails: (
+    productId: number, 
+    details: Partial<Omit<CartItem, keyof Product | 'tons'>>
+  ) => void;
   clearCart: () => void;
   total: number;
+  isDeliveryInfoComplete: (item: CartItem) => boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -21,35 +38,35 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  const addToCart = useCallback((product: Product & { quantity?: number, deliveryDate?: Date }) => {
-    setItems(currentItems => {
-      const existingItem = currentItems.find(item => item.id === product.id);
-      if (existingItem) {
-        return currentItems.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + (product.quantity || 1) }
-            : item
-        );
+  // Modified to add each product as a new cart item (never combine)
+  const addToCart = useCallback((product: Product & { tons?: number, deliveryDate?: Date }) => {
+    const tons = product.tons || 3; // Default to 3 tons if not specified
+    // Calculate yards based on tonYardRatio if available
+    const yards = product.tonYardRatio ? tons / product.tonYardRatio : undefined;
+    
+    setItems(currentItems => [
+      ...currentItems,
+      {
+        ...product,
+        tons,
+        yards
       }
-      return [...currentItems, { 
-        ...product, 
-        quantity: product.quantity || 1,
-        deliveryDate: product.deliveryDate
-      }];
-    });
+    ]);
   }, []);
 
   const removeFromCart = useCallback((productId: number) => {
     setItems(currentItems => currentItems.filter(item => item.id !== productId));
   }, []);
 
-  const updateQuantity = useCallback((productId: number, quantity: number) => {
-    if (quantity <= 0) return; // Don't allow negative or zero quantities
-
+  // New function to update delivery details for a specific cart item
+  const updateDeliveryDetails = useCallback((
+    productId: number,
+    details: Partial<Omit<CartItem, keyof Product | 'tons'>>
+  ) => {
     setItems(currentItems =>
       currentItems.map(item =>
         item.id === productId
-          ? { ...item, quantity }
+          ? { ...item, ...details }
           : item
       )
     );
@@ -59,10 +76,30 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setItems([]);
   }, []);
 
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  // Helper function to check if delivery info is complete for an item
+  const isDeliveryInfoComplete = useCallback((item: CartItem) => {
+    return !!(
+      item.deliveryDate &&
+      item.deliveryAddress?.street &&
+      item.deliveryAddress?.city &&
+      item.deliveryAddress?.state &&
+      item.deliveryAddress?.zip &&
+      item.contactPhone
+    );
+  }, []);
+
+  const total = items.reduce((sum, item) => sum + item.price * item.tons, 0);
 
   return (
-    <CartContext.Provider value={{ items, addToCart, removeFromCart, updateQuantity, clearCart, total }}>
+    <CartContext.Provider value={{ 
+      items, 
+      addToCart, 
+      removeFromCart, 
+      updateDeliveryDetails,
+      clearCart, 
+      total,
+      isDeliveryInfoComplete
+    }}>
       {children}
     </CartContext.Provider>
   );

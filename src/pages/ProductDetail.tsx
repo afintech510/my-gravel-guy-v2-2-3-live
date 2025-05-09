@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,7 +11,7 @@ import ZipCodeSearch from '@/components/ZipCodeSearch';
 import ProductImages from '@/components/products/ProductImages';
 import ProductHeader from '@/components/products/ProductHeader';
 import ProductActions from '@/components/products/ProductActions';
-import ProductTabs from '@/components/products/ProductTabs';
+import ProductAccordion from '@/components/products/ProductAccordion';
 import MiniCalculator from '@/components/products/MiniCalculator';
 import { useProduct } from '@/hooks/useProduct';
 import { Product } from '@/services/productTypes';
@@ -55,7 +56,7 @@ const ProductDetail = () => {
     );
   }
 
-  const handleAddToCart = (productToAdd: Product & { quantity: number, deliveryDate: Date }) => {
+  const handleAddToCart = (productToAdd: Product & { tons: number, deliveryDate: Date }) => {
     addToCart(productToAdd);
     
     toast({
@@ -99,7 +100,7 @@ const ProductDetail = () => {
           </div>
         </div>
 
-        <ProductTabs product={product} />
+        <ProductAccordion product={product} />
       </div>
     </div>
   );
