@@ -3,7 +3,6 @@ import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Search, Filter, SortAsc, SortDesc } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import ZipCodeSearch from '@/components/ZipCodeSearch'; // Fixed import
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,9 +52,7 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
           />
         </div>
         
-        <div className="w-full md:w-auto">
-          <ZipCodeSearch />
-        </div>
+  
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
