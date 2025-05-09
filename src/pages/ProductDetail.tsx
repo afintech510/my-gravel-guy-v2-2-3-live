@@ -13,6 +13,7 @@ import ProductHeader from '@/components/products/ProductHeader';
 import ProductActions from '@/components/products/ProductActions';
 import ProductTabs from '@/components/products/ProductTabs';
 import MiniCalculator from '@/components/products/MiniCalculator';
+import TrustBuildingSection from '@/components/products/TrustBuildingSection';
 import { useProduct } from '@/hooks/useProduct';
 import { Product } from '@/services/productTypes';
 
@@ -101,6 +102,8 @@ const ProductDetail = () => {
         </div>
 
         <ProductTabs product={product} />
+        
+        <TrustBuildingSection />
       </div>
     </div>
   );
