@@ -38,10 +38,10 @@ const Index = () => {
           </p>
           <div className="flex flex-col md:flex-row items-center justify-center gap-4">
             <Link to="/quiz">
-              <Button variant="outline" size="lg">Take Our Material Quiz</Button>
+              <Button variant="outline" size="lg">Use our Project Planner</Button>
             </Link>
             <Link to="/blog">
-              <Button variant="secondary" size="lg">Read Our Blog</Button>
+              <Button variant="secondary" size="lg">Gravel Guy Calculator</Button>
             </Link>
           </div>
         </div>
