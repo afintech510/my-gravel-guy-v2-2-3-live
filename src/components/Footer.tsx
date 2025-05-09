@@ -41,7 +41,7 @@ const Footer = () => {
   const navLinks = [
     { label: 'Shop', href: '/products', icon: <ShoppingCart className="h-4 w-4" /> },
     { label: 'Locations', href: '/locations', icon: <MapPin className="h-4 w-4" /> },
-    { label: 'Calculator', href: '/calculator', icon: <Calculator className="h-4 w-4" /> },
+    { label: 'Gravel Guy Calculator', href: '/calculator', icon: <Calculator className="h-4 w-4" /> },
     { label: 'Project Planner', href: '/quiz', icon: <NotebookPen className="h-4 w-4" /> },
     { label: 'Reviews', href: '/reviews', icon: <Star className="h-4 w-4" /> },
     { label: 'Request Quote', href: '/contact', icon: <Quote className="h-4 w-4" /> },
