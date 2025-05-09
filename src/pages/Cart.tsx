@@ -17,13 +17,26 @@ const Cart = () => {
 
   // Helper function to sanitize product data for Stripe
   const sanitizeProductData = (items) => {
-    return items.map(item => ({
-      id: item.id,
-      name: item.name.replace(/['"\\]/g, ''), // Remove quotes and backslashes
-      price: parseFloat(item.price),
-      quantity: item.quantity,
-      image: item.image || '/placeholder.svg'
-    }));
+    const origin = window.location.origin;
+    
+    return items.map(item => {
+      // Process image URL to ensure it's absolute
+      let imageUrl = item.image || '/placeholder.svg';
+      
+      // If image URL is relative (starts with / or is a local path), convert to absolute URL
+      if (imageUrl && (imageUrl.startsWith('/') && !imageUrl.startsWith('//')) || !imageUrl.includes('://')) {
+        imageUrl = `${origin}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+      }
+      
+      // Return sanitized item with absolute image URL
+      return {
+        id: item.id,
+        name: String(item.name).replace(/['"\\]/g, ''), // Remove quotes and backslashes
+        price: parseFloat(item.price),
+        quantity: item.quantity,
+        image: imageUrl
+      };
+    });
   };
 
   const handleCheckout = async () => {
