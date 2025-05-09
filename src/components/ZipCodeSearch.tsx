@@ -100,16 +100,16 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
       if (zipData) {
         console.log('Found match:', zipData);
         
-        // Convert Supabase data to ZipCodeData format
+        // Convert Supabase data to ZipCodeData format with proper type conversion
         const zipCodeData: ZipCodeData = {
           zip: zipData.zip,
-          lat: zipData.lat,
-          lng: zipData.lng,
+          lat: Number(zipData.lat) || 0,
+          lng: Number(zipData.lng) || 0,
           city: zipData.city,
           state_id: zipData.state_id,
           state_name: zipData.state_name,
-          population: zipData.population,
-          density: zipData.density,
+          population: Number(zipData.population) || 0,
+          density: Number(zipData.density) || 0,
           county_fips: zipData.county_fips,
           county_name: zipData.county_name,
           county_names_all: zipData.county_names_all,
@@ -205,16 +205,16 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
         console.log('Suggestions result:', { data, error });
         
         if (data && data.length > 0) {
-          // Convert to ZipCodeData format
+          // Convert to ZipCodeData format with proper type conversion
           const zipCodeSuggestions: ZipCodeData[] = data.map(item => ({
             zip: item.zip,
-            lat: item.lat,
-            lng: item.lng,
+            lat: Number(item.lat) || 0,
+            lng: Number(item.lng) || 0,
             city: item.city,
             state_id: item.state_id,
             state_name: item.state_name,
-            population: item.population,
-            density: item.density,
+            population: Number(item.population) || 0,
+            density: Number(item.density) || 0,
             county_fips: item.county_fips,
             county_name: item.county_name,
             county_names_all: item.county_names_all,
