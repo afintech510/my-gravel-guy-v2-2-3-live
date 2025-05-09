@@ -9,6 +9,7 @@ import HowItWorks from '../components/HowItWorks';
 import TestQueryButton from '../components/TestQueryButton';
 import { Button } from '@/components/ui/button';
 import { useZipCode } from '../contexts/ZipCodeContext';
+import TrustBanner from '../components/products/trust/TrustBanner';
 
 const Index = () => {
   const { zipCode } = useZipCode();
@@ -70,6 +71,18 @@ const Index = () => {
               <Button>View All Products</Button>
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Trust Banner - Scrolling format above calculator */}
+      <section className="py-6 px-4 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <TrustBanner 
+            title="Why Customers Trust Us" 
+            forceScrolling={true} 
+            badgeSize="compact"
+            className="bg-white rounded-lg shadow-sm"
+          />
         </div>
       </section>
 
