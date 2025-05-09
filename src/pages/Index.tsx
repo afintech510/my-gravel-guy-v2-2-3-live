@@ -31,12 +31,7 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Location Product Hero - Shows always below ZIP search */}
-      <section className="py-6 px-4">
-        <div className="max-w-6xl mx-auto">
-          <LocationProductHero />
-        </div>
-      </section>
+ 
 
       {/* Hero Section */}
       <section className="py-16 px-4">
