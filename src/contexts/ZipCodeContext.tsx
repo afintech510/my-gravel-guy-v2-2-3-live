@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ZipCodeData } from '../services/productTypes';
 import { supabase } from '@/integrations/supabase/client';
@@ -60,8 +59,24 @@ export function ZipCodeProvider({ children }: { children: React.ReactNode }) {
               .maybeSingle();
               
             if (zipData) {
-              // Found exact match for ZIP code
-              setZipCode(data.postal, zipData);
+              // Found exact match for ZIP code with proper type conversion
+              const formattedZipData: ZipCodeData = {
+                zip: zipData.zip,
+                lat: Number(zipData.lat) || 0,
+                lng: Number(zipData.lng) || 0,
+                city: zipData.city,
+                state_id: zipData.state_id,
+                state_name: zipData.state_name,
+                population: Number(zipData.population) || 0,
+                density: Number(zipData.density) || 0,
+                county_fips: zipData.county_fips,
+                county_name: zipData.county_name,
+                county_names_all: zipData.county_names_all,
+                county_fips_all: zipData.county_fips_all,
+                timezone: zipData.timezone
+              };
+              
+              setZipCode(data.postal, formattedZipData);
               setIsSearchLocked(true);
             } else {
               // Try to find by city name
@@ -72,7 +87,24 @@ export function ZipCodeProvider({ children }: { children: React.ReactNode }) {
                 .limit(1);
                 
               if (cityData && cityData.length > 0) {
-                setZipCode(cityData[0].zip, cityData[0]);
+                // Found city match with proper type conversion
+                const formattedCityData: ZipCodeData = {
+                  zip: cityData[0].zip,
+                  lat: Number(cityData[0].lat) || 0,
+                  lng: Number(cityData[0].lng) || 0,
+                  city: cityData[0].city,
+                  state_id: cityData[0].state_id,
+                  state_name: cityData[0].state_name,
+                  population: Number(cityData[0].population) || 0,
+                  density: Number(cityData[0].density) || 0,
+                  county_fips: cityData[0].county_fips,
+                  county_name: cityData[0].county_name,
+                  county_names_all: cityData[0].county_names_all,
+                  county_fips_all: cityData[0].county_fips_all,
+                  timezone: cityData[0].timezone
+                };
+                
+                setZipCode(cityData[0].zip, formattedCityData);
                 setIsSearchLocked(true);
               } else {
                 // If no matches, just get any service location as fallback
@@ -82,7 +114,24 @@ export function ZipCodeProvider({ children }: { children: React.ReactNode }) {
                   .limit(1);
                   
                 if (anyZipData && anyZipData.length > 0) {
-                  setZipCode(anyZipData[0].zip, anyZipData[0]);
+                  // Format any ZIP data with proper type conversion
+                  const formattedAnyData: ZipCodeData = {
+                    zip: anyZipData[0].zip,
+                    lat: Number(anyZipData[0].lat) || 0,
+                    lng: Number(anyZipData[0].lng) || 0,
+                    city: anyZipData[0].city,
+                    state_id: anyZipData[0].state_id,
+                    state_name: anyZipData[0].state_name,
+                    population: Number(anyZipData[0].population) || 0,
+                    density: Number(anyZipData[0].density) || 0,
+                    county_fips: anyZipData[0].county_fips,
+                    county_name: anyZipData[0].county_name,
+                    county_names_all: anyZipData[0].county_names_all,
+                    county_fips_all: anyZipData[0].county_fips_all,
+                    timezone: anyZipData[0].timezone
+                  };
+                  
+                  setZipCode(anyZipData[0].zip, formattedAnyData);
                   setIsSearchLocked(true);
                 }
               }
@@ -97,7 +146,24 @@ export function ZipCodeProvider({ children }: { children: React.ReactNode }) {
             .limit(1);
             
           if (anyZipData && anyZipData.length > 0) {
-            setZipCode(anyZipData[0].zip, anyZipData[0]);
+            // Format fallback data with proper type conversion
+            const formattedFallbackData: ZipCodeData = {
+              zip: anyZipData[0].zip,
+              lat: Number(anyZipData[0].lat) || 0,
+              lng: Number(anyZipData[0].lng) || 0,
+              city: anyZipData[0].city,
+              state_id: anyZipData[0].state_id,
+              state_name: anyZipData[0].state_name,
+              population: Number(anyZipData[0].population) || 0,
+              density: Number(anyZipData[0].density) || 0,
+              county_fips: anyZipData[0].county_fips,
+              county_name: anyZipData[0].county_name,
+              county_names_all: anyZipData[0].county_names_all,
+              county_fips_all: anyZipData[0].county_fips_all,
+              timezone: anyZipData[0].timezone
+            };
+            
+            setZipCode(anyZipData[0].zip, formattedFallbackData);
             setIsSearchLocked(true);
           }
         }
