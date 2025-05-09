@@ -30,7 +30,7 @@ const TopBanner = ({ className }: TopBannerProps) => {
     )}>
       <div className="max-w-6xl mx-auto flex items-center justify-center">
         <h3 className="text-sm font-semibold">
-          FREE Delivery in{' '}
+          FREE Delivery to{' '}
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <button className="inline-flex items-center underline hover:text-white transition-colors">
@@ -50,7 +50,7 @@ const TopBanner = ({ className }: TopBannerProps) => {
               </div>
             </DialogContent>
           </Dialog>
-          {' '}on PREMIUM Gravel
+          {' '}   Only Quality Gravel & Construction Aggregates
         </h3>
       </div>
     </div>
