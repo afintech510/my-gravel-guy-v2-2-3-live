@@ -30,9 +30,12 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
     setShowSuggestions
   } = useZipCodeSearch();
   
-  const suggestionsRef = useClickOutside(() => {
+  const suggestionsRef = React.useRef<HTMLDivElement>(null);
+
+  // Use the hook but provide our own ref
+  useClickOutside(() => {
     setShowSuggestions(false);
-  });
+  }, suggestionsRef);
 
   return (
     <div className={cn("w-full max-w-md mx-auto relative", className)}>

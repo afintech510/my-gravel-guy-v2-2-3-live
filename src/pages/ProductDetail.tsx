@@ -6,7 +6,7 @@ import { useZipCode } from '../contexts/ZipCodeContext';
 import { useCart } from '../contexts/CartContext';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from '@/components/ui/button';
-import ZipCodeSearch from '@/components/ZipCodeSearch';
+import ZipCodeSearch from '@/components/zip-code/ZipCodeSearch';
 import ProductImages from '@/components/products/ProductImages';
 import ProductHeader from '@/components/products/ProductHeader';
 import ProductActions from '@/components/products/ProductActions';

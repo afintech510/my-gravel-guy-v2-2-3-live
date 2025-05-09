@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { fetchSheetData } from '../utils/googleSheets';
-import ZipCodeSearch from '../components/ZipCodeSearch';
+import ZipCodeSearch from '../components/zip-code/ZipCodeSearch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Search, MapPin, ArrowRight, Info } from 'lucide-react';

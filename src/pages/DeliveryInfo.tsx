@@ -1,9 +1,8 @@
-
 import React from "react";
 import { Helmet } from "react-helmet-async";
 import { Truck, MapPin, Info, Clock, Calendar, HelpCircle } from "lucide-react";
 import { useZipCode } from "@/contexts/ZipCodeContext";
-import ZipCodeSearch from "@/components/ZipCodeSearch";
+import ZipCodeSearch from "@/components/zip-code/ZipCodeSearch";
 import {
   Breadcrumb,
   BreadcrumbList,
