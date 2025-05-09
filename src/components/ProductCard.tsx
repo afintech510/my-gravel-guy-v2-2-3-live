@@ -32,7 +32,7 @@ const ProductCard = ({ product }: { product: Product }) => {
     addToCart({
       ...product,
       price: adjustedPrice,
-      quantity: 3
+      tons: 3
     });
     
     toast({

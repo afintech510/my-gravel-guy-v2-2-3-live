@@ -113,7 +113,7 @@ const LocationProductHero = () => {
   const handleAddToCart = (product: Product) => {
     addToCart({
       ...product,
-      quantity: 1
+      tons: 1
     });
     
     toast({
