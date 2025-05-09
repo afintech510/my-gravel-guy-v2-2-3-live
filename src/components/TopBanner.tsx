@@ -50,7 +50,7 @@ const TopBanner = ({ className }: TopBannerProps) => {
               </div>
             </DialogContent>
           </Dialog>
-          {' '}   Only Quality Gravel & Construction Aggregates
+          {' '}  only Quality Gravel & Construction Aggregates
         </h3>
       </div>
     </div>
