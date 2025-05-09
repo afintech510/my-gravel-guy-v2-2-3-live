@@ -47,9 +47,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <HowItWorks />
-
      {/* Location Product Hero - Shows always below ZIP search */}
       <section className="py-6 px-4">
         <div className="max-w-6xl mx-auto">
@@ -57,7 +54,9 @@ const Index = () => {
         </div>
       </section>
       
-
+      {/* How It Works Section */}
+      <HowItWorks />
+      
       {/* Trust Banner - Scrolling format above calculator */}
       <section className="py-6 px-4 bg-gray-50">
         <div className="max-w-6xl mx-auto">
