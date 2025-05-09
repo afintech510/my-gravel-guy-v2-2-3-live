@@ -11,7 +11,7 @@ import ZipCodeSearch from '@/components/ZipCodeSearch';
 import ProductImages from '@/components/products/ProductImages';
 import ProductHeader from '@/components/products/ProductHeader';
 import ProductActions from '@/components/products/ProductActions';
-import ProductAccordion from '@/components/products/ProductAccordion';
+import ProductTabs from '@/components/products/ProductTabs';
 import MiniCalculator from '@/components/products/MiniCalculator';
 import { useProduct } from '@/hooks/useProduct';
 import { Product } from '@/services/productTypes';
@@ -100,7 +100,7 @@ const ProductDetail = () => {
           </div>
         </div>
 
-        <ProductAccordion product={product} />
+        <ProductTabs product={product} />
       </div>
     </div>
   );

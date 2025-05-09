@@ -1,4 +1,3 @@
-
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu, ShoppingCart, NotebookPen, Calculator, Store, ThumbsUp, Phone, House, MapPin } from "lucide-react";
@@ -11,7 +10,7 @@ import { useState } from 'react';
 const Navbar = () => {
   const { items } = useCart();
   const { zipCode, zipCodeData, clearZipCode, isSearchLocked } = useZipCode();
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  const totalItems = items.reduce((sum, item) => sum + item.tons, 0);
   const [isOpen, setIsOpen] = useState(false);
 
   const links = [

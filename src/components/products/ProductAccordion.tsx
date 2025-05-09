@@ -6,6 +6,7 @@ import {
   AccordionItem, 
   AccordionTrigger 
 } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
 import { Product } from '@/services/productTypes';
 import { FileText, Package, HardHat, Truck, RotateCcw, HelpCircle, Newspaper } from "lucide-react";
 
