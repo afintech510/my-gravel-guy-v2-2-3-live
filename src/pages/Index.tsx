@@ -16,12 +16,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       
-      {/* ZIP Code Search Section */}
-      <section className="py-4 px-4 bg-blue-50 border-b">
-        <div className="max-w-4xl mx-auto">
-          <ZipCodeSearch />
-        </div>
-      </section>
+   
     
       {/* Hero Section */}
       <section className="py-16 px-4">
