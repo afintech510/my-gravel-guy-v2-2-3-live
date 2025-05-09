@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,10 +12,12 @@ import { cn } from '@/lib/utils';
 interface ZipCodeSearchProps {
   className?: string;
   variant?: 'default' | 'minimal';
+  onZipSelected?: (zipCode: string) => void;
+  initialZip?: string;
 }
 
-const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) => {
-  const [inputValue, setInputValue] = useState('');
+const ZipCodeSearch = ({ className, variant = 'default', onZipSelected, initialZip }: ZipCodeSearchProps) => {
+  const [inputValue, setInputValue] = useState(initialZip || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<ZipCodeData[]>([]);
@@ -36,7 +37,7 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
   // Initialize input value with zip code if available
   useEffect(() => {
     console.log('ZipCode or zipCodeData changed:', { zipCode, zipCodeData });
-    if (zipCode && zipCodeData) {
+    if (zipCode && zipCodeData && !initialZip) {
       setInputValue(zipCode);
       setSearchCompleted(true);
     }
@@ -104,11 +105,16 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
         setSearchCompleted(true);
         setInputValue(zipData.zip); // Update the input with the found ZIP code
         
-        // Show success message with location info
-        toast({
-          title: "Location Found!",
-          description: `We deliver to ${zipData.city}, ${zipData.state_id}. Browse our products below.`,
-        });
+        // Call onZipSelected if provided
+        if (onZipSelected) {
+          onZipSelected(zipData.zip);
+        } else {
+          // Show success message with location info
+          toast({
+            title: "Location Found!",
+            description: `We deliver to ${zipData.city}, ${zipData.state_id}. Browse our products below.`,
+          });
+        }
         return;
       }
       
@@ -261,10 +267,15 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
     setSearchCompleted(true);
     setError(null);
     
-    toast({
-      title: "Location Selected",
-      description: `${suggestion.city}, ${suggestion.state_id} selected.`,
-    });
+    // Call onZipSelected if provided
+    if (onZipSelected) {
+      onZipSelected(suggestion.zip);
+    } else {
+      toast({
+        title: "Location Selected",
+        description: `${suggestion.city}, ${suggestion.state_id} selected.`,
+      });
+    }
   };
   
   const handleUnlockSearch = () => {
@@ -277,7 +288,7 @@ const ZipCodeSearch = ({ className, variant = 'default' }: ZipCodeSearchProps) =
 
   return (
     <div className={cn("w-full max-w-md mx-auto relative", className)}>
-      {isSearchLocked && zipCodeData ? (
+      {isSearchLocked && zipCodeData && !onZipSelected ? (
         <div className="flex items-center justify-between bg-primary/10 rounded-lg p-3">
           <div className="flex items-center">
             <MapPin className="h-4 w-4 mr-2 text-primary" />
