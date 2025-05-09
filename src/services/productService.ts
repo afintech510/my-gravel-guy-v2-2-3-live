@@ -1,3 +1,4 @@
+
 import { Product, ZipCodeData } from './productTypes';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -41,23 +42,42 @@ export async function getProducts(): Promise<Product[]> {
         categories[0] as 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base' : 
         'gravel';
       
+      // Parse metadata if it's a JSON string
+      let metadata: any = {};
+      if (row.metadata) {
+        try {
+          // Try to parse if it's a JSON string
+          if (typeof row.metadata === 'string') {
+            metadata = JSON.parse(row.metadata);
+          } else {
+            // If it's already an object, use it directly
+            metadata = row.metadata;
+          }
+        } catch (e) {
+          console.error('Failed to parse metadata:', e);
+        }
+      }
+
       return {
         id: row.id || index + 1,
         name: row.name || `Product ${index + 1}`,
         description: row.description || "",
-        price: parseFloat(row.price) || 0,
+        price: parseFloat(String(row.price)) || 0,
         image: row.image || "/placeholder.svg",
         category: mainCategory,
         categories: categories, // Add all categories as an array for filtering
-        tonYardRatio: row.ton_yard_ratio ? parseFloat(row.ton_yard_ratio) : 1.5,
+        tonYardRatio: row.ton_yard_ratio ? parseFloat(String(row.ton_yard_ratio)) : 1.5,
         slug: row.name?.toLowerCase().replace(/\s+/g, '-') || `product-${index + 1}`,
         specifications: {
-          density: row.metadata?.density || "",
-          size: row.metadata?.size || "",
-          color: row.metadata?.color || "",
-          coverage: row.metadata?.coverage || ""
+          density: metadata?.density || "",
+          size: metadata?.size || "",
+          color: metadata?.color || "",
+          coverage: metadata?.coverage || ""
         },
-        uses: row.metadata?.uses ? row.metadata.uses.split(',').map((use: string) => use.trim()) : [],
+        uses: metadata?.uses ? Array.isArray(metadata.uses) ? 
+              metadata.uses : 
+              String(metadata.uses).split(',').map((use: string) => use.trim()) : 
+              [],
         faqs: []
       };
     });
