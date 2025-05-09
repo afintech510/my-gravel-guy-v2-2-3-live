@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useMediaQuery } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import ScrollingTrustBanner from './ScrollingTrustBanner';
 import TrustGrid from './TrustGrid';
 import { trustItems, TrustBadgeItem } from './TrustData';
@@ -25,7 +25,7 @@ const TrustBanner: React.FC<TrustBannerProps> = ({
   columns = 3,
   className
 }) => {
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isMobile = useIsMobile();
   
   // Determine which component to show
   const showScrolling = forceScrolling || (!forceGrid && isMobile);
