@@ -23,7 +23,21 @@ serve(async (req) => {
     const requestBody = await req.text();
     console.log('Received request body:', requestBody);
     
-    const { items } = JSON.parse(requestBody);
+    let parsedData;
+    try {
+      parsedData = JSON.parse(requestBody);
+    } catch (parseError) {
+      console.error('JSON parsing error:', parseError.message);
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON in request body" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
+    }
+    
+    const { items } = parsedData;
     
     // Access Stripe secret key and validate it exists
     const stripeKey = Deno.env.get("stripe");
@@ -54,35 +68,48 @@ serve(async (req) => {
       );
     }
 
-    // Validate each item
-    const validatedLineItems = items.map((item) => {
-      if (!item.name || !item.price || !item.quantity) {
-        console.error('Invalid item:', item);
-        throw new Error(`Invalid item: ${JSON.stringify(item)}`);
-      }
-      
-      return {
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: item.name,
-            images: item.image ? [item.image] : [],
+    // Validate and transform each item with detailed error logging
+    const validatedLineItems = [];
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      try {
+        if (!item.name || typeof item.price !== 'number' || !item.quantity) {
+          console.error(`Invalid item at index ${i}:`, item);
+          throw new Error(`Invalid item at index ${i}: missing required fields or invalid types`);
+        }
+        
+        // Use a clean name for Stripe (no special chars)
+        const cleanName = String(item.name).replace(/['"\\]/g, '');
+        
+        validatedLineItems.push({
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: cleanName,
+              images: item.image ? [item.image] : [],
+            },
+            unit_amount: Math.round(item.price * 100), // Convert to cents
           },
-          unit_amount: Math.round(item.price * 100), // Convert to cents
-        },
-        quantity: item.quantity,
-      };
-    });
+          quantity: item.quantity,
+        });
+      } catch (validationError) {
+        console.error(`Item validation error for item ${i}:`, validationError);
+        throw new Error(`Item validation error: ${validationError.message}`);
+      }
+    }
 
     console.log('Creating Stripe checkout session with items:', validatedLineItems);
+
+    // Get origin for success/cancel URLs
+    const origin = req.headers.get("origin") || "http://localhost:3000";
 
     // Create a Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: validatedLineItems,
       mode: "payment",
-      success_url: `${req.headers.get("origin")}/payment-success`,
-      cancel_url: `${req.headers.get("origin")}/cart`,
+      success_url: `${origin}/payment-success`,
+      cancel_url: `${origin}/cart`,
     });
 
     console.log('Stripe checkout session created:', session.id);
@@ -116,4 +143,3 @@ serve(async (req) => {
     );
   }
 });
-
