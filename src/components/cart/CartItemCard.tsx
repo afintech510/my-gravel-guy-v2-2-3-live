@@ -11,8 +11,8 @@ import { CartItem } from "../../contexts/CartContext";
 
 interface CartItemCardProps {
   item: CartItem;
-  onRemove: (id: number) => void;
-  onUpdateDelivery: (id: number, details: Partial<CartItem>) => void;
+  onRemove: (id: string | number) => void;
+  onUpdateDelivery: (id: string | number, details: Partial<CartItem>) => void;
 }
 
 const CartItemCard = ({ item, onRemove, onUpdateDelivery }: CartItemCardProps) => {
