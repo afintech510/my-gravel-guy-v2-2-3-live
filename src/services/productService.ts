@@ -117,7 +117,7 @@ export async function getZipCodePricingMap(): Promise<Map<string, number>> {
     
     zipData.forEach(row => {
       const zipCode = row.zip?.trim();
-      const adjustment = parseFloat(row.price_adjustment || "0");
+      const adjustment = parseFloat(String(row.price_adjustment || "0"));
       
       if (zipCode && !isNaN(adjustment)) {
         zipPricingMap.set(zipCode, adjustment);
@@ -201,13 +201,13 @@ export async function getZipCodes(): Promise<ZipCodeData[]> {
     // Transform raw data into ZipCodeData objects
     const zipCodes: ZipCodeData[] = zipData.map(row => ({
       zip: row.zip || "",
-      lat: parseFloat(row.lat) || 0,
-      lng: parseFloat(row.lng) || 0,
+      lat: row.lat ? Number(row.lat) : 0,
+      lng: row.lng ? Number(row.lng) : 0,
       city: row.city || "",
       state_id: row.state_id || "",
       state_name: row.state_name || "",
-      population: parseInt(row.population) || 0,
-      density: parseFloat(row.density) || 0,
+      population: row.population ? Number(row.population) : 0,
+      density: row.density ? Number(row.density) : 0,
       county_fips: row.county_fips || "",
       county_name: row.county_name || "",
       county_names_all: row.county_names_all || "",
@@ -273,13 +273,13 @@ export async function validateZipCode(zipCode: string): Promise<{
       inServiceArea,
       zipData: zipData ? {
         zip: zipData.zip,
-        lat: zipData.lat,
-        lng: zipData.lng,
+        lat: Number(zipData.lat) || 0,
+        lng: Number(zipData.lng) || 0,
         city: zipData.city,
         state_id: zipData.state_id,
         state_name: zipData.state_name,
-        population: zipData.population,
-        density: zipData.density,
+        population: Number(zipData.population) || 0,
+        density: Number(zipData.density) || 0,
         county_fips: zipData.county_fips,
         county_name: zipData.county_name,
         county_names_all: zipData.county_names_all,
@@ -364,13 +364,13 @@ export async function getServiceAreasByState(): Promise<Record<string, ZipCodeDa
     zipData.forEach(row => {
       const zipCodeData: ZipCodeData = {
         zip: row.zip || "",
-        lat: parseFloat(row.lat) || 0,
-        lng: parseFloat(row.lng) || 0,
+        lat: Number(row.lat) || 0,
+        lng: Number(row.lng) || 0,
         city: row.city || "",
         state_id: row.state_id || "",
         state_name: row.state_name || "",
-        population: parseInt(row.population) || 0,
-        density: parseFloat(row.density) || 0,
+        population: Number(row.population) || 0,
+        density: Number(row.density) || 0,
         county_fips: row.county_fips || "",
         county_name: row.county_name || "",
         county_names_all: row.county_names_all || "",
