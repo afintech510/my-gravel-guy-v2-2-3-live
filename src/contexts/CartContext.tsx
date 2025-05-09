@@ -23,9 +23,9 @@ export interface CartItem extends Product {
 interface CartContextType {
   items: CartItem[];
   addToCart: (product: Product & { tons?: number, deliveryDate?: Date }) => void;
-  removeFromCart: (productId: number) => void;
+  removeFromCart: (productId: string | number) => void;
   updateDeliveryDetails: (
-    productId: number, 
+    productId: string | number, 
     details: Partial<Omit<CartItem, keyof Product | 'tons'>>
   ) => void;
   clearCart: () => void;
@@ -54,13 +54,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ]);
   }, []);
 
-  const removeFromCart = useCallback((productId: number) => {
+  const removeFromCart = useCallback((productId: string | number) => {
     setItems(currentItems => currentItems.filter(item => item.id !== productId));
   }, []);
 
   // New function to update delivery details for a specific cart item
   const updateDeliveryDetails = useCallback((
-    productId: number,
+    productId: string | number,
     details: Partial<Omit<CartItem, keyof Product | 'tons'>>
   ) => {
     setItems(currentItems =>

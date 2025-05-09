@@ -12,7 +12,7 @@ const ResultsStep: React.FC = () => {
   const { state, prevStep, resetQuiz } = useQuiz();
   const { addToCart } = useCart();
   
-  const handleAddToCart = (productId: number) => {
+  const handleAddToCart = (productId: string | number) => {
     const product = state.recommendations.find(p => p.id === productId);
     if (product) {
       addToCart(product);
