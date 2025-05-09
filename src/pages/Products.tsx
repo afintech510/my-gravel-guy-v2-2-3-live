@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import ProductGrid from '../components/ProductGrid';
 import ProductSearch from '../components/ProductSearch';
+import TrustBanner from '../components/products/trust/TrustBanner';
 
 const Products = () => {
   const [filters, setFilters] = useState({
@@ -34,6 +35,16 @@ const Products = () => {
           />
         </div>
         <ProductGrid filters={filters} />
+        
+        {/* Trust Banner Section */}
+        <div className="mt-16 mb-12">
+          <TrustBanner 
+            title="Shop With Confidence" 
+            badgeSize="large" 
+            columns={3}
+            className="shadow-md"
+          />
+        </div>
       </div>
     </div>
   );
