@@ -1,3 +1,4 @@
+
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu, ShoppingCart, NotebookPen, Calculator, Store, ThumbsUp, Phone, House, MapPin } from "lucide-react";
@@ -27,7 +28,8 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="border-b bg-white sticky top-0 z-50 shadow-sm">
+    <nav className="border-b bg-white z-40 shadow-sm">
+      {/* Note: removed 'sticky top-0' since we now have the banner above */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center">
