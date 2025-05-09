@@ -9,6 +9,7 @@ import { CartProvider } from "./contexts/CartContext";
 import { ZipCodeProvider } from "./contexts/ZipCodeContext";
 import { BlogProvider } from "./contexts/BlogContext";
 import ScrollToTop from "./components/ScrollToTop";
+import TopBanner from "./components/TopBanner";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Index from "./pages/Index";
@@ -49,6 +50,7 @@ const App = () => {
               <BrowserRouter>
                 <ScrollToTop />
                 <div className="min-h-screen bg-gray-50 flex flex-col">
+                  <TopBanner />
                   <Navbar />
                   <Routes>
                     <Route path="/" element={<Index />} />
