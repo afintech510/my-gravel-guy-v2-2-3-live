@@ -5,7 +5,7 @@ import { Menu, ShoppingCart, NotebookPen, Calculator, Store, ThumbsUp, Phone, Ho
 import { Link } from "react-router-dom";
 import { useCart } from '../contexts/CartContext';
 import { useZipCode } from '../contexts/ZipCodeContext';
-import ZipCodeSearch from './ZipCodeSearch';
+import ZipCodeSearch from './zip-code/ZipCodeSearch';
 import { useState } from 'react';
 
 const Navbar = () => {

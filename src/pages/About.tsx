@@ -1,6 +1,5 @@
-
 import React from 'react';
-import ZipCodeSearch from '../components/ZipCodeSearch';
+import ZipCodeSearch from '../components/zip-code/ZipCodeSearch';
 
 const About = () => {
   return (

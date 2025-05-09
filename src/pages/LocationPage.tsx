@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import ProductGrid from '../components/ProductGrid';
-import ZipCodeSearch from '../components/ZipCodeSearch';
+import ZipCodeSearch from '../components/zip-code/ZipCodeSearch';
 import { fetchSheetData } from '../utils/googleSheets';
 import { Card, CardContent } from '@/components/ui/card';
 import { MapPin, TruckIcon, Clock, Phone, Star } from 'lucide-react';
