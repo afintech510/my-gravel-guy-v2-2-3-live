@@ -1,3 +1,4 @@
+
 export interface Product {
   id: number;
   name: string;
@@ -5,6 +6,7 @@ export interface Product {
   price: number;
   image: string;
   category: 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base';
+  categories?: string[]; // Added for multiple categories per product
   slug: string;
   tonYardRatio: number;
   usage?: 'driveway' | 'walkway' | 'general';

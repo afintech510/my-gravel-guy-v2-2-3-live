@@ -1,10 +1,5 @@
-
 import { Product, ZipCodeData } from './productTypes';
-import { fetchSheetData } from "../utils/googleSheets";
 import { supabase } from '@/integrations/supabase/client';
-
-// The Google Sheet ID from your URL - will only be used for product data now
-const SHEET_ID = "1f-9eFHdoSETcV79k1lkEFTNSZ9ZXCDJqPbRWquiZByI";
 
 // In-memory cache with expiry
 let productsCache: Product[] | null = null;
@@ -14,7 +9,7 @@ let lastFetchTimestamp = 0;
 const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
 
 /**
- * Fetch products from Google Sheets
+ * Fetch products from Supabase
  */
 export async function getProducts(): Promise<Product[]> {
   // Check cache first
@@ -23,29 +18,49 @@ export async function getProducts(): Promise<Product[]> {
   }
 
   try {
-    console.log('Fetching products from Google Sheets...');
-    const rawProducts = await fetchSheetData(SHEET_ID, "Products");
-    console.log('Raw products data:', rawProducts);
+    console.log('Fetching products from Supabase...');
+    
+    const { data: productsData, error } = await supabase
+      .from('products')
+      .select('*');
+
+    if (error) {
+      throw error;
+    }
+
+    console.log('Raw products data from Supabase:', productsData);
     
     // Transform raw data into Product objects
-    const products: Product[] = rawProducts.map((row, index) => ({
-      id: index + 1,
-      name: row.name || `Product ${index + 1}`,
-      description: row.description || "",
-      price: parseFloat(row.price) || 0,
-      image: row.image || "/placeholder.svg",
-      category: (row.category as 'gravel' | 'sand' | 'dirt') || 'gravel',
-      tonYardRatio: parseFloat(row.tonYardRatio) || 1.5, // default ratio if not specified
-      slug: row.slug || row.name?.toLowerCase().replace(/\s+/g, '-') || `product-${index + 1}`,
-      specifications: {
-        density: row.density || "",
-        size: row.size || "",
-        color: row.color || "",
-        coverage: row.coverage || ""
-      },
-      uses: row.uses ? row.uses.split(',').map((use: string) => use.trim()) : [],
-      faqs: []
-    }));
+    const products: Product[] = productsData.map((row, index) => {
+      // Extract categories - if category is a comma-separated string, convert to array
+      const categoryStr = row.category || 'gravel';
+      
+      // Set main category as the first category in the list
+      const categories = categoryStr.split(',').map((cat: string) => cat.trim().toLowerCase());
+      const mainCategory = categories.length > 0 ? 
+        categories[0] as 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base' : 
+        'gravel';
+      
+      return {
+        id: row.id || index + 1,
+        name: row.name || `Product ${index + 1}`,
+        description: row.description || "",
+        price: parseFloat(row.price) || 0,
+        image: row.image || "/placeholder.svg",
+        category: mainCategory,
+        categories: categories, // Add all categories as an array for filtering
+        tonYardRatio: row.ton_yard_ratio ? parseFloat(row.ton_yard_ratio) : 1.5,
+        slug: row.name?.toLowerCase().replace(/\s+/g, '-') || `product-${index + 1}`,
+        specifications: {
+          density: row.metadata?.density || "",
+          size: row.metadata?.size || "",
+          color: row.metadata?.color || "",
+          coverage: row.metadata?.coverage || ""
+        },
+        uses: row.metadata?.uses ? row.metadata.uses.split(',').map((use: string) => use.trim()) : [],
+        faqs: []
+      };
+    });
     
     console.log('Transformed products:', products);
     
@@ -57,7 +72,6 @@ export async function getProducts(): Promise<Product[]> {
   } catch (error) {
     console.error("Failed to fetch products:", error);
     console.error("Error details:", {
-      sheetId: SHEET_ID,
       timestamp: new Date().toISOString(),
       errorMessage: error instanceof Error ? error.message : String(error)
     });
@@ -392,6 +406,27 @@ export async function getServiceAreasByState(): Promise<Record<string, ZipCodeDa
     console.error("Error fetching service areas by state:", error);
     return {};
   }
+}
+
+/**
+ * Get all unique categories from products
+ * @returns Array of unique categories
+ */
+export async function getUniqueCategories(): Promise<string[]> {
+  const products = await getProducts();
+  
+  const categoriesSet = new Set<string>();
+  
+  // Extract all categories from all products
+  products.forEach(product => {
+    if (product.categories && Array.isArray(product.categories)) {
+      product.categories.forEach(cat => categoriesSet.add(cat));
+    } else if (product.category) {
+      categoriesSet.add(product.category);
+    }
+  });
+  
+  return Array.from(categoriesSet).sort();
 }
 
 // Re-export types from productTypes for convenience

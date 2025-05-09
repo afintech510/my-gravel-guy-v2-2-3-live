@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import ProductGrid from '../components/ProductGrid';
 import ProductSearch from '../components/ProductSearch';
 import TrustBanner from '../components/products/trust/TrustBanner';
+import { useToast } from "@/components/ui/use-toast";
 
 const Products = () => {
   const [filters, setFilters] = useState({
@@ -10,6 +11,7 @@ const Products = () => {
     sort: 'nameAsc',
     category: 'all'
   });
+  const { toast } = useToast();
 
   const handleSearch = (term: string) => {
     setFilters(prev => ({ ...prev, search: term }));
@@ -21,6 +23,14 @@ const Products = () => {
 
   const handleFilter = (category: string) => {
     setFilters(prev => ({ ...prev, category }));
+    
+    if (category !== 'all') {
+      toast({
+        title: "Category selected",
+        description: `Showing ${category} products`,
+        duration: 2000,
+      });
+    }
   };
 
   return (

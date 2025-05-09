@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
-import { Search, Filter, SortAsc, SortDesc } from 'lucide-react';
+import { Search, Filter, SortAsc, SortDesc, Grid3X3 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { getUniqueCategories } from '@/services/productService';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,9 +26,25 @@ interface ProductSearchProps {
 }
 
 const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
-  const [sortOrder, setSortOrder] = React.useState('nameAsc');
-  const [category, setCategory] = React.useState('all');
+  const [sortOrder, setSortOrder] = useState('nameAsc');
+  const [category, setCategory] = useState('all');
+  const [categories, setCategories] = useState<string[]>(['all', 'gravel', 'sand', 'dirt', 'mulch']);
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    // Fetch unique categories from the database
+    async function loadCategories() {
+      try {
+        const uniqueCategories = await getUniqueCategories();
+        // Always include 'all' as the first option
+        setCategories(['all', ...uniqueCategories]);
+      } catch (error) {
+        console.error("Failed to load categories:", error);
+      }
+    }
+
+    loadCategories();
+  }, []);
 
   const handleSortChange = (value: string) => {
     setSortOrder(value);
@@ -37,6 +54,12 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
   const handleCategoryChange = (value: string) => {
     setCategory(value);
     onFilter(value);
+  };
+
+  // Format category name for display
+  const formatCategoryName = (category: string) => {
+    if (category === 'all') return 'All Products';
+    return category.charAt(0).toUpperCase() + category.slice(1);
   };
 
   return (
@@ -51,8 +74,6 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
             className="pl-9"
           />
         </div>
-        
-  
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
@@ -63,10 +84,33 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
             onValueChange={(value) => value && handleCategoryChange(value)}
             className="justify-start"
           >
-            <ToggleGroupItem value="all">All Products</ToggleGroupItem>
-            <ToggleGroupItem value="gravel">Gravel</ToggleGroupItem>
-            <ToggleGroupItem value="sand">Sand</ToggleGroupItem>
-            <ToggleGroupItem value="dirt">Dirt</ToggleGroupItem>
+            {categories.slice(0, 5).map((cat) => (
+              <ToggleGroupItem key={cat} value={cat}>
+                {formatCategoryName(cat)}
+              </ToggleGroupItem>
+            ))}
+            {categories.length > 5 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Grid3X3 className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>More Categories</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {categories.slice(5).map((cat) => (
+                    <DropdownMenuRadioItem 
+                      key={cat} 
+                      value={cat}
+                      onClick={() => handleCategoryChange(cat)}
+                    >
+                      {formatCategoryName(cat)}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </ToggleGroup>
         ) : (
           <DropdownMenu>
@@ -79,10 +123,11 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
               <DropdownMenuLabel>Category</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuRadioGroup value={category} onValueChange={handleCategoryChange}>
-                <DropdownMenuRadioItem value="all">All Products</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="gravel">Gravel</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="sand">Sand</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="dirt">Dirt</DropdownMenuRadioItem>
+                {categories.map((cat) => (
+                  <DropdownMenuRadioItem key={cat} value={cat}>
+                    {formatCategoryName(cat)}
+                  </DropdownMenuRadioItem>
+                ))}
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
