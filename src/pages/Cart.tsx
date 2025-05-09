@@ -15,6 +15,17 @@ const Cart = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Helper function to sanitize product data for Stripe
+  const sanitizeProductData = (items) => {
+    return items.map(item => ({
+      id: item.id,
+      name: item.name.replace(/['"\\]/g, ''), // Remove quotes and backslashes
+      price: parseFloat(item.price),
+      quantity: item.quantity,
+      image: item.image || '/placeholder.svg'
+    }));
+  };
+
   const handleCheckout = async () => {
     if (items.length === 0) {
       toast({
@@ -29,11 +40,14 @@ const Cart = () => {
       setIsLoading(true);
       setError(null);
 
+      // Sanitize product data for Stripe
+      const sanitizedItems = sanitizeProductData(items);
+      
       // Detailed logging for debugging
-      console.log('Checkout Items:', items);
+      console.log('Checkout with sanitized items:', sanitizedItems);
 
       const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: JSON.stringify({ items })
+        body: JSON.stringify({ items: sanitizedItems })
       });
 
       if (error) {
