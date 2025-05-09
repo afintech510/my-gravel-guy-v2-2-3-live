@@ -69,7 +69,7 @@ const AreaInputs = ({ areas, onAreaChange }: AreaInputsProps) => {
                 <Minus className="h-4 w-4" />
               </Button>
             )}
-            {index === areas.length - 1 && (
+            {index === 0 && (
               <Button
                 variant="outline"
                 size="icon"
