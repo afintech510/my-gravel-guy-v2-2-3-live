@@ -50,8 +50,10 @@ const App = () => {
               <BrowserRouter>
                 <ScrollToTop />
                 <div className="min-h-screen bg-gray-50 flex flex-col">
-                  <TopBanner />
-                  <Navbar />
+                  <div className="sticky top-0 z-50 w-full">
+                    <TopBanner />
+                    <Navbar />
+                  </div>
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/products" element={<Products />} />
