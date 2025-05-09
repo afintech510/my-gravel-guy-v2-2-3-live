@@ -16,13 +16,7 @@ const Index = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      {/* ZIP Code Search - Prominent placement under navigation */}
-      <section className="py-6 px-4 bg-white border-b shadow-sm">
-        <div className="max-w-lg mx-auto text-center">
-          <h2 className="text-xl font-semibold mb-3">Check Delivery to Your Location</h2>
-          <ZipCodeSearch />
-        </div>
-      </section>
+      
       
       {/* Test Query Button - Temporary addition for testing */}
       <section className="py-6 px-4 bg-blue-50 border-b">
