@@ -56,18 +56,13 @@ const Index = () => {
       {/* How It Works Section */}
       <HowItWorks />
 
-      {/* Products Section */}
-      <section className="py-16 px-4 bg-white">
+     {/* Location Product Hero - Shows always below ZIP search */}
+      <section className="py-6 px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">Our Products</h2>
-          <ProductGrid limit={6} />
-          <div className="text-center mt-8">
-            <Link to="/products">
-              <Button>View All Products</Button>
-            </Link>
-          </div>
+          <LocationProductHero />
         </div>
       </section>
+      
 
       {/* Trust Banner - Scrolling format above calculator */}
       <section className="py-6 px-4 bg-gray-50">
