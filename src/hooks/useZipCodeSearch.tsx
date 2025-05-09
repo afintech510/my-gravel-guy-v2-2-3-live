@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { ZipCodeData } from '../services/productTypes';
@@ -9,7 +8,7 @@ import {
   checkZipCodeTableExists,
   getDemoZipCode,
   saveLocationSearch
-} from '../utils/zipCodeUtils';
+} from '../utils/zipCode';
 
 export const useZipCodeSearch = (onZipCodeSelected?: () => void) => {
   const [inputValue, setInputValue] = useState('');

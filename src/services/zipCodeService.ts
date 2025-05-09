@@ -1,7 +1,15 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { ZipCodeData } from './productTypes';
-import { formatZipCodeData, saveLocationSearch } from '../utils/zipCodeUtils';
+import { 
+  formatZipCodeData, 
+  saveLocationSearch,
+  findZipCodeMatch,
+  findZipCodeSuggestions,
+  checkZipCodeTableExists,
+  getDemoZipCode,
+  getDemoZipCodes
+} from '../utils/zipCode';
 
 /**
  * Function to detect user's location using IP address
