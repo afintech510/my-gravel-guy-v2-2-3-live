@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useZipCode } from '../contexts/ZipCodeContext';
 import { getProducts, getPriceAdjustmentForZipCode, applyZipCodeAdjustment } from '../services/productService';
@@ -7,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { useCart } from '../contexts/CartContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/use-toast';
-import { MapPin } from 'lucide-react';
+import { MapPin, RefreshCw, PackageSearch } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
 const LocationProductHero = () => {
@@ -16,100 +16,118 @@ const LocationProductHero = () => {
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [regionalProducts, setRegionalProducts] = useState<Product[]>([]);
   const [otherProducts, setOtherProducts] = useState<Product[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true);
-      try {
-        console.log("LocationProductHero: Fetching products");
-        const allProducts = await getProducts();
-        console.log("LocationProductHero: All products:", allProducts);
-        
-        let adjustment = 0;
-        
-        if (zipCode) {
-          console.log("LocationProductHero: Getting price adjustment for ZIP", zipCode);
-          adjustment = await getPriceAdjustmentForZipCode(zipCode);
-          console.log("LocationProductHero: Price adjustment:", adjustment);
-        }
-        
-        // Apply price adjustments based on ZIP code
-        const productsWithAdjustedPrices = allProducts.map(product => ({
-          ...product,
-          price: applyZipCodeAdjustment(product.price, adjustment)
-        }));
-        
-        console.log("LocationProductHero: Products with adjusted prices:", productsWithAdjustedPrices);
-        
-        // Determine regional products based on ZIP code region
-        const region = zipCodeData?.state_name || '';
-        
-        // Select best products to show as regional
-        let regional: Product[] = [];
-        
-        if (region && productsWithAdjustedPrices.length > 0) {
-          // For demo purposes - consider products as regional if they match the state or have specific keywords
-          regional = productsWithAdjustedPrices.filter(product => 
-            product.description?.toLowerCase().includes(region.toLowerCase()) ||
-            product.name.toLowerCase().includes(region.toLowerCase())
-          );
-          
-          console.log("LocationProductHero: Regional products based on region match:", regional);
-          
-          // If no matches by region, select by category
-          if (regional.length === 0) {
-            // Group by category
-            const gravel = productsWithAdjustedPrices.filter(p => 
-              p.name.toLowerCase().includes('gravel')
-            );
-            
-            const sand = productsWithAdjustedPrices.filter(p => 
-              p.name.toLowerCase().includes('sand')
-            );
-            
-            const dirt = productsWithAdjustedPrices.filter(p => 
-              p.name.toLowerCase().includes('dirt') || 
-              p.name.toLowerCase().includes('soil')
-            );
-            
-            // Take 1 from each category if available
-            regional = [
-              ...(gravel.length > 0 ? [gravel[0]] : []),
-              ...(sand.length > 0 ? [sand[0]] : []),
-              ...(dirt.length > 0 ? [dirt[0]] : [])
-            ];
-            
-            console.log("LocationProductHero: Regional products by category:", regional);
-          }
-        }
-        
-        // If still no regional products or none selected, just take the first 3
-        if (regional.length === 0 && productsWithAdjustedPrices.length > 0) {
-          regional = productsWithAdjustedPrices.slice(0, 3);
-          console.log("LocationProductHero: Using first 3 products as regional:", regional);
-        }
-        
-        // Other products are everything else
-        const others = productsWithAdjustedPrices.filter(p => 
-          !regional.some(rp => rp.id === p.id)
+  const loadProducts = async (forceRefresh = false) => {
+    setLoading(true);
+    setError(null);
+    try {
+      console.log("LocationProductHero: Fetching products");
+      const allProducts = await getProducts(forceRefresh);
+      
+      if (!allProducts || allProducts.length === 0) {
+        console.log("LocationProductHero: No products found");
+        setProducts([]);
+        setRegionalProducts([]);
+        setOtherProducts([]);
+        setLoading(false);
+        return;
+      }
+      
+      console.log("LocationProductHero: All products:", allProducts);
+      
+      let adjustment = 0;
+      
+      if (zipCode) {
+        console.log("LocationProductHero: Getting price adjustment for ZIP", zipCode);
+        adjustment = await getPriceAdjustmentForZipCode(zipCode);
+        console.log("LocationProductHero: Price adjustment:", adjustment);
+      }
+      
+      // Apply price adjustments based on ZIP code
+      const productsWithAdjustedPrices = allProducts.map(product => ({
+        ...product,
+        price: applyZipCodeAdjustment(product.price, adjustment)
+      }));
+      
+      console.log("LocationProductHero: Products with adjusted prices:", productsWithAdjustedPrices);
+      
+      // Determine regional products based on ZIP code region
+      const region = zipCodeData?.state_name || '';
+      
+      // Select best products to show as regional
+      let regional: Product[] = [];
+      
+      if (region && productsWithAdjustedPrices.length > 0) {
+        // For demo purposes - consider products as regional if they match the state or have specific keywords
+        regional = productsWithAdjustedPrices.filter(product => 
+          product.description?.toLowerCase().includes(region.toLowerCase()) ||
+          product.name.toLowerCase().includes(region.toLowerCase())
         );
         
-        console.log("LocationProductHero: Other products:", others);
+        console.log("LocationProductHero: Regional products based on region match:", regional);
         
-        setProducts(productsWithAdjustedPrices);
-        setRegionalProducts(regional);
-        setOtherProducts(others);
-      } catch (error) {
-        console.error('Error fetching products:', error);
-      } finally {
-        setLoading(false);
+        // If no matches by region, select by category
+        if (regional.length === 0) {
+          // Group by category
+          const gravel = productsWithAdjustedPrices.filter(p => 
+            p.name.toLowerCase().includes('gravel') || 
+            (p.categories && p.categories.includes('gravel'))
+          );
+          
+          const sand = productsWithAdjustedPrices.filter(p => 
+            p.name.toLowerCase().includes('sand') || 
+            (p.categories && p.categories.includes('sand'))
+          );
+          
+          const dirt = productsWithAdjustedPrices.filter(p => 
+            p.name.toLowerCase().includes('dirt') || 
+            p.name.toLowerCase().includes('soil') ||
+            (p.categories && (p.categories.includes('dirt') || p.categories.includes('soil')))
+          );
+          
+          // Take 1 from each category if available
+          regional = [
+            ...(gravel.length > 0 ? [gravel[0]] : []),
+            ...(sand.length > 0 ? [sand[0]] : []),
+            ...(dirt.length > 0 ? [dirt[0]] : [])
+          ];
+          
+          console.log("LocationProductHero: Regional products by category:", regional);
+        }
       }
-    };
-    
-    fetchProducts();
+      
+      // If still no regional products or none selected, just take the first 3
+      if (regional.length === 0 && productsWithAdjustedPrices.length > 0) {
+        regional = productsWithAdjustedPrices.slice(0, 3);
+        console.log("LocationProductHero: Using first 3 products as regional:", regional);
+      }
+      
+      // Other products are everything else
+      const others = productsWithAdjustedPrices.filter(p => 
+        !regional.some(rp => rp.id === p.id)
+      );
+      
+      console.log("LocationProductHero: Other products:", others);
+      
+      setProducts(productsWithAdjustedPrices);
+      setRegionalProducts(regional);
+      setOtherProducts(others);
+    } catch (e) {
+      console.error('Error fetching products:', e);
+      setError("Failed to load products. Please try again.");
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+  
+  useEffect(() => {
+    loadProducts();
   }, [zipCode, zipCodeData]);
   
   const handleAddToCart = (product: Product) => {
@@ -124,6 +142,11 @@ const LocationProductHero = () => {
     });
   };
   
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await loadProducts(true); // Force refresh
+  };
+  
   // Always show the component with appropriate messaging if no location is set
   const locationText = zipCodeData ? 
     `${zipCodeData.city}, ${zipCodeData.state_id}` : 
@@ -134,11 +157,23 @@ const LocationProductHero = () => {
   
   return (
     <div className="bg-gradient-to-b from-primary/5 to-transparent py-6 px-4 rounded-lg border">
-      <div className="flex items-center mb-4">
-        <MapPin className="h-5 w-5 text-primary mr-2" />
-        <h2 className="text-xl font-semibold">
-          {titlePrefix} {zipCodeData ? locationText : ""}
-        </h2>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center">
+          <MapPin className="h-5 w-5 text-primary mr-2" />
+          <h2 className="text-xl font-semibold">
+            {titlePrefix} {zipCodeData ? locationText : ""}
+          </h2>
+        </div>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={handleRefresh} 
+          disabled={isRefreshing}
+          className="flex items-center gap-1"
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? 'Refreshing...' : 'Refresh'}
+        </Button>
       </div>
       
       {loading ? (
@@ -152,9 +187,20 @@ const LocationProductHero = () => {
           ))}
         </div>
       ) : products.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-gray-500 mb-4">No products available yet</p>
-          <p className="text-sm">Please check back later or contact us for assistance</p>
+        <div className="text-center py-8 space-y-4">
+          <PackageSearch className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+          <p className="text-gray-500 mb-4">No products found at this time</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button onClick={handleRefresh} disabled={isRefreshing}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Try Again
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/products">
+                View All Products
+              </Link>
+            </Button>
+          </div>
         </div>
       ) : (
         <>

@@ -1,4 +1,3 @@
-
 import { Product, ZipCodeData } from './productTypes';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -12,9 +11,10 @@ const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
 /**
  * Fetch products from Supabase
  */
-export async function getProducts(): Promise<Product[]> {
-  // Check cache first
-  if (productsCache && (Date.now() - lastFetchTimestamp < CACHE_TTL)) {
+export async function getProducts(forceRefresh = false): Promise<Product[]> {
+  // Check cache first, unless force refresh is requested
+  if (!forceRefresh && productsCache && (Date.now() - lastFetchTimestamp < CACHE_TTL)) {
+    console.log('Using cached products data:', productsCache.length, 'products found');
     return productsCache;
   }
 
@@ -26,7 +26,13 @@ export async function getProducts(): Promise<Product[]> {
       .select('*');
 
     if (error) {
+      console.error('Supabase error when fetching products:', error);
       throw error;
+    }
+
+    if (!productsData || productsData.length === 0) {
+      console.warn('No products found in Supabase!');
+      return [];
     }
 
     console.log('Raw products data from Supabase:', productsData);
@@ -54,16 +60,18 @@ export async function getProducts(): Promise<Product[]> {
             metadata = row.metadata;
           }
         } catch (e) {
-          console.error('Failed to parse metadata:', e);
+          console.error('Failed to parse metadata for product:', row.name, e);
         }
       }
+
+      const defaultImage = "/placeholder.svg";
 
       return {
         id: row.id || index + 1,
         name: row.name || `Product ${index + 1}`,
         description: row.description || "",
         price: parseFloat(String(row.price)) || 0,
-        image: row.image || "/placeholder.svg",
+        image: row.image || defaultImage,
         category: mainCategory,
         categories: categories, // Add all categories as an array for filtering
         tonYardRatio: row.ton_yard_ratio ? parseFloat(String(row.ton_yard_ratio)) : 1.5,
@@ -93,11 +101,18 @@ export async function getProducts(): Promise<Product[]> {
     console.error("Failed to fetch products:", error);
     console.error("Error details:", {
       timestamp: new Date().toISOString(),
-      errorMessage: error instanceof Error ? error.message : String(error)
+      errorMessage: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
     });
     
     // Return cache even if expired or fallback to empty array
-    return productsCache || [];
+    if (productsCache) {
+      console.log('Returning cached products due to fetch error');
+      return productsCache;
+    }
+    
+    console.log('No cached products available, returning empty array');
+    return [];
   }
 }
 
@@ -183,6 +198,8 @@ export async function getZipCodePricingMap(): Promise<Map<string, number>> {
  */
 export async function getPriceAdjustmentForZipCode(zipCode: string): Promise<number> {
   try {
+    console.log('Fetching price adjustment for ZIP:', zipCode);
+    
     const { data, error } = await supabase
       .from('service_zip_codes')
       .select('price_adjustment')
@@ -194,6 +211,7 @@ export async function getPriceAdjustmentForZipCode(zipCode: string): Promise<num
       return 0;
     }
     
+    console.log('Price adjustment data:', data);
     return data?.price_adjustment || 0; // Default to 0% adjustment if ZIP not found
   } catch (error) {
     console.error("Error fetching price adjustment:", error);

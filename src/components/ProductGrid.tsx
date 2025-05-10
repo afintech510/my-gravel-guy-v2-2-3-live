@@ -4,6 +4,9 @@ import ProductCard from './ProductCard';
 import { getProducts } from '../services/productService';
 import { Product } from '../services/productTypes';
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { RefreshCw } from "lucide-react";
 
 interface ProductGridProps {
   filters?: {
@@ -22,24 +25,33 @@ const ProductGrid = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const loadProducts = async (forceRefresh = false) => {
+    try {
+      setLoading(true);
+      setError(null);
+      console.log("ProductGrid: Fetching products");
+      const fetchedProducts = await getProducts(forceRefresh);
+      console.log("ProductGrid: Fetched", fetchedProducts.length, "products");
+      setProducts(fetchedProducts);
+    } catch (err) {
+      console.error("ProductGrid: Failed to load products:", err);
+      setError("Failed to load products. Please try again later.");
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    async function loadProducts() {
-      try {
-        setLoading(true);
-        const fetchedProducts = await getProducts();
-        setProducts(fetchedProducts);
-        setError(null);
-      } catch (err) {
-        console.error("Failed to load products:", err);
-        setError("Failed to load products. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    }
-
     loadProducts();
   }, []);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await loadProducts(true); // Force refresh
+  };
 
   useEffect(() => {
     let result = [...products];
@@ -104,8 +116,34 @@ const ProductGrid = ({
 
   if (error) {
     return (
-      <div className="text-center py-8">
-        <p className="text-red-500">{error}</p>
+      <div className="space-y-4">
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+        <Button 
+          onClick={handleRefresh} 
+          disabled={isRefreshing}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? 'Refreshing...' : 'Try Again'}
+        </Button>
+      </div>
+    );
+  }
+
+  if (products.length === 0) {
+    return (
+      <div className="text-center py-8 space-y-4">
+        <p className="text-gray-500">No products found. There might be an issue connecting to the database.</p>
+        <Button 
+          onClick={handleRefresh} 
+          disabled={isRefreshing}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? 'Refreshing...' : 'Try Again'}
+        </Button>
       </div>
     );
   }
@@ -114,6 +152,9 @@ const ProductGrid = ({
     return (
       <div className="text-center py-8">
         <p className="text-gray-500">No products found matching your criteria.</p>
+        {filters.category !== 'all' || filters.search !== '' ? (
+          <p className="text-sm mt-2">Try changing your filters or search terms.</p>
+        ) : null}
       </div>
     );
   }
