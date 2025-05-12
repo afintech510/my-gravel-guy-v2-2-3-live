@@ -106,10 +106,7 @@ const MaterialCalculator = () => {
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle>Material Calculator</CardTitle>
-      </CardHeader>
+    <Card className="w-full max-w-4xl mx-auto"> 
       <CardContent className="space-y-6">
         <MaterialSelector
           products={products}
@@ -128,7 +125,7 @@ const MaterialCalculator = () => {
               value={[depth]}
               onValueChange={([value]) => setDepth(value)}
               min={1}
-              max={100}
+              max={36}
               step={1}
             />
           </div>
