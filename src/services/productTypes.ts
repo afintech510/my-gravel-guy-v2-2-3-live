@@ -7,19 +7,14 @@ export interface Product {
   image: string;
   category: 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base';
   categories?: string[]; // Added for multiple categories per product
-  category1?: string; // Primary category (dirt, gravel, base, mulch)
-  category2?: string; // Secondary category
   slug: string;
   tonYardRatio: number;
   usage?: 'driveway' | 'walkway' | 'general';
   subtype?: 'crushed' | 'round' | 'natural' | 'concrete' | 'mason-sand' | 'playground-sand' | 'beach-sand' | 'washed-sand' | 
             'top-soil' | 'compost' | 'fill-dirt' | 'loam' | 'sandy-loam' |
             'road-base' | 'concrete-rca' | 'crusher-base';
-  size?: string; // Changed from union type to string for flexibility
-  color?: string; // Changed from union type to string for flexibility
-  application?: string; // New field for application type
-  efficiency?: string; // New field for efficiency rating
-  shape?: string; // New field for material shape
+  size?: '3/8"' | '3/4"' | '1-1/2"';
+  color?: 'chocolate' | 'jet-black' | 'red' | 'natural-dark' | 'wood-chips';
   specifications?: {
     density?: string;
     size?: string;
@@ -54,5 +49,3 @@ export type MaterialUsage = NonNullable<Product['usage']>;
 export type MaterialSubtype = NonNullable<Product['subtype']>;
 export type MaterialSize = NonNullable<Product['size']>;
 export type MaterialColor = NonNullable<Product['color']>;
-export type MaterialApplication = NonNullable<Product['application']>;
-export type MaterialShape = NonNullable<Product['shape']>;

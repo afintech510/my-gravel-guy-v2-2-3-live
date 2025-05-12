@@ -60,31 +60,21 @@ const ProductGrid = ({
       const searchTerm = filters.search.toLowerCase();
       result = result.filter(product => 
         product.name.toLowerCase().includes(searchTerm) ||
-        product.description?.toLowerCase().includes(searchTerm)
+        product.description.toLowerCase().includes(searchTerm)
       );
     }
 
     if (filters.category !== 'all') {
       result = result.filter(product => {
-        const category = filters.category.toLowerCase();
-        
-        // Check all possible category fields
-        if (product.category1?.toLowerCase() === category) {
-          return true;
-        }
-        
-        if (product.category2?.toLowerCase() === category) {
-          return true;
-        }
-        
-        if (product.category?.toLowerCase() === category) {
+        // Check if the product has the category either in the main category or in the categories array
+        if (product.category === filters.category) {
           return true;
         }
         
         // Check in the categories array if available
         if (product.categories && Array.isArray(product.categories)) {
           return product.categories.some(cat => 
-            cat.toLowerCase() === category
+            cat.toLowerCase() === filters.category.toLowerCase()
           );
         }
         

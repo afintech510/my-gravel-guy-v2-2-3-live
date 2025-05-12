@@ -1,14 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
-import { Search, Filter, SortAsc, SortDesc, Grid3X3, Tag, Palette, Ruler } from 'lucide-react';
+import { Search, Filter, SortAsc, SortDesc, Grid3X3 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { 
-  getUniqueCategories, 
-  getUniqueSizes, 
-  getUniqueColors,
-  getUniqueApplications 
-} from '@/services/productService';
+import { getUniqueCategories } from '@/services/productService';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,10 +12,6 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
-  DropdownMenuCheckboxItem
 } from "@/components/ui/dropdown-menu";
 import {
   ToggleGroup,
@@ -38,31 +29,21 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
   const [sortOrder, setSortOrder] = useState('nameAsc');
   const [category, setCategory] = useState('all');
   const [categories, setCategories] = useState<string[]>(['all', 'gravel', 'sand', 'dirt', 'mulch']);
-  const [sizes, setSizes] = useState<string[]>([]);
-  const [colors, setColors] = useState<string[]>([]);
-  const [applications, setApplications] = useState<string[]>([]);
   const isMobile = useIsMobile();
 
   useEffect(() => {
     // Fetch unique categories from the database
-    async function loadFilters() {
+    async function loadCategories() {
       try {
         const uniqueCategories = await getUniqueCategories();
-        const uniqueSizes = await getUniqueSizes();
-        const uniqueColors = await getUniqueColors();
-        const uniqueApplications = await getUniqueApplications();
-        
         // Always include 'all' as the first option
-        setCategories(['all', ...uniqueCategories.filter(cat => cat && cat !== 'all')]);
-        setSizes(uniqueSizes.filter(Boolean));
-        setColors(uniqueColors.filter(Boolean));
-        setApplications(uniqueApplications.filter(Boolean));
+        setCategories(['all', ...uniqueCategories]);
       } catch (error) {
-        console.error("Failed to load filters:", error);
+        console.error("Failed to load categories:", error);
       }
     }
 
-    loadFilters();
+    loadCategories();
   }, []);
 
   const handleSortChange = (value: string) => {
@@ -134,59 +115,20 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
         ) : (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
+              <Button variant="outline" size="icon">
+                <Filter className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
-                  <Tag className="h-4 w-4 mr-2" />
-                  Category
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  <DropdownMenuRadioGroup value={category} onValueChange={handleCategoryChange}>
-                    {categories.map((cat) => (
-                      <DropdownMenuRadioItem key={cat} value={cat}>
-                        {formatCategoryName(cat)}
-                      </DropdownMenuRadioItem>
-                    ))}
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-              
-              {sizes.length > 0 && (
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
-                  <Ruler className="h-4 w-4 mr-2" />
-                  Size
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  {sizes.map((size) => (
-                    <DropdownMenuCheckboxItem key={size} checked={false}>
-                      {size}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-              )}
-              
-              {colors.length > 0 && (
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
-                  <Palette className="h-4 w-4 mr-2" />
-                  Color
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  {colors.map((color) => (
-                    <DropdownMenuCheckboxItem key={color} checked={false}>
-                      {color}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-              )}
+              <DropdownMenuLabel>Category</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuRadioGroup value={category} onValueChange={handleCategoryChange}>
+                {categories.map((cat) => (
+                  <DropdownMenuRadioItem key={cat} value={cat}>
+                    {formatCategoryName(cat)}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         )}

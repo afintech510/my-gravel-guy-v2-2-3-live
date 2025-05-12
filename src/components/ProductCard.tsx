@@ -8,8 +8,7 @@ import { Link } from 'react-router-dom';
 import { useZipCode } from '../contexts/ZipCodeContext';
 import { getPriceAdjustmentForZipCode, applyZipCodeAdjustment } from '../services/productService';
 import { Product } from '../services/productTypes';
-import { ImageOff, Tag, Ruler } from 'lucide-react';
-import { Badge } from "@/components/ui/badge";
+import { ImageOff } from 'lucide-react';
 
 const ProductCard = ({ product }: { product: Product }) => {
   const { addToCart } = useCart();
@@ -75,37 +74,17 @@ const ProductCard = ({ product }: { product: Product }) => {
             )}
           </Link>
         </div>
-        
-        {/* Product attributes */}
-        <div className="space-y-2">
-          {/* Categories and tags */}
-          <div className="flex flex-wrap gap-1 mb-2">
-            {product.category1 && (
-              <Badge variant="secondary" className="text-xs">
-                <Tag className="h-3 w-3 mr-1" />
-                {product.category1}
-              </Badge>
-            )}
-            {product.size && (
-              <Badge variant="outline" className="text-xs">
-                <Ruler className="h-3 w-3 mr-1" />
-                {product.size}
-              </Badge>
-            )}
-          </div>
-          
-          <p className="text-gray-600 mb-2 line-clamp-2">{product.description}</p>
-          <p className="text-xl font-bold">${adjustedPrice.toFixed(2)} • ton</p>
-          {zipCode && product.price !== adjustedPrice && (
-            <p className="text-sm text-gray-500">
-              <span className={adjustedPrice > product.price ? "text-red-500" : "text-green-500"}>
-                {adjustedPrice > product.price ? "+" : "-"}
-                {Math.abs(((adjustedPrice - product.price) / product.price) * 100).toFixed(0)}%
-              </span>
-              {" "}adjusted for ZIP {zipCode}
-            </p>
-          )}
-        </div>
+        <p className="text-gray-600 mb-2 line-clamp-2">{product.description}</p>
+        <p className="text-xl font-bold">${adjustedPrice.toFixed(2)} • ton</p>
+        {zipCode && product.price !== adjustedPrice && (
+          <p className="text-sm text-gray-500">
+            <span className={adjustedPrice > product.price ? "text-red-500" : "text-green-500"}>
+              {adjustedPrice > product.price ? "+" : "-"}
+              {Math.abs(((adjustedPrice - product.price) / product.price) * 100).toFixed(0)}%
+            </span>
+            {" "}adjusted for ZIP {zipCode}
+          </p>
+        )}
       </CardContent>
       <CardFooter>
         <Button onClick={handleAddToCart} className="w-full">
