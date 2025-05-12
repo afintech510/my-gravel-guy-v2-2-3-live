@@ -15,8 +15,8 @@ export interface Product {
   subtype?: 'crushed' | 'round' | 'natural' | 'concrete' | 'mason-sand' | 'playground-sand' | 'beach-sand' | 'washed-sand' | 
             'top-soil' | 'compost' | 'fill-dirt' | 'loam' | 'sandy-loam' |
             'road-base' | 'concrete-rca' | 'crusher-base';
-  size?: '3/8"' | '3/4"' | '1-1/2"';
-  color?: 'chocolate' | 'jet-black' | 'red' | 'natural-dark' | 'wood-chips';
+  size?: string; // Changed from union type to string for flexibility
+  color?: string; // Changed from union type to string for flexibility
   application?: string; // New field for application type
   efficiency?: string; // New field for efficiency rating
   shape?: string; // New field for material shape
