@@ -108,12 +108,6 @@ const MaterialCalculator = () => {
   return (
     <Card className="w-full max-w-4xl mx-auto"> 
       <CardContent className="space-y-6">
-        <MaterialSelector
-          products={products}
-          selectedProduct={selectedProduct}
-          onProductSelect={setSelectedProduct}
-        />
-
         <AreaInputs areas={areas} onAreaChange={setAreas} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -142,6 +136,12 @@ const MaterialCalculator = () => {
             />
           </div>
         </div>
+
+        <MaterialSelector
+          products={products}
+          selectedProduct={selectedProduct}
+          onProductSelect={setSelectedProduct}
+        />
 
         <CalculationDisplay
           totalArea={calculations.totalSquareFeet}
