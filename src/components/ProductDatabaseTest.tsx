@@ -50,8 +50,9 @@ const ProductDatabaseTest = () => {
       // Get column information for products table if it exists
       if (availableTables.includes('products')) {
         try {
+          // Fix: Use explicitly typed parameters for the RPC call
           const { data: columnData } = await supabase
-            .rpc('get_table_info', { table_name: 'products' });
+            .rpc('get_table_info', { table_name: 'products' as string });
           
           if (columnData) {
             setTableInfo(columnData);
