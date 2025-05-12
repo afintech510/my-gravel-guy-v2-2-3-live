@@ -5,11 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+type TableName = 'products' | 'blog_posts' | 'blog_categories' | 'service_zip_codes' | 'delivery_locations' | 'location_search';
+
 const ProductDatabaseTest = () => {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-  const [tables, setTables] = useState<string[]>([]);
+  const [tables, setTables] = useState<TableName[]>([]);
   const [tableInfo, setTableInfo] = useState<any>(null);
 
   const testConnection = async () => {
@@ -28,10 +30,10 @@ const ProductDatabaseTest = () => {
       }
 
       // Get list of tables by querying each known table
-      const tables = ['products', 'blog_posts', 'blog_categories', 'service_zip_codes', 'delivery_locations', 'location_search'];
-      const availableTables: string[] = [];
+      const tablesToCheck: TableName[] = ['products', 'blog_posts', 'blog_categories', 'service_zip_codes', 'delivery_locations', 'location_search'];
+      const availableTables: TableName[] = [];
 
-      for (const table of tables) {
+      for (const table of tablesToCheck) {
         const { error: checkError } = await supabase
           .from(table)
           .select('id')
