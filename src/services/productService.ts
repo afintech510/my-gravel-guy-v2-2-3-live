@@ -55,8 +55,9 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
           categories = [categoryStr.trim().toLowerCase()];
         }
       } else if (Array.isArray(categoryStr)) {
-        // Fix: Ensure we're properly typing the array elements
-        categories = categoryStr.map((cat: any) => String(cat).trim().toLowerCase());
+        // Fix: Properly cast as string array to avoid the 'never' type issue
+        const categoryArray = categoryStr as any[];
+        categories = categoryArray.map(cat => String(cat).trim().toLowerCase());
       }
       
       // Ensure we have at least one category
