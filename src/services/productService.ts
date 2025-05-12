@@ -39,63 +39,14 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
     
     // Transform raw data into Product objects
     const products: Product[] = productsData.map((row, index) => {
-      // Extract categories - handle both comma-separated and newline-separated strings
-      let categories: string[] = [];
+      // Extract categories - if category is a comma-separated string, convert to array
       const categoryStr = row.category || 'gravel';
       
-      if (categoryStr) {
-        // First try splitting by newlines
-        if (categoryStr.includes('\n')) {
-          categories = categoryStr.split('\n').map(cat => cat.trim().toLowerCase()).filter(Boolean);
-        }
-        // Then try splitting by commas (for backward compatibility)
-        else if (categoryStr.includes(',')) {
-          categories = categoryStr.split(',').map(cat => cat.trim().toLowerCase()).filter(Boolean);
-        }
-        // If no separator is found, treat as a single category
-        else {
-          categories = [categoryStr.trim().toLowerCase()];
-        }
-      }
-      
-      // Ensure we have at least one category
-      if (categories.length === 0) {
-        categories = ['gravel']; // Default category
-      }
-      
-      // Map the first category to one of the valid enum types
-      const mainCategoryMap: Record<string, 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base'> = {
-        'gravel': 'gravel',
-        'sand': 'sand',
-        'dirt': 'dirt',
-        'soil': 'dirt',
-        'mulch': 'mulch',
-        'base': 'base',
-        'stone': 'gravel',
-        'rock': 'gravel'
-      };
-      
-      // Find the first category that matches one of our main types
-      let mainCategory: 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base' = 'gravel';
-      for (const cat of categories) {
-        for (const [key, value] of Object.entries(mainCategoryMap)) {
-          if (cat.includes(key)) {
-            mainCategory = value;
-            break;
-          }
-        }
-      }
-      
-      // Get category fields
-      const category1 = row.category1 || categories[0] || mainCategory;
-      const category2 = row.category2 || (categories.length > 1 ? categories[1] : undefined);
-      
-      // Handle other fields with safe defaults
-      const size = row.size || '';
-      const application = row.application || '';
-      const efficiency = row.efficiency || '';
-      const shape = row.shape || '';
-      const color = row.color || '';
+      // Set main category as the first category in the list
+      const categories = categoryStr.split(',').map((cat: string) => cat.trim().toLowerCase());
+      const mainCategory = categories.length > 0 ? 
+        categories[0] as 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base' : 
+        'gravel';
       
       // Parse metadata if it's a JSON string
       let metadata: any = {};
@@ -114,31 +65,21 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
       }
 
       const defaultImage = "/placeholder.svg";
-      
-      // Generate a slug if not present
-      const slug = row.slug || row.name?.toLowerCase().replace(/\s+/g, '-') || `product-${index + 1}`;
 
       return {
         id: row.id || index + 1,
         name: row.name || `Product ${index + 1}`,
-        description: row.description || `Premium quality ${row.name || 'material'}`,
+        description: row.description || "",
         price: parseFloat(String(row.price)) || 0,
         image: row.image || defaultImage,
         category: mainCategory,
-        categories: categories,
-        category1,
-        category2,
-        size,
-        application,
-        efficiency,
-        shape,
-        color,
+        categories: categories, // Add all categories as an array for filtering
         tonYardRatio: row.ton_yard_ratio ? parseFloat(String(row.ton_yard_ratio)) : 1.5,
-        slug,
+        slug: row.name?.toLowerCase().replace(/\s+/g, '-') || `product-${index + 1}`,
         specifications: {
           density: metadata?.density || "",
-          size: metadata?.size || size || "",
-          color: metadata?.color || color || "",
+          size: metadata?.size || "",
+          color: metadata?.color || "",
           coverage: metadata?.coverage || ""
         },
         uses: metadata?.uses ? Array.isArray(metadata.uses) ? 
@@ -516,16 +457,6 @@ export async function getUniqueCategories(): Promise<string[]> {
   
   // Extract all categories from all products
   products.forEach(product => {
-    // Check primary category fields first
-    if (product.category1) {
-      categoriesSet.add(product.category1);
-    }
-    
-    if (product.category2) {
-      categoriesSet.add(product.category2);
-    }
-    
-    // Then check the legacy category field and categories array
     if (product.categories && Array.isArray(product.categories)) {
       product.categories.forEach(cat => categoriesSet.add(cat));
     } else if (product.category) {
@@ -534,60 +465,6 @@ export async function getUniqueCategories(): Promise<string[]> {
   });
   
   return Array.from(categoriesSet).sort();
-}
-
-/**
- * Get all unique sizes from products
- * @returns Array of unique sizes
- */
-export async function getUniqueSizes(): Promise<string[]> {
-  const products = await getProducts();
-  
-  const sizesSet = new Set<string>();
-  
-  products.forEach(product => {
-    if (product.size) {
-      sizesSet.add(product.size);
-    }
-  });
-  
-  return Array.from(sizesSet).sort();
-}
-
-/**
- * Get all unique colors from products
- * @returns Array of unique colors
- */
-export async function getUniqueColors(): Promise<string[]> {
-  const products = await getProducts();
-  
-  const colorsSet = new Set<string>();
-  
-  products.forEach(product => {
-    if (product.color) {
-      colorsSet.add(product.color);
-    }
-  });
-  
-  return Array.from(colorsSet).sort();
-}
-
-/**
- * Get all unique applications from products
- * @returns Array of unique applications
- */
-export async function getUniqueApplications(): Promise<string[]> {
-  const products = await getProducts();
-  
-  const applicationsSet = new Set<string>();
-  
-  products.forEach(product => {
-    if (product.application) {
-      applicationsSet.add(product.application);
-    }
-  });
-  
-  return Array.from(applicationsSet).sort();
 }
 
 // Re-export types from productTypes for convenience
