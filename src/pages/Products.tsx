@@ -38,7 +38,7 @@ const Products = () => {
   return (
     <div className="min-h-screen bg-white py-8 px-4">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-center mb-8">Our Products</h1>
+        <h1 className="text-4xl font-bold text-center mb-8">Premium Aggregates for All Projects</h1>
         <div className="mb-8">
           <ProductSearch
             onSearch={handleSearch}
