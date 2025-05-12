@@ -17,35 +17,45 @@ const ProductDatabaseTest = () => {
     setError(null);
     
     try {
-      // Test 1: Check if we can connect to Supabase at all
-      const { data: tablesData, error: tablesError } = await supabase
-        .from('pg_catalog.pg_tables')
-        .select('tablename')
-        .eq('schemaname', 'public');
-      
-      if (tablesError) {
-        throw new Error(`Failed to list tables: ${tablesError.message}`);
-      }
-      
-      const tableNames = tablesData?.map(t => t.tablename) || [];
-      setTables(tableNames);
-      
-      // Test 2: Try to query the products table specifically
+      // Test 1: Try to query the products table directly
       const { data: productsData, error: productsError } = await supabase
         .from('products')
-        .select('*');
+        .select('*')
+        .limit(10);
       
       if (productsError) {
         throw new Error(`Failed to query products table: ${productsError.message}`);
       }
-      
-      // Get table structure
-      if (tableNames.includes('products')) {
-        const { data: columns, error: columnsError } = await supabase
-          .rpc('get_table_info', { table_name: 'products' });
+
+      // Get list of tables by querying each known table
+      const tables = ['products', 'blog_posts', 'blog_categories', 'service_zip_codes', 'delivery_locations', 'location_search'];
+      const availableTables: string[] = [];
+
+      for (const table of tables) {
+        const { error: checkError } = await supabase
+          .from(table)
+          .select('id')
+          .limit(1);
         
-        if (!columnsError) {
-          setTableInfo(columns);
+        // If no error, table exists and is accessible
+        if (!checkError) {
+          availableTables.push(table);
+        }
+      }
+
+      setTables(availableTables);
+      
+      // Get column information for products table if it exists
+      if (availableTables.includes('products')) {
+        try {
+          const { data: columnData } = await supabase
+            .rpc('get_table_info', { table_name: 'products' });
+          
+          if (columnData) {
+            setTableInfo(columnData);
+          }
+        } catch (columnsErr) {
+          console.warn('Could not get column info:', columnsErr);
         }
       }
       
