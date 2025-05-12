@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import ProductGrid from '../components/ProductGrid';
 import ProductSearch from '../components/ProductSearch';
 import TrustBanner from '../components/products/trust/TrustBanner';
+import ProductDatabaseTest from '../components/ProductDatabaseTest'; // Add this import
 import { useToast } from "@/components/ui/use-toast";
 
 const Products = () => {
@@ -12,6 +13,7 @@ const Products = () => {
     category: 'all'
   });
   const { toast } = useToast();
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
 
   const handleSearch = (term: string) => {
     setFilters(prev => ({ ...prev, search: term }));
@@ -44,6 +46,23 @@ const Products = () => {
             onFilter={handleFilter}
           />
         </div>
+        
+        {/* Diagnostics Toggle */}
+        <div className="mb-8 flex justify-end">
+          <button 
+            onClick={() => setShowDiagnostics(!showDiagnostics)}
+            className="text-sm text-gray-500 underline"
+          >
+            {showDiagnostics ? 'Hide Database Diagnostics' : 'Show Database Diagnostics'}
+          </button>
+        </div>
+        
+        {showDiagnostics && (
+          <div className="mb-8">
+            <ProductDatabaseTest />
+          </div>
+        )}
+        
         <ProductGrid filters={filters} />
         
         {/* Trust Banner Section */}
