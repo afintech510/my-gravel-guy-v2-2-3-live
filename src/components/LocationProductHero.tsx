@@ -3,18 +3,17 @@ import { useZipCode } from '../contexts/ZipCodeContext';
 import { getProducts, getPriceAdjustmentForZipCode, applyZipCodeAdjustment } from '../services/productService';
 import { Product } from '../services/productTypes';
 import { Button } from '@/components/ui/button';
-import { useCart } from '../contexts/CartContext';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/components/ui/use-toast';
 import { MapPin, RefreshCw, PackageSearch } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useCart } from '../contexts/CartContext';
+import { useToast } from '@/components/ui/use-toast';
 
 const LocationProductHero = () => {
   const { zipCode, zipCodeData } = useZipCode();
   const { addToCart } = useCart();
   const { toast } = useToast();
-  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -130,18 +129,6 @@ const LocationProductHero = () => {
     loadProducts();
   }, [zipCode, zipCodeData]);
   
-  const handleAddToCart = (product: Product) => {
-    addToCart({
-      ...product,
-      tons: 1
-    });
-    
-    toast({
-      title: "Added to cart",
-      description: `${product.name} has been added to your cart.`,
-    });
-  };
-  
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await loadProducts(true); // Force refresh
@@ -222,15 +209,15 @@ const LocationProductHero = () => {
                     </div>
                     <h4 className="font-semibold">{product.name}</h4>
                     <p className="text-sm text-gray-500 mb-2 line-clamp-1">{product.description || `Premium quality ${product.name}`}</p>
-                    <div className="flex justify-between items-center">
-                      <p className="text-lg font-bold">${product.price.toFixed(2)}/ton</p>
-                      <Button 
-                        onClick={() => handleAddToCart(product)} 
-                        size="sm"
-                      >
-                        Add to Cart
-                      </Button>
-                    </div>
+                    <Button 
+                      asChild
+                      className="w-full"
+                      size="sm"
+                    >
+                      <Link to={`/products/${encodeURIComponent(product.slug)}`}>
+                        Shop
+                      </Link>
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -244,13 +231,15 @@ const LocationProductHero = () => {
                 {otherProducts.slice(0, 4).map((product) => (
                   <div key={product.id} className="bg-white p-3 rounded-md border hover:shadow-md transition-shadow">
                     <h4 className="font-semibold text-sm mb-1 line-clamp-1">{product.name}</h4>
-                    <p className="text-sm font-bold mb-2">${product.price.toFixed(2)}/ton</p>
+                    <p className="text-xs text-gray-500 mb-2 line-clamp-1">{product.description || `Premium quality ${product.name}`}</p>
                     <Button 
-                      onClick={() => handleAddToCart(product)} 
+                      asChild
                       size="sm" 
                       className="w-full text-xs py-1"
                     >
-                      Add to Cart
+                      <Link to={`/products/${encodeURIComponent(product.slug)}`}>
+                        Shop
+                      </Link>
                     </Button>
                   </div>
                 ))}
