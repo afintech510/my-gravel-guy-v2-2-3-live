@@ -15,15 +15,15 @@ const ProductCard = ({ product }: { product: Product }) => {
   const defaultImage = "/placeholder.svg";
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader>
+    <Card className="w-full max-w-sm h-full flex flex-col transition-all duration-200 hover:shadow-md">
+      <CardHeader className="pb-2">
         <CardTitle className="text-lg font-semibold">
-          <Link to={`/products/${encodeURIComponent(product.slug)}`}>
+          <Link to={`/products/${encodeURIComponent(product.slug)}`} className="hover:text-primary transition-colors">
             {product.name}
           </Link>
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-grow">
         <div className="aspect-square relative mb-4">
           <Link to={`/products/${encodeURIComponent(product.slug)}`}>
             {imageError ? (
@@ -43,12 +43,12 @@ const ProductCard = ({ product }: { product: Product }) => {
             )}
           </Link>
         </div>
-        <p className="text-gray-600 mb-2 line-clamp-2">{product.description}</p>
+        <p className="text-gray-600 mb-2 line-clamp-3 text-sm">{product.description}</p>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="pt-2">
         <Button asChild className="w-full">
           <Link to={`/products/${encodeURIComponent(product.slug)}`}>
-            Shop
+            View Details
           </Link>
         </Button>
       </CardFooter>

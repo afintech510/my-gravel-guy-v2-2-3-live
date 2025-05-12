@@ -4,7 +4,7 @@ import { getProducts, getPriceAdjustmentForZipCode, applyZipCodeAdjustment } fro
 import { Product } from '../services/productTypes';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MapPin, RefreshCw, PackageSearch } from 'lucide-react';
+import { MapPin, RefreshCw, PackageSearch, ImageOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useCart } from '../contexts/CartContext';
@@ -196,7 +196,7 @@ const LocationProductHero = () => {
               <h3 className="text-lg font-medium mb-3">{zipCodeData ? 'Popular in Your Area' : 'Featured Products'}</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {regionalProducts.slice(0, 3).map((product) => (
-                  <div key={product.id} className="bg-white p-4 rounded-md border hover:shadow-md transition-shadow">
+                  <div key={product.id} className="bg-white p-4 rounded-md border hover:shadow-md transition-shadow h-full flex flex-col">
                     <div className="aspect-square relative mb-4">
                       <img
                         src={product.image || "/placeholder.svg"}
@@ -207,8 +207,8 @@ const LocationProductHero = () => {
                         }}
                       />
                     </div>
-                    <h4 className="font-semibold">{product.name}</h4>
-                    <p className="text-sm text-gray-500 mb-2 line-clamp-1">{product.description || `Premium quality ${product.name}`}</p>
+                    <h4 className="font-semibold mb-1">{product.name}</h4>
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-2 flex-grow">{product.description || `Premium quality ${product.name}`}</p>
                     <Button 
                       asChild
                       className="w-full"
@@ -229,9 +229,9 @@ const LocationProductHero = () => {
               <h3 className="text-lg font-medium mb-3">Other Available Products</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {otherProducts.slice(0, 4).map((product) => (
-                  <div key={product.id} className="bg-white p-3 rounded-md border hover:shadow-md transition-shadow">
+                  <div key={product.id} className="bg-white p-3 rounded-md border hover:shadow-md transition-shadow h-full flex flex-col">
                     <h4 className="font-semibold text-sm mb-1 line-clamp-1">{product.name}</h4>
-                    <p className="text-xs text-gray-500 mb-2 line-clamp-1">{product.description || `Premium quality ${product.name}`}</p>
+                    <p className="text-xs text-gray-500 mb-2 line-clamp-2 flex-grow">{product.description || `Premium quality ${product.name}`}</p>
                     <Button 
                       asChild
                       size="sm" 
