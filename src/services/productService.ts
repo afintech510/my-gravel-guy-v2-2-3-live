@@ -1,3 +1,4 @@
+
 import { Product, ZipCodeData } from './productTypes';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -48,6 +49,15 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
         categories[0] as 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base' : 
         'gravel';
       
+      // Get new category fields
+      const category1 = row.category1 || mainCategory;
+      const category2 = row.category2;
+      const size = row.size;
+      const application = row.application;
+      const efficiency = row.efficiency;
+      const shape = row.shape;
+      const color = row.color;
+      
       // Parse metadata if it's a JSON string
       let metadata: any = {};
       if (row.metadata) {
@@ -65,6 +75,9 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
       }
 
       const defaultImage = "/placeholder.svg";
+      
+      // Generate a slug if not present
+      const slug = row.name?.toLowerCase().replace(/\s+/g, '-') || `product-${index + 1}`;
 
       return {
         id: row.id || index + 1,
@@ -74,12 +87,19 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
         image: row.image || defaultImage,
         category: mainCategory,
         categories: categories, // Add all categories as an array for filtering
+        category1,
+        category2,
+        size,
+        application,
+        efficiency,
+        shape,
+        color,
         tonYardRatio: row.ton_yard_ratio ? parseFloat(String(row.ton_yard_ratio)) : 1.5,
-        slug: row.name?.toLowerCase().replace(/\s+/g, '-') || `product-${index + 1}`,
+        slug,
         specifications: {
           density: metadata?.density || "",
-          size: metadata?.size || "",
-          color: metadata?.color || "",
+          size: metadata?.size || size || "",
+          color: metadata?.color || color || "",
           coverage: metadata?.coverage || ""
         },
         uses: metadata?.uses ? Array.isArray(metadata.uses) ? 
@@ -457,6 +477,16 @@ export async function getUniqueCategories(): Promise<string[]> {
   
   // Extract all categories from all products
   products.forEach(product => {
+    // Check primary category fields first
+    if (product.category1) {
+      categoriesSet.add(product.category1);
+    }
+    
+    if (product.category2) {
+      categoriesSet.add(product.category2);
+    }
+    
+    // Then check the legacy category field and categories array
     if (product.categories && Array.isArray(product.categories)) {
       product.categories.forEach(cat => categoriesSet.add(cat));
     } else if (product.category) {
@@ -465,6 +495,60 @@ export async function getUniqueCategories(): Promise<string[]> {
   });
   
   return Array.from(categoriesSet).sort();
+}
+
+/**
+ * Get all unique sizes from products
+ * @returns Array of unique sizes
+ */
+export async function getUniqueSizes(): Promise<string[]> {
+  const products = await getProducts();
+  
+  const sizesSet = new Set<string>();
+  
+  products.forEach(product => {
+    if (product.size) {
+      sizesSet.add(product.size);
+    }
+  });
+  
+  return Array.from(sizesSet).sort();
+}
+
+/**
+ * Get all unique colors from products
+ * @returns Array of unique colors
+ */
+export async function getUniqueColors(): Promise<string[]> {
+  const products = await getProducts();
+  
+  const colorsSet = new Set<string>();
+  
+  products.forEach(product => {
+    if (product.color) {
+      colorsSet.add(product.color);
+    }
+  });
+  
+  return Array.from(colorsSet).sort();
+}
+
+/**
+ * Get all unique applications from products
+ * @returns Array of unique applications
+ */
+export async function getUniqueApplications(): Promise<string[]> {
+  const products = await getProducts();
+  
+  const applicationsSet = new Set<string>();
+  
+  products.forEach(product => {
+    if (product.application) {
+      applicationsSet.add(product.application);
+    }
+  });
+  
+  return Array.from(applicationsSet).sort();
 }
 
 // Re-export types from productTypes for convenience
