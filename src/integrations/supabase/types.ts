@@ -163,38 +163,50 @@ export type Database = {
       }
       products: {
         Row: {
+          application: string | null
           category: string | null
+          color: string | null
           created_at: string | null
           description: string | null
+          efficiency: string | null
           id: string
           image: string | null
           metadata: string | null
           name: string
           price: number
+          size: string | null
           ton_yard_ratio: string | null
           zip_code_ratio: string | null
         }
         Insert: {
+          application?: string | null
           category?: string | null
+          color?: string | null
           created_at?: string | null
           description?: string | null
+          efficiency?: string | null
           id?: string
           image?: string | null
           metadata?: string | null
           name: string
           price: number
+          size?: string | null
           ton_yard_ratio?: string | null
           zip_code_ratio?: string | null
         }
         Update: {
+          application?: string | null
           category?: string | null
+          color?: string | null
           created_at?: string | null
           description?: string | null
+          efficiency?: string | null
           id?: string
           image?: string | null
           metadata?: string | null
           name?: string
           price?: number
+          size?: string | null
           ton_yard_ratio?: string | null
           zip_code_ratio?: string | null
         }

@@ -39,14 +39,48 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
     
     // Transform raw data into Product objects
     const products: Product[] = productsData.map((row, index) => {
-      // Extract categories - if category is a comma-separated string, convert to array
+      // Extract categories - if category is a string, parse it
+      let categories: string[] = [];
       const categoryStr = row.category || 'gravel';
       
-      // Set main category as the first category in the list
-      const categories = categoryStr.split(',').map((cat: string) => cat.trim().toLowerCase());
-      const mainCategory = categories.length > 0 ? 
-        categories[0] as 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base' : 
-        'gravel';
+      // Handle different category separators (comma, newline, or single value)
+      if (typeof categoryStr === 'string') {
+        if (categoryStr.includes('\n')) {
+          categories = categoryStr.split('\n').map(cat => cat.trim().toLowerCase()).filter(Boolean);
+        } else if (categoryStr.includes(',')) {
+          categories = categoryStr.split(',').map(cat => cat.trim().toLowerCase()).filter(Boolean);
+        } else {
+          categories = [categoryStr.trim().toLowerCase()];
+        }
+      } else if (Array.isArray(categoryStr)) {
+        categories = categoryStr.map(cat => String(cat).trim().toLowerCase());
+      }
+      
+      // Ensure we have at least one category
+      if (categories.length === 0) {
+        categories = ['gravel']; // Default category
+      }
+      
+      // Map to valid main category type
+      const mainCategoryMap: Record<string, 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base'> = {
+        'gravel': 'gravel',
+        'sand': 'sand',
+        'dirt': 'dirt',
+        'soil': 'dirt',
+        'mulch': 'mulch',
+        'base': 'base',
+        'stone': 'gravel',
+        'rock': 'gravel'
+      };
+      
+      // Find the first category that maps to a valid main category
+      let mainCategory: 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base' = 'gravel';
+      for (const cat of categories) {
+        if (mainCategoryMap[cat]) {
+          mainCategory = mainCategoryMap[cat];
+          break;
+        }
+      }
       
       // Parse metadata if it's a JSON string
       let metadata: any = {};
@@ -64,29 +98,33 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
         }
       }
 
+      // Generate a slug if one doesn't exist
+      const slug = row.name?.toLowerCase().replace(/\s+/g, '-') || `product-${index + 1}`;
+      
       const defaultImage = "/placeholder.svg";
 
+      // Create the product object with appropriate fallbacks for all fields
       return {
-        id: row.id || index + 1,
+        id: row.id || `temp-${index + 1}`,
         name: row.name || `Product ${index + 1}`,
         description: row.description || "",
         price: parseFloat(String(row.price)) || 0,
         image: row.image || defaultImage,
         category: mainCategory,
-        categories: categories, // Add all categories as an array for filtering
-        tonYardRatio: row.ton_yard_ratio ? parseFloat(String(row.ton_yard_ratio)) : 1.5,
-        slug: row.name?.toLowerCase().replace(/\s+/g, '-') || `product-${index + 1}`,
+        categories: categories,
+        slug: slug,
+        tonYardRatio: parseFloat(String(row.ton_yard_ratio)) || 1.5,
         specifications: {
           density: metadata?.density || "",
-          size: metadata?.size || "",
-          color: metadata?.color || "",
+          size: row.size || metadata?.size || "",
+          color: row.color || metadata?.color || "",
           coverage: metadata?.coverage || ""
         },
-        uses: metadata?.uses ? Array.isArray(metadata.uses) ? 
+        uses: Array.isArray(metadata?.uses) ? 
               metadata.uses : 
-              String(metadata.uses).split(',').map((use: string) => use.trim()) : 
-              [],
-        faqs: []
+              typeof metadata?.uses === 'string' ? 
+                String(metadata.uses).split(',').map((use: string) => use.trim()) :
+                []
       };
     });
     
