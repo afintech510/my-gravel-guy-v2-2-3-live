@@ -1,3 +1,4 @@
+
 import { Product, ZipCodeData } from './productTypes';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -45,6 +46,7 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
       
       // Handle different category separators (comma, newline, or single value)
       if (typeof categoryStr === 'string') {
+        // Fix: Ensure we're explicitly handling the string type
         if (categoryStr.includes('\n')) {
           categories = categoryStr.split('\n').map(cat => cat.trim().toLowerCase()).filter(Boolean);
         } else if (categoryStr.includes(',')) {
@@ -53,7 +55,8 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
           categories = [categoryStr.trim().toLowerCase()];
         }
       } else if (Array.isArray(categoryStr)) {
-        categories = categoryStr.map(cat => String(cat).trim().toLowerCase());
+        // Fix: Ensure we're properly typing the array elements
+        categories = categoryStr.map((cat: any) => String(cat).trim().toLowerCase());
       }
       
       // Ensure we have at least one category
@@ -99,7 +102,7 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
       }
 
       // Generate a slug if one doesn't exist
-      const slug = row.name?.toLowerCase().replace(/\s+/g, '-') || `product-${index + 1}`;
+      const slug = row.name ? row.name.toLowerCase().replace(/\s+/g, '-') : `product-${index + 1}`;
       
       const defaultImage = "/placeholder.svg";
 
