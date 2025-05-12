@@ -2,47 +2,16 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
-import { useCart } from '../contexts/CartContext';
 import { Link } from 'react-router-dom';
 import { useZipCode } from '../contexts/ZipCodeContext';
-import { getPriceAdjustmentForZipCode, applyZipCodeAdjustment } from '../services/productService';
+import { getPriceAdjustmentForZipCode } from '../services/productService';
 import { Product } from '../services/productTypes';
 import { ImageOff } from 'lucide-react';
 
 const ProductCard = ({ product }: { product: Product }) => {
-  const { addToCart } = useCart();
   const { zipCode } = useZipCode();
-  const { toast } = useToast();
-  const [adjustedPrice, setAdjustedPrice] = useState(product.price);
   const [imageError, setImageError] = useState(false);
   
-  useEffect(() => {
-    async function updatePrice() {
-      if (zipCode) {
-        const adjustment = await getPriceAdjustmentForZipCode(zipCode);
-        setAdjustedPrice(applyZipCodeAdjustment(product.price, adjustment));
-      } else {
-        setAdjustedPrice(product.price);
-      }
-    }
-    
-    updatePrice();
-  }, [product.price, zipCode]);
-
-  const handleAddToCart = () => {
-    addToCart({
-      ...product,
-      price: adjustedPrice,
-      tons: 3
-    });
-    
-    toast({
-      title: "Added to cart",
-      description: `${product.name} has been added to your cart.`,
-    });
-  };
-
   const defaultImage = "/placeholder.svg";
 
   return (
@@ -75,20 +44,12 @@ const ProductCard = ({ product }: { product: Product }) => {
           </Link>
         </div>
         <p className="text-gray-600 mb-2 line-clamp-2">{product.description}</p>
-        <p className="text-xl font-bold">${adjustedPrice.toFixed(2)} • ton</p>
-        {zipCode && product.price !== adjustedPrice && (
-          <p className="text-sm text-gray-500">
-            <span className={adjustedPrice > product.price ? "text-red-500" : "text-green-500"}>
-              {adjustedPrice > product.price ? "+" : "-"}
-              {Math.abs(((adjustedPrice - product.price) / product.price) * 100).toFixed(0)}%
-            </span>
-            {" "}adjusted for ZIP {zipCode}
-          </p>
-        )}
       </CardContent>
       <CardFooter>
-        <Button onClick={handleAddToCart} className="w-full">
-          Add to Cart
+        <Button asChild className="w-full">
+          <Link to={`/products/${encodeURIComponent(product.slug)}`}>
+            Shop
+          </Link>
         </Button>
       </CardFooter>
     </Card>
