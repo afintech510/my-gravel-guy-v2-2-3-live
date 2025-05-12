@@ -165,8 +165,6 @@ export type Database = {
         Row: {
           application: string | null
           category: string | null
-          category1: string | null
-          category2: string | null
           color: string | null
           created_at: string | null
           description: string | null
@@ -176,7 +174,6 @@ export type Database = {
           metadata: string | null
           name: string
           price: number
-          shape: string | null
           size: string | null
           ton_yard_ratio: string | null
           zip_code_ratio: string | null
@@ -184,8 +181,6 @@ export type Database = {
         Insert: {
           application?: string | null
           category?: string | null
-          category1?: string | null
-          category2?: string | null
           color?: string | null
           created_at?: string | null
           description?: string | null
@@ -195,7 +190,6 @@ export type Database = {
           metadata?: string | null
           name: string
           price: number
-          shape?: string | null
           size?: string | null
           ton_yard_ratio?: string | null
           zip_code_ratio?: string | null
@@ -203,8 +197,6 @@ export type Database = {
         Update: {
           application?: string | null
           category?: string | null
-          category1?: string | null
-          category2?: string | null
           color?: string | null
           created_at?: string | null
           description?: string | null
@@ -214,7 +206,6 @@ export type Database = {
           metadata?: string | null
           name?: string
           price?: number
-          shape?: string | null
           size?: string | null
           ton_yard_ratio?: string | null
           zip_code_ratio?: string | null
