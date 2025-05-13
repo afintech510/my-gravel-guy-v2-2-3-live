@@ -42,6 +42,8 @@ const MaterialCalculator = () => {
   const { toast } = useToast();
   const { addToCart } = useCart();
   const [cityState, setCityState] = useState<string>('');
+  const [manualTons, setManualTons] = useState<number | undefined>(undefined);
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -68,11 +70,20 @@ const MaterialCalculator = () => {
     loadProducts();
   }, []);
 
+  // Reset manual tons when areas or depth change to recalculate based on dimensions
+  useEffect(() => {
+    setManualTons(undefined);
+  }, [areas, depth, extraPercentage]);
+
   const selectedProductObj = products.find(p => p.id.toString() === selectedProduct);
   const selectedProductPrice = selectedProductObj?.price || 0;
   const tonYardRatio = selectedProductObj?.tonYardRatio ? parseFloat(String(selectedProductObj.tonYardRatio)) : 1.5;
   
-  const calculations = useCalculator(areas, depth, extraPercentage, selectedProductPrice, tonYardRatio);
+  const calculations = useCalculator(areas, depth, extraPercentage, selectedProductPrice, tonYardRatio, manualTons);
+
+  const handleTonsChange = (newTons: number) => {
+    setManualTons(newTons);
+  };
 
   const handleAddToCart = () => {
     const product = products.find(p => p.id.toString() === selectedProduct);
@@ -163,6 +174,8 @@ const MaterialCalculator = () => {
           cubicYards={calculations.totalCubicYards}
           tons={calculations.totalTons}
           estimatedCost={calculations.estimatedCost}
+          onTonsChange={handleTonsChange}
+          isManualTons={manualTons !== undefined}
         />
 
         <CalculatorForm
