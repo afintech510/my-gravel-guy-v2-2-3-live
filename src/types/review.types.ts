@@ -16,10 +16,9 @@ export interface CustomerReview {
 
 export type ReviewFilter = 'all' | 'verified' | '5star' | '4star' | '3star' | '2star' | '1star';
 
-// Note: For future reference, to implement this properly,
-// you'll need to add a customer_reviews table in Supabase with these fields:
+// Note: This has been implemented in Supabase with these fields:
 // - id (uuid, primary key)
-// - product_id (text, references products.id)
+// - product_id (uuid, references products.id)
 // - product_name (text)
 // - user_name (text, not null)
 // - rating (integer, not null)
