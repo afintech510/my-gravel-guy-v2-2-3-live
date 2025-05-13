@@ -1,217 +1,96 @@
 
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { useCart } from '../contexts/CartContext';
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, CheckCircle2 } from "lucide-react";
-import CartItemCard from '@/components/cart/CartItemCard';
+import { Button } from '@/components/ui/button';
+import { ShoppingCart, ArrowRight } from 'lucide-react';
+import CartItemCard from '../components/cart/CartItemCard';
+import { useNavigate } from 'react-router-dom';
+import DeliveryForm from '../components/cart/DeliveryForm';
 
 const Cart = () => {
-  const { items, removeFromCart, updateDeliveryDetails, total, isDeliveryInfoComplete } = useCart();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { items, total, discountTotal } = useCart();
+  const navigate = useNavigate();
+  
+  // Check if any discounts have been applied
+  const hasDiscounts = total !== discountTotal;
+  const totalDiscount = total - discountTotal;
 
-  // Helper function to sanitize product data for Stripe
-  const sanitizeProductData = (items) => {
-    const origin = window.location.origin;
-    
-    return items.map(item => {
-      // Process image URL to ensure it's absolute
-      let imageUrl = item.image || '/placeholder.svg';
-      
-      // If image URL is relative (starts with / or is a local path), convert to absolute URL
-      if (imageUrl && (imageUrl.startsWith('/') && !imageUrl.startsWith('//')) || !imageUrl.includes('://')) {
-        imageUrl = `${origin}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
-      }
-      
-      // Build a descriptive name with delivery info
-      const deliveryDate = item.deliveryDate ? ` - Delivery on ${item.deliveryDate.toLocaleDateString()}` : '';
-      const productName = `${String(item.name).replace(/['"\\]/g, '')} (${item.tons} tons${item.yards ? ` / ${item.yards.toFixed(1)} yards` : ''})${deliveryDate}`;
-      
-      // Return sanitized item with absolute image URL and enhanced metadata
-      return {
-        id: item.id,
-        name: productName,
-        price: parseFloat(item.price),
-        quantity: item.tons, // Use tons as the quantity
-        image: imageUrl,
-        metadata: {
-          deliveryDate: item.deliveryDate ? item.deliveryDate.toISOString() : null,
-          deliveryAddress: item.deliveryAddress ? JSON.stringify(item.deliveryAddress) : null,
-          contactPhone: item.contactPhone || null,
-          deliveryTimePreference: item.deliveryTimePreference || null,
-          deliveryInstructions: item.deliveryInstructions || null
-        }
-      };
-    });
-  };
-
-  const handleCheckout = async () => {
-    if (items.length === 0) {
-      toast({
-        title: "Cart is empty",
-        description: "Please add items to your cart before checkout.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Check if all items have complete delivery information
-    const incompleteItems = items.filter(item => !isDeliveryInfoComplete(item));
-    if (incompleteItems.length > 0) {
-      toast({
-        title: "Missing delivery information",
-        description: "Please complete delivery information for all items before checkout.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      // Sanitize product data for Stripe
-      const sanitizedItems = sanitizeProductData(items);
-      
-      console.log('Checkout with sanitized items:', sanitizedItems);
-
-      const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: JSON.stringify({ items: sanitizedItems })
-      });
-
-      if (error) {
-        console.error('Supabase Function Error:', error);
-        throw new Error(error.message || "Failed to create checkout session");
-      }
-      
-      if (!data?.url) {
-        console.error('No checkout URL received:', data);
-        throw new Error("No checkout URL received from payment service");
-      }
-      
-      // Redirect to Stripe checkout
-      window.location.href = data.url;
-    } catch (error) {
-      console.error("Checkout Error:", error);
-      
-      // More informative error handling
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : "Could not process checkout. Please try again.";
-      
-      setError(errorMessage);
-      toast({
-        title: "Checkout Error",
-        description: errorMessage,
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  useEffect(() => {
+    // Scroll to top when component mounts
+    window.scrollTo(0, 0);
+  }, []);
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-white py-16 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-3xl font-bold mb-4">Your Cart is Empty</h1>
-          <Button asChild>
-            <a href="/products">Continue Shopping</a>
+      <div className="py-16 px-4 max-w-6xl mx-auto">
+        <div className="text-center space-y-6 py-12">
+          <div className="bg-gray-100 p-6 rounded-full w-20 h-20 mx-auto flex items-center justify-center">
+            <ShoppingCart className="w-10 h-10 text-gray-500" />
+          </div>
+          <h1 className="text-3xl font-bold">Your cart is empty</h1>
+          <p className="text-muted-foreground max-w-md mx-auto">
+            Looks like you haven't added any products to your cart yet. 
+            Start by exploring our products and adding some to your cart.
+          </p>
+          <Button onClick={() => navigate('/products')} className="mt-4">
+            Browse Products
           </Button>
         </div>
       </div>
     );
   }
 
-  // Count how many items have complete delivery info
-  const completeItems = items.filter(item => isDeliveryInfoComplete(item)).length;
-  const totalItems = items.length;
-
   return (
-    <div className="min-h-screen bg-white py-16 px-4">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Delivery Orders</h1>
+    <div className="py-8 px-4 max-w-6xl mx-auto">
+      <h1 className="text-3xl font-bold mb-8">Your Cart</h1>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6">
+          {items.map((item, index) => (
+            <CartItemCard
+              key={`${item.id}-${index}`}
+              item={item}
+            />
+          ))}
+        </div>
         
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="md:col-span-2 space-y-6">
-            {items.map((item) => (
-              <CartItemCard
-                key={`${item.id}-${item.deliveryDate?.getTime()}`}
-                item={item}
-                onRemove={removeFromCart}
-                onUpdateDelivery={updateDeliveryDetails}
-              />
-            ))}
-          </div>
-          
-          <div className="md:col-span-1">
-            <div className="bg-gray-50 p-6 rounded-lg sticky top-24">
-              <h2 className="text-xl font-bold mb-4">Order Summary</h2>
-              
-              <div className="space-y-2 border-b pb-4 mb-4">
-                {items.map((item) => (
-                  <div key={`summary-${item.id}-${item.deliveryDate?.getTime()}`} className="flex justify-between">
-                    <span>{item.name} ({item.tons} tons)</span>
-                    <span>${(item.price * item.tons).toFixed(2)}</span>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="flex justify-between text-lg font-bold mb-6">
-                <span>Total</span>
+        <div className="lg:col-span-1">
+          <div className="bg-gray-50 rounded-lg p-6 sticky top-24">
+            <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+            
+            {/* Order summary details */}
+            <div className="space-y-2 mb-4 pb-4 border-b">
+              <div className="flex justify-between text-sm">
+                <span>Subtotal ({items.length} items)</span>
                 <span>${total.toFixed(2)}</span>
               </div>
               
-              {completeItems < totalItems ? (
-                <div className="bg-amber-50 border border-amber-200 rounded p-3 mb-4 text-sm">
-                  <p className="font-semibold text-amber-800">
-                    Please complete delivery information for all items
-                  </p>
-                  <p className="text-amber-700 mt-1">
-                    {completeItems} of {totalItems} items ready for checkout
-                  </p>
-                </div>
-              ) : (
-                <div className="bg-green-50 border border-green-200 rounded p-3 mb-4 text-sm">
-                  <div className="flex items-center">
-                    <CheckCircle2 className="h-4 w-4 text-green-600 mr-2" />
-                    <p className="font-semibold text-green-800">
-                      All delivery information complete
-                    </p>
-                  </div>
+              {/* Show discount if applied */}
+              {hasDiscounts && (
+                <div className="flex justify-between text-sm text-green-600">
+                  <span>Discount</span>
+                  <span>-${totalDiscount.toFixed(2)}</span>
                 </div>
               )}
               
-              <Button 
-                onClick={handleCheckout} 
-                className="w-full mb-2"
-                disabled={isLoading || completeItems < totalItems}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  "Proceed to Checkout"
-                )}
-              </Button>
-              
-              <p className="text-xs text-gray-500 text-center mt-2">
-                Each item will be delivered as a separate order. 
-                Please ensure delivery information is accurate.
-              </p>
+              <div className="flex justify-between text-sm">
+                <span>Delivery</span>
+                <span>Calculated at checkout</span>
+              </div>
             </div>
+            
+            <div className="flex justify-between font-semibold text-lg mb-6">
+              <span>Total</span>
+              <span>${discountTotal.toFixed(2)}</span>
+            </div>
+            
+            <Button 
+              onClick={() => navigate('/checkout')} 
+              className="w-full"
+            >
+              Proceed to Checkout
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>

@@ -27,6 +27,8 @@ export interface CartItem extends Product {
   locationPhotoUrl?: string;
   contactInfo?: ContactInfo;
   basePrice?: number; // Original product price before ZIP code adjustments
+  couponApplied?: boolean; // Track if a coupon has been applied
+  couponAmount?: number; // Amount of the coupon discount
 }
 
 interface CartContextType {
@@ -35,7 +37,9 @@ interface CartContextType {
     tons?: number, 
     yards?: number,
     deliveryDate?: Date,
-    contactInfo?: ContactInfo 
+    contactInfo?: ContactInfo,
+    couponApplied?: boolean,
+    couponAmount?: number
   }) => void;
   removeFromCart: (productId: string | number) => void;
   updateDeliveryDetails: (
@@ -44,6 +48,7 @@ interface CartContextType {
   ) => void;
   clearCart: () => void;
   total: number;
+  discountTotal: number;
   isDeliveryInfoComplete: (item: CartItem) => boolean;
 }
 
@@ -57,7 +62,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     tons?: number, 
     yards?: number,
     deliveryDate?: Date,
-    contactInfo?: ContactInfo 
+    contactInfo?: ContactInfo,
+    couponApplied?: boolean,
+    couponAmount?: number
   }) => {
     const tons = product.tons || 3; // Default to 3 tons if not specified
     // Use the provided yards or calculate yards based on tonYardRatio if available
@@ -70,6 +77,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         tons,
         yards,
         basePrice: product.price, // Store original price for potential adjustments later
+        couponApplied: product.couponApplied || false,
+        couponAmount: product.couponAmount || 0
       }
     ]);
   }, []);
@@ -108,7 +117,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   }, []);
 
+  // Calculate the total before any discounts
   const total = items.reduce((sum, item) => sum + item.price * item.tons, 0);
+  
+  // Calculate the total after applying any coupon discounts
+  const discountTotal = items.reduce((sum, item) => {
+    const itemTotal = item.price * item.tons;
+    const discount = item.couponApplied && item.couponAmount ? item.couponAmount : 0;
+    return sum + (itemTotal - discount);
+  }, 0);
 
   return (
     <CartContext.Provider value={{ 
@@ -118,6 +135,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updateDeliveryDetails,
       clearCart, 
       total,
+      discountTotal,
       isDeliveryInfoComplete
     }}>
       {children}

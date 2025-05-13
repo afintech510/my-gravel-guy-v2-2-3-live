@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -147,12 +146,15 @@ const MaterialCalculator = () => {
           email: formData.email,
           phone: formData.phone,
           zipCode: formData.zipCode
-        }
+        },
+        // Apply the $50 coupon automatically
+        couponApplied: true,
+        couponAmount: 50
       });
       
       toast({
         title: "Added to Cart",
-        description: `${Math.floor(calculations.totalTons)} tons of ${product.name} added to your cart.`,
+        description: `${Math.floor(calculations.totalTons)} tons of ${product.name} added to your cart with a $50 discount applied.`,
       });
     }
   };
