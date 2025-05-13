@@ -87,6 +87,9 @@ export const fetchReviews = async (
   limit: number = 10
 ): Promise<{ reviews: CustomerReview[], total: number }> => {
   try {
+    // Calculate pagination offset once to be reused
+    const paginationOffset = (page - 1) * limit;
+    
     // For now, we'll use the sample data until Supabase types are updated
     let filteredReviews = [...sampleReviews];
     
@@ -104,16 +107,15 @@ export const fetchReviews = async (
     );
     
     // Apply pagination
-    const start = (page - 1) * limit;
-    const end = start + limit;
-    const paginatedReviews = filteredReviews.slice(start, end);
+    const end = paginationOffset + limit;
+    const paginatedReviews = filteredReviews.slice(paginationOffset, end);
     
     return { 
       reviews: paginatedReviews, 
       total: filteredReviews.length 
     };
     
-    
+    /* 
     // This code will be uncommented when Supabase types are updated
     let query = supabase
       .from('customer_reviews')
@@ -128,10 +130,9 @@ export const fetchReviews = async (
     }
     
     // Apply pagination
-    const start = (page - 1) * limit;
     query = query
       .order('created_at', { ascending: false })
-      .range(start, start + limit - 1);
+      .range(paginationOffset, paginationOffset + limit - 1);
     
     const { data, count, error } = await query;
     
@@ -144,6 +145,7 @@ export const fetchReviews = async (
       reviews: data as CustomerReview[], 
       total: count || 0 
     };
+    */
     
   } catch (err) {
     console.error("Unexpected error fetching reviews:", err);
@@ -168,7 +170,7 @@ export const fetchProductReviews = async (
     // Apply limit
     return productReviews.slice(0, limit);
     
-    
+    /* 
     // This code will be uncommented when Supabase types are updated
     const { data, error } = await supabase
       .from('customer_reviews')
@@ -183,6 +185,7 @@ export const fetchProductReviews = async (
     }
     
     return data as CustomerReview[];
+    */
     
   } catch (err) {
     console.error("Unexpected error fetching product reviews:", err);
@@ -214,7 +217,7 @@ export const submitReview = async (review: Omit<CustomerReview, 'id' | 'created_
     // For now we'll just return the mock review
     return newReview;
     
-     
+    /* 
     // This code will be uncommented when Supabase types are updated
     // Insert the new review
     const { data, error } = await supabase
@@ -237,6 +240,7 @@ export const submitReview = async (review: Omit<CustomerReview, 'id' | 'created_
     }
     
     return data as CustomerReview;
+    */
     
   } catch (err) {
     console.error("Unexpected error submitting review:", err);
@@ -254,7 +258,7 @@ export const voteReviewHelpful = async (reviewId: string): Promise<boolean> => {
     // For now we'll just return success
     return true;
     
-    
+    /* 
     // This code will be uncommented when Supabase types are updated
     // First get current helpful_votes count
     const { data: review, error: fetchError } = await supabase
@@ -280,6 +284,7 @@ export const voteReviewHelpful = async (reviewId: string): Promise<boolean> => {
     }
     
     return true;
+    */
     
   } catch (err) {
     console.error("Unexpected error voting on review:", err);
