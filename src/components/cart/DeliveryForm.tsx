@@ -67,6 +67,8 @@ const DeliveryForm = ({ initialData, zipCode, onSubmit, lockZipCode = false }: D
 
   const handleSubmitForm = (data: DeliveryFormData) => {
     onSubmit(data);
+    // Auto-scroll to top of page after submission
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -124,23 +126,13 @@ const DeliveryForm = ({ initialData, zipCode, onSubmit, lockZipCode = false }: D
               <FormItem>
                 <FormLabel>ZIP Code</FormLabel>
                 <FormControl>
-                  {lockZipCode ? (
-                    <Input 
-                      placeholder="ZIP" 
-                      {...field} 
-                      readOnly 
-                      disabled
-                      className="bg-gray-100 cursor-not-allowed"
-                    />
-                  ) : (
-                    <Input placeholder="ZIP" {...field} />
-                  )}
+                  <Input placeholder="ZIP" {...field} />
                 </FormControl>
-                {lockZipCode && (
+                {lockZipCode ? (
                   <p className="text-xs text-muted-foreground mt-1">
-                    ZIP code cannot be changed as pricing is based on delivery location
+                    Changing the ZIP code may affect delivery pricing
                   </p>
-                )}
+                ) : null}
                 <FormMessage />
               </FormItem>
             )}

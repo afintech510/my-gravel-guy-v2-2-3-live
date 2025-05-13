@@ -7,6 +7,9 @@ interface PriceDisplayProps {
   showDiscountedPrice: boolean;
   discountedCost: number;
   totalTons: number;
+  originalPrice?: number;
+  adjustedPrice?: number;
+  priceAdjustment?: number;
   onAddToCart: () => void;
   isAvailable?: boolean;
 }
@@ -15,10 +18,14 @@ export function PriceDisplay({
   showDiscountedPrice, 
   discountedCost, 
   totalTons,
+  originalPrice,
+  adjustedPrice,
+  priceAdjustment = 0,
   onAddToCart,
   isAvailable = true
 }: PriceDisplayProps) {
   const formattedTons = Math.floor(totalTons);
+  const hasZipAdjustment = priceAdjustment !== 0;
   
   return (
     <div className="bg-gray-50 p-6 rounded-lg">
@@ -28,9 +35,31 @@ export function PriceDisplay({
             <h3 className="text-lg font-semibold">Your Estimated Total</h3>
             <div className="text-xl font-bold">${discountedCost.toFixed(2)}</div>
           </div>
+          
+          {hasZipAdjustment && originalPrice && adjustedPrice && (
+            <div className="text-sm">
+              <div className="flex justify-between text-gray-600">
+                <span>Base price:</span>
+                <span>${originalPrice.toFixed(2)} per ton</span>
+              </div>
+              <div className="flex justify-between text-gray-600">
+                <span>Location adjustment:</span>
+                <span className={priceAdjustment > 0 ? "text-red-600" : "text-green-600"}>
+                  {priceAdjustment > 0 ? "+" : ""}{priceAdjustment}%
+                </span>
+              </div>
+              <div className="flex justify-between font-medium mt-1">
+                <span>Final price:</span>
+                <span>${adjustedPrice.toFixed(2)} per ton</span>
+              </div>
+            </div>
+          )}
+          
           <p className="text-sm text-gray-600">
-            Price includes optional $50 discount for online ordering. Final price may vary based
-            on exact tons delivered and delivery location.
+            {hasZipAdjustment 
+              ? `Price includes location-based ${priceAdjustment > 0 ? 'increase' : 'discount'} for your delivery ZIP code.` 
+              : "Price includes optional $50 discount for online ordering."} 
+            Final price may vary based on exact tons delivered.
           </p>
           
           {!isAvailable ? (

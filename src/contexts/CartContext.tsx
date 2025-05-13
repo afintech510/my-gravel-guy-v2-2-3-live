@@ -26,6 +26,7 @@ export interface CartItem extends Product {
   deliveryInstructions?: string;
   locationPhotoUrl?: string;
   contactInfo?: ContactInfo;
+  basePrice?: number; // Original product price before ZIP code adjustments
 }
 
 interface CartContextType {
@@ -67,7 +68,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {
         ...product,
         tons,
-        yards
+        yards,
+        basePrice: product.price, // Store original price for potential adjustments later
       }
     ]);
   }, []);

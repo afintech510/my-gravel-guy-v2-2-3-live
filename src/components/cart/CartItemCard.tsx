@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import DeliveryForm, { DeliveryFormData } from "./DeliveryForm";
 import { CartItem } from "../../contexts/CartContext";
 import DeliveryDatePicker from "../products/DeliveryDatePicker";
+import { getPriceAdjustmentForZipCode } from "../../services/productService";
 
 interface CartItemCardProps {
   item: CartItem;
@@ -20,6 +21,7 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery }: CartItemCardProps) =
   const { toast } = useToast();
   const [isEditingDelivery, setIsEditingDelivery] = useState(!item.deliveryAddress);
   const [isSelectingDate, setIsSelectingDate] = useState(false);
+  const [isUpdatingPrice, setIsUpdatingPrice] = useState(false);
   
   const hasDeliveryInfo = !!(
     item.deliveryAddress?.street && 
@@ -29,25 +31,70 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery }: CartItemCardProps) =
     item.contactPhone
   );
 
-  const handleDeliverySubmit = (data: DeliveryFormData) => {
-    onUpdateDelivery(item.id, {
-      deliveryAddress: {
-        street: data.street,
-        city: data.city,
-        state: data.state,
-        zip: data.zip,
-      },
-      contactPhone: data.contactPhone,
-      deliveryTimePreference: data.deliveryTimePreference as 'morning' | 'afternoon' | undefined,
-      deliveryInstructions: data.deliveryInstructions
-    });
+  const handleDeliverySubmit = async (data: DeliveryFormData) => {
+    setIsUpdatingPrice(true);
     
-    setIsEditingDelivery(false);
-    
-    toast({
-      title: "Delivery information updated",
-      description: "Your delivery details have been saved.",
-    });
+    try {
+      // If ZIP code has changed, get the new price adjustment
+      if (data.zip !== item.deliveryAddress?.zip) {
+        const priceAdjustment = await getPriceAdjustmentForZipCode(data.zip);
+        console.log(`Price adjustment for ${data.zip}: ${priceAdjustment}%`);
+        
+        // Calculate the new price with adjustment
+        const basePrice = item.basePrice || item.price; // Use basePrice if exists, otherwise use current price
+        const newPrice = basePrice * (1 + priceAdjustment / 100);
+        
+        // Update the item with new delivery info and adjusted price
+        onUpdateDelivery(item.id, {
+          deliveryAddress: {
+            street: data.street,
+            city: data.city,
+            state: data.state,
+            zip: data.zip,
+          },
+          contactPhone: data.contactPhone,
+          deliveryTimePreference: data.deliveryTimePreference as 'morning' | 'afternoon' | undefined,
+          deliveryInstructions: data.deliveryInstructions,
+          price: parseFloat(newPrice.toFixed(2)),
+          basePrice: basePrice // Store the original base price
+        });
+        
+        toast({
+          title: "Delivery information updated",
+          description: priceAdjustment !== 0 
+            ? `Price adjusted by ${priceAdjustment > 0 ? '+' : ''}${priceAdjustment}% for delivery to ${data.zip}`
+            : "Your delivery details have been saved.",
+        });
+      } else {
+        // No ZIP change, just update the delivery info
+        onUpdateDelivery(item.id, {
+          deliveryAddress: {
+            street: data.street,
+            city: data.city,
+            state: data.state,
+            zip: data.zip,
+          },
+          contactPhone: data.contactPhone,
+          deliveryTimePreference: data.deliveryTimePreference as 'morning' | 'afternoon' | undefined,
+          deliveryInstructions: data.deliveryInstructions
+        });
+        
+        toast({
+          title: "Delivery information updated",
+          description: "Your delivery details have been saved.",
+        });
+      }
+    } catch (error) {
+      console.error("Error updating delivery info:", error);
+      toast({
+        title: "Error updating delivery information",
+        description: "Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUpdatingPrice(false);
+      setIsEditingDelivery(false);
+    }
   };
 
   const handleDateSelect = (date: Date | undefined) => {
@@ -154,17 +201,15 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery }: CartItemCardProps) =
                 )}
                 
                 <div className="flex flex-wrap gap-2 mt-3">
-                  {!item.deliveryDate && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="flex items-center gap-1"
-                      onClick={() => setIsSelectingDate(true)}
-                    >
-                      <CalendarDays className="h-4 w-4" />
-                      Set Delivery Date
-                    </Button>
-                  )}
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="flex items-center gap-1"
+                    onClick={() => setIsSelectingDate(true)}
+                  >
+                    <CalendarDays className="h-4 w-4" />
+                    {item.deliveryDate ? "Change Date" : "Set Date"}
+                  </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -186,7 +231,7 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery }: CartItemCardProps) =
                 } : undefined}
                 zipCode={item.contactInfo?.zipCode || item.deliveryAddress?.zip}
                 onSubmit={handleDeliverySubmit}
-                lockZipCode={true}
+                lockZipCode={false} // Allow ZIP code to be edited
               />
             )}
           </div>
