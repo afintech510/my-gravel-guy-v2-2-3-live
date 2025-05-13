@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +9,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Upload, X } from "lucide-react";
+import { findZipCodeMatch } from "../../utils/zipCode";
+import { useToast } from "@/hooks/use-toast";
 
 const deliverySchema = z.object({
   street: z.string().min(1, "Street address is required"),
@@ -32,6 +34,8 @@ interface DeliveryFormProps {
 const DeliveryForm = ({ initialData, zipCode, onSubmit, lockZipCode = false }: DeliveryFormProps) => {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const { toast } = useToast();
+  const [isLoadingZipData, setIsLoadingZipData] = useState(false);
   
   const form = useForm<DeliveryFormData>({
     resolver: zodResolver(deliverySchema),
@@ -45,6 +49,40 @@ const DeliveryForm = ({ initialData, zipCode, onSubmit, lockZipCode = false }: D
       deliveryInstructions: initialData?.deliveryInstructions || ''
     }
   });
+
+  // Watch for zip code changes to auto-populate city and state
+  const watchedZip = form.watch('zip');
+
+  // Auto-populate city and state when zip changes
+  useEffect(() => {
+    const fetchLocationData = async (zipCode: string) => {
+      if (zipCode.length === 5) {
+        setIsLoadingZipData(true);
+        try {
+          const zipData = await findZipCodeMatch(zipCode);
+          if (zipData) {
+            // Update city and state fields
+            form.setValue('city', zipData.city);
+            form.setValue('state', zipData.state_id);
+            toast({
+              title: "Location found",
+              description: `${zipData.city}, ${zipData.state_id} detected for ZIP code ${zipCode}`,
+            });
+          }
+        } catch (error) {
+          console.error("Error finding ZIP data:", error);
+        } finally {
+          setIsLoadingZipData(false);
+        }
+      }
+    };
+
+    // Only run if zip code is valid length and not already populated
+    if (watchedZip && watchedZip.length === 5 && 
+        (!form.getValues('city') || !form.getValues('state'))) {
+      fetchLocationData(watchedZip);
+    }
+  }, [watchedZip, form, toast]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -91,13 +129,27 @@ const DeliveryForm = ({ initialData, zipCode, onSubmit, lockZipCode = false }: D
           
           <FormField
             control={form.control}
-            name="city"
+            name="zip"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>City</FormLabel>
+                <FormLabel>ZIP Code</FormLabel>
                 <FormControl>
-                  <Input placeholder="City" {...field} />
+                  <Input 
+                    placeholder="ZIP" 
+                    {...field} 
+                    className={isLoadingZipData ? "bg-gray-50" : ""}
+                  />
                 </FormControl>
+                {isLoadingZipData && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Looking up location...
+                  </p>
+                )}
+                {lockZipCode ? (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Changing the ZIP code may affect delivery pricing
+                  </p>
+                ) : null}
                 <FormMessage />
               </FormItem>
             )}
@@ -107,12 +159,16 @@ const DeliveryForm = ({ initialData, zipCode, onSubmit, lockZipCode = false }: D
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="state"
+            name="city"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>State</FormLabel>
+                <FormLabel>City</FormLabel>
                 <FormControl>
-                  <Input placeholder="State" {...field} />
+                  <Input 
+                    placeholder="City" 
+                    {...field} 
+                    className={isLoadingZipData ? "bg-gray-50" : ""}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -121,18 +177,17 @@ const DeliveryForm = ({ initialData, zipCode, onSubmit, lockZipCode = false }: D
           
           <FormField
             control={form.control}
-            name="zip"
+            name="state"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>ZIP Code</FormLabel>
+                <FormLabel>State</FormLabel>
                 <FormControl>
-                  <Input placeholder="ZIP" {...field} />
+                  <Input 
+                    placeholder="State" 
+                    {...field}
+                    className={isLoadingZipData ? "bg-gray-50" : ""}
+                  />
                 </FormControl>
-                {lockZipCode ? (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Changing the ZIP code may affect delivery pricing
-                  </p>
-                ) : null}
                 <FormMessage />
               </FormItem>
             )}
