@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, AlertCircle } from "lucide-react";
+import { ShoppingCart, AlertCircle, Tag } from "lucide-react";
 
 interface PriceDisplayProps {
   showDiscountedPrice: boolean;
@@ -55,10 +55,21 @@ export function PriceDisplay({
             </div>
           )}
           
+          {/* Coupon Discount Information */}
+          <div className="bg-green-50 border border-green-200 rounded-md p-3 flex items-start">
+            <Tag className="h-5 w-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-green-700">$50 Discount Applied</p>
+              <p className="text-xs text-green-600">
+                A $50 discount will be automatically applied to your order when you add to cart.
+              </p>
+            </div>
+          </div>
+          
           <p className="text-sm text-gray-600">
             {hasZipAdjustment 
               ? `Price includes location-based ${priceAdjustment > 0 ? 'increase' : 'discount'} for your delivery ZIP code.` 
-              : "Price includes optional $50 discount for online ordering."} 
+              : "Price includes online ordering discount."} 
             Final price may vary based on exact tons delivered.
           </p>
           
