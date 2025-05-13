@@ -88,15 +88,23 @@ const MaterialCalculator = () => {
   const handleAddToCart = () => {
     const product = products.find(p => p.id.toString() === selectedProduct);
     if (product) {
+      const formData = form.getValues();
+      
       addToCart({
         ...product,
-        price: calculations.discountedCost / calculations.totalTons,
-        quantity: calculations.totalTons,
-      } as any);
+        tons: calculations.totalTons,
+        yards: calculations.totalCubicYards,
+        contactInfo: {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          zipCode: formData.zipCode
+        }
+      });
       
       toast({
         title: "Added to Cart",
-        description: `${calculations.totalTons.toFixed(1)} tons of ${product.name} added with $50 discount applied.`,
+        description: `${Math.floor(calculations.totalTons)} tons of ${product.name} added to your cart.`,
       });
     }
   };
