@@ -26,9 +26,10 @@ interface DeliveryFormProps {
   initialData?: Partial<DeliveryFormData>;
   zipCode?: string;
   onSubmit: (data: DeliveryFormData) => void;
+  lockZipCode?: boolean;
 }
 
-const DeliveryForm = ({ initialData, zipCode, onSubmit }: DeliveryFormProps) => {
+const DeliveryForm = ({ initialData, zipCode, onSubmit, lockZipCode = false }: DeliveryFormProps) => {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   
@@ -123,8 +124,23 @@ const DeliveryForm = ({ initialData, zipCode, onSubmit }: DeliveryFormProps) => 
               <FormItem>
                 <FormLabel>ZIP Code</FormLabel>
                 <FormControl>
-                  <Input placeholder="ZIP" {...field} />
+                  {lockZipCode ? (
+                    <Input 
+                      placeholder="ZIP" 
+                      {...field} 
+                      readOnly 
+                      disabled
+                      className="bg-gray-100 cursor-not-allowed"
+                    />
+                  ) : (
+                    <Input placeholder="ZIP" {...field} />
+                  )}
                 </FormControl>
+                {lockZipCode && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    ZIP code cannot be changed as pricing is based on delivery location
+                  </p>
+                )}
                 <FormMessage />
               </FormItem>
             )}
