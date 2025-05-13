@@ -5,10 +5,9 @@ import { Button } from '@/components/ui/button';
 import { ShoppingCart, ArrowRight } from 'lucide-react';
 import CartItemCard from '../components/cart/CartItemCard';
 import { useNavigate } from 'react-router-dom';
-import DeliveryForm from '../components/cart/DeliveryForm';
 
 const Cart = () => {
-  const { items, total, discountTotal } = useCart();
+  const { items, total, discountTotal, removeFromCart, updateDeliveryDetails } = useCart();
   const navigate = useNavigate();
   
   // Check if any discounts have been applied
@@ -50,6 +49,8 @@ const Cart = () => {
             <CartItemCard
               key={`${item.id}-${index}`}
               item={item}
+              onRemove={removeFromCart}
+              onUpdateDelivery={updateDeliveryDetails}
             />
           ))}
         </div>
