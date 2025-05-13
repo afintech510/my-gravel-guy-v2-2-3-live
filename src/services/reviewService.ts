@@ -113,7 +113,7 @@ export const fetchReviews = async (
       total: filteredReviews.length 
     };
     
-    /* 
+    
     // This code will be uncommented when Supabase types are updated
     let query = supabase
       .from('customer_reviews')
@@ -144,7 +144,7 @@ export const fetchReviews = async (
       reviews: data as CustomerReview[], 
       total: count || 0 
     };
-    */
+    
   } catch (err) {
     console.error("Unexpected error fetching reviews:", err);
     return { reviews: [], total: 0 };
@@ -168,7 +168,7 @@ export const fetchProductReviews = async (
     // Apply limit
     return productReviews.slice(0, limit);
     
-    /* 
+    
     // This code will be uncommented when Supabase types are updated
     const { data, error } = await supabase
       .from('customer_reviews')
@@ -183,7 +183,7 @@ export const fetchProductReviews = async (
     }
     
     return data as CustomerReview[];
-    */
+    
   } catch (err) {
     console.error("Unexpected error fetching product reviews:", err);
     return [];
@@ -214,7 +214,7 @@ export const submitReview = async (review: Omit<CustomerReview, 'id' | 'created_
     // For now we'll just return the mock review
     return newReview;
     
-    /* 
+     
     // This code will be uncommented when Supabase types are updated
     // Insert the new review
     const { data, error } = await supabase
@@ -237,7 +237,7 @@ export const submitReview = async (review: Omit<CustomerReview, 'id' | 'created_
     }
     
     return data as CustomerReview;
-    */
+    
   } catch (err) {
     console.error("Unexpected error submitting review:", err);
     return null;
@@ -254,7 +254,7 @@ export const voteReviewHelpful = async (reviewId: string): Promise<boolean> => {
     // For now we'll just return success
     return true;
     
-    /* 
+    
     // This code will be uncommented when Supabase types are updated
     // First get current helpful_votes count
     const { data: review, error: fetchError } = await supabase
@@ -280,7 +280,7 @@ export const voteReviewHelpful = async (reviewId: string): Promise<boolean> => {
     }
     
     return true;
-    */
+    
   } catch (err) {
     console.error("Unexpected error voting on review:", err);
     return false;
