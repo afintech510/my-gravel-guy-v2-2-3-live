@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -9,6 +8,7 @@ import { CartProvider } from "./contexts/CartContext";
 import { ZipCodeProvider } from "./contexts/ZipCodeContext";
 import { BlogProvider } from "./contexts/BlogContext";
 import ScrollToTop from "./components/ScrollToTop";
+import RouteTracker from "./components/analytics/RouteTracker";
 import TopBanner from "./components/TopBanner";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -50,6 +50,7 @@ const App = () => {
               <Sonner />
               <BrowserRouter>
                 <ScrollToTop />
+                <RouteTracker />
                 <div className="min-h-screen bg-gray-50 flex flex-col">
                   <div className="sticky top-0 z-50 w-full">
                     <TopBanner />
