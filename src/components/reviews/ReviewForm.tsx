@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import StarRating from './StarRating';
 import { submitReview } from '@/services/reviewService';
+import { trackEvent } from '@/utils/analytics';
 
 interface ReviewFormProps {
   productId?: string;
@@ -66,6 +66,9 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     setIsSubmitting(false);
     
     if (result) {
+      // Track the review submission in analytics
+      trackEvent('submit_review', 'review_interaction', productName || 'general_review', rating);
+      
       toast({
         title: "Review submitted",
         description: "Thank you for your feedback!",

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import { ThumbsUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { CustomerReview } from '@/types/review.types';
 import { voteReviewHelpful } from '@/services/reviewService';
+import { trackEvent } from '@/utils/analytics';
 
 interface ReviewCardProps {
   review: CustomerReview;
@@ -33,6 +33,9 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, className }) => {
         title: "Thank you!",
         description: "Your feedback has been recorded.",
       });
+      
+      // Track this event in analytics
+      trackEvent('vote_helpful', 'review_interaction', `review_${review.id}`, 1);
     }
   };
   
