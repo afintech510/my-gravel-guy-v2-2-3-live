@@ -10,7 +10,7 @@ const QuizProgress: React.FC = () => {
   const steps: { id: QuizStep; title: string }[] = [
     { id: "projectType", title: "Project Type" },
     { id: "requirements", title: "Requirements" },
-    { id: "budget", title: "Budget" },
+    { id: "areaCalculator", title: "Area Calculator" },
     { id: "delivery", title: "Delivery" },
     { id: "results", title: "Results" },
   ];

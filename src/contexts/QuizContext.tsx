@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { getProducts } from "../services/productService";
 import { Product } from "../services/productTypes";
@@ -6,7 +7,7 @@ import { Product } from "../services/productTypes";
 export type QuizStep = 
   | "projectType" 
   | "requirements"
-  | "budget"
+  | "areaCalculator"
   | "delivery"
   | "results";
 
@@ -15,7 +16,10 @@ export type ProjectType =
   | "driveway" 
   | "landscaping" 
   | "patio" 
-  | "walkway" 
+  | "walkway"
+  | "drainage"
+  | "base"
+  | "general"
   | "other";
 
 // Material requirements
@@ -24,10 +28,20 @@ export interface MaterialRequirements {
   aesthetics: boolean;
   durability: boolean;
   easeOfInstallation: boolean;
+  newInstall: boolean;
+  topDressing: boolean;
+  fillHole: boolean;
+  gradeProperty: boolean;
 }
 
-// Budget preferences
-export type BudgetPreference = "economy" | "standard" | "premium";
+// Area input interface
+export interface AreaInput {
+  length: number;
+  width: number;
+}
+
+// Gravel size options
+export type GravelSize = "small" | "medium" | "large";
 
 // Delivery information
 export interface DeliveryInfo {
@@ -44,7 +58,10 @@ export interface QuizState {
   currentStep: QuizStep;
   projectType: ProjectType | null;
   requirements: MaterialRequirements;
-  budget: BudgetPreference | null;
+  areas: AreaInput[];
+  depth: number;
+  extraPercentage: number;
+  gravelSize: GravelSize;
   deliveryInfo: DeliveryInfo;
   recommendations: Product[];
 }
@@ -54,7 +71,10 @@ interface QuizContextType {
   state: QuizState;
   setProjectType: (type: ProjectType) => void;
   setRequirements: (requirements: MaterialRequirements) => void;
-  setBudget: (budget: BudgetPreference) => void;
+  setAreas: (areas: AreaInput[]) => void;
+  setDepth: (depth: number) => void;
+  setExtraPercentage: (percentage: number) => void;
+  setGravelSize: (size: GravelSize) => void;
   setDeliveryInfo: (info: DeliveryInfo) => void;
   nextStep: () => void;
   prevStep: () => void;
@@ -62,6 +82,12 @@ interface QuizContextType {
   generateRecommendations: () => Promise<void>;
   isStepComplete: (step: QuizStep) => boolean;
   resetQuiz: () => void;
+  calculatedValues: {
+    totalSquareFeet: number;
+    totalCubicYards: number;
+    totalTons: number;
+  };
+  getRecommendedDepth: () => number;
 }
 
 // Initial quiz state
@@ -73,8 +99,15 @@ const initialState: QuizState = {
     aesthetics: false,
     durability: false,
     easeOfInstallation: false,
+    newInstall: false,
+    topDressing: false,
+    fillHole: false,
+    gradeProperty: false,
   },
-  budget: null,
+  areas: [{ length: 10, width: 10 }],
+  depth: 4,
+  extraPercentage: 10,
+  gravelSize: "medium",
   deliveryInfo: {
     name: "",
     email: "",
@@ -102,6 +135,26 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem("quizState", JSON.stringify(state));
   }, [state]);
 
+  // Calculate recommended depth based on requirements
+  const getRecommendedDepth = (): number => {
+    if (state.requirements.drainage) {
+      return 6; // 6" for good drainage
+    } else if (state.requirements.newInstall) {
+      return 3; // 3" for new installation
+    } else if (state.requirements.topDressing) {
+      return 1.5; // 1.5" for top dressing (middle of 1-2" range)
+    }
+    return 4; // Default depth
+  };
+
+  // Update depth when requirements change
+  useEffect(() => {
+    const recommendedDepth = getRecommendedDepth();
+    if (state.depth !== recommendedDepth) {
+      setState((prev) => ({ ...prev, depth: recommendedDepth }));
+    }
+  }, [state.requirements]);
+
   const setProjectType = (type: ProjectType) => {
     setState((prev) => ({ ...prev, projectType: type }));
   };
@@ -110,8 +163,20 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setState((prev) => ({ ...prev, requirements }));
   };
 
-  const setBudget = (budget: BudgetPreference) => {
-    setState((prev) => ({ ...prev, budget }));
+  const setAreas = (areas: AreaInput[]) => {
+    setState((prev) => ({ ...prev, areas }));
+  };
+
+  const setDepth = (depth: number) => {
+    setState((prev) => ({ ...prev, depth }));
+  };
+
+  const setExtraPercentage = (percentage: number) => {
+    setState((prev) => ({ ...prev, extraPercentage: percentage }));
+  };
+
+  const setGravelSize = (size: GravelSize) => {
+    setState((prev) => ({ ...prev, gravelSize: size }));
   };
 
   const setDeliveryInfo = (info: DeliveryInfo) => {
@@ -119,7 +184,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const nextStep = () => {
-    const steps: QuizStep[] = ["projectType", "requirements", "budget", "delivery", "results"];
+    const steps: QuizStep[] = ["projectType", "requirements", "areaCalculator", "delivery", "results"];
     const currentIndex = steps.indexOf(state.currentStep);
     
     if (currentIndex < steps.length - 1) {
@@ -128,7 +193,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const prevStep = () => {
-    const steps: QuizStep[] = ["projectType", "requirements", "budget", "delivery", "results"];
+    const steps: QuizStep[] = ["projectType", "requirements", "areaCalculator", "delivery", "results"];
     const currentIndex = steps.indexOf(state.currentStep);
     
     if (currentIndex > 0) {
@@ -138,6 +203,19 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const goToStep = (step: QuizStep) => {
     setState((prev) => ({ ...prev, currentStep: step }));
+  };
+
+  // Calculate values for area, cubic yards, and tons
+  const calculatedValues = {
+    totalSquareFeet: state.areas.reduce((total, area) => total + area.length * area.width, 0),
+    get totalCubicYards() {
+      const cubicFeet = (this.totalSquareFeet * state.depth) / 12;
+      return +(cubicFeet / 27 * (1 + state.extraPercentage / 100)).toFixed(2);
+    },
+    get totalTons() {
+      // Using 1.5 as default tons per cubic yard
+      return Math.floor(this.totalCubicYards * 1.5);
+    }
   };
 
   const generateRecommendations = async () => {
@@ -153,41 +231,94 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
         switch (state.projectType) {
           case "driveway":
             if (product.category === "gravel") score += 10;
+            if (product.categories?.includes("driveway")) score += 10;
             break;
           case "landscaping":
-            if (["gravel", "dirt"].includes(product.category)) score += 10;
+            if (["gravel", "dirt", "mulch"].includes(product.category)) score += 8;
+            if (product.categories?.includes("landscaping")) score += 10;
             break;
           case "patio":
             if (product.category === "gravel") score += 8;
-            if (product.category === "sand") score += 5;
+            if (product.categories?.includes("patio")) score += 10;
             break;
           case "walkway":
+            if (product.category === "gravel") score += 8;
+            if (product.categories?.includes("walkway")) score += 10;
+            break;
+          case "drainage":
             if (product.category === "gravel") score += 10;
+            if (product.categories?.includes("drainage")) score += 10;
+            break;
+          case "base":
+            if (product.category === "base" || product.category === "gravel") score += 8;
+            if (product.categories?.includes("base")) score += 10;
             break;
           default:
             break;
         }
         
         // Requirements scoring
-        if (state.requirements.drainage && product.category === "gravel") score += 5;
-        if (state.requirements.aesthetics && product.category === "gravel") score += 3;
-        if (state.requirements.durability && product.category === "gravel") score += 5;
-        if (state.requirements.easeOfInstallation && product.category === "sand") score += 3;
+        if (state.requirements.drainage) {
+          if (product.category === "gravel") score += 5;
+          if (product.categories?.includes("drainage")) score += 10;
+        }
         
-        // Budget scoring
-        switch (state.budget) {
-          case "economy":
-            if (product.price < 30) score += 10;
-            else if (product.price < 50) score += 5;
-            break;
-          case "standard":
-            if (product.price >= 30 && product.price <= 70) score += 10;
-            break;
-          case "premium":
-            if (product.price > 70) score += 10;
-            break;
-          default:
-            break;
+        if (state.requirements.aesthetics) {
+          if (product.categories?.includes("decorative")) score += 8;
+          if (product.color) score += 5; // Products with color info are likely decorative
+        }
+        
+        if (state.requirements.durability) {
+          if (product.category === "gravel" || product.category === "base") score += 5;
+          if (product.categories?.includes("durable")) score += 8;
+        }
+        
+        if (state.requirements.newInstall) {
+          if (product.categories?.includes("new-installation")) score += 8;
+        }
+        
+        if (state.requirements.topDressing) {
+          if (product.categories?.includes("top-dressing")) score += 10;
+        }
+        
+        if (state.requirements.fillHole) {
+          if (product.categories?.includes("fill")) score += 10;
+        }
+        
+        if (state.requirements.gradeProperty) {
+          if (product.categories?.includes("grading")) score += 10;
+        }
+        
+        // Gravel size scoring
+        if (product.category === "gravel" || product.categories?.includes("gravel")) {
+          const sizeStr = product.size?.toLowerCase() || "";
+          
+          switch (state.gravelSize) {
+            case "small": // ≤ ¾"
+              if (sizeStr.includes("3/8") || 
+                  sizeStr.includes("1/4") ||
+                  sizeStr.includes("1/2") ||
+                  sizeStr.includes("3/4")) {
+                score += 10;
+              }
+              break;
+            case "medium": // 1-2"
+              if (sizeStr.includes("1\"") || 
+                  sizeStr.includes("1-") || 
+                  sizeStr.includes("1.5") || 
+                  sizeStr.includes("1 1/2")) {
+                score += 10;
+              }
+              break;
+            case "large": // 2+"
+              if (sizeStr.includes("2\"") || 
+                  sizeStr.includes("3\"") || 
+                  sizeStr.includes("4\"") || 
+                  parseInt(sizeStr) >= 2) {
+                score += 10;
+              }
+              break;
+          }
         }
         
         return { product, score };
@@ -213,8 +344,10 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return state.projectType !== null;
       case "requirements":
         return Object.values(state.requirements).some(val => val === true);
-      case "budget":
-        return state.budget !== null;
+      case "areaCalculator":
+        return state.areas.length > 0 && 
+               state.areas.every(area => area.length > 0 && area.width > 0) && 
+               state.depth > 0;
       case "delivery":
         return !!state.deliveryInfo.name && 
                !!state.deliveryInfo.email && 
@@ -238,7 +371,10 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
         state,
         setProjectType,
         setRequirements,
-        setBudget,
+        setAreas,
+        setDepth,
+        setExtraPercentage,
+        setGravelSize,
         setDeliveryInfo,
         nextStep,
         prevStep,
@@ -246,6 +382,8 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
         generateRecommendations,
         isStepComplete,
         resetQuiz,
+        calculatedValues,
+        getRecommendedDepth,
       }}
     >
       {children}

@@ -13,9 +13,9 @@ const projectTypes: { id: ProjectType; title: string; description: string }[] = 
     description: "Durable materials for vehicle traffic and parking areas."
   },
   {
-    id: "landscaping",
-    title: "Landscaping",
-    description: "Materials for garden paths, beds, and decorative areas."
+    id: "walkway",
+    title: "Walkway",
+    description: "Materials for pedestrian paths and walkways."
   },
   {
     id: "patio",
@@ -23,9 +23,24 @@ const projectTypes: { id: ProjectType; title: string; description: string }[] = 
     description: "Materials for outdoor seating and entertainment areas."
   },
   {
-    id: "walkway",
-    title: "Walkway",
-    description: "Materials for pedestrian paths and walkways."
+    id: "landscaping",
+    title: "Landscaping",
+    description: "Materials for garden paths, beds, and decorative areas."
+  },
+  {
+    id: "drainage",
+    title: "Drainage",
+    description: "Materials for water management and drainage solutions."
+  },
+  {
+    id: "base",
+    title: "Base Material",
+    description: "Foundation materials for construction and support layers."
+  },
+  {
+    id: "general",
+    title: "General Purpose",
+    description: "Versatile materials for various outdoor projects."
   },
   {
     id: "other",

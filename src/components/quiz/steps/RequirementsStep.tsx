@@ -26,6 +26,26 @@ const requirements = [
     id: "easeOfInstallation",
     title: "Easy Installation",
     description: "Materials that are easier to work with and install."
+  },
+  {
+    id: "newInstall",
+    title: "New Installation",
+    description: "Starting a new project from scratch."
+  },
+  {
+    id: "topDressing",
+    title: "Top Dressing",
+    description: "Adding a new layer over existing material."
+  },
+  {
+    id: "fillHole",
+    title: "Fill Hole",
+    description: "Materials to fill in depressions or excavated areas."
+  },
+  {
+    id: "gradeProperty",
+    title: "Grade Property",
+    description: "Materials for leveling or creating a slope on your property."
   }
 ];
 
