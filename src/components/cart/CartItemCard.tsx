@@ -2,12 +2,13 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, CalendarDays } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import DeliveryForm, { DeliveryFormData } from "./DeliveryForm";
 import { CartItem } from "../../contexts/CartContext";
+import DeliveryDatePicker from "../products/DeliveryDatePicker";
 
 interface CartItemCardProps {
   item: CartItem;
@@ -18,6 +19,7 @@ interface CartItemCardProps {
 const CartItemCard = ({ item, onRemove, onUpdateDelivery }: CartItemCardProps) => {
   const { toast } = useToast();
   const [isEditingDelivery, setIsEditingDelivery] = useState(!item.deliveryAddress);
+  const [isSelectingDate, setIsSelectingDate] = useState(false);
   
   const hasDeliveryInfo = !!(
     item.deliveryAddress?.street && 
@@ -47,6 +49,17 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery }: CartItemCardProps) =
       description: "Your delivery details have been saved.",
     });
   };
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      onUpdateDelivery(item.id, { deliveryDate: date });
+      setIsSelectingDate(false);
+      toast({
+        title: "Delivery date updated",
+        description: `Delivery date set to ${format(date, 'MMMM d, yyyy')}`,
+      });
+    }
+  };
   
   return (
     <Card className="mb-6">
@@ -62,9 +75,15 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery }: CartItemCardProps) =
                 ≈ {item.yards.toFixed(1)} cubic yards
               </Badge>
             )}
-            {item.deliveryDate && (
-              <Badge variant="outline" className="bg-green-50">
-                Delivery: {format(item.deliveryDate, 'MMM d, yyyy')}
+            {item.deliveryDate ? (
+              <Badge variant="outline" className="flex items-center gap-1 bg-green-50 cursor-pointer" onClick={() => setIsSelectingDate(true)}>
+                <CalendarDays className="h-3 w-3" />
+                {format(item.deliveryDate, 'MMM d, yyyy')}
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="flex items-center gap-1 bg-amber-50 cursor-pointer" onClick={() => setIsSelectingDate(true)}>
+                <CalendarDays className="h-3 w-3" />
+                Set delivery date
               </Badge>
             )}
           </div>
@@ -80,6 +99,24 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery }: CartItemCardProps) =
       </CardHeader>
       
       <CardContent>
+        {isSelectingDate && (
+          <div className="mb-4 p-4 border rounded-md bg-gray-50">
+            <h4 className="text-sm font-medium mb-2">Select Delivery Date</h4>
+            <DeliveryDatePicker 
+              selectedDate={item.deliveryDate}
+              onDateSelect={handleDateSelect}
+            />
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="mt-2"
+              onClick={() => setIsSelectingDate(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        )}
+        
         <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-4">
           <div className="w-24 h-24 rounded overflow-hidden">
             <img
@@ -115,14 +152,27 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery }: CartItemCardProps) =
                     <strong>Instructions:</strong> {item.deliveryInstructions}
                   </div>
                 )}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="mt-2"
-                  onClick={() => setIsEditingDelivery(true)}
-                >
-                  Edit Delivery Info
-                </Button>
+                
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {!item.deliveryDate && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="flex items-center gap-1"
+                      onClick={() => setIsSelectingDate(true)}
+                    >
+                      <CalendarDays className="h-4 w-4" />
+                      Set Delivery Date
+                    </Button>
+                  )}
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setIsEditingDelivery(true)}
+                  >
+                    Edit Delivery Info
+                  </Button>
+                </div>
               </div>
             )}
             
@@ -134,8 +184,9 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery }: CartItemCardProps) =
                   deliveryTimePreference: item.deliveryTimePreference,
                   deliveryInstructions: item.deliveryInstructions
                 } : undefined}
-                zipCode={item.deliveryAddress?.zip}
+                zipCode={item.contactInfo?.zipCode || item.deliveryAddress?.zip}
                 onSubmit={handleDeliverySubmit}
+                lockZipCode={true}
               />
             )}
           </div>

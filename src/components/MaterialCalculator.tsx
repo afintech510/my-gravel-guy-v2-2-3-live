@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,7 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '../contexts/CartContext';
-import { getProducts } from '../services/productService';
+import { getProducts, validateZipCode, getPriceAdjustmentForZipCode, applyZipCodeAdjustment } from '../services/productService';
 import { Product } from '../services/productTypes';
 import AreaInputs from './calculator/AreaInputs';
 import CalculationDisplay from './calculator/CalculationDisplay';
@@ -15,6 +16,7 @@ import { useCalculator } from '../hooks/useCalculator';
 import { CalculatorForm } from './calculator/CalculatorForm';
 import MaterialSelector from './calculator/MaterialSelector';
 import { PriceDisplay } from './calculator/PriceDisplay';
+import { useZipCode } from '../contexts/ZipCodeContext';
 
 type AreaInput = {
   length: number;
@@ -42,6 +44,9 @@ const MaterialCalculator = () => {
   const { addToCart } = useCart();
   const [cityState, setCityState] = useState<string>('');
   const [manualTons, setManualTons] = useState<number | undefined>(undefined);
+  const [priceAdjustment, setPriceAdjustment] = useState<number>(0);
+  const [availableInZip, setAvailableInZip] = useState<boolean>(true);
+  const { zipCode } = useZipCode();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -53,6 +58,39 @@ const MaterialCalculator = () => {
       consent: false,
     },
   });
+
+  // Set the ZIP code in the form when it's available from context
+  useEffect(() => {
+    if (zipCode && form.getValues('zipCode') === '') {
+      form.setValue('zipCode', zipCode);
+      lookupCityState(zipCode);
+      fetchPriceAdjustment(zipCode);
+    }
+  }, [zipCode, form]);
+
+  // Fetch price adjustment when ZIP code changes
+  const fetchPriceAdjustment = async (zip: string) => {
+    try {
+      const validation = await validateZipCode(zip);
+      setAvailableInZip(validation.inServiceArea);
+      
+      if (validation.inServiceArea) {
+        const adjustment = validation.priceAdjustment || 0;
+        setPriceAdjustment(adjustment);
+        console.log(`Price adjustment for ${zip}: ${adjustment}%`);
+      } else {
+        setPriceAdjustment(0);
+        toast({
+          title: "Delivery Not Available",
+          description: `We don't currently deliver to ${zip}. Please try another ZIP code.`,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch price adjustment:', error);
+      setPriceAdjustment(0);
+    }
+  };
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -75,7 +113,11 @@ const MaterialCalculator = () => {
   }, [areas, depth, extraPercentage]);
 
   const selectedProductObj = products.find(p => p.id.toString() === selectedProduct);
-  const selectedProductPrice = selectedProductObj?.price || 0;
+  
+  // Apply price adjustment based on ZIP code
+  const selectedProductPrice = selectedProductObj ? 
+    applyZipCodeAdjustment(selectedProductObj.price, priceAdjustment) : 0;
+    
   const tonYardRatio = selectedProductObj?.tonYardRatio ? parseFloat(String(selectedProductObj.tonYardRatio)) : 1.5;
   
   const calculations = useCalculator(areas, depth, extraPercentage, selectedProductPrice, tonYardRatio, manualTons);
@@ -90,8 +132,14 @@ const MaterialCalculator = () => {
     if (product) {
       const formData = form.getValues();
       
-      addToCart({
+      // Apply price adjustment to the product price
+      const adjustedProduct = {
         ...product,
+        price: selectedProductPrice // Use the ZIP code adjusted price
+      };
+      
+      addToCart({
+        ...adjustedProduct,
         tons: calculations.totalTons,
         yards: calculations.totalCubicYards,
         contactInfo: {
@@ -122,6 +170,9 @@ const MaterialCalculator = () => {
         const state = addressComponents.find((c: any) => c.types.includes('administrative_area_level_1'))?.long_name || '';
         setCityState(city && state ? `${city}, ${state}` : '');
       }
+      
+      // Also check if zip code is in our service area
+      fetchPriceAdjustment(zipCode);
     } catch (error) {
       console.error('Failed to lookup location:', error);
     }
@@ -176,6 +227,18 @@ const MaterialCalculator = () => {
           selectedProduct={selectedProduct}
           onProductSelect={setSelectedProduct}
         />
+        
+        {priceAdjustment !== 0 && (
+          <div className="px-4 py-2 bg-blue-50 border border-blue-100 rounded-md">
+            <p className="text-sm text-blue-700">
+              {priceAdjustment > 0 ? (
+                `Price includes ${priceAdjustment}% regional adjustment for ${form.getValues('zipCode')}`
+              ) : (
+                `Price includes ${Math.abs(priceAdjustment)}% discount for ${form.getValues('zipCode')}`
+              )}
+            </p>
+          </div>
+        )}
 
         <CalculationDisplay
           totalArea={calculations.totalSquareFeet}
@@ -188,7 +251,10 @@ const MaterialCalculator = () => {
 
         <CalculatorForm
           onSubmit={() => setShowDiscountedPrice(true)}
-          onZipCodeChange={lookupCityState}
+          onZipCodeChange={(zipCode) => {
+            lookupCityState(zipCode);
+            fetchPriceAdjustment(zipCode);
+          }}
         />
 
         <PriceDisplay
@@ -196,6 +262,7 @@ const MaterialCalculator = () => {
           discountedCost={calculations.discountedCost}
           totalTons={calculations.totalTons}
           onAddToCart={handleAddToCart}
+          isAvailable={availableInZip}
         />
       </CardContent>
     </Card>
