@@ -16,7 +16,8 @@ export const useCalculator = (
   areas: AreaInput[],
   depth: number,
   extraPercentage: number,
-  productPrice: number
+  productPrice: number,
+  tonYardRatio: number = 1.5 // Default ratio is 1.5 tons per cubic yard
 ) => {
   const calculateTotalSquareFeet = (): number => {
     return areas.reduce((total, area) => total + (area.length * area.width), 0);
@@ -29,8 +30,8 @@ export const useCalculator = (
   };
 
   const calculateTotalTons = (cubicYards: number): number => {
-    // Calculate tons but don't round here, let the component decide how to display
-    return +(cubicYards * 1.5).toFixed(1);
+    // Calculate tons using the provided ratio, defaulting to 1.5
+    return +(cubicYards * tonYardRatio).toFixed(1);
   };
 
   const calculateEstimatedCost = (tons: number): number => {
