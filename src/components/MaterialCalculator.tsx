@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '../contexts/CartContext';
 import { getProducts } from '../services/productService';
-import { Product } from '../services/productTypes'; // Fixed import from productTypes directly
+import { Product } from '../services/productTypes';
 import AreaInputs from './calculator/AreaInputs';
 import CalculationDisplay from './calculator/CalculationDisplay';
 import { useCalculator } from '../hooks/useCalculator';
@@ -68,8 +68,11 @@ const MaterialCalculator = () => {
     loadProducts();
   }, []);
 
-  const selectedProductPrice = products.find(p => p.id.toString() === selectedProduct)?.price || 0;
-  const calculations = useCalculator(areas, depth, extraPercentage, selectedProductPrice);
+  const selectedProductObj = products.find(p => p.id.toString() === selectedProduct);
+  const selectedProductPrice = selectedProductObj?.price || 0;
+  const tonYardRatio = selectedProductObj?.tonYardRatio ? parseFloat(String(selectedProductObj.tonYardRatio)) : 1.5;
+  
+  const calculations = useCalculator(areas, depth, extraPercentage, selectedProductPrice, tonYardRatio);
 
   const handleAddToCart = () => {
     const product = products.find(p => p.id.toString() === selectedProduct);
@@ -82,7 +85,7 @@ const MaterialCalculator = () => {
       
       toast({
         title: "Added to Cart",
-        description: `${calculations.totalTons.toFixed(1)} tons added with $50 discount applied.`,
+        description: `${calculations.totalTons.toFixed(1)} tons of ${product.name} added with $50 discount applied.`,
       });
     }
   };
