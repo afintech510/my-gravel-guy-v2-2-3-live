@@ -4,7 +4,7 @@ import { useQuiz } from "../../contexts/QuizContext";
 import QuizProgress from "./QuizProgress";
 import ProjectTypeStep from "./steps/ProjectTypeStep";
 import RequirementsStep from "./steps/RequirementsStep";
-import BudgetStep from "./steps/BudgetStep";
+import AreaCalculatorStep from "./steps/AreaCalculatorStep";
 import DeliveryStep from "./steps/DeliveryStep";
 import ResultsStep from "./steps/ResultsStep";
 
@@ -25,8 +25,8 @@ const QuizFlow: React.FC = () => {
         return <ProjectTypeStep />;
       case "requirements":
         return <RequirementsStep />;
-      case "budget":
-        return <BudgetStep />;
+      case "areaCalculator":
+        return <AreaCalculatorStep />;
       case "delivery":
         return <DeliveryStep />;
       case "results":
