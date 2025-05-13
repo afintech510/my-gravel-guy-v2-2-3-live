@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +15,7 @@ import MiniCalculator from '@/components/products/MiniCalculator';
 import TrustBanner from '@/components/products/trust/TrustBanner';
 import { useProduct } from '@/hooks/useProduct';
 import { Product } from '@/services/productTypes';
+import { trackEcommerce, trackEvent } from '@/utils/analytics';
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -23,6 +24,21 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
   
   const { product, adjustedPrice, loading, error } = useProduct(slug, zipCode);
+
+  // Track product view when product data is loaded
+  useEffect(() => {
+    if (product) {
+      // Track view_item event for Google Analytics
+      trackEcommerce('view_item', [
+        {
+          item_id: product.id,
+          item_name: product.name,
+          price: adjustedPrice ?? product.price,
+          item_category: product.category
+        }
+      ]);
+    }
+  }, [product, adjustedPrice]);
 
   if (loading) {
     return (
@@ -59,6 +75,18 @@ const ProductDetail = () => {
   const handleAddToCart = (productToAdd: Product & { tons: number, deliveryDate: Date }) => {
     addToCart(productToAdd);
     
+    // Track add_to_cart event
+    trackEcommerce('add_to_cart', [
+      {
+        item_id: productToAdd.id,
+        item_name: productToAdd.name,
+        price: adjustedPrice ?? productToAdd.price,
+        quantity: productToAdd.tons,
+        item_category: productToAdd.category
+      }
+    ], productToAdd.tons * (adjustedPrice ?? productToAdd.price));
+    
+    // Show toast notification
     toast({
       title: "Added to cart",
       description: `${product.name} has been added to your cart for delivery on ${productToAdd.deliveryDate.toLocaleDateString()}.`,
