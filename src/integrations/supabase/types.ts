@@ -7,6 +7,31 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          operationName?: string
+          query?: string
+          variables?: Json
+          extensions?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       blog_categories: {
@@ -82,6 +107,59 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "blog_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_reviews: {
+        Row: {
+          admin_response: string | null
+          admin_response_date: string | null
+          content: string
+          created_at: string | null
+          helpful_votes: number | null
+          id: string
+          product_id: string | null
+          product_name: string | null
+          rating: number
+          title: string
+          user_name: string
+          verified_purchase: boolean | null
+        }
+        Insert: {
+          admin_response?: string | null
+          admin_response_date?: string | null
+          content: string
+          created_at?: string | null
+          helpful_votes?: number | null
+          id?: string
+          product_id?: string | null
+          product_name?: string | null
+          rating: number
+          title: string
+          user_name: string
+          verified_purchase?: boolean | null
+        }
+        Update: {
+          admin_response?: string | null
+          admin_response_date?: string | null
+          content?: string
+          created_at?: string | null
+          helpful_votes?: number | null
+          id?: string
+          product_id?: string | null
+          product_name?: string | null
+          rating?: number
+          title?: string
+          user_name?: string
+          verified_purchase?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -391,6 +469,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },
