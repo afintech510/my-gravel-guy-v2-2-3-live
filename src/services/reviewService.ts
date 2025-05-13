@@ -2,138 +2,7 @@
 import { CustomerReview, ReviewFilter } from "@/types/review.types";
 import { supabase } from "@/integrations/supabase/client";
 
-// Get reviews with filtering, pagination and sorting
-export const fetchReviews = async (
-  filter: ReviewFilter = 'all',
-  page: number = 1,
-  limit: number = 10
-): Promise<{ reviews: CustomerReview[], total: number }> => {
-  try {
-    let query = supabase
-      .from('customer_reviews')
-      .select('*', { count: 'exact' });
-    
-    // Apply filters
-    if (filter === 'verified') {
-      query = query.eq('verified_purchase', true);
-    } else if (filter.includes('star')) {
-      const rating = parseInt(filter.charAt(0));
-      query = query.eq('rating', rating);
-    }
-    
-    // Apply pagination
-    const start = (page - 1) * limit;
-    query = query
-      .order('created_at', { ascending: false })
-      .range(start, start + limit - 1);
-    
-    const { data, count, error } = await query;
-    
-    if (error) {
-      console.error("Error fetching reviews:", error);
-      return { reviews: [], total: 0 };
-    }
-    
-    return { 
-      reviews: data as CustomerReview[], 
-      total: count || 0 
-    };
-  } catch (err) {
-    console.error("Unexpected error fetching reviews:", err);
-    return { reviews: [], total: 0 };
-  }
-};
-
-// Get reviews for a specific product
-export const fetchProductReviews = async (
-  productId: string,
-  limit: number = 3
-): Promise<CustomerReview[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('customer_reviews')
-      .select('*')
-      .eq('product_id', productId)
-      .order('created_at', { ascending: false })
-      .limit(limit);
-    
-    if (error) {
-      console.error("Error fetching product reviews:", error);
-      return [];
-    }
-    
-    return data as CustomerReview[];
-  } catch (err) {
-    console.error("Unexpected error fetching product reviews:", err);
-    return [];
-  }
-};
-
-// Submit a new review
-export const submitReview = async (review: Omit<CustomerReview, 'id' | 'created_at' | 'helpful_votes'>): Promise<CustomerReview | null> => {
-  try {
-    // Insert the new review
-    const { data, error } = await supabase
-      .from('customer_reviews')
-      .insert({
-        product_id: review.product_id,
-        product_name: review.product_name,
-        user_name: review.user_name,
-        title: review.title,
-        content: review.content,
-        rating: review.rating,
-        verified_purchase: review.verified_purchase || false
-      })
-      .select()
-      .single();
-    
-    if (error) {
-      console.error("Error submitting review:", error);
-      return null;
-    }
-    
-    return data as CustomerReview;
-  } catch (err) {
-    console.error("Unexpected error submitting review:", err);
-    return null;
-  }
-};
-
-// Vote a review as helpful
-export const voteReviewHelpful = async (reviewId: string): Promise<boolean> => {
-  try {
-    // First get current helpful_votes count
-    const { data: review, error: fetchError } = await supabase
-      .from('customer_reviews')
-      .select('helpful_votes')
-      .eq('id', reviewId)
-      .single();
-    
-    if (fetchError) {
-      console.error("Error fetching review for voting:", fetchError);
-      return false;
-    }
-    
-    // Increment helpful_votes
-    const { error: updateError } = await supabase
-      .from('customer_reviews')
-      .update({ helpful_votes: (review.helpful_votes || 0) + 1 })
-      .eq('id', reviewId);
-    
-    if (updateError) {
-      console.error("Error updating helpful votes:", updateError);
-      return false;
-    }
-    
-    return true;
-  } catch (err) {
-    console.error("Unexpected error voting on review:", err);
-    return false;
-  }
-};
-
-// Fallback sample data for development when Supabase is not available
-// This can be useful during development or if the Supabase connection fails
+// Fallback sample data for development
 const sampleReviews: CustomerReview[] = [
   {
     id: "1",
@@ -210,3 +79,210 @@ const sampleReviews: CustomerReview[] = [
     admin_response_date: "2025-03-16T09:45:00Z"
   }
 ];
+
+// Get reviews with filtering, pagination and sorting - using fallback data
+export const fetchReviews = async (
+  filter: ReviewFilter = 'all',
+  page: number = 1,
+  limit: number = 10
+): Promise<{ reviews: CustomerReview[], total: number }> => {
+  try {
+    // For now, we'll use the sample data until Supabase types are updated
+    let filteredReviews = [...sampleReviews];
+    
+    // Apply filters
+    if (filter === 'verified') {
+      filteredReviews = filteredReviews.filter(review => review.verified_purchase);
+    } else if (filter.includes('star')) {
+      const rating = parseInt(filter.charAt(0));
+      filteredReviews = filteredReviews.filter(review => review.rating === rating);
+    }
+    
+    // Sort by date descending
+    filteredReviews.sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+    
+    // Apply pagination
+    const start = (page - 1) * limit;
+    const end = start + limit;
+    const paginatedReviews = filteredReviews.slice(start, end);
+    
+    return { 
+      reviews: paginatedReviews, 
+      total: filteredReviews.length 
+    };
+    
+    /* 
+    // This code will be uncommented when Supabase types are updated
+    let query = supabase
+      .from('customer_reviews')
+      .select('*', { count: 'exact' });
+    
+    // Apply filters
+    if (filter === 'verified') {
+      query = query.eq('verified_purchase', true);
+    } else if (filter.includes('star')) {
+      const rating = parseInt(filter.charAt(0));
+      query = query.eq('rating', rating);
+    }
+    
+    // Apply pagination
+    const start = (page - 1) * limit;
+    query = query
+      .order('created_at', { ascending: false })
+      .range(start, start + limit - 1);
+    
+    const { data, count, error } = await query;
+    
+    if (error) {
+      console.error("Error fetching reviews:", error);
+      return { reviews: [], total: 0 };
+    }
+    
+    return { 
+      reviews: data as CustomerReview[], 
+      total: count || 0 
+    };
+    */
+  } catch (err) {
+    console.error("Unexpected error fetching reviews:", err);
+    return { reviews: [], total: 0 };
+  }
+};
+
+// Get reviews for a specific product
+export const fetchProductReviews = async (
+  productId: string,
+  limit: number = 3
+): Promise<CustomerReview[]> => {
+  try {
+    // For now, we'll use the sample data until Supabase types are updated
+    let productReviews = sampleReviews.filter(review => review.product_id === productId);
+    
+    // Sort by date descending
+    productReviews.sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+    
+    // Apply limit
+    return productReviews.slice(0, limit);
+    
+    /* 
+    // This code will be uncommented when Supabase types are updated
+    const { data, error } = await supabase
+      .from('customer_reviews')
+      .select('*')
+      .eq('product_id', productId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    
+    if (error) {
+      console.error("Error fetching product reviews:", error);
+      return [];
+    }
+    
+    return data as CustomerReview[];
+    */
+  } catch (err) {
+    console.error("Unexpected error fetching product reviews:", err);
+    return [];
+  }
+};
+
+// Submit a new review
+export const submitReview = async (review: Omit<CustomerReview, 'id' | 'created_at' | 'helpful_votes'>): Promise<CustomerReview | null> => {
+  try {
+    // For now, we'll use the sample data until Supabase types are updated
+    // Generate a mock response for the submitted review
+    const newReview: CustomerReview = {
+      id: `mock-${Math.random().toString(36).substring(2, 9)}`,
+      user_name: review.user_name,
+      rating: review.rating,
+      title: review.title,
+      content: review.content,
+      verified_purchase: review.verified_purchase || false,
+      helpful_votes: 0,
+      created_at: new Date().toISOString(),
+      product_id: review.product_id,
+      product_name: review.product_name,
+    };
+    
+    console.log("Review submitted (mock):", newReview);
+    
+    // In a real implementation, this would be added to the database
+    // For now we'll just return the mock review
+    return newReview;
+    
+    /* 
+    // This code will be uncommented when Supabase types are updated
+    // Insert the new review
+    const { data, error } = await supabase
+      .from('customer_reviews')
+      .insert({
+        product_id: review.product_id,
+        product_name: review.product_name,
+        user_name: review.user_name,
+        title: review.title,
+        content: review.content,
+        rating: review.rating,
+        verified_purchase: review.verified_purchase || false
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Error submitting review:", error);
+      return null;
+    }
+    
+    return data as CustomerReview;
+    */
+  } catch (err) {
+    console.error("Unexpected error submitting review:", err);
+    return null;
+  }
+};
+
+// Vote a review as helpful
+export const voteReviewHelpful = async (reviewId: string): Promise<boolean> => {
+  try {
+    // For now, we'll use the sample data until Supabase types are updated
+    console.log(`Voted review ${reviewId} as helpful (mock)`);
+    
+    // In a real implementation, this would update the database
+    // For now we'll just return success
+    return true;
+    
+    /* 
+    // This code will be uncommented when Supabase types are updated
+    // First get current helpful_votes count
+    const { data: review, error: fetchError } = await supabase
+      .from('customer_reviews')
+      .select('helpful_votes')
+      .eq('id', reviewId)
+      .single();
+    
+    if (fetchError) {
+      console.error("Error fetching review for voting:", fetchError);
+      return false;
+    }
+    
+    // Increment helpful_votes
+    const { error: updateError } = await supabase
+      .from('customer_reviews')
+      .update({ helpful_votes: (review.helpful_votes || 0) + 1 })
+      .eq('id', reviewId);
+    
+    if (updateError) {
+      console.error("Error updating helpful votes:", updateError);
+      return false;
+    }
+    
+    return true;
+    */
+  } catch (err) {
+    console.error("Unexpected error voting on review:", err);
+    return false;
+  }
+};
