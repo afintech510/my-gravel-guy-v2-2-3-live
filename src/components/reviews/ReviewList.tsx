@@ -130,7 +130,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
             {/* Ellipsis if needed */}
             {currentPage > 3 && (
               <PaginationItem>
-                <PaginationLink disabled>...</PaginationLink>
+                <PaginationLink className="cursor-default">...</PaginationLink>
               </PaginationItem>
             )}
             
@@ -164,7 +164,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
             {/* Ellipsis if needed */}
             {currentPage < totalPages - 2 && (
               <PaginationItem>
-                <PaginationLink disabled>...</PaginationLink>
+                <PaginationLink className="cursor-default">...</PaginationLink>
               </PaginationItem>
             )}
             
