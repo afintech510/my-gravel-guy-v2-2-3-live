@@ -112,6 +112,18 @@ const MaterialCalculator = () => {
     <Card className="w-full max-w-4xl mx-auto"> 
       <CardContent className="space-y-6">
         <AreaInputs areas={areas} onAreaChange={setAreas} />
+        
+        {/* Mini calculation display showing just area and cubic yards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-4 py-2 bg-gray-50 rounded-md">
+          <div>
+            <p className="text-sm text-muted-foreground">Total Area</p>
+            <p className="text-xl font-bold">{calculations.totalSquareFeet.toFixed(2)} sq. ft.</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Cubic Yards Needed</p>
+            <p className="text-xl font-bold">{calculations.totalCubicYards.toFixed(2)} cu. yds.</p>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
