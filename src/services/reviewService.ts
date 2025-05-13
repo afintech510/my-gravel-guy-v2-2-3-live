@@ -2,7 +2,8 @@
 import { CustomerReview, ReviewFilter } from "@/types/review.types";
 import { supabase } from "@/integrations/supabase/client";
 
-// Fallback sample data for development
+/* 
+// Commented out fallback sample data
 const sampleReviews: CustomerReview[] = [
   {
     id: "1",
@@ -79,8 +80,9 @@ const sampleReviews: CustomerReview[] = [
     admin_response_date: "2025-03-16T09:45:00Z"
   }
 ];
+*/
 
-// Get reviews with filtering, pagination and sorting - using fallback data
+// Get reviews with filtering, pagination and sorting - using Supabase data
 export const fetchReviews = async (
   filter: ReviewFilter = 'all',
   page: number = 1,
@@ -90,7 +92,8 @@ export const fetchReviews = async (
     // Calculate pagination offset once to be reused
     const paginationOffset = (page - 1) * limit;
     
-    // For now, we'll use the sample data until Supabase types are updated
+    /* 
+    // Commented out sample data implementation
     let filteredReviews = [...sampleReviews];
     
     // Apply filters
@@ -114,9 +117,9 @@ export const fetchReviews = async (
       reviews: paginatedReviews, 
       total: filteredReviews.length 
     };
+    */
     
-    /* 
-    // This code will be uncommented when Supabase types are updated
+    // Using Supabase to fetch reviews
     let query = supabase
       .from('customer_reviews')
       .select('*', { count: 'exact' });
@@ -145,7 +148,6 @@ export const fetchReviews = async (
       reviews: data as CustomerReview[], 
       total: count || 0 
     };
-    */
     
   } catch (err) {
     console.error("Unexpected error fetching reviews:", err);
@@ -159,7 +161,8 @@ export const fetchProductReviews = async (
   limit: number = 3
 ): Promise<CustomerReview[]> => {
   try {
-    // For now, we'll use the sample data until Supabase types are updated
+    /* 
+    // Commented out sample data implementation
     let productReviews = sampleReviews.filter(review => review.product_id === productId);
     
     // Sort by date descending
@@ -169,9 +172,9 @@ export const fetchProductReviews = async (
     
     // Apply limit
     return productReviews.slice(0, limit);
+    */
     
-    /* 
-    // This code will be uncommented when Supabase types are updated
+    // Using Supabase to fetch product reviews
     const { data, error } = await supabase
       .from('customer_reviews')
       .select('*')
@@ -185,7 +188,6 @@ export const fetchProductReviews = async (
     }
     
     return data as CustomerReview[];
-    */
     
   } catch (err) {
     console.error("Unexpected error fetching product reviews:", err);
@@ -196,7 +198,8 @@ export const fetchProductReviews = async (
 // Submit a new review
 export const submitReview = async (review: Omit<CustomerReview, 'id' | 'created_at' | 'helpful_votes'>): Promise<CustomerReview | null> => {
   try {
-    // For now, we'll use the sample data until Supabase types are updated
+    /* 
+    // Commented out mock review implementation
     // Generate a mock response for the submitted review
     const newReview: CustomerReview = {
       id: `mock-${Math.random().toString(36).substring(2, 9)}`,
@@ -216,9 +219,9 @@ export const submitReview = async (review: Omit<CustomerReview, 'id' | 'created_
     // In a real implementation, this would be added to the database
     // For now we'll just return the mock review
     return newReview;
+    */
     
-    /* 
-    // This code will be uncommented when Supabase types are updated
+    // Using Supabase to submit a new review
     // Insert the new review
     const { data, error } = await supabase
       .from('customer_reviews')
@@ -240,7 +243,6 @@ export const submitReview = async (review: Omit<CustomerReview, 'id' | 'created_
     }
     
     return data as CustomerReview;
-    */
     
   } catch (err) {
     console.error("Unexpected error submitting review:", err);
@@ -251,15 +253,16 @@ export const submitReview = async (review: Omit<CustomerReview, 'id' | 'created_
 // Vote a review as helpful
 export const voteReviewHelpful = async (reviewId: string): Promise<boolean> => {
   try {
-    // For now, we'll use the sample data until Supabase types are updated
+    /* 
+    // Commented out mock implementation
     console.log(`Voted review ${reviewId} as helpful (mock)`);
     
     // In a real implementation, this would update the database
     // For now we'll just return success
     return true;
+    */
     
-    /* 
-    // This code will be uncommented when Supabase types are updated
+    // Using Supabase to update helpful votes
     // First get current helpful_votes count
     const { data: review, error: fetchError } = await supabase
       .from('customer_reviews')
@@ -284,7 +287,6 @@ export const voteReviewHelpful = async (reviewId: string): Promise<boolean> => {
     }
     
     return true;
-    */
     
   } catch (err) {
     console.error("Unexpected error voting on review:", err);
