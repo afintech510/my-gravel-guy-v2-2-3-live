@@ -1,3 +1,4 @@
+
 interface CalculationResult {
   totalSquareFeet: number;
   totalCubicYards: number;
@@ -17,7 +18,7 @@ export const useCalculator = (
   extraPercentage: number,
   productPrice: number,
   tonYardRatio: number = 1.5, // Default ratio is 1.5 tons per cubic yard
-  manualTons?: number // New parameter for manually set tons
+  manualTons?: number // Manual tons parameter
 ) => {
   const calculateTotalSquareFeet = (): number => {
     return areas.reduce((total, area) => total + (area.length * area.width), 0);
@@ -35,8 +36,8 @@ export const useCalculator = (
   };
 
   const calculateTotalTons = (cubicYards: number): number => {
-    // Calculate tons using the provided ratio, defaulting to 1.5
-    return +(cubicYards * tonYardRatio).toFixed(1);
+    // Round to whole number when calculating tons
+    return Math.floor(cubicYards * tonYardRatio);
   };
 
   const calculateEstimatedCost = (tons: number): number => {
@@ -51,8 +52,8 @@ export const useCalculator = (
   let totalTons: number;
 
   if (manualTons !== undefined) {
-    // When manual tons is set, reverse the calculation
-    totalTons = manualTons;
+    // When manual tons is set, ensure it's an integer and reverse the calculation
+    totalTons = Math.floor(manualTons);
     totalCubicYards = calculateCubicYardsFromTons(totalTons);
   } else {
     // Normal flow: area -> cubic yards -> tons

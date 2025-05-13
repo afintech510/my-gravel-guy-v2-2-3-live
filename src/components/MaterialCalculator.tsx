@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -82,7 +81,8 @@ const MaterialCalculator = () => {
   const calculations = useCalculator(areas, depth, extraPercentage, selectedProductPrice, tonYardRatio, manualTons);
 
   const handleTonsChange = (newTons: number) => {
-    setManualTons(newTons);
+    // Ensure we're always using integer values
+    setManualTons(Math.floor(newTons));
   };
 
   const handleAddToCart = () => {
