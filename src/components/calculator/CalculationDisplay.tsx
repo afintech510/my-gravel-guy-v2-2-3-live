@@ -2,7 +2,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Minus } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 
 interface CalculationDisplayProps {
   totalArea: number;
@@ -23,20 +22,15 @@ const CalculationDisplay = ({
 }: CalculationDisplayProps) => {
   const handleIncrement = () => {
     if (onTonsChange) {
-      onTonsChange(+(tons + 0.5).toFixed(1));
+      // Changed to increment by 1 whole number
+      onTonsChange(Math.floor(tons + 1));
     }
   };
 
   const handleDecrement = () => {
-    if (onTonsChange && tons > 0.5) {
-      onTonsChange(+(tons - 0.5).toFixed(1));
-    }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value);
-    if (onTonsChange && !isNaN(value) && value >= 0) {
-      onTonsChange(+value.toFixed(1));
+    if (onTonsChange && tons > 1) {
+      // Changed to decrement by 1 whole number with minimum of 1
+      onTonsChange(Math.floor(tons - 1));
     }
   };
 
@@ -58,18 +52,13 @@ const CalculationDisplay = ({
               variant="outline" 
               size="icon" 
               onClick={handleDecrement} 
-              disabled={tons <= 0.5}
+              disabled={tons <= 1}
             >
               <Minus className="h-4 w-4" />
             </Button>
-            <Input 
-              type="number" 
-              value={tons.toFixed(1)}
-              onChange={handleInputChange}
-              className="w-20 text-center" 
-              min="0.5"
-              step="0.5"
-            />
+            <div className="w-20 h-10 flex items-center justify-center border rounded-md bg-background text-2xl font-bold">
+              {Math.floor(tons)}
+            </div>
             <Button 
               variant="outline" 
               size="icon" 
@@ -79,7 +68,7 @@ const CalculationDisplay = ({
             </Button>
           </div>
         ) : (
-          <p className="text-2xl font-bold">{tons.toFixed(1)}</p>
+          <p className="text-2xl font-bold">{Math.floor(tons)}</p>
         )}
       </div>
       <div>
