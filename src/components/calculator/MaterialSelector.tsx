@@ -1,10 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Product, MaterialCategory, MaterialUsage, MaterialSubtype, MaterialSize, MaterialColor } from '@/services/productTypes';
+import { Product, MaterialCategory } from '@/services/productTypes';
 import { cn } from '@/lib/utils';
 import { Package, BrickWall, Leaf, TreeDeciduous, Hammer } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 interface MaterialSelectorProps {
   products: Product[];
@@ -20,19 +22,27 @@ const CategoryIcons = {
   base: Hammer,
 };
 
+// Define multi-select options
+const USAGE_OPTIONS = ['driveway', 'walkway', 'drainage', 'general'];
+const TYPE_OPTIONS = ['crushed', 'natural', 'round', 'concrete'];
+const SIZE_OPTIONS = ['3/8"', '1/2"', '3/4"', '1"', '1 1/2"', '2"', '3"', '4"'];
+
 const MaterialSelector = ({ products, selectedProduct, onProductSelect }: MaterialSelectorProps) => {
   const [selectedCategory, setSelectedCategory] = useState<MaterialCategory>('gravel');
-  const [selectedUsage, setSelectedUsage] = useState<MaterialUsage | ''>('');
-  const [selectedSubtype, setSelectedSubtype] = useState<MaterialSubtype | ''>('');
-  const [selectedSize, setSelectedSize] = useState<MaterialSize | ''>('');
-  const [selectedColor, setSelectedColor] = useState<MaterialColor | ''>('');
+  
+  // Multi-select states
+  const [selectedUsages, setSelectedUsages] = useState<string[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [selectedColor, setSelectedColor] = useState<string>('');
+
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   
   // Reset dependent selections when category changes
   useEffect(() => {
-    setSelectedUsage('');
-    setSelectedSubtype('');
-    setSelectedSize('');
+    setSelectedUsages([]);
+    setSelectedTypes([]);
+    setSelectedSizes([]);
     setSelectedColor('');
   }, [selectedCategory]);
   
@@ -42,34 +52,48 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
       // Base category filter
       if (product.category !== selectedCategory) return false;
       
-      // Check application/usage filter
-      if (selectedUsage && product.usage !== selectedUsage) {
-        // Also check if usage exists in categories array
-        const categoryHasUsage = product.categories?.some(cat => 
-          cat.toLowerCase() === selectedUsage.toLowerCase()
-        );
-        if (!categoryHasUsage) return false;
+      // Check application/usage filter (if any selected)
+      if (selectedUsages.length > 0) {
+        // Check if product matches any of the selected usages
+        const matchesUsage = selectedUsages.some(usage => {
+          // Check both usage field and categories array
+          const usageMatch = product.usage === usage;
+          const categoryHasUsage = product.categories?.some(cat => 
+            cat.toLowerCase() === usage.toLowerCase()
+          );
+          return usageMatch || categoryHasUsage;
+        });
+        
+        if (!matchesUsage) return false;
       }
 
-      // Check size filter - handle various size formats in the database
-      if (selectedSize && product.size) {
-        const normalizedProductSize = product.size.replace(/\s+/g, '');
-        const normalizedSelectedSize = selectedSize.replace(/\s+/g, '');
-        if (normalizedProductSize !== normalizedSelectedSize) return false;
+      // Check size filter (if any selected)
+      if (selectedSizes.length > 0 && product.size) {
+        // Normalize sizes for comparison
+        const normalizedProductSize = product.size.replace(/\s+/g, '').toLowerCase();
+        
+        // Check if product size matches any of the selected sizes
+        const matchesSize = selectedSizes.some(size => {
+          const normalizedSelectedSize = size.replace(/\s+/g, '').toLowerCase();
+          return normalizedProductSize.includes(normalizedSelectedSize);
+        });
+        
+        if (!matchesSize) return false;
       }
 
-      // Check subtype filter
-      if (selectedSubtype) {
-        // Check if subtype exists directly in product.subtype
-        if (product.subtype && product.subtype !== selectedSubtype) return false;
+      // Check type filter (if any selected)
+      if (selectedTypes.length > 0) {
+        // Check if product matches any of the selected types
+        const matchesType = selectedTypes.some(type => {
+          // Check both subtype field and categories array
+          const subtypeMatch = product.subtype === type;
+          const categoryHasSubtype = product.categories?.some(cat => 
+            cat.toLowerCase() === type.toLowerCase()
+          );
+          return subtypeMatch || categoryHasSubtype;
+        });
         
-        // Also check if subtype exists in categories array
-        const categoryHasSubtype = product.categories?.some(cat => 
-          cat.toLowerCase() === selectedSubtype.toLowerCase()
-        );
-        
-        // If neither condition is true, filter out the product
-        if (!product.subtype && !categoryHasSubtype) return false;
+        if (!matchesType) return false;
       }
       
       // Check color filter
@@ -87,35 +111,44 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
         onProductSelect(filtered[0].id.toString());
       }
     }
-  }, [products, selectedCategory, selectedUsage, selectedSubtype, selectedSize, selectedColor, selectedProduct, onProductSelect]);
+  }, [products, selectedCategory, selectedUsages, selectedTypes, selectedSizes, selectedColor, selectedProduct, onProductSelect]);
   
   // Get available options for each filter based on current selections
-  const getAvailableOptions = (filterType: 'usage' | 'subtype' | 'size' | 'color') => {
+  const getAvailableOptions = (filterType: 'usage' | 'type' | 'size' | 'color') => {
     // Filter products based on current selections except the one we're checking
     const baseFiltered = products.filter(product => {
       if (product.category !== selectedCategory) return false;
       
       // Skip checking the filter type we're getting options for
-      if (filterType !== 'usage' && selectedUsage) {
-        if (product.usage !== selectedUsage) {
+      if (filterType !== 'usage' && selectedUsages.length > 0) {
+        const matchesUsage = selectedUsages.some(usage => {
+          const usageMatch = product.usage === usage;
           const categoryHasUsage = product.categories?.some(cat => 
-            cat.toLowerCase() === selectedUsage.toLowerCase()
+            cat.toLowerCase() === usage.toLowerCase()
           );
-          if (!categoryHasUsage) return false;
-        }
+          return usageMatch || categoryHasUsage;
+        });
+        if (!matchesUsage) return false;
       }
       
-      if (filterType !== 'subtype' && selectedSubtype) {
-        const categoryHasSubtype = product.categories?.some(cat => 
-          cat.toLowerCase() === selectedSubtype.toLowerCase()
-        );
-        if (product.subtype !== selectedSubtype && !categoryHasSubtype) return false;
+      if (filterType !== 'type' && selectedTypes.length > 0) {
+        const matchesType = selectedTypes.some(type => {
+          const subtypeMatch = product.subtype === type;
+          const categoryHasSubtype = product.categories?.some(cat => 
+            cat.toLowerCase() === type.toLowerCase()
+          );
+          return subtypeMatch || categoryHasSubtype;
+        });
+        if (!matchesType) return false;
       }
       
-      if (filterType !== 'size' && selectedSize && product.size) {
-        const normalizedProductSize = product.size.replace(/\s+/g, '');
-        const normalizedSelectedSize = selectedSize.replace(/\s+/g, '');
-        if (normalizedProductSize !== normalizedSelectedSize) return false;
+      if (filterType !== 'size' && selectedSizes.length > 0 && product.size) {
+        const normalizedProductSize = product.size.replace(/\s+/g, '').toLowerCase();
+        const matchesSize = selectedSizes.some(size => {
+          const normalizedSelectedSize = size.replace(/\s+/g, '').toLowerCase();
+          return normalizedProductSize.includes(normalizedSelectedSize);
+        });
+        if (!matchesSize) return false;
       }
       
       if (filterType !== 'color' && selectedColor && product.color !== selectedColor) return false;
@@ -131,26 +164,35 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
           if (product.usage) options.add(product.usage);
           // Also check categories for usage-related terms
           if (product.categories) {
-            ['driveway', 'walkway', 'general'].forEach(usage => {
+            USAGE_OPTIONS.forEach(usage => {
               if (product.categories?.some(cat => cat.toLowerCase() === usage)) {
                 options.add(usage);
               }
             });
           }
           break;
-        case 'subtype':
+        case 'type':
           if (product.subtype) options.add(product.subtype);
-          // Also check categories for subtype-related terms
+          // Also check categories for type-related terms
           if (product.categories) {
-            ['crushed', 'round', 'natural', 'concrete'].forEach(subtype => {
-              if (product.categories?.some(cat => cat.toLowerCase() === subtype)) {
-                options.add(subtype);
+            TYPE_OPTIONS.forEach(type => {
+              if (product.categories?.some(cat => cat.toLowerCase() === type)) {
+                options.add(type);
               }
             });
           }
           break;
         case 'size':
-          if (product.size) options.add(product.size);
+          if (product.size) {
+            // Map to standard size option
+            SIZE_OPTIONS.forEach(sizeOption => {
+              const normalizedSizeOption = sizeOption.replace(/\s+/g, '').toLowerCase();
+              const normalizedProductSize = product.size?.replace(/\s+/g, '').toLowerCase() || '';
+              if (normalizedProductSize.includes(normalizedSizeOption)) {
+                options.add(sizeOption);
+              }
+            });
+          }
           break;
         case 'color':
           if (product.color) options.add(product.color);
@@ -162,7 +204,7 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
   };
   
   const availableUsages = getAvailableOptions('usage');
-  const availableSubtypes = getAvailableOptions('subtype');
+  const availableTypes = getAvailableOptions('type');
   const availableSizes = getAvailableOptions('size');
   const availableColors = getAvailableOptions('color');
 
@@ -170,93 +212,56 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
     setSelectedCategory(value as MaterialCategory);
   };
 
-  const getSandSubtypes = () => [
-    { value: 'mason-sand', label: 'Mason Sand' },
-    { value: 'playground-sand', label: 'Playground Sand' },
-    { value: 'beach-sand', label: 'Beach Sand' },
-    { value: 'washed-sand', label: 'Washed Sand' }
-  ].filter(subtype => availableSubtypes.includes(subtype.value));
-
-  const getDirtSubtypes = () => [
-    { value: 'top-soil', label: 'Topsoil' },
-    { value: 'compost', label: 'Compost' },
-    { value: 'fill-dirt', label: 'Fill Dirt' },
-    { value: 'loam', label: 'Loam' },
-    { value: 'sandy-loam', label: 'Sandy Loam' }
-  ].filter(subtype => availableSubtypes.includes(subtype.value));
-
-  const getBaseSubtypes = () => [
-    { value: 'road-base', label: 'Road Base' },
-    { value: 'concrete-rca', label: 'Concrete (RCA)' },
-    { value: 'crusher-base', label: 'Crusher Base' }
-  ].filter(subtype => availableSubtypes.includes(subtype.value));
-
-  const renderSubtypeSelector = () => {
-    let subtypes = [];
-    
-    switch (selectedCategory) {
-      case 'sand':
-        subtypes = getSandSubtypes();
-        break;
-      case 'dirt':
-        subtypes = getDirtSubtypes();
-        break;
-      case 'base':
-        subtypes = getBaseSubtypes();
-        break;
-      case 'gravel':
-        // Only show subtype selector if there are available options
-        if (availableSubtypes.length === 0) return null;
-        
-        return (
-          <div className="space-y-2 mt-4">
-            <label className="text-sm font-medium">Type</label>
-            <ToggleGroup
-              type="single"
-              value={selectedSubtype}
-              onValueChange={(value) => setSelectedSubtype(value as MaterialSubtype)}
-              className="justify-start gap-2"
-            >
-              {['crushed', 'round', 'natural', 'concrete'].filter(type => 
-                availableSubtypes.includes(type)
-              ).map((type) => (
-                <ToggleGroupItem
-                  key={type}
-                  value={type}
-                  className="flex-1 py-3 data-[state=on]:bg-primary/10 data-[state=on]:text-primary"
-                  disabled={!availableSubtypes.includes(type)}
-                >
-                  <span className="capitalize">{type.replace('-', ' ')}</span>
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-          </div>
-        );
-      default:
-        return null;
+  // Toggle selection in a multi-select array
+  const toggleSelection = (value: string, currentSelections: string[], setSelections: React.Dispatch<React.SetStateAction<string[]>>) => {
+    if (currentSelections.includes(value)) {
+      setSelections(currentSelections.filter(item => item !== value));
+    } else {
+      setSelections([...currentSelections, value]);
     }
+  };
 
-    if (subtypes.length === 0) return null;
+  // Render the multi-select checkboxes for a filter type
+  const renderMultiSelect = (
+    title: string,
+    options: string[],
+    availableOptions: string[],
+    selectedOptions: string[],
+    setSelectedOptions: React.Dispatch<React.SetStateAction<string[]>>
+  ) => {
+    if (availableOptions.length === 0) return null;
 
     return (
       <div className="space-y-2 mt-4">
-        <label className="text-sm font-medium">Type</label>
-        <ToggleGroup
-          type="single"
-          value={selectedSubtype}
-          onValueChange={(value) => setSelectedSubtype(value as MaterialSubtype)}
-          className="justify-start gap-2 flex-wrap"
-        >
-          {subtypes.map(({ value, label }) => (
-            <ToggleGroupItem
-              key={value}
-              value={value}
-              className="flex-1 py-3 data-[state=on]:bg-primary/10 data-[state=on]:text-primary"
-            >
-              <span className="capitalize">{label}</span>
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+        <label className="text-sm font-medium">{title}</label>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {options.map((option) => {
+            const isAvailable = availableOptions.includes(option);
+            return (
+              <div key={option} className="flex items-center space-x-2">
+                <Checkbox 
+                  id={`${title.toLowerCase()}-${option}`}
+                  checked={selectedOptions.includes(option)}
+                  disabled={!isAvailable}
+                  onCheckedChange={() => {
+                    if (isAvailable) {
+                      toggleSelection(option, selectedOptions, setSelectedOptions);
+                    }
+                  }}
+                />
+                <Label 
+                  htmlFor={`${title.toLowerCase()}-${option}`}
+                  className={cn(
+                    "capitalize",
+                    !isAvailable && "text-gray-400"
+                  )}
+                >
+                  {option.replace(/-/g, ' ')}
+                </Label>
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   };
@@ -289,55 +294,13 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
         </ToggleGroup>
       </div>
 
-      {selectedCategory === 'gravel' && availableUsages.length > 0 && (
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Usage</label>
-          <ToggleGroup
-            type="single"
-            value={selectedUsage}
-            onValueChange={(value) => setSelectedUsage(value as MaterialUsage)}
-            className="justify-start gap-2"
-          >
-            {['driveway', 'walkway', 'general'].filter(usage => 
-              availableUsages.includes(usage)
-            ).map((usage) => (
-              <ToggleGroupItem
-                key={usage}
-                value={usage}
-                className="flex-1 py-3 data-[state=on]:bg-primary/10 data-[state=on]:text-primary"
-                disabled={!availableUsages.includes(usage)}
-              >
-                <span className="capitalize">{usage}</span>
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-
-          {availableSizes.length > 0 && (
-            <div className="space-y-2 mt-4">
-              <label className="text-sm font-medium">Size</label>
-              <ToggleGroup
-                type="single"
-                value={selectedSize}
-                onValueChange={(value) => setSelectedSize(value as MaterialSize)}
-                className="justify-start gap-2"
-              >
-                {['3/8"', '3/4"', '1-1/2"'].filter(size => {
-                  // Match normalized sizes (remove spaces)
-                  const normalizedSize = size.replace(/\s+/g, '');
-                  return availableSizes.some(s => s.replace(/\s+/g, '') === normalizedSize);
-                }).map((size) => (
-                  <ToggleGroupItem
-                    key={size}
-                    value={size}
-                    className="flex-1 py-3 data-[state=on]:bg-primary/10 data-[state=on]:text-primary"
-                  >
-                    {size}
-                  </ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-            </div>
-          )}
-        </div>
+      {/* Multi-select filter options based on category */}
+      {selectedCategory === 'gravel' && (
+        <>
+          {renderMultiSelect('Usage', USAGE_OPTIONS, availableUsages, selectedUsages, setSelectedUsages)}
+          {renderMultiSelect('Type', TYPE_OPTIONS, availableTypes, selectedTypes, setSelectedTypes)}
+          {renderMultiSelect('Size', SIZE_OPTIONS, availableSizes, selectedSizes, setSelectedSizes)}
+        </>
       )}
 
       {selectedCategory === 'mulch' && (
@@ -346,7 +309,7 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
           <ToggleGroup
             type="single"
             value={selectedColor}
-            onValueChange={(value) => setSelectedColor(value as MaterialColor)}
+            onValueChange={(value) => setSelectedColor(value)}
             className="justify-start gap-2"
           >
             {['chocolate', 'jet-black', 'red', 'natural-dark', 'wood-chips'].filter(color => 
@@ -365,32 +328,49 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
         </div>
       )}
 
-      {selectedCategory && renderSubtypeSelector()}
+      {/* Render different subtype selectors based on category */}
+      {['sand', 'dirt', 'base'].includes(selectedCategory) && (
+        <div className="space-y-2 mt-4">
+          <label className="text-sm font-medium">Type</label>
+          <ToggleGroup
+            type="single"
+            value={selectedTypes[0] || ''}
+            onValueChange={(value) => setSelectedTypes(value ? [value] : [])}
+            className="justify-start gap-2 flex-wrap"
+          >
+            {availableTypes.map((type) => (
+              <ToggleGroupItem
+                key={type}
+                value={type}
+                className="flex-1 py-3 data-[state=on]:bg-primary/10 data-[state=on]:text-primary"
+              >
+                <span className="capitalize">{type.replace('-', ' ')}</span>
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </div>
+      )}
 
+      {/* Available Products Display */}
       {filteredProducts.length > 0 ? (
         <div className="space-y-3 border rounded-lg p-4">
           <div className="flex justify-between items-center">
             <h3 className="font-medium">Available Products</h3>
             <Badge variant="outline">{filteredProducts.length} found</Badge>
           </div>
-          <div className="grid gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {filteredProducts.map((product) => (
               <button
                 key={product.id}
                 onClick={() => onProductSelect(product.id.toString())}
                 className={cn(
-                  "w-full p-4 text-left rounded-lg border transition-colors",
+                  "w-full p-3 text-left rounded-lg border transition-colors",
                   selectedProduct === product.id.toString()
                     ? "border-primary bg-primary/5"
                     : "hover:bg-gray-50"
                 )}
               >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">{product.name}</span>
-                  <span className="text-sm font-medium text-primary">
-                    ${product.price}/ton
-                  </span>
-                </div>
+                <span className="font-medium">{product.name}</span>
               </button>
             ))}
           </div>
