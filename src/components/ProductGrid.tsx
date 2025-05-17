@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import { getProducts } from '../services/productService';
@@ -89,71 +88,201 @@ const ProductGrid = ({
         result = result.filter(product => {
           const subcategory = filters.subcategory?.toLowerCase();
           
-          // Enhanced matching for walkway, driveway, drainage subcategories
-          if (['walkway', 'driveway', 'drainage', 'natural', 'crushed', 'round'].includes(subcategory!)) {
-            // Check in uses array for these specific subcategories
-            if (product.uses && Array.isArray(product.uses)) {
-              const hasMatchingUse = product.uses.some(use => 
-                use.toLowerCase().includes(subcategory!)
-              );
-              if (hasMatchingUse) return true;
-            }
+          // Enhanced matching for all subcategories based on their category
+          switch (filters.category) {
+            case 'gravel':
+              // Logic for gravel subcategories (walkway, driveway, drainage, natural, crushed, round)
+              if (['walkway', 'driveway', 'drainage', 'natural', 'crushed', 'round'].includes(subcategory!)) {
+                // Check in uses array
+                if (product.uses && Array.isArray(product.uses)) {
+                  const hasMatchingUse = product.uses.some(use => 
+                    use.toLowerCase().includes(subcategory!)
+                  );
+                  if (hasMatchingUse) return true;
+                }
 
-            // Check in subtype property - important for crushed, round, natural
-            if (product.subtype && product.subtype.toLowerCase().includes(subcategory!)) {
-              return true;
-            }
+                // Check in subtype property
+                if (product.subtype && product.subtype.toLowerCase().includes(subcategory!)) {
+                  return true;
+                }
+                
+                // Check in categories array
+                if (product.categories && Array.isArray(product.categories)) {
+                  return product.categories.some(cat => 
+                    cat.toLowerCase().includes(subcategory!)
+                  );
+                }
+                
+                // Check description for keywords
+                if (product.description.toLowerCase().includes(subcategory!)) {
+                  return true;
+                }
+              }
+              break;
             
-            // For better coverage, also check in categories array
-            if (product.categories && Array.isArray(product.categories)) {
-              return product.categories.some(cat => 
-                cat.toLowerCase().includes(subcategory!)
-              );
-            }
+            case 'dirt':
+              // Logic for dirt subcategories (top-soil, compost, fill-dirt, loam, sandy-loam)
+              if (['top-soil', 'compost', 'fill-dirt', 'loam', 'sandy-loam'].includes(subcategory!)) {
+                // Check in subtype
+                if (product.subtype && product.subtype.toLowerCase() === subcategory) {
+                  return true;
+                }
+                
+                // Check in categories
+                if (product.categories && Array.isArray(product.categories)) {
+                  const hasMatch = product.categories.some(cat => 
+                    cat.toLowerCase() === subcategory || cat.toLowerCase().includes(subcategory!)
+                  );
+                  if (hasMatch) return true;
+                }
+                
+                // Check in description
+                if (product.description.toLowerCase().includes(subcategory!)) {
+                  return true;
+                }
+                
+                // Special case for hyphenated terms
+                if (subcategory === 'top-soil' && 
+                    (product.description.toLowerCase().includes('top soil') || 
+                     product.description.toLowerCase().includes('topsoil'))) {
+                  return true;
+                }
+                
+                if (subcategory === 'fill-dirt' && 
+                    (product.description.toLowerCase().includes('fill dirt'))) {
+                  return true;
+                }
+                
+                if (subcategory === 'sandy-loam' && 
+                    (product.description.toLowerCase().includes('sandy loam'))) {
+                  return true;
+                }
+              }
+              break;
             
-            // Check description for keywords
-            if (product.description.toLowerCase().includes(subcategory!)) {
-              return true;
-            }
+            case 'base':
+              // Logic for base subcategories (road-base, concrete-rca, crusher-base)
+              if (['road-base', 'concrete-rca', 'crusher-base'].includes(subcategory!)) {
+                // Check in subtype
+                if (product.subtype && 
+                    (product.subtype.toLowerCase() === subcategory || 
+                     product.subtype.toLowerCase().includes(subcategory!.replace('-', ' ')))) {
+                  return true;
+                }
+                
+                // Check in categories
+                if (product.categories && Array.isArray(product.categories)) {
+                  const hasMatch = product.categories.some(cat => 
+                    cat.toLowerCase() === subcategory || 
+                    cat.toLowerCase().includes(subcategory!) ||
+                    cat.toLowerCase().includes(subcategory!.replace('-', ' '))
+                  );
+                  if (hasMatch) return true;
+                }
+                
+                // Check in description - also try without hyphens
+                if (product.description.toLowerCase().includes(subcategory!) || 
+                    product.description.toLowerCase().includes(subcategory!.replace('-', ' '))) {
+                  return true;
+                }
+              }
+              break;
+            
+            case 'sand':
+              // Logic for sand subcategories (concrete, mason, playground, beach, washed)
+              if (['concrete', 'mason', 'playground', 'beach', 'washed'].includes(subcategory!)) {
+                // Check in subtype
+                if (product.subtype && 
+                    (product.subtype.toLowerCase() === subcategory || 
+                     product.subtype.toLowerCase().includes(subcategory! + '-sand') ||
+                     product.subtype.toLowerCase().includes(subcategory! + ' sand'))) {
+                  return true;
+                }
+                
+                // Check in categories
+                if (product.categories && Array.isArray(product.categories)) {
+                  const hasMatch = product.categories.some(cat => 
+                    cat.toLowerCase() === subcategory || 
+                    cat.toLowerCase().includes(subcategory! + '-sand') ||
+                    cat.toLowerCase().includes(subcategory! + ' sand')
+                  );
+                  if (hasMatch) return true;
+                }
+                
+                // Check in description
+                if (product.description.toLowerCase().includes(subcategory! + ' sand') || 
+                    product.description.toLowerCase().includes(subcategory!)) {
+                  return true;
+                }
+              }
+              break;
+            
+            case 'mulch':
+              // Logic for mulch subcategories (chocolate, jet-black, red, natural-dark, wood-chips)
+              if (['chocolate', 'jet-black', 'red', 'natural-dark', 'wood-chips'].includes(subcategory!)) {
+                // Check in color property
+                if (product.color && (
+                    product.color.toLowerCase() === subcategory ||
+                    product.color.toLowerCase().includes(subcategory!))) {
+                  return true;
+                }
+                
+                // Check in specifications.color
+                if (product.specifications?.color && 
+                    product.specifications.color.toLowerCase().includes(subcategory!)) {
+                  return true;
+                }
+                
+                // Check in categories
+                if (product.categories && Array.isArray(product.categories)) {
+                  const hasMatch = product.categories.some(cat => 
+                    cat.toLowerCase() === subcategory || 
+                    cat.toLowerCase().includes(subcategory!)
+                  );
+                  if (hasMatch) return true;
+                }
+                
+                // Check in description
+                if (product.description.toLowerCase().includes(subcategory!)) {
+                  return true;
+                }
 
-            return false;
-          }
-          
-          // Standard checks for other subcategories
-          
-          // Check in usage
-          if (product.usage && product.usage.toLowerCase() === subcategory) {
-            return true;
-          }
-          
-          // Check in subtype
-          if (product.subtype && product.subtype.toLowerCase() === subcategory) {
-            return true;
-          }
-          
-          // Check in size
-          if (product.size && product.size.toLowerCase().includes(subcategory!)) {
-            return true;
-          }
-          
-          // Check in color
-          if (product.color && product.color.toLowerCase() === subcategory) {
-            return true;
-          }
-          
-          // Check in uses array if available
-          if (product.uses && Array.isArray(product.uses)) {
-            return product.uses.some(use => 
-              use.toLowerCase().includes(subcategory!)
-            );
-          }
-          
-          // Check in categories array for more specific matches
-          if (product.categories && Array.isArray(product.categories)) {
-            return product.categories.some(cat => 
-              cat.toLowerCase() === subcategory ||
-              cat.toLowerCase().includes(subcategory!)
-            );
+                // Special cases for hyphenated terms
+                if (subcategory === 'jet-black' && 
+                    (product.description.toLowerCase().includes('jet black') || 
+                     product.color?.toLowerCase().includes('black'))) {
+                  return true;
+                }
+
+                if (subcategory === 'natural-dark' && 
+                    (product.description.toLowerCase().includes('natural dark') || 
+                     product.description.toLowerCase().includes('dark natural') ||
+                     product.color?.toLowerCase().includes('natural'))) {
+                  return true;
+                }
+
+                if (subcategory === 'wood-chips' && 
+                    (product.description.toLowerCase().includes('wood chips') ||
+                     product.description.toLowerCase().includes('woodchips'))) {
+                  return true;
+                }
+              }
+              break;
+              
+            default:
+              // Fallback generic checks for any other category
+              // Check in all possible fields
+              if (product.subtype?.toLowerCase() === subcategory ||
+                  product.color?.toLowerCase() === subcategory ||
+                  product.size?.toLowerCase() === subcategory ||
+                  (product.uses && Array.isArray(product.uses) && 
+                   product.uses.some(use => use.toLowerCase().includes(subcategory!))) ||
+                  (product.categories && Array.isArray(product.categories) && 
+                   product.categories.some(cat => cat.toLowerCase().includes(subcategory!))) ||
+                  product.description.toLowerCase().includes(subcategory!)) {
+                return true;
+              }
+              break;
           }
           
           return false;
