@@ -8,8 +8,18 @@ interface ProductImagesProps {
 }
 
 // Helper function to handle image paths
-const getCorrectImagePath = (path: string | undefined) => {
+const getCorrectImagePath = (path: string | undefined, productName: string | undefined) => {
   if (!path) return "/placeholder.svg";
+  
+  // Special case for River Rock products
+  if (productName && productName.toLowerCase().includes('river rock')) {
+    return "/assets/river-rocks.png";
+  }
+  
+  // Special case for Crushed Stone products
+  if (productName && productName.toLowerCase().includes('crushed stone')) {
+    return "/assets/crushed-stone.png";
+  }
   
   // Handle /src/assets/ paths by removing the /src prefix
   if (path.startsWith('/src/assets/')) {
@@ -24,7 +34,7 @@ const ProductImages = ({ product }: ProductImagesProps) => {
   
   // Use the default image if no image is provided
   const defaultImage = "/placeholder.svg";
-  const correctedImagePath = getCorrectImagePath(product?.image);
+  const correctedImagePath = getCorrectImagePath(product?.image, product?.name);
   
   return (
     <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">

@@ -113,6 +113,11 @@ function processImagePath(imagePath: string | null | undefined, productName: str
     return '/assets/river-rocks.png';
   }
   
+  // Special case for Crushed Stone products
+  if (productName.toLowerCase().includes('crushed stone')) {
+    return '/assets/crushed-stone.png';
+  }
+  
   // If the path starts with /src/assets/, remove the /src prefix
   if (imagePath.startsWith('/src/assets/')) {
     return imagePath.replace('/src/', '/');
@@ -239,6 +244,12 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
       if (productName.toLowerCase().includes('river rock')) {
         productImage = '/assets/river-rocks.png';
         console.log(`Set River Rock image for ${productName} to ${productImage}`);
+      }
+      
+      // Special case for Crushed Stone products
+      if (productName.toLowerCase().includes('crushed stone')) {
+        productImage = '/assets/crushed-stone.png';
+        console.log(`Set Crushed Stone image for ${productName} to ${productImage}`);
       }
 
       // Create the product object with appropriate fallbacks for all fields
