@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
-import { Search, Filter, SortAsc, SortDesc, Grid3X3, ChevronDown } from 'lucide-react';
-import { Package, BrickWall, Leaf, TreeDeciduous, Hammer } from 'lucide-react';
+import { Search, Filter, SortAsc, SortDesc, Grid3X3, ChevronDown, Package, Cube } from 'lucide-react';
+import { Leaf, BrickWall, TreeDeciduous, Hammer } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getUniqueCategories } from '@/services/productService';
 import {
@@ -33,20 +33,20 @@ import { Label } from "@/components/ui/label";
 const categoryStructure = {
   'all': [],
   'gravel': ['walkway', 'driveway', 'drainage', 'natural', 'crushed', 'round'],
-  'sand': ['concrete', 'mason', 'playground', 'beach', 'washed'],
   'dirt': ['top-soil', 'compost', 'fill-dirt', 'loam', 'sandy-loam'],
-  'mulch': ['chocolate', 'jet-black', 'red', 'natural-dark', 'wood-chips'],
-  'base': ['road-base', 'concrete-rca', 'crusher-base']
+  'base': ['road-base', 'concrete-rca', 'crusher-base'],
+  'sand': ['concrete', 'mason', 'playground', 'beach', 'washed'],
+  'mulch': ['chocolate', 'jet-black', 'red', 'natural-dark', 'wood-chips']
 };
 
 // Define category icons - making sure each category has a valid icon
 const CategoryIcons = {
   'all': Grid3X3,
-  'gravel': Package,
-  'sand': BrickWall,
+  'gravel': Cube,
   'dirt': Leaf,
-  'mulch': TreeDeciduous,
   'base': Hammer,
+  'sand': BrickWall,
+  'mulch': TreeDeciduous,
 };
 
 interface ProductSearchProps {
@@ -59,7 +59,7 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
   const [sortOrder, setSortOrder] = useState('nameAsc');
   const [category, setCategory] = useState('all');
   const [subcategory, setSubcategory] = useState('');
-  const [categories, setCategories] = useState<string[]>(['all', 'gravel', 'sand', 'dirt', 'mulch', 'base']);
+  const [categories, setCategories] = useState<string[]>(['all', 'gravel', 'dirt', 'base', 'sand', 'mulch']);
   const [subcategories, setSubcategories] = useState<string[]>([]);
   const isMobile = useIsMobile();
 
@@ -68,8 +68,24 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
     async function loadCategories() {
       try {
         const uniqueCategories = await getUniqueCategories();
-        // Always include 'all' as the first option
-        setCategories(['all', ...uniqueCategories]);
+        // Always include 'all' as the first option and maintain the specified order
+        const orderedCategories = ['all'];
+        
+        // Add the categories in the specified order if they exist in uniqueCategories
+        ['gravel', 'dirt', 'base', 'sand', 'mulch'].forEach(cat => {
+          if (uniqueCategories.includes(cat) || cat === 'all') {
+            orderedCategories.push(cat);
+          }
+        });
+        
+        // Add any remaining categories that weren't in our predefined order
+        uniqueCategories.forEach(cat => {
+          if (!orderedCategories.includes(cat)) {
+            orderedCategories.push(cat);
+          }
+        });
+        
+        setCategories(orderedCategories);
       } catch (error) {
         console.error("Failed to load categories:", error);
       }
@@ -142,11 +158,12 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
                   <ToggleGroupItem 
                     key={cat} 
                     value={cat}
-                    className="flex-1 py-6 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                    className={`flex-1 py-4 ${cat === category ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
+                              data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-md`}
                   >
                     <div className="flex flex-col items-center gap-2">
                       <IconComponent className="h-6 w-6" />
-                      <span className="capitalize">{formatName(cat)}</span>
+                      <span className="capitalize text-sm">{formatName(cat)}</span>
                     </div>
                   </ToggleGroupItem>
                 );
