@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
-import { Search, Filter, SortAsc, SortDesc, Grid3X3, ChevronDown, Package } from 'lucide-react';
-import { Leaf, BrickWall, TreeDeciduous, Hammer } from 'lucide-react';
+import { Search, Filter, SortAsc, SortDesc, ChevronDown, Package } from 'lucide-react';
+import { Leaf, BrickWall, TreeDeciduous, Hammer, Grid3X3 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getUniqueCategories } from '@/services/productService';
 import {
@@ -144,14 +144,14 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
 
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
         {!isMobile ? (
-          <div className="flex flex-col sm:flex-row gap-4 w-full">
+          <div className="flex flex-col gap-4 w-full">
             <ToggleGroup
               type="single"
               value={category}
               onValueChange={(value) => value && handleCategoryChange(value)}
-              className="grid grid-cols-3 sm:grid-cols-6 gap-2 w-full"
+              className="grid grid-cols-6 gap-2 w-full"
             >
-              {categories.slice(0, 6).map((cat) => {
+              {categories.map((cat) => {
                 // Safe guard for categories that don't have defined icons
                 const IconComponent = CategoryIcons[cat as keyof typeof CategoryIcons] || Grid3X3;
                 return (
@@ -168,47 +168,38 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
                   </ToggleGroupItem>
                 );
               })}
-              {categories.length > 6 && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <Grid3X3 className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 bg-white">
-                    <DropdownMenuLabel>More Categories</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {categories.slice(6).map((cat) => (
-                      <DropdownMenuRadioItem 
-                        key={cat} 
-                        value={cat}
-                        onClick={() => handleCategoryChange(cat)}
-                      >
-                        {formatName(cat)}
-                      </DropdownMenuRadioItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
             </ToggleGroup>
 
-            {/* Subcategory selector - only shown when a main category is selected */}
+            {/* Subcategory toggle buttons - only shown when a main category is selected */}
             {category !== 'all' && subcategories.length > 0 && (
-              <div className="flex-grow">
-                <Select value={subcategory} onValueChange={handleSubcategoryChange}>
-                  <SelectTrigger className="w-full sm:w-[200px]">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white">
-                    <SelectItem value="all">All {formatName(category)}</SelectItem>
-                    {subcategories.map((sub) => (
-                      <SelectItem key={sub} value={sub}>
-                        {formatName(sub)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <ToggleGroup
+                type="single"
+                value={subcategory}
+                onValueChange={(value) => value && handleSubcategoryChange(value)}
+                className="grid grid-cols-3 sm:grid-cols-6 gap-2 w-full"
+              >
+                <ToggleGroupItem 
+                  value="all"
+                  className={`flex-1 py-2 text-xs ${subcategory === 'all' ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
+                            data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-md`}
+                >
+                  <div className="flex flex-col items-center">
+                    <span>All {formatName(category)}</span>
+                  </div>
+                </ToggleGroupItem>
+                {subcategories.map((sub) => (
+                  <ToggleGroupItem 
+                    key={sub} 
+                    value={sub}
+                    className={`flex-1 py-2 text-xs ${sub === subcategory ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
+                              data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-md`}
+                  >
+                    <div className="flex flex-col items-center">
+                      <span>{formatName(sub)}</span>
+                    </div>
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
             )}
           </div>
         ) : (
