@@ -8,34 +8,12 @@ import { getPriceAdjustmentForZipCode } from '../services/productService';
 import { Product } from '../services/productTypes';
 import { ImageOff } from 'lucide-react';
 
-// Helper function to handle image paths
-const getCorrectImagePath = (path: string | undefined, productName: string | undefined) => {
-  if (!path) return "/placeholder.svg";
-  
-  // Special case for River Rock products
-  if (productName && productName.toLowerCase().includes('river rock')) {
-    return "/assets/river-rocks.png";
-  }
-  
-  // Special case for Crushed Stone products
-  if (productName && productName.toLowerCase().includes('crushed stone')) {
-    return "/assets/crushed-stone.png";
-  }
-  
-  // Handle /src/assets/ paths by removing the /src prefix
-  if (path.startsWith('/src/assets/')) {
-    return path.replace('/src/', '/');
-  }
-  
-  return path;
-};
-
 const ProductCard = ({ product }: { product: Product }) => {
   const { zipCode } = useZipCode();
   const [imageError, setImageError] = useState(false);
   
-  const defaultImage = "/placeholder.svg";
-  const correctedImagePath = getCorrectImagePath(product.image, product.name);
+  // Use the image path directly from the product data
+  const imagePath = product.image || "/placeholder.svg";
 
   return (
     <Card className="w-full max-w-sm h-full flex flex-col transition-all duration-200 hover:shadow-md">
@@ -55,11 +33,11 @@ const ProductCard = ({ product }: { product: Product }) => {
               </div>
             ) : (
               <img
-                src={correctedImagePath}
+                src={imagePath}
                 alt={product.name}
                 className="object-cover w-full h-full rounded-md"
                 onError={(e) => {
-                  console.log(`Image failed to load for ${product.name}:`, product.image, "Tried path:", correctedImagePath);
+                  console.log(`Image failed to load for ${product.name}:`, product.image);
                   setImageError(true);
                 }}
               />

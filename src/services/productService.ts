@@ -133,16 +133,6 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
   // Check cache first, unless force refresh is requested
   if (!forceRefresh && productsCache && (Date.now() - lastFetchTimestamp < CACHE_TTL)) {
     console.log('Using cached products data:', productsCache.length, 'products found');
-    
-    // Process all product images to ensure paths are correct
-    productsCache.forEach(product => {
-      if (product.name.toLowerCase().includes('river rock')) {
-        product.image = '/assets/river-rocks.png';
-      } else if (product.image && product.image.startsWith('/src/assets/')) {
-        product.image = product.image.replace('/src/', '/');
-      }
-    });
-    
     return productsCache;
   }
 
@@ -234,23 +224,8 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
       // Generate a slug if one doesn't exist
       const slug = row.name ? row.name.toLowerCase().replace(/\s+/g, '-') : `product-${index + 1}`;
       
-      const defaultImage = "/placeholder.svg";
-      
-      // Process the image path
-      const productName = row.name || `Product ${index + 1}`;
-      let productImage = processImagePath(row.image, productName);
-      
-      // Special case for River Rock products
-      if (productName.toLowerCase().includes('river rock')) {
-        productImage = '/assets/river-rocks.png';
-        console.log(`Set River Rock image for ${productName} to ${productImage}`);
-      }
-      
-      // Special case for Crushed Stone products
-      if (productName.toLowerCase().includes('crushed stone')) {
-        productImage = '/assets/crushed-stone.png';
-        console.log(`Set Crushed Stone image for ${productName} to ${productImage}`);
-      }
+      // Use the image path directly from the database
+      const productImage = row.image || "/placeholder.svg";
 
       // Create the product object with appropriate fallbacks for all fields
       return {
