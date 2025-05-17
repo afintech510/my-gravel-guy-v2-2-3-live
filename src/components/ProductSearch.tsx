@@ -147,11 +147,11 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
                   <ToggleGroupItem 
                     key={cat} 
                     value={cat}
-                    className={`flex-1 py-4 ${cat === category ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
-                              data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-md`}
+                    className={`flex-1 py-6 ${cat === category ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
+                              data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-md transition-colors`}
                   >
-                    <div className="flex flex-col items-center gap-2">
-                      <IconComponent className="h-6 w-6" />
+                    <div className="flex flex-col items-center gap-3">
+                      <IconComponent className="h-7 w-7" />
                       <span className="capitalize text-sm">{formatName(cat)}</span>
                     </div>
                   </ToggleGroupItem>
@@ -169,8 +169,8 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
               >
                 <ToggleGroupItem 
                   value="all"
-                  className={`flex-1 py-2 text-xs ${subcategory === 'all' ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
-                            data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-md`}
+                  className={`flex-1 py-3 text-xs ${subcategory === 'all' ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
+                            data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-md transition-colors`}
                 >
                   <div className="flex flex-col items-center">
                     <span>All {formatName(category)}</span>
@@ -180,8 +180,8 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
                   <ToggleGroupItem 
                     key={sub} 
                     value={sub}
-                    className={`flex-1 py-2 text-xs ${sub === subcategory ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
-                              data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-md`}
+                    className={`flex-1 py-3 text-xs ${sub === subcategory ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
+                              data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-md transition-colors`}
                   >
                     <div className="flex flex-col items-center">
                       <span>{formatName(sub)}</span>
