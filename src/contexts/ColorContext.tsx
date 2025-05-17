@@ -7,6 +7,7 @@ export const PRIMARY_COLORS = {
   ORANGE: { name: 'Orange', value: '#F97316', hsl: '24 95% 53%' },
   LIME_GREEN: { name: 'Lime Green', value: '#84CC16', hsl: '90 61% 44%' },
   LIME_YELLOW: { name: 'Lime Yellow', value: '#BEF264', hsl: '83 84% 67%' },
+  BRIGHT_GREEN: { name: 'Bright Green', value: '#39ff14', hsl: '111 100% 54%' },
 };
 
 export const BACKGROUND_COLORS = {

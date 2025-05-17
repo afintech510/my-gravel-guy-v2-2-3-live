@@ -37,7 +37,7 @@ const ColorSelector = ({ variant = 'default' }: ColorSelectorProps) => {
           <h4 className="text-sm font-medium">Theme Colors</h4>
           <div className="space-y-2">
             <div className="text-xs text-muted-foreground">Primary Color</div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-5 gap-2">
               {primaryColorKeys.map((key) => (
                 <Button
                   key={key}
