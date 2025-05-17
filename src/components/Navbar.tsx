@@ -18,7 +18,7 @@ const Navbar = () => {
     { href: "/", label: "Home", icon: <House className="h-4 w-4 mr-1" /> },
     { href: "/products", label: "Shop", icon: <Store className="h-4 w-4 mr-1" /> },
     { href: "/calculator", label: "Calculator", icon: <Calculator className="h-4 w-4 mr-1" /> },
-    { href: "/quiz", label: "Plan Project", icon: <NotebookPen className="h-4 w-4 mr-1" /> },
+//    { href: "/quiz", label: "Plan Project", icon: <NotebookPen className="h-4 w-4 mr-1" /> },
     { href: "/about", label: "About", icon: <ThumbsUp className="h-4 w-4 mr-1" /> },
     { href: "/contact", label: "Contact", icon: <Phone className="h-4 w-4 mr-1" /> },
   ];
