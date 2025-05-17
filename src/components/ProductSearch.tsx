@@ -39,7 +39,7 @@ const categoryStructure = {
   'base': ['road-base', 'concrete-rca', 'crusher-base']
 };
 
-// Define category icons similar to MaterialSelector
+// Define category icons - making sure each category has a valid icon
 const CategoryIcons = {
   'all': Grid3X3,
   'gravel': Package,
@@ -136,7 +136,8 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
               className="grid grid-cols-3 sm:grid-cols-6 gap-2 w-full"
             >
               {categories.slice(0, 6).map((cat) => {
-                const Icon = CategoryIcons[cat as keyof typeof CategoryIcons];
+                // Safe guard for categories that don't have defined icons
+                const IconComponent = CategoryIcons[cat as keyof typeof CategoryIcons] || Grid3X3;
                 return (
                   <ToggleGroupItem 
                     key={cat} 
@@ -144,7 +145,7 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
                     className="flex-1 py-6 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
                   >
                     <div className="flex flex-col items-center gap-2">
-                      <Icon className="h-6 w-6" />
+                      <IconComponent className="h-6 w-6" />
                       <span className="capitalize">{formatName(cat)}</span>
                     </div>
                   </ToggleGroupItem>
@@ -207,12 +208,13 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
               <div className="p-2">
                 <RadioGroup value={category} onValueChange={handleCategoryChange}>
                   {categories.map((cat) => {
-                    const Icon = CategoryIcons[cat as keyof typeof CategoryIcons];
+                    // Safe guard for categories that don't have defined icons
+                    const IconComponent = CategoryIcons[cat as keyof typeof CategoryIcons] || Grid3X3;
                     return (
                       <div className="flex items-center space-x-2 py-1" key={cat}>
                         <RadioGroupItem value={cat} id={`category-${cat}`} />
                         <Label htmlFor={`category-${cat}`} className="flex items-center gap-2">
-                          <Icon className="h-4 w-4" /> {formatName(cat)}
+                          <IconComponent className="h-4 w-4" /> {formatName(cat)}
                         </Label>
                       </div>
                     );
