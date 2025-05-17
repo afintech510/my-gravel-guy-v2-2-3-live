@@ -1,60 +1,66 @@
 
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
-import ZipCodeSearch from './zip-code/ZipCodeSearch';
+import { MapPin } from 'lucide-react';
 import { useZipCode } from '../contexts/ZipCodeContext';
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog";
+import ZipCodeSearch from './zip-code/ZipCodeSearch';
+import { cn } from '@/lib/utils';
 
-const TopBanner = () => {
-  const [isVisible, setIsVisible] = useState(
-    localStorage.getItem('topBannerDismissed') !== 'true'
-  );
-  const { zipCode } = useZipCode();
-  const [showZipSearch, setShowZipSearch] = useState(false);
+interface TopBannerProps {
+  className?: string;
+}
 
-  const handleDismiss = () => {
-    localStorage.setItem('topBannerDismissed', 'true');
-    setIsVisible(false);
-  };
-
+const TopBanner = ({ className }: TopBannerProps) => {
+  const { zipCodeData } = useZipCode();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  
+  // Use the city name from zipCodeData if available
+  const cityName = zipCodeData?.city || 'Your Area';
+  
+  // Callback to close the dialog when a ZIP code is selected
   const handleZipCodeSelected = () => {
-    setShowZipSearch(false);
+    setDialogOpen(false);
   };
-
-  if (!isVisible) return null;
-
+  
   return (
-    <div className="bg-primary text-primary-foreground py-2 px-4 flex items-center justify-between relative">
-      <div className="text-center flex-1 font-medium">
-        Free delivery on orders over 10 tons! <Link to="/delivery" className="underline ml-1 font-bold">Check delivery info</Link>
-      </div>
-      
-      <div className="flex items-center space-x-4">
-        {!showZipSearch && !zipCode ? (
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs h-7 px-3 bg-transparent border-white hover:bg-white/10"
-            onClick={() => setShowZipSearch(true)}
-          >
-            Enter ZIP Code
-          </Button>
-        ) : showZipSearch ? (
-          <div className="w-48">
-            <ZipCodeSearch variant="minimal" onZipCodeSelected={handleZipCodeSelected} />
-          </div>
-        ) : null}
-        
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-6 w-6 text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/20"
-          onClick={handleDismiss}
-        >
-          <X className="h-4 w-4" />
-          <span className="sr-only">Dismiss</span>
-        </Button>
+    <div className={cn(
+      "bg-primary text-primary-foreground py-2 px-4 text-center z-50", 
+      className
+    )}>
+      <div className="max-w-6xl mx-auto flex items-center justify-center">
+        <h3 className="text-sm font-semibold">
+          FREE Delivery to{' '}
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <button className="inline-flex items-center underline hover:text-white transition-colors">
+                {cityName}
+                <MapPin className="h-3 w-3 ml-0.5" />
+              </button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Change Your Delivery Location</DialogTitle>
+              </DialogHeader>
+              <div className="py-4">
+                <p className="text-sm text-muted-foreground mb-4">
+                  Enter your ZIP code to see delivery options and pricing for your area.
+                </p>
+                <ZipCodeSearch 
+                  variant="minimal" 
+                  className="w-full" 
+                  onZipCodeSelected={handleZipCodeSelected}
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+          {' '}  only Quality Gravel & Construction Aggregates
+        </h3>
       </div>
     </div>
   );

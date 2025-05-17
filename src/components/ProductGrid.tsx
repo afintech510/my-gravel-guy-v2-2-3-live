@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import { getProducts } from '../services/productService';
@@ -53,67 +54,6 @@ const ProductGrid = ({
     await loadProducts(true); // Force refresh
   };
 
-  // Helper function for more robust subcategory matching
-  const matchesSubcategory = (product: Product, subcategory: string): boolean => {
-    const normalizedSubcategory = subcategory.toLowerCase().trim();
-    
-    // Log the product values for debugging
-    console.log(`Checking product ${product.name} against subcategory: ${normalizedSubcategory}`);
-    console.log(`Product values: usage=${product.usage}, subtype=${product.subtype}, size=${product.size}, color=${product.color}`);
-    if (product.uses) console.log(`Product uses:`, product.uses);
-    if (product.categories) console.log(`Product categories:`, product.categories);
-    
-    // Check in usage
-    if (product.usage && product.usage.toLowerCase().includes(normalizedSubcategory)) {
-      return true;
-    }
-    
-    // Check in subtype
-    if (product.subtype && product.subtype.toLowerCase().includes(normalizedSubcategory)) {
-      return true;
-    }
-    
-    // Check in size
-    if (product.size && product.size.toLowerCase().includes(normalizedSubcategory)) {
-      return true;
-    }
-    
-    // Check in color
-    if (product.color && product.color.toLowerCase().includes(normalizedSubcategory)) {
-      return true;
-    }
-    
-    // Check in uses array if available
-    if (product.uses && Array.isArray(product.uses)) {
-      const hasMatchingUse = product.uses.some(use => 
-        use.toLowerCase().includes(normalizedSubcategory)
-      );
-      if (hasMatchingUse) return true;
-    }
-    
-    // Check in categories array for more specific matches
-    if (product.categories && Array.isArray(product.categories)) {
-      const hasMatchingCategory = product.categories.some(cat => 
-        cat.toLowerCase().includes(normalizedSubcategory)
-      );
-      if (hasMatchingCategory) return true;
-    }
-    
-    // Check for stemmed matches or similar variations
-    // Examples: "walkway" should match "walkways", "drainage" should match "drain"
-    if (normalizedSubcategory === 'walkway' && product.name.toLowerCase().includes('walkway')) {
-      return true;
-    }
-    if (normalizedSubcategory === 'drainage' && product.name.toLowerCase().includes('drain')) {
-      return true;
-    }
-    if (normalizedSubcategory === 'driveway' && product.name.toLowerCase().includes('drive')) {
-      return true;
-    }
-    
-    return false;
-  };
-
   useEffect(() => {
     let result = [...products];
     console.log("Filtering products with:", filters);
@@ -141,13 +81,49 @@ const ProductGrid = ({
       
       console.log(`After category filter (${filters.category}): ${result.length} products`);
 
-      // Filter by subcategory if present (using our improved matching function)
+      // Filter by subcategory if present
       if (filters.subcategory) {
         console.log(`Applying subcategory filter: ${filters.subcategory}`);
         const beforeCount = result.length;
         
-        // Use the new matching function for better subcategory filtering
-        result = result.filter(product => matchesSubcategory(product, filters.subcategory!));
+        result = result.filter(product => {
+          // Check in usage
+          if (product.usage && product.usage.toLowerCase() === filters.subcategory!.toLowerCase()) {
+            return true;
+          }
+          
+          // Check in subtype
+          if (product.subtype && product.subtype.toLowerCase() === filters.subcategory!.toLowerCase()) {
+            return true;
+          }
+          
+          // Check in size
+          if (product.size && product.size.toLowerCase().includes(filters.subcategory!.toLowerCase())) {
+            return true;
+          }
+          
+          // Check in color
+          if (product.color && product.color.toLowerCase() === filters.subcategory!.toLowerCase()) {
+            return true;
+          }
+          
+          // Check in uses array if available
+          if (product.uses && Array.isArray(product.uses)) {
+            return product.uses.some(use => 
+              use.toLowerCase().includes(filters.subcategory!.toLowerCase())
+            );
+          }
+          
+          // Check in categories array for more specific matches
+          if (product.categories && Array.isArray(product.categories)) {
+            return product.categories.some(cat => 
+              cat.toLowerCase() === filters.subcategory!.toLowerCase() ||
+              cat.toLowerCase().includes(filters.subcategory!.toLowerCase())
+            );
+          }
+          
+          return false;
+        });
         
         console.log(`After subcategory filter: ${result.length} products (removed ${beforeCount - result.length})`);
       }
