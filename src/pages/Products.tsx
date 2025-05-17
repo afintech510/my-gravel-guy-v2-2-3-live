@@ -23,6 +23,8 @@ const Products = () => {
   };
 
   const handleFilter = (category: string, subcategory: string = '') => {
+    console.log(`Products: handleFilter called with category=${category}, subcategory=${subcategory}`);
+    
     // If subcategory is "all", treat it as no specific subcategory
     const effectiveSubcategory = subcategory === 'all' ? '' : subcategory;
     

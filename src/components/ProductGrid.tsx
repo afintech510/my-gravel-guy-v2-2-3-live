@@ -56,6 +56,7 @@ const ProductGrid = ({
 
   useEffect(() => {
     let result = [...products];
+    console.log("Filtering products with:", filters);
 
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase();
@@ -65,11 +66,11 @@ const ProductGrid = ({
       );
     }
 
-    // Filter by main category
+    // Filter by main category - always apply this filter first
     if (filters.category !== 'all') {
       result = result.filter(product => {
         // Check if the product has the category either in the main category or in the categories array
-        const matchesMainCategory = product.category === filters.category;
+        const matchesMainCategory = product.category.toLowerCase() === filters.category.toLowerCase();
         
         // Check in the categories array if available
         const matchesCategoryArray = product.categories && Array.isArray(product.categories) && 
@@ -77,27 +78,32 @@ const ProductGrid = ({
         
         return matchesMainCategory || matchesCategoryArray;
       });
+      
+      console.log(`After category filter (${filters.category}): ${result.length} products`);
 
       // Filter by subcategory if present
       if (filters.subcategory) {
+        console.log(`Applying subcategory filter: ${filters.subcategory}`);
+        const beforeCount = result.length;
+        
         result = result.filter(product => {
           // Check in usage
-          if (product.usage && product.usage === filters.subcategory) {
+          if (product.usage && product.usage.toLowerCase() === filters.subcategory!.toLowerCase()) {
             return true;
           }
           
           // Check in subtype
-          if (product.subtype && product.subtype === filters.subcategory) {
+          if (product.subtype && product.subtype.toLowerCase() === filters.subcategory!.toLowerCase()) {
             return true;
           }
           
           // Check in size
-          if (product.size && product.size.toLowerCase().includes(filters.subcategory.toLowerCase())) {
+          if (product.size && product.size.toLowerCase().includes(filters.subcategory!.toLowerCase())) {
             return true;
           }
           
           // Check in color
-          if (product.color && product.color === filters.subcategory) {
+          if (product.color && product.color.toLowerCase() === filters.subcategory!.toLowerCase()) {
             return true;
           }
           
@@ -111,15 +117,19 @@ const ProductGrid = ({
           // Check in categories array for more specific matches
           if (product.categories && Array.isArray(product.categories)) {
             return product.categories.some(cat => 
-              cat.toLowerCase() === filters.subcategory!.toLowerCase()
+              cat.toLowerCase() === filters.subcategory!.toLowerCase() ||
+              cat.toLowerCase().includes(filters.subcategory!.toLowerCase())
             );
           }
           
           return false;
         });
+        
+        console.log(`After subcategory filter: ${result.length} products (removed ${beforeCount - result.length})`);
       }
     }
 
+    // Apply sorting after all filters
     result.sort((a, b) => {
       switch (filters.sort) {
         case 'nameDesc':
@@ -135,6 +145,7 @@ const ProductGrid = ({
     });
 
     const limitedResult = limit ? result.slice(0, limit) : result;
+    console.log(`Final filtered products: ${limitedResult.length} products displayed (limit: ${limit})`);
     setFilteredProducts(limitedResult);
   }, [products, filters, limit]);
 
