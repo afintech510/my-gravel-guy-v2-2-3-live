@@ -161,7 +161,7 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent className="bg-white">
-                    <SelectItem value="">All {formatName(category)}</SelectItem>
+                    <SelectItem value="all">All {formatName(category)}</SelectItem>
                     {subcategories.map((sub) => (
                       <SelectItem key={sub} value={sub}>
                         {formatName(sub)}
@@ -201,7 +201,7 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
                   <div className="p-2">
                     <RadioGroup value={subcategory} onValueChange={handleSubcategoryChange}>
                       <div className="flex items-center space-x-2 py-1">
-                        <RadioGroupItem value="" id="subcategory-all" />
+                        <RadioGroupItem value="all" id="subcategory-all" />
                         <Label htmlFor="subcategory-all">All {formatName(category)}</Label>
                       </div>
                       {subcategories.map((sub) => (
