@@ -9,7 +9,8 @@ const Products = () => {
   const [filters, setFilters] = useState({
     search: '',
     sort: 'nameAsc',
-    category: 'all'
+    category: 'all',
+    subcategory: ''
   });
   const { toast } = useToast();
 
@@ -21,13 +22,25 @@ const Products = () => {
     setFilters(prev => ({ ...prev, sort: option }));
   };
 
-  const handleFilter = (category: string) => {
-    setFilters(prev => ({ ...prev, category }));
+  const handleFilter = (category: string, subcategory: string = '') => {
+    setFilters(prev => ({ ...prev, category, subcategory }));
     
+    let toastMessage = '';
     if (category !== 'all') {
+      if (subcategory) {
+        const formattedSubcategory = subcategory
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        
+        toastMessage = `Showing ${formattedSubcategory} ${category} products`;
+      } else {
+        toastMessage = `Showing all ${category} products`;
+      }
+      
       toast({
         title: "Category selected",
-        description: `Showing ${category} products`,
+        description: toastMessage,
         duration: 2000,
       });
     }
