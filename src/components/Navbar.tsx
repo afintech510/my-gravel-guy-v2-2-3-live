@@ -7,6 +7,7 @@ import { useCart } from '../contexts/CartContext';
 import { useZipCode } from '../contexts/ZipCodeContext';
 import ZipCodeSearch from './zip-code/ZipCodeSearch';
 import { useState } from 'react';
+import ColorSelector from './theme/ColorSelector';
 
 const Navbar = () => {
   const { items } = useCart();
@@ -57,6 +58,9 @@ const Navbar = () => {
                 {link.label}
               </Link>
             ))}
+            
+            <ColorSelector />
+            
             <Link to="/cart" className="relative">
               <Button variant="ghost" size="icon">
                 <ShoppingCart className="h-6 w-6" />
@@ -70,6 +74,8 @@ const Navbar = () => {
           </div>
 
           <div className="flex items-center md:hidden gap-2">
+            <ColorSelector variant="minimal" />
+            
             <Link to="/cart" className="relative">
               <Button variant="ghost" size="icon">
                 <ShoppingCart className="h-6 w-6" />

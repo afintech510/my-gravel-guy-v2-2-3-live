@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -7,6 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "./contexts/CartContext";
 import { ZipCodeProvider } from "./contexts/ZipCodeContext";
 import { BlogProvider } from "./contexts/BlogContext";
+import { ColorProvider } from "./contexts/ColorContext";
 import ScrollToTop from "./components/ScrollToTop";
 import RouteTracker from "./components/analytics/RouteTracker";
 import TopBanner from "./components/TopBanner";
@@ -45,46 +47,48 @@ const App = () => {
       <ZipCodeProvider>
         <CartProvider>
           <BlogProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <ScrollToTop />
-                <RouteTracker />
-                <div className="min-h-screen bg-gray-50 flex flex-col">
-                  <div className="sticky top-0 z-50 w-full">
-                    <TopBanner />
-                    <Navbar />
+            <ColorProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <ScrollToTop />
+                  <RouteTracker />
+                  <div className="min-h-screen bg-background flex flex-col text-foreground">
+                    <div className="sticky top-0 z-50 w-full">
+                      <TopBanner />
+                      <Navbar />
+                    </div>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/products" element={<Products />} />
+                      <Route path="/products/:slug" element={<ProductDetail />} />
+                      <Route path="/locations" element={<LocationsIndex />} />
+                      <Route path="/locations/:slug" element={<LocationPage />} />
+                      <Route path="/about" element={<About />} />
+                      <Route path="/contact" element={<Contact />} />
+                      <Route path="/cart" element={<Cart />} />
+                      <Route path="/quiz" element={<Quiz />} />
+                      <Route path="/calculator" element={<Calculator />} />
+                      <Route path="/payment-success" element={<PaymentSuccess />} />
+                      <Route path="/privacy" element={<PrivacyPolicy />} />
+                      <Route path="/terms" element={<TermsOfService />} />
+                      <Route path="/refund" element={<RefundPolicy />} />
+                      <Route path="/delivery-map" element={<DeliveryMap />} />
+                      <Route path="/faq" element={<FAQ />} />
+                      <Route path="/delivery" element={<DeliveryInfo />} />
+                      <Route path="/blog" element={<Blog />} />
+                      <Route path="/blog/:slug" element={<BlogPost />} />
+                      <Route path="/blog/category/:slug" element={<BlogCategory />} />
+                      <Route path="/stripe-test" element={<StripeTest />} />
+                      <Route path="/reviews" element={<Reviews />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                    <Footer />
                   </div>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/products" element={<Products />} />
-                    <Route path="/products/:slug" element={<ProductDetail />} />
-                    <Route path="/locations" element={<LocationsIndex />} />
-                    <Route path="/locations/:slug" element={<LocationPage />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/cart" element={<Cart />} />
-                    <Route path="/quiz" element={<Quiz />} />
-                    <Route path="/calculator" element={<Calculator />} />
-                    <Route path="/payment-success" element={<PaymentSuccess />} />
-                    <Route path="/privacy" element={<PrivacyPolicy />} />
-                    <Route path="/terms" element={<TermsOfService />} />
-                    <Route path="/refund" element={<RefundPolicy />} />
-                    <Route path="/delivery-map" element={<DeliveryMap />} />
-                    <Route path="/faq" element={<FAQ />} />
-                    <Route path="/delivery" element={<DeliveryInfo />} />
-                    <Route path="/blog" element={<Blog />} />
-                    <Route path="/blog/:slug" element={<BlogPost />} />
-                    <Route path="/blog/category/:slug" element={<BlogCategory />} />
-                    <Route path="/stripe-test" element={<StripeTest />} />
-                    <Route path="/reviews" element={<Reviews />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                  <Footer />
-                </div>
-              </BrowserRouter>
-            </TooltipProvider>
+                </BrowserRouter>
+              </TooltipProvider>
+            </ColorProvider>
           </BlogProvider>
         </CartProvider>
       </ZipCodeProvider>
