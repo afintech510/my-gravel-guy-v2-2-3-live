@@ -39,10 +39,13 @@ const categoryStructure = {
   'mulch': ['chocolate', 'jet-black', 'red', 'natural-dark', 'wood-chips']
 };
 
+// Define main categories to display - limited to just the 6 main ones
+const mainCategories = ['all', 'gravel', 'dirt', 'base', 'sand', 'mulch'];
+
 // Define category icons - making sure each category has a valid icon
 const CategoryIcons = {
   'all': Grid3X3,
-  'gravel': Package,  // Changed from Cube to Package which is available in lucide-react
+  'gravel': Package,
   'dirt': Leaf,
   'base': Hammer,
   'sand': BrickWall,
@@ -59,33 +62,19 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
   const [sortOrder, setSortOrder] = useState('nameAsc');
   const [category, setCategory] = useState('all');
   const [subcategory, setSubcategory] = useState('');
-  const [categories, setCategories] = useState<string[]>(['all', 'gravel', 'dirt', 'base', 'sand', 'mulch']);
+  const [categories, setCategories] = useState<string[]>(mainCategories);
   const [subcategories, setSubcategories] = useState<string[]>([]);
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    // Fetch unique categories from the database
+    // Fetch unique categories from the database but only use our predefined main categories
     async function loadCategories() {
       try {
-        const uniqueCategories = await getUniqueCategories();
-        // Always include 'all' as the first option and maintain the specified order
-        const orderedCategories = ['all'];
+        // We'll still fetch all categories but only use the ones in our mainCategories array
+        await getUniqueCategories();
         
-        // Add the categories in the specified order if they exist in uniqueCategories
-        ['gravel', 'dirt', 'base', 'sand', 'mulch'].forEach(cat => {
-          if (uniqueCategories.includes(cat) || cat === 'all') {
-            orderedCategories.push(cat);
-          }
-        });
-        
-        // Add any remaining categories that weren't in our predefined order
-        uniqueCategories.forEach(cat => {
-          if (!orderedCategories.includes(cat)) {
-            orderedCategories.push(cat);
-          }
-        });
-        
-        setCategories(orderedCategories);
+        // Only use the predefined main categories
+        setCategories(mainCategories);
       } catch (error) {
         console.error("Failed to load categories:", error);
       }
