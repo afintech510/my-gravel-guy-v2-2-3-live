@@ -92,4 +92,9 @@
   body {
     @apply bg-background text-foreground transition-colors duration-300;
   }
+
+  /* Custom override for bright green button with black text */
+  [style*="background-color: #39ff14"] {
+    color: #000000 !important;
+  }
 }
