@@ -23,12 +23,19 @@ const Products = () => {
   };
 
   const handleFilter = (category: string, subcategory: string = '') => {
-    setFilters(prev => ({ ...prev, category, subcategory }));
+    // If subcategory is "all", treat it as no specific subcategory
+    const effectiveSubcategory = subcategory === 'all' ? '' : subcategory;
+    
+    setFilters(prev => ({ 
+      ...prev, 
+      category, 
+      subcategory: effectiveSubcategory 
+    }));
     
     let toastMessage = '';
     if (category !== 'all') {
-      if (subcategory) {
-        const formattedSubcategory = subcategory
+      if (effectiveSubcategory) {
+        const formattedSubcategory = effectiveSubcategory
           .split('-')
           .map(word => word.charAt(0).toUpperCase() + word.slice(1))
           .join(' ');
