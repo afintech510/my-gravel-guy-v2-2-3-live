@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Search, Filter, SortAsc, SortDesc, ChevronDown, Package } from 'lucide-react';
@@ -144,7 +143,7 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
               type="single"
               value={category}
               onValueChange={(value) => value && handleCategoryChange(value)}
-              className="grid grid-cols-6 gap-2 w-full"
+              className="grid grid-cols-6 gap-1.5 w-full" // Reduced gap from gap-2 to gap-1.5
             >
               {categories.map((cat) => {
                 // Safe guard for categories that don't have defined icons
@@ -153,11 +152,14 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
                   <ToggleGroupItem 
                     key={cat} 
                     value={cat}
-                    className={`flex-1 py-6 ${cat === category ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
+                    className={`flex-1 py-5 ${cat === category ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
                               data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-md transition-colors duration-200`}
+                    // Reduced padding from py-6 to py-5
                   >
-                    <div className="flex flex-col items-center gap-3">
-                      <IconComponent className="h-7 w-7" />
+                    <div className="flex flex-col items-center gap-2.5"> 
+                      {/* Reduced gap from gap-3 to gap-2.5 */}
+                      <IconComponent className="h-6 w-6" /> 
+                      {/* Reduced icon size from h-7 w-7 to h-6 w-6 */}
                       <span className="capitalize text-sm">{formatName(cat)}</span>
                     </div>
                   </ToggleGroupItem>
@@ -171,12 +173,13 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
                 type="single"
                 value={subcategory}
                 onValueChange={(value) => value && handleSubcategoryChange(value)}
-                className="grid grid-cols-3 sm:grid-cols-6 gap-2 w-full"
+                className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 w-full" // Reduced gap from gap-2 to gap-1.5
               >
                 <ToggleGroupItem 
                   value="all"
-                  className={`flex-1 py-3 text-xs ${subcategory === 'all' ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
+                  className={`flex-1 py-2.5 text-xs ${subcategory === 'all' ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
                             data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-md transition-colors duration-200`}
+                  // Reduced padding from py-3 to py-2.5
                 >
                   <div className="flex flex-col items-center">
                     <span>All {formatName(category)}</span>
@@ -186,8 +189,9 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
                   <ToggleGroupItem 
                     key={sub} 
                     value={sub}
-                    className={`flex-1 py-3 text-xs ${sub === subcategory ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
+                    className={`flex-1 py-2.5 text-xs ${sub === subcategory ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
                               data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-md transition-colors duration-200`}
+                    // Reduced padding from py-3 to py-2.5
                   >
                     <div className="flex flex-col items-center">
                       <span>{formatName(sub)}</span>
