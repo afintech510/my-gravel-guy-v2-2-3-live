@@ -89,6 +89,38 @@ const ProductGrid = ({
         result = result.filter(product => {
           const subcategory = filters.subcategory?.toLowerCase();
           
+          // Enhanced matching for walkway, driveway, drainage subcategories
+          if (['walkway', 'driveway', 'drainage', 'natural', 'crushed', 'round'].includes(subcategory!)) {
+            // Check in uses array for these specific subcategories
+            if (product.uses && Array.isArray(product.uses)) {
+              const hasMatchingUse = product.uses.some(use => 
+                use.toLowerCase().includes(subcategory!)
+              );
+              if (hasMatchingUse) return true;
+            }
+
+            // Check in subtype property - important for crushed, round, natural
+            if (product.subtype && product.subtype.toLowerCase().includes(subcategory!)) {
+              return true;
+            }
+            
+            // For better coverage, also check in categories array
+            if (product.categories && Array.isArray(product.categories)) {
+              return product.categories.some(cat => 
+                cat.toLowerCase().includes(subcategory!)
+              );
+            }
+            
+            // Check description for keywords
+            if (product.description.toLowerCase().includes(subcategory!)) {
+              return true;
+            }
+
+            return false;
+          }
+          
+          // Standard checks for other subcategories
+          
           // Check in usage
           if (product.usage && product.usage.toLowerCase() === subcategory) {
             return true;
