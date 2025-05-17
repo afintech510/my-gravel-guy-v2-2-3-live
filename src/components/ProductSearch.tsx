@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
-import { Search, Filter, SortAsc, SortDesc, Grid3X3, ChevronDown, Package, Cube } from 'lucide-react';
+import { Search, Filter, SortAsc, SortDesc, Grid3X3, ChevronDown, Package } from 'lucide-react';
 import { Leaf, BrickWall, TreeDeciduous, Hammer } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getUniqueCategories } from '@/services/productService';
@@ -42,7 +42,7 @@ const categoryStructure = {
 // Define category icons - making sure each category has a valid icon
 const CategoryIcons = {
   'all': Grid3X3,
-  'gravel': Cube,
+  'gravel': Package,  // Changed from Cube to Package which is available in lucide-react
   'dirt': Leaf,
   'base': Hammer,
   'sand': BrickWall,
