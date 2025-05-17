@@ -25,7 +25,7 @@ const ProductImages = ({ product }: ProductImagesProps) => {
           alt={product?.name} 
           className="w-full h-full object-cover"
           onError={(e) => {
-            console.log(`Image failed to load for ${product?.name}:`, product?.image);
+            console.log(`Image failed to load for ${product?.name}:`, imagePath);
             setImageError(true);
           }}
         />

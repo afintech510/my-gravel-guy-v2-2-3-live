@@ -1,3 +1,4 @@
+
 import { Product, ZipCodeData } from './productTypes';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -15,7 +16,7 @@ const SAMPLE_PRODUCTS: Product[] = [
     name: 'River Rock Gravel',
     description: 'Smooth rounded stones perfect for landscaping and garden paths.',
     price: 45.99,
-    image: '/placeholder.svg',
+    image: '/assets/river-rocks.png',
     category: 'gravel',
     categories: ['gravel', 'landscaping', 'garden'],
     slug: 'river-rock-gravel',
@@ -87,7 +88,7 @@ const SAMPLE_PRODUCTS: Product[] = [
     name: 'Crushed Limestone',
     description: 'Durable crushed limestone for driveways and base material.',
     price: 42.50,
-    image: '/lovable-uploads/1b9997e1-fc18-4b77-9b87-0e303edf5d3d.png',
+    image: '/assets/crushed-stone.png',
     category: 'gravel',
     categories: ['gravel', 'limestone', 'driveway'],
     slug: 'crushed-limestone',
@@ -108,21 +109,22 @@ const SAMPLE_PRODUCTS: Product[] = [
 function processImagePath(imagePath: string | null | undefined, productName: string): string {
   if (!imagePath) return "/placeholder.svg";
   
-  // Special case for River Rock products
+  // Special case for River Rock products - use our local asset
   if (productName.toLowerCase().includes('river rock')) {
     return '/assets/river-rocks.png';
   }
   
-  // Special case for Crushed Stone products
+  // Special case for Crushed Stone products - use our local asset
   if (productName.toLowerCase().includes('crushed stone')) {
     return '/assets/crushed-stone.png';
   }
   
-  // If the path starts with /src/assets/, remove the /src prefix
+  // If the path starts with /src/assets/, replace with /assets/
   if (imagePath.startsWith('/src/assets/')) {
     return imagePath.replace('/src/', '/');
   }
   
+  // Return the image path as is
   return imagePath;
 }
 

@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from 'react-router-dom';
 import { useZipCode } from '../contexts/ZipCodeContext';
-import { getPriceAdjustmentForZipCode } from '../services/productService';
 import { Product } from '../services/productTypes';
 import { ImageOff } from 'lucide-react';
 
@@ -37,7 +36,7 @@ const ProductCard = ({ product }: { product: Product }) => {
                 alt={product.name}
                 className="object-cover w-full h-full rounded-md"
                 onError={(e) => {
-                  console.log(`Image failed to load for ${product.name}:`, product.image);
+                  console.log(`Image failed to load for ${product.name}:`, imagePath);
                   setImageError(true);
                 }}
               />
