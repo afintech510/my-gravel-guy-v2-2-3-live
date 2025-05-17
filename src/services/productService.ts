@@ -111,7 +111,7 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
     console.log('Using cached products data:', productsCache.length, 'products found');
     
     // Update product #57 with the uploaded image if it exists in the cache
-    const product57 = productsCache.find(p => p.id === 57 || p.id === '57');
+    const product57 = productsCache.find(p => String(p.id) === '57');
     if (product57) {
       product57.image = '/lovable-uploads/1b9997e1-fc18-4b77-9b87-0e303edf5d3d.png';
     }
@@ -211,7 +211,7 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
       
       // Use our custom image for product #57
       let productImage = row.image || defaultImage;
-      if (row.id === 57 || row.id === '57' || row.name?.toLowerCase().includes('crushed stone')) {
+      if (String(row.id) === '57' || row.name?.toLowerCase().includes('crushed stone')) {
         productImage = '/lovable-uploads/1b9997e1-fc18-4b77-9b87-0e303edf5d3d.png';
       }
 
