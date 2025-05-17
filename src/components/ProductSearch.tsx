@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Search, Filter, SortAsc, SortDesc, Grid3X3, ChevronDown } from 'lucide-react';
+import { Package, BrickWall, Leaf, TreeDeciduous, Hammer } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getUniqueCategories } from '@/services/productService';
 import {
@@ -36,6 +37,16 @@ const categoryStructure = {
   'dirt': ['top-soil', 'compost', 'fill-dirt', 'loam', 'sandy-loam'],
   'mulch': ['chocolate', 'jet-black', 'red', 'natural-dark', 'wood-chips'],
   'base': ['road-base', 'concrete-rca', 'crusher-base']
+};
+
+// Define category icons similar to MaterialSelector
+const CategoryIcons = {
+  'all': Grid3X3,
+  'gravel': Package,
+  'sand': BrickWall,
+  'dirt': Leaf,
+  'mulch': TreeDeciduous,
+  'base': Hammer,
 };
 
 interface ProductSearchProps {
@@ -122,14 +133,24 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
               type="single"
               value={category}
               onValueChange={(value) => value && handleCategoryChange(value)}
-              className="justify-start"
+              className="grid grid-cols-3 sm:grid-cols-6 gap-2 w-full"
             >
-              {categories.slice(0, 5).map((cat) => (
-                <ToggleGroupItem key={cat} value={cat}>
-                  {formatName(cat)}
-                </ToggleGroupItem>
-              ))}
-              {categories.length > 5 && (
+              {categories.slice(0, 6).map((cat) => {
+                const Icon = CategoryIcons[cat as keyof typeof CategoryIcons];
+                return (
+                  <ToggleGroupItem 
+                    key={cat} 
+                    value={cat}
+                    className="flex-1 py-6 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <Icon className="h-6 w-6" />
+                      <span className="capitalize">{formatName(cat)}</span>
+                    </div>
+                  </ToggleGroupItem>
+                );
+              })}
+              {categories.length > 6 && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
@@ -139,7 +160,7 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
                   <DropdownMenuContent align="end" className="w-56 bg-white">
                     <DropdownMenuLabel>More Categories</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {categories.slice(5).map((cat) => (
+                    {categories.slice(6).map((cat) => (
                       <DropdownMenuRadioItem 
                         key={cat} 
                         value={cat}
@@ -185,12 +206,17 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
               <DropdownMenuSeparator />
               <div className="p-2">
                 <RadioGroup value={category} onValueChange={handleCategoryChange}>
-                  {categories.map((cat) => (
-                    <div className="flex items-center space-x-2 py-1" key={cat}>
-                      <RadioGroupItem value={cat} id={`category-${cat}`} />
-                      <Label htmlFor={`category-${cat}`}>{formatName(cat)}</Label>
-                    </div>
-                  ))}
+                  {categories.map((cat) => {
+                    const Icon = CategoryIcons[cat as keyof typeof CategoryIcons];
+                    return (
+                      <div className="flex items-center space-x-2 py-1" key={cat}>
+                        <RadioGroupItem value={cat} id={`category-${cat}`} />
+                        <Label htmlFor={`category-${cat}`} className="flex items-center gap-2">
+                          <Icon className="h-4 w-4" /> {formatName(cat)}
+                        </Label>
+                      </div>
+                    );
+                  })}
                 </RadioGroup>
               </div>
               
