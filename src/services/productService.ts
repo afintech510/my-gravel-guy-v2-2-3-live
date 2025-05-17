@@ -103,6 +103,25 @@ const SAMPLE_PRODUCTS: Product[] = [
 ];
 
 /**
+ * Process image paths to ensure they work correctly
+ */
+function processImagePath(imagePath: string | null | undefined, productName: string): string {
+  if (!imagePath) return "/placeholder.svg";
+  
+  // Special case for River Rock products
+  if (productName.toLowerCase().includes('river rock')) {
+    return '/assets/river-rocks.png';
+  }
+  
+  // If the path starts with /src/assets/, remove the /src prefix
+  if (imagePath.startsWith('/src/assets/')) {
+    return imagePath.replace('/src/', '/');
+  }
+  
+  return imagePath;
+}
+
+/**
  * Fetch products from Supabase
  */
 export async function getProducts(forceRefresh = false): Promise<Product[]> {
@@ -110,11 +129,14 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
   if (!forceRefresh && productsCache && (Date.now() - lastFetchTimestamp < CACHE_TTL)) {
     console.log('Using cached products data:', productsCache.length, 'products found');
     
-    // Update product #57 with the uploaded image if it exists in the cache
-    const product57 = productsCache.find(p => String(p.id) === '57');
-    if (product57) {
-      product57.image = '/lovable-uploads/646fdaef-3f82-4658-ad98-21de35fad1a1.png';
-    }
+    // Process all product images to ensure paths are correct
+    productsCache.forEach(product => {
+      if (product.name.toLowerCase().includes('river rock')) {
+        product.image = '/assets/river-rocks.png';
+      } else if (product.image && product.image.startsWith('/src/assets/')) {
+        product.image = product.image.replace('/src/', '/');
+      }
+    });
     
     return productsCache;
   }
@@ -209,10 +231,14 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
       
       const defaultImage = "/placeholder.svg";
       
-      // Use our custom image for product #57
-      let productImage = row.image || defaultImage;
-      if (String(row.id) === '57' || row.name?.toLowerCase().includes('crushed stone')) {
-        productImage = '/lovable-uploads/646fdaef-3f82-4658-ad98-21de35fad1a1.png';
+      // Process the image path
+      const productName = row.name || `Product ${index + 1}`;
+      let productImage = processImagePath(row.image, productName);
+      
+      // Special case for River Rock products
+      if (productName.toLowerCase().includes('river rock')) {
+        productImage = '/assets/river-rocks.png';
+        console.log(`Set River Rock image for ${productName} to ${productImage}`);
       }
 
       // Create the product object with appropriate fallbacks for all fields
