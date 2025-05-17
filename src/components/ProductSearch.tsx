@@ -104,11 +104,17 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
     setCategory(value);
     setSubcategory('');
     onFilter(value);
+    console.log(`Category changed to: ${value}, subcategory reset to empty`);
   };
 
   const handleSubcategoryChange = (value: string) => {
     setSubcategory(value);
-    onFilter(category, value);
+    
+    // Critical fix: Always pass both category and subcategory to onFilter
+    // This ensures that when we select a subcategory, we still filter by the main category
+    const effectiveSubcategory = value === 'all' ? '' : value;
+    console.log(`Subcategory changed to: ${value} (effective: ${effectiveSubcategory}), category: ${category}`);
+    onFilter(category, effectiveSubcategory);
   };
 
   // Format name for display
@@ -147,11 +153,11 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
                   <ToggleGroupItem 
                     key={cat} 
                     value={cat}
-                    className={`flex-1 py-4 ${cat === category ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
-                              data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-md`}
+                    className={`flex-1 py-6 ${cat === category ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
+                              data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-md transition-colors duration-200`}
                   >
-                    <div className="flex flex-col items-center gap-2">
-                      <IconComponent className="h-6 w-6" />
+                    <div className="flex flex-col items-center gap-3">
+                      <IconComponent className="h-7 w-7" />
                       <span className="capitalize text-sm">{formatName(cat)}</span>
                     </div>
                   </ToggleGroupItem>
@@ -169,8 +175,8 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
               >
                 <ToggleGroupItem 
                   value="all"
-                  className={`flex-1 py-2 text-xs ${subcategory === 'all' ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
-                            data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-md`}
+                  className={`flex-1 py-3 text-xs ${subcategory === 'all' ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
+                            data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-md transition-colors duration-200`}
                 >
                   <div className="flex flex-col items-center">
                     <span>All {formatName(category)}</span>
@@ -180,8 +186,8 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
                   <ToggleGroupItem 
                     key={sub} 
                     value={sub}
-                    className={`flex-1 py-2 text-xs ${sub === subcategory ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
-                              data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-md`}
+                    className={`flex-1 py-3 text-xs ${sub === subcategory ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
+                              data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-md transition-colors duration-200`}
                   >
                     <div className="flex flex-col items-center">
                       <span>{formatName(sub)}</span>
