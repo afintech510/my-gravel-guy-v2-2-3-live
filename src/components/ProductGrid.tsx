@@ -13,12 +13,13 @@ interface ProductGridProps {
     search: string;
     sort: string;
     category: string;
+    subcategory?: string;
   };
   limit?: number; // New prop to limit number of products
 }
 
 const ProductGrid = ({ 
-  filters = { search: '', sort: 'nameAsc', category: 'all' }, 
+  filters = { search: '', sort: 'nameAsc', category: 'all', subcategory: '' }, 
   limit = 9 // Default to 9 products, matches home page requirement
 }: ProductGridProps) => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -64,22 +65,59 @@ const ProductGrid = ({
       );
     }
 
+    // Filter by main category
     if (filters.category !== 'all') {
       result = result.filter(product => {
         // Check if the product has the category either in the main category or in the categories array
-        if (product.category === filters.category) {
-          return true;
-        }
+        const matchesMainCategory = product.category === filters.category;
         
         // Check in the categories array if available
-        if (product.categories && Array.isArray(product.categories)) {
-          return product.categories.some(cat => 
-            cat.toLowerCase() === filters.category.toLowerCase()
-          );
-        }
+        const matchesCategoryArray = product.categories && Array.isArray(product.categories) && 
+          product.categories.some(cat => cat.toLowerCase() === filters.category.toLowerCase());
         
-        return false;
+        return matchesMainCategory || matchesCategoryArray;
       });
+
+      // Filter by subcategory if present
+      if (filters.subcategory) {
+        result = result.filter(product => {
+          // Check in usage
+          if (product.usage && product.usage === filters.subcategory) {
+            return true;
+          }
+          
+          // Check in subtype
+          if (product.subtype && product.subtype === filters.subcategory) {
+            return true;
+          }
+          
+          // Check in size
+          if (product.size && product.size.toLowerCase().includes(filters.subcategory.toLowerCase())) {
+            return true;
+          }
+          
+          // Check in color
+          if (product.color && product.color === filters.subcategory) {
+            return true;
+          }
+          
+          // Check in uses array if available
+          if (product.uses && Array.isArray(product.uses)) {
+            return product.uses.some(use => 
+              use.toLowerCase().includes(filters.subcategory!.toLowerCase())
+            );
+          }
+          
+          // Check in categories array for more specific matches
+          if (product.categories && Array.isArray(product.categories)) {
+            return product.categories.some(cat => 
+              cat.toLowerCase() === filters.subcategory!.toLowerCase()
+            );
+          }
+          
+          return false;
+        });
+      }
     }
 
     result.sort((a, b) => {
@@ -152,7 +190,7 @@ const ProductGrid = ({
     return (
       <div className="text-center py-8">
         <p className="text-gray-500">No products found matching your criteria.</p>
-        {filters.category !== 'all' || filters.search !== '' ? (
+        {(filters.category !== 'all' || filters.search !== '' || filters.subcategory) ? (
           <p className="text-sm mt-2">Try changing your filters or search terms.</p>
         ) : null}
       </div>

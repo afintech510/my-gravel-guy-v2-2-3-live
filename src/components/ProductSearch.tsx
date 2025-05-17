@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
-import { Search, Filter, SortAsc, SortDesc, Grid3X3 } from 'lucide-react';
+import { Search, Filter, SortAsc, SortDesc, Grid3X3, ChevronDown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getUniqueCategories } from '@/services/productService';
 import {
@@ -18,17 +18,38 @@ import {
   ToggleGroupItem,
 } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+
+// Define the category and subcategory structure
+const categoryStructure = {
+  'all': [],
+  'gravel': ['walkway', 'driveway', 'drainage', 'natural', 'crushed', 'round'],
+  'sand': ['concrete', 'mason', 'playground', 'beach', 'washed'],
+  'dirt': ['top-soil', 'compost', 'fill-dirt', 'loam', 'sandy-loam'],
+  'mulch': ['chocolate', 'jet-black', 'red', 'natural-dark', 'wood-chips'],
+  'base': ['road-base', 'concrete-rca', 'crusher-base']
+};
 
 interface ProductSearchProps {
   onSearch: (term: string) => void;
   onSort: (option: string) => void;
-  onFilter: (category: string) => void;
+  onFilter: (category: string, subcategory?: string) => void;
 }
 
 const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
   const [sortOrder, setSortOrder] = useState('nameAsc');
   const [category, setCategory] = useState('all');
-  const [categories, setCategories] = useState<string[]>(['all', 'gravel', 'sand', 'dirt', 'mulch']);
+  const [subcategory, setSubcategory] = useState('');
+  const [categories, setCategories] = useState<string[]>(['all', 'gravel', 'sand', 'dirt', 'mulch', 'base']);
+  const [subcategories, setSubcategories] = useState<string[]>([]);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -46,6 +67,18 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
     loadCategories();
   }, []);
 
+  // Update subcategories when category changes
+  useEffect(() => {
+    if (category === 'all') {
+      setSubcategories([]);
+      setSubcategory('');
+    } else {
+      const availableSubcategories = categoryStructure[category as keyof typeof categoryStructure] || [];
+      setSubcategories(availableSubcategories);
+      setSubcategory(''); // Reset subcategory when category changes
+    }
+  }, [category]);
+
   const handleSortChange = (value: string) => {
     setSortOrder(value);
     onSort(value);
@@ -53,13 +86,19 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
 
   const handleCategoryChange = (value: string) => {
     setCategory(value);
+    setSubcategory('');
     onFilter(value);
   };
 
-  // Format category name for display
-  const formatCategoryName = (category: string) => {
-    if (category === 'all') return 'All Products';
-    return category.charAt(0).toUpperCase() + category.slice(1);
+  const handleSubcategoryChange = (value: string) => {
+    setSubcategory(value);
+    onFilter(category, value);
+  };
+
+  // Format name for display
+  const formatName = (name: string) => {
+    if (name === 'all') return 'All Products';
+    return name.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   };
 
   return (
@@ -78,57 +117,103 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
 
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
         {!isMobile ? (
-          <ToggleGroup
-            type="single"
-            value={category}
-            onValueChange={(value) => value && handleCategoryChange(value)}
-            className="justify-start"
-          >
-            {categories.slice(0, 5).map((cat) => (
-              <ToggleGroupItem key={cat} value={cat}>
-                {formatCategoryName(cat)}
-              </ToggleGroupItem>
-            ))}
-            {categories.length > 5 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <Grid3X3 className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>More Categories</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {categories.slice(5).map((cat) => (
-                    <DropdownMenuRadioItem 
-                      key={cat} 
-                      value={cat}
-                      onClick={() => handleCategoryChange(cat)}
-                    >
-                      {formatCategoryName(cat)}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+          <div className="flex flex-col sm:flex-row gap-4 w-full">
+            <ToggleGroup
+              type="single"
+              value={category}
+              onValueChange={(value) => value && handleCategoryChange(value)}
+              className="justify-start"
+            >
+              {categories.slice(0, 5).map((cat) => (
+                <ToggleGroupItem key={cat} value={cat}>
+                  {formatName(cat)}
+                </ToggleGroupItem>
+              ))}
+              {categories.length > 5 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <Grid3X3 className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 bg-white">
+                    <DropdownMenuLabel>More Categories</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {categories.slice(5).map((cat) => (
+                      <DropdownMenuRadioItem 
+                        key={cat} 
+                        value={cat}
+                        onClick={() => handleCategoryChange(cat)}
+                      >
+                        {formatName(cat)}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </ToggleGroup>
+
+            {/* Subcategory selector - only shown when a main category is selected */}
+            {category !== 'all' && subcategories.length > 0 && (
+              <div className="flex-grow">
+                <Select value={subcategory} onValueChange={handleSubcategoryChange}>
+                  <SelectTrigger className="w-full sm:w-[200px]">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="">All {formatName(category)}</SelectItem>
+                    {subcategories.map((sub) => (
+                      <SelectItem key={sub} value={sub}>
+                        {formatName(sub)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             )}
-          </ToggleGroup>
+          </div>
         ) : (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
+              <Button variant="outline" size="icon" className="flex items-center">
+                <Filter className="h-4 w-4 mr-2" />
+                <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="start" className="w-64 bg-white">
               <DropdownMenuLabel>Category</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuRadioGroup value={category} onValueChange={handleCategoryChange}>
-                {categories.map((cat) => (
-                  <DropdownMenuRadioItem key={cat} value={cat}>
-                    {formatCategoryName(cat)}
-                  </DropdownMenuRadioItem>
-                ))}
-              </DropdownMenuRadioGroup>
+              <div className="p-2">
+                <RadioGroup value={category} onValueChange={handleCategoryChange}>
+                  {categories.map((cat) => (
+                    <div className="flex items-center space-x-2 py-1" key={cat}>
+                      <RadioGroupItem value={cat} id={`category-${cat}`} />
+                      <Label htmlFor={`category-${cat}`}>{formatName(cat)}</Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+              
+              {category !== 'all' && subcategories.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel>Type</DropdownMenuLabel>
+                  <div className="p-2">
+                    <RadioGroup value={subcategory} onValueChange={handleSubcategoryChange}>
+                      <div className="flex items-center space-x-2 py-1">
+                        <RadioGroupItem value="" id="subcategory-all" />
+                        <Label htmlFor="subcategory-all">All {formatName(category)}</Label>
+                      </div>
+                      {subcategories.map((sub) => (
+                        <div className="flex items-center space-x-2 py-1" key={sub}>
+                          <RadioGroupItem value={sub} id={`subcategory-${sub}`} />
+                          <Label htmlFor={`subcategory-${sub}`}>{formatName(sub)}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         )}
@@ -143,7 +228,7 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuContent align="end" className="w-48 bg-white">
             <DropdownMenuLabel>Sort By</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuRadioGroup value={sortOrder} onValueChange={handleSortChange}>
