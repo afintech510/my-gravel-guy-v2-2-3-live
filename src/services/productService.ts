@@ -87,7 +87,7 @@ const SAMPLE_PRODUCTS: Product[] = [
     name: 'Crushed Limestone',
     description: 'Durable crushed limestone for driveways and base material.',
     price: 42.50,
-    image: '/placeholder.svg',
+    image: '/lovable-uploads/1b9997e1-fc18-4b77-9b87-0e303edf5d3d.png',
     category: 'gravel',
     categories: ['gravel', 'limestone', 'driveway'],
     slug: 'crushed-limestone',
@@ -109,6 +109,13 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
   // Check cache first, unless force refresh is requested
   if (!forceRefresh && productsCache && (Date.now() - lastFetchTimestamp < CACHE_TTL)) {
     console.log('Using cached products data:', productsCache.length, 'products found');
+    
+    // Update product #57 with the uploaded image if it exists in the cache
+    const product57 = productsCache.find(p => p.id === 57 || p.id === '57');
+    if (product57) {
+      product57.image = '/lovable-uploads/1b9997e1-fc18-4b77-9b87-0e303edf5d3d.png';
+    }
+    
     return productsCache;
   }
 
@@ -201,6 +208,12 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
       const slug = row.name ? row.name.toLowerCase().replace(/\s+/g, '-') : `product-${index + 1}`;
       
       const defaultImage = "/placeholder.svg";
+      
+      // Use our custom image for product #57
+      let productImage = row.image || defaultImage;
+      if (row.id === 57 || row.id === '57' || row.name?.toLowerCase().includes('crushed stone')) {
+        productImage = '/lovable-uploads/1b9997e1-fc18-4b77-9b87-0e303edf5d3d.png';
+      }
 
       // Create the product object with appropriate fallbacks for all fields
       return {
@@ -208,7 +221,7 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
         name: row.name || `Product ${index + 1}`,
         description: row.description || "",
         price: parseFloat(String(row.price)) || 0,
-        image: row.image || defaultImage,
+        image: productImage,
         category: mainCategory,
         categories: categories,
         slug: slug,
