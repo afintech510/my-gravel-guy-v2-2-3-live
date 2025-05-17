@@ -87,38 +87,40 @@ const ProductGrid = ({
         const beforeCount = result.length;
         
         result = result.filter(product => {
+          const subcategory = filters.subcategory?.toLowerCase();
+          
           // Check in usage
-          if (product.usage && product.usage.toLowerCase() === filters.subcategory!.toLowerCase()) {
+          if (product.usage && product.usage.toLowerCase() === subcategory) {
             return true;
           }
           
           // Check in subtype
-          if (product.subtype && product.subtype.toLowerCase() === filters.subcategory!.toLowerCase()) {
+          if (product.subtype && product.subtype.toLowerCase() === subcategory) {
             return true;
           }
           
           // Check in size
-          if (product.size && product.size.toLowerCase().includes(filters.subcategory!.toLowerCase())) {
+          if (product.size && product.size.toLowerCase().includes(subcategory!)) {
             return true;
           }
           
           // Check in color
-          if (product.color && product.color.toLowerCase() === filters.subcategory!.toLowerCase()) {
+          if (product.color && product.color.toLowerCase() === subcategory) {
             return true;
           }
           
           // Check in uses array if available
           if (product.uses && Array.isArray(product.uses)) {
             return product.uses.some(use => 
-              use.toLowerCase().includes(filters.subcategory!.toLowerCase())
+              use.toLowerCase().includes(subcategory!)
             );
           }
           
           // Check in categories array for more specific matches
           if (product.categories && Array.isArray(product.categories)) {
             return product.categories.some(cat => 
-              cat.toLowerCase() === filters.subcategory!.toLowerCase() ||
-              cat.toLowerCase().includes(filters.subcategory!.toLowerCase())
+              cat.toLowerCase() === subcategory ||
+              cat.toLowerCase().includes(subcategory!)
             );
           }
           
