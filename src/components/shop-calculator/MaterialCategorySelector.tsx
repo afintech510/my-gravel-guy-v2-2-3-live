@@ -31,11 +31,11 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
   productImages
 }) => {
   const categories = [
-    { id: 'gravel' as MaterialCategory, name: 'Gravel', icon: <Truck className="h-5 w-5" /> },
-    { id: 'sand' as MaterialCategory, name: 'Sand', icon: <Map className="h-5 w-5" /> },
-    { id: 'dirt' as MaterialCategory, name: 'Dirt', icon: <Shovel className="h-5 w-5" /> },
-    { id: 'mulch' as MaterialCategory, name: 'Mulch', icon: <Trees className="h-5 w-5" /> },
-    { id: 'base' as MaterialCategory, name: 'Base', icon: <Building className="h-5 w-5" /> }
+    { id: 'gravel' as MaterialCategory, name: 'Gravel', icon: <Truck className="h-6 w-6" /> },
+    { id: 'sand' as MaterialCategory, name: 'Sand', icon: <Map className="h-6 w-6" /> },
+    { id: 'dirt' as MaterialCategory, name: 'Dirt', icon: <Shovel className="h-6 w-6" /> },
+    { id: 'mulch' as MaterialCategory, name: 'Mulch', icon: <Trees className="h-6 w-6" /> },
+    { id: 'base' as MaterialCategory, name: 'Base', icon: <Building className="h-6 w-6" /> }
   ];
 
   // Define subcategories for each material category
@@ -44,7 +44,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
     dirt: ['fill-dirt', 'top-soil', 'compost', 'loam', 'sandy-loam'],
     mulch: ['natural', 'black', 'chocolate-brown', 'red', 'request'],
     base: ['57-crushed-stone', 'crusher-run', 'road-base', 'rca-crushed-concrete', 'drainage-rock'],
-    gravel: ['pea-gravel', 'river-rock', 'crushed-stone', 'decorative-gravel', 'drainage-gravel']
+    gravel: ['driveway', 'walkway', 'landscape', 'natural', 'construction']
   };
 
   // Categories that should show size selection
@@ -74,6 +74,11 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
       'road-base': 'Road Base',
       'rca-crushed-concrete': 'RCA / Crushed Concrete',
       'drainage-rock': 'Drainage Rock',
+      'driveway': 'Driveway',
+      'walkway': 'Walkway',
+      'landscape': 'Landscape',
+      'natural': 'Natural',
+      'construction': 'Construction',
       'pea-gravel': 'Pea Gravel',
       'river-rock': 'River Rock',
       'crushed-stone': 'Crushed Stone',
@@ -129,7 +134,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
               className="flex flex-col items-center justify-center p-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
               {category.icon}
-              <span className="mt-1 text-xs font-medium">{category.name}</span>
+              <span className="mt-1 text-sm font-medium">{category.name}</span>
             </TabsTrigger>
           ))}
         </TabsList>
@@ -140,12 +145,12 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
               <h3 className="font-medium text-gray-700">Type</h3>
               
               {/* Subcategory Selection */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-5 gap-2">
                 {subcategories[category.id].map(subcategory => (
                   <button
                     key={subcategory}
                     onClick={() => setSelectedSubcategory(subcategory)}
-                    className={`p-3 rounded-lg text-sm transition-colors ${
+                    className={`p-2 rounded-lg text-sm transition-colors ${
                       selectedSubcategory === subcategory && selectedCategory === category.id
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-gray-100 hover:bg-gray-200'
