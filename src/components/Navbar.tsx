@@ -35,7 +35,7 @@ const Navbar = () => {
             <img 
               src="/lovable-uploads/a6be5117-8980-4436-b8d3-4762ecced179.png" 
               alt="My Gravel Guy Logo" 
-              className="h-10 w-auto" 
+              className="h-11 w-auto" // Increased from h-10 to h-11 (10% increase)
             />
           </Link>
 
@@ -51,7 +51,7 @@ const Navbar = () => {
               <Link
                 key={link.href}
                 to={link.href}
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium inline-flex items-center"
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-[1.1rem] font-medium inline-flex items-center" // Changed from text-sm to text-[1.1rem] (10% increase)
               >
                 {link.icon}
                 {link.label}
@@ -107,7 +107,7 @@ const Navbar = () => {
                     <Link
                       key={link.href}
                       to={link.href}
-                      className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium inline-flex items-center"
+                      className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-[1.1rem] font-medium inline-flex items-center" // Changed from text-sm to text-[1.1rem] (10% increase) for mobile menu too
                       onClick={handleMenuClick}
                     >
                       {link.icon}
