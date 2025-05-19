@@ -47,7 +47,7 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
   };
 
   return (
-    <div className="border-2 border-green-500 rounded-lg p-4">
+    <div className="border-2 border-primary rounded-lg p-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-medium mb-2">Delivery ZIP Code</label>
@@ -60,7 +60,7 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
               />
               {zipCodeValid && (
                 <div className="absolute right-10 top-1/2 -translate-y-1/2">
-                  <Check className="h-5 w-5 text-green-500" />
+                  <Check className="h-5 w-5 text-primary" />
                 </div>
               )}
             </div>
@@ -113,8 +113,8 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
               <p className="text-2xl font-bold line-through text-gray-400">${estimatedCost.toFixed(2)}</p>
             </div>
             <div>
-              <p className="text-sm text-green-600">Your Price</p>
-              <p className="text-3xl font-bold text-green-600">${discountedCost.toFixed(2)}</p>
+              <p className="text-sm text-primary">Your Price</p>
+              <p className="text-3xl font-bold text-primary">${discountedCost.toFixed(2)}</p>
             </div>
           </div>
         </div>
@@ -128,7 +128,7 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
           >
             Add to Cart
           </Button>
-          <p className="text-xs font-semibold text-green-600 mt-1">FREE SHIPPING!!</p>
+          <p className="text-xs font-semibold text-primary mt-1">FREE SHIPPING!!</p>
         </div>
       </div>
     </div>

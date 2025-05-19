@@ -126,7 +126,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
             <TabsTrigger 
               key={category.id} 
               value={category.id}
-              className="flex flex-col items-center justify-center p-3 data-[state=active]:bg-green-500 data-[state=active]:text-white"
+              className="flex flex-col items-center justify-center p-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
               {category.icon}
               <span className="mt-1 text-xs font-medium">{category.name}</span>
@@ -147,7 +147,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
                     onClick={() => setSelectedSubcategory(subcategory)}
                     className={`p-3 rounded-lg text-sm transition-colors ${
                       selectedSubcategory === subcategory && selectedCategory === category.id
-                        ? 'bg-green-500 text-white'
+                        ? 'bg-primary text-primary-foreground'
                         : 'bg-gray-100 hover:bg-gray-200'
                     }`}
                   >
