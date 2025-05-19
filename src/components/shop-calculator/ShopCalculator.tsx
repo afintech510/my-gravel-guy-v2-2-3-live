@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -67,9 +66,9 @@ const ShopCalculator = () => {
         setProducts(fetchedProducts);
         if (fetchedProducts.length > 0) {
           setSelectedProduct(fetchedProducts[0].id.toString());
-          // Set initial product images
-          if (fetchedProducts[0].images) {
-            setProductImages(fetchedProducts[0].images);
+          // Set initial product images - Use single image and convert to array if needed
+          if (fetchedProducts[0].image) {
+            setProductImages([fetchedProducts[0].image]);
           }
         }
       } catch (error) {
@@ -89,9 +88,9 @@ const ShopCalculator = () => {
     
     if (filteredProducts.length > 0) {
       setSelectedProduct(filteredProducts[0].id.toString());
-      // Update product images
-      if (filteredProducts[0].images) {
-        setProductImages(filteredProducts[0].images);
+      // Update product images - Use single image and convert to array if needed
+      if (filteredProducts[0].image) {
+        setProductImages([filteredProducts[0].image]);
       }
     }
   }, [selectedCategory, selectedApplication, products]);

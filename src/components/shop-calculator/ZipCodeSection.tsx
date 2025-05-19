@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Minus, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { ZipCodeSearch } from '@/components/zip-code/ZipCodeSearch';
+import ZipCodeSearch from '@/components/zip-code/ZipCodeSearch';
 
 type ZipCodeSectionProps = {
   zipCode: string | null;

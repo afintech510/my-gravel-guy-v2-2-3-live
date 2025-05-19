@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Truck, Road, Shovel, Tree, Building } from 'lucide-react';
+import { Truck, Map, Shovel, Trees, Building } from 'lucide-react';
 import { MaterialCategory, ApplicationType } from './ShopCalculator';
 
 type MaterialCategorySelectorProps = {
@@ -18,9 +18,9 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
 }) => {
   const categories = [
     { id: 'gravel' as MaterialCategory, name: 'Gravel', icon: <Truck className="h-5 w-5" /> },
-    { id: 'sand' as MaterialCategory, name: 'Sand', icon: <Road className="h-5 w-5" /> },
+    { id: 'sand' as MaterialCategory, name: 'Sand', icon: <Map className="h-5 w-5" /> },
     { id: 'dirt' as MaterialCategory, name: 'Dirt', icon: <Shovel className="h-5 w-5" /> },
-    { id: 'mulch' as MaterialCategory, name: 'Mulch', icon: <Tree className="h-5 w-5" /> },
+    { id: 'mulch' as MaterialCategory, name: 'Mulch', icon: <Trees className="h-5 w-5" /> },
     { id: 'base' as MaterialCategory, name: 'Base', icon: <Building className="h-5 w-5" /> }
   ];
 

@@ -8,7 +8,7 @@ type ContactFormProps = {
   form: UseFormReturn<{
     name: string;
     phone: string;
-  }>;
+  }, any, undefined>;
 };
 
 const ContactForm: React.FC<ContactFormProps> = ({ form }) => {

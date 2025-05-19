@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -40,8 +39,7 @@ import Reviews from "./pages/Reviews";
 
 const queryClient = new QueryClient();
 
-const App = () => {
-  console.log("App rendering with routes");
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ZipCodeProvider>
@@ -69,7 +67,7 @@ const App = () => {
                     <Route path="/cart" element={<Cart />} />
                     <Route path="/quiz" element={<Quiz />} />
                     <Route path="/calculator" element={<Calculator />} />
-                    <Route path="/calculator-shop" element={<CalculatorShop />} /> {/* Added new route */}
+                    <Route path="/calculator-shop" element={<CalculatorShop />} />
                     <Route path="/payment-success" element={<PaymentSuccess />} />
                     <Route path="/privacy" element={<PrivacyPolicy />} />
                     <Route path="/terms" element={<TermsOfService />} />
@@ -93,6 +91,6 @@ const App = () => {
       </ZipCodeProvider>
     </QueryClientProvider>
   );
-};
+}
 
 export default App;
