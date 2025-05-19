@@ -23,6 +23,19 @@ export type MaterialCategory = 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base';
 export type ApplicationType = 'driveway' | 'walkway' | 'landscape' | 'natural' | 'construction';
 export type MaterialSize = '3/8"' | '3/4"' | '1"' | '1½"' | '2-3"';
 
+// Define material subcategories
+export type MaterialSubcategory = 
+  // Sand subcategories
+  'washed-sand' | 'mason-sand' | 'playground-sand' | 'pool-sand' | 'beach-sand' |
+  // Dirt subcategories
+  'fill-dirt' | 'top-soil' | 'compost' | 'loam' | 'sandy-loam' |
+  // Mulch subcategories
+  'natural' | 'black' | 'chocolate-brown' | 'red' | 'request' |
+  // Base subcategories
+  '57-crushed-stone' | 'crusher-run' | 'road-base' | 'rca-crushed-concrete' | 'drainage-rock' |
+  // Gravel subcategories
+  'pea-gravel' | 'river-rock' | 'crushed-stone' | 'decorative-gravel' | 'drainage-gravel';
+
 // Form schema for contact info
 const contactSchema = z.object({
   name: z.string().min(2, 'Name required'),
@@ -32,6 +45,7 @@ const contactSchema = z.object({
 const ShopCalculator = () => {
   // Material selection state
   const [selectedCategory, setSelectedCategory] = useState<MaterialCategory>('gravel');
+  const [selectedSubcategory, setSelectedSubcategory] = useState<MaterialSubcategory>('pea-gravel');
   const [selectedApplication, setSelectedApplication] = useState<ApplicationType>('driveway');
   const [selectedSize, setSelectedSize] = useState<MaterialSize>('3/4"');
   
@@ -78,12 +92,13 @@ const ShopCalculator = () => {
     loadProducts();
   }, []);
 
-  // Update product selection when category or application changes
+  // Update product selection when category or subcategory changes
   useEffect(() => {
-    // In a real app, you would filter products by category and application
+    // In a real app, you would filter products by category and subcategory
     const filteredProducts = products.filter(p => 
-      p.category?.toLowerCase() === selectedCategory || 
-      p.name.toLowerCase().includes(selectedCategory)
+      (p.category?.toLowerCase() === selectedCategory) || 
+      (p.subtype === selectedSubcategory) ||
+      (p.name.toLowerCase().includes(selectedCategory))
     );
     
     if (filteredProducts.length > 0) {
@@ -93,7 +108,7 @@ const ShopCalculator = () => {
         setProductImages([filteredProducts[0].image]);
       }
     }
-  }, [selectedCategory, selectedApplication, products]);
+  }, [selectedCategory, selectedSubcategory, products]);
 
   // Reset manual tons when areas or depth change to recalculate based on dimensions
   useEffect(() => {
@@ -184,12 +199,12 @@ const ShopCalculator = () => {
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
-      {/* Material Category and Application Selectors */}
+      {/* Material Category and Subcategory Selectors */}
       <MaterialCategorySelector 
         selectedCategory={selectedCategory}
         setSelectedCategory={setSelectedCategory}
-        selectedApplication={selectedApplication}
-        setSelectedApplication={setSelectedApplication}
+        selectedSubcategory={selectedSubcategory}
+        setSelectedSubcategory={setSelectedSubcategory}
       />
 
       {/* Size Selection */}
