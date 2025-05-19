@@ -14,12 +14,12 @@ interface ProductGridProps {
     category: string;
     subcategory?: string;
   };
-  limit?: number; // New prop to limit number of products
+  limit?: number; // Prop to limit number of products
 }
 
 const ProductGrid = ({ 
   filters = { search: '', sort: 'nameAsc', category: 'all', subcategory: '' }, 
-  limit = 9 // Default to 9 products, matches home page requirement
+  limit = 100 // Changed default from 9 to 100 products
 }: ProductGridProps) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);

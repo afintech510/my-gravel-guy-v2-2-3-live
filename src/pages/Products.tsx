@@ -67,7 +67,7 @@ const Products = () => {
           />
         </div>
         
-        <ProductGrid filters={filters} />
+        <ProductGrid filters={filters} limit={100} />
         
         {/* Trust Banner Section */}
         <div className="mt-16 mb-12">
