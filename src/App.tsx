@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -24,6 +25,7 @@ import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Quiz from "./pages/Quiz";
 import Calculator from "./pages/Calculator";
+import CalculatorShop from "./pages/CalculatorShop"; // Added new import
 import FAQ from "./pages/FAQ";
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import TermsOfService from "./pages/legal/TermsOfService";
@@ -67,6 +69,7 @@ const App = () => {
                     <Route path="/cart" element={<Cart />} />
                     <Route path="/quiz" element={<Quiz />} />
                     <Route path="/calculator" element={<Calculator />} />
+                    <Route path="/calculator-shop" element={<CalculatorShop />} /> {/* Added new route */}
                     <Route path="/payment-success" element={<PaymentSuccess />} />
                     <Route path="/privacy" element={<PrivacyPolicy />} />
                     <Route path="/terms" element={<TermsOfService />} />
