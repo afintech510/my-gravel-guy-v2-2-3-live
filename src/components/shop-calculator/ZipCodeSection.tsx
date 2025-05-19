@@ -34,12 +34,6 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
     }
   };
 
-  const handleCheckZipCode = async () => {
-    if (inputZip && inputZip.length >= 5) {
-      await validateZipCodeAndGetPrice(inputZip);
-    }
-  };
-
   const adjustTons = (amount: number) => {
     const currentTons = Math.floor(totalTons);
     const newTons = Math.max(1, currentTons + amount);
@@ -59,18 +53,11 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
                 variant="minimal"
               />
               {zipCodeValid && (
-                <div className="absolute right-10 top-1/2 -translate-y-1/2">
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
                   <Check className="h-5 w-5 text-primary" />
                 </div>
               )}
             </div>
-            <Button 
-              onClick={handleCheckZipCode}
-              disabled={!inputZip || inputZip.length < 5}
-              className="whitespace-nowrap"
-            >
-              Check
-            </Button>
           </div>
         </div>
 
@@ -109,12 +96,8 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
         <div className="mb-4 md:mb-0">
           <div className="flex items-end gap-2">
             <div>
-              <p className="text-sm text-gray-500">Original Price</p>
-              <p className="text-2xl font-bold line-through text-gray-400">${estimatedCost.toFixed(2)}</p>
-            </div>
-            <div>
-              <p className="text-sm text-primary">Your Price</p>
-              <p className="text-3xl font-bold text-primary">${discountedCost.toFixed(2)}</p>
+              <p className="text-sm text-primary">Sale Price</p>
+              <p className="text-3xl font-bold text-primary">${estimatedCost.toFixed(2)}</p>
             </div>
           </div>
         </div>
