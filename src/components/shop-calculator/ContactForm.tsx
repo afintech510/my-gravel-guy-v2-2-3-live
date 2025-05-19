@@ -88,7 +88,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ form, onApplyDiscount }) => {
             onClick={onApplyDiscount}
             type="button"
             className="w-full"
-            disabled={!form.formState.isValid}
+            disabled={!form.formState.isValid || !form.getValues().consent}
           >
             Get $50 OFF Discount
           </Button>
