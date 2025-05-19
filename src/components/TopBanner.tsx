@@ -20,8 +20,10 @@ const TopBanner = ({ className }: TopBannerProps) => {
   const { zipCodeData } = useZipCode();
   const [dialogOpen, setDialogOpen] = useState(false);
   
-  // Use the city name from zipCodeData if available
-  const cityName = zipCodeData?.city || 'Your Area';
+  // Use the city name and state from zipCodeData if available
+  const locationText = zipCodeData ? 
+    `${zipCodeData.city}, ${zipCodeData.state_id}` : 
+    'Your Area';
   
   // Callback to close the dialog when a ZIP code is selected
   const handleZipCodeSelected = () => {
@@ -39,7 +41,7 @@ const TopBanner = ({ className }: TopBannerProps) => {
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <button className="inline-flex items-center underline hover:text-white transition-colors">
-                {cityName}
+                {locationText}
                 <MapPin className="h-3 w-3 ml-0.5" />
               </button>
             </DialogTrigger>
