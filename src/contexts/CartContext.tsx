@@ -29,6 +29,13 @@ export interface CartItem extends Product {
   basePrice?: number; // Original product price before ZIP code adjustments
   couponApplied?: boolean; // Track if a coupon has been applied
   couponAmount?: number; // Amount of the coupon discount
+  
+  // Additional material properties
+  materialCategory?: string;
+  materialSubcategory?: string;
+  materialSize?: string;
+  applicationType?: string;
+  depth?: number;
 }
 
 interface CartContextType {
@@ -39,7 +46,13 @@ interface CartContextType {
     deliveryDate?: Date,
     contactInfo?: ContactInfo,
     couponApplied?: boolean,
-    couponAmount?: number
+    couponAmount?: number,
+    materialCategory?: string,
+    materialSubcategory?: string,
+    materialSize?: string,
+    applicationType?: string,
+    depth?: number,
+    deliveryAddress?: DeliveryAddress
   }) => void;
   removeFromCart: (productId: string | number) => void;
   updateDeliveryDetails: (
@@ -64,7 +77,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     deliveryDate?: Date,
     contactInfo?: ContactInfo,
     couponApplied?: boolean,
-    couponAmount?: number
+    couponAmount?: number,
+    materialCategory?: string,
+    materialSubcategory?: string,
+    materialSize?: string,
+    applicationType?: string,
+    depth?: number,
+    deliveryAddress?: DeliveryAddress
   }) => {
     const tons = product.tons || 3; // Default to 3 tons if not specified
     // Use the provided yards or calculate yards based on tonYardRatio if available
@@ -78,7 +97,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         yards,
         basePrice: product.price, // Store original price for potential adjustments later
         couponApplied: product.couponApplied || false,
-        couponAmount: product.couponAmount || 0
+        couponAmount: product.couponAmount || 0,
+        materialCategory: product.materialCategory,
+        materialSubcategory: product.materialSubcategory,
+        materialSize: product.materialSize,
+        applicationType: product.applicationType,
+        depth: product.depth,
+        deliveryAddress: product.deliveryAddress
       }
     ]);
   }, []);
