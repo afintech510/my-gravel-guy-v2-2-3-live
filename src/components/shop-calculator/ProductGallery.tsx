@@ -19,35 +19,39 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ images, productName }) 
   ].map(url => `${url}?w=600&h=400&fit=crop&auto=format`);
   
   const displayImages = images && images.length > 0 ? images : fallbackImages;
+  // Limit to maximum 3 images
+  const limitedImages = displayImages.slice(0, 3);
 
   return (
-    <div className="space-y-4">
-      <div className="relative aspect-video overflow-hidden rounded-lg border border-gray-200">
+    <div className="space-y-3">
+      <div className="relative overflow-hidden rounded-lg border border-gray-200" style={{ maxHeight: '300px' }}>
         <img
-          src={displayImages[selectedImage]}
+          src={limitedImages[selectedImage]}
           alt={`${productName} - View ${selectedImage + 1}`}
-          className="object-cover w-full h-full"
+          className="object-cover w-full h-full max-h-[300px]"
         />
       </div>
       
-      <div className="flex space-x-2 overflow-auto pb-2">
-        {displayImages.map((image, index) => (
-          <div 
-            key={index}
-            onClick={() => setSelectedImage(index)}
-            className={cn(
-              "cursor-pointer rounded-md overflow-hidden border-2 h-16 w-16 flex-shrink-0 transition-all",
-              selectedImage === index ? "border-green-500" : "border-transparent opacity-70 hover:opacity-100"
-            )}
-          >
-            <img 
-              src={image} 
-              alt={`${productName} thumbnail ${index + 1}`} 
-              className="object-cover w-full h-full"
-            />
-          </div>
-        ))}
-      </div>
+      {limitedImages.length > 1 && (
+        <div className="flex space-x-2 overflow-auto pb-1">
+          {limitedImages.map((image, index) => (
+            <div 
+              key={index}
+              onClick={() => setSelectedImage(index)}
+              className={cn(
+                "cursor-pointer rounded-md overflow-hidden border-2 h-12 w-12 flex-shrink-0 transition-all",
+                selectedImage === index ? "border-primary" : "border-transparent opacity-70 hover:opacity-100"
+              )}
+            >
+              <img 
+                src={image} 
+                alt={`${productName} thumbnail ${index + 1}`} 
+                className="object-cover w-full h-full"
+              />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

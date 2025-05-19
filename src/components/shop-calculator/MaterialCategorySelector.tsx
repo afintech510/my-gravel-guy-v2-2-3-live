@@ -121,12 +121,12 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
         onValueChange={handleTabChange}
         className="w-full"
       >
-        <TabsList className="grid grid-cols-5 mb-6">
+        <TabsList className="grid grid-cols-5 mb-6 bg-gray-100 p-1 rounded-lg">
           {categories.map(category => (
             <TabsTrigger 
               key={category.id} 
               value={category.id}
-              className="flex flex-col items-center justify-center p-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="flex flex-col items-center justify-center p-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
               {category.icon}
               <span className="mt-1 text-xs font-medium">{category.name}</span>
@@ -167,20 +167,24 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
                 </div>
               )}
               
-              {/* Description */}
-              <div className="mt-4 p-3 bg-gray-50 rounded-md">
-                <p className="text-sm text-gray-600">
-                  {getDescription(category.id, selectedCategory === category.id ? selectedSubcategory : subcategories[category.id][0])}
-                </p>
-              </div>
-              
-              {/* Product Gallery */}
-              <div className="mt-6">
-                <h3 className="font-medium text-gray-700 mb-2">Product Preview</h3>
-                <ProductGallery 
-                  images={productImages} 
-                  productName={getSubcategoryDisplayName(selectedSubcategory)} 
-                />
+              {/* Description and Product Gallery in flex layout */}
+              <div className="flex flex-col md:flex-row gap-6 mt-6">
+                {/* Description */}
+                <div className="flex-1 p-4 bg-gray-50 rounded-md">
+                  <h3 className="font-medium text-gray-700 mb-2">Description</h3>
+                  <p className="text-sm text-gray-600">
+                    {getDescription(category.id, selectedCategory === category.id ? selectedSubcategory : subcategories[category.id][0])}
+                  </p>
+                </div>
+                
+                {/* Product Gallery */}
+                <div className="md:w-1/3 md:max-w-[300px]">
+                  <h3 className="font-medium text-gray-700 mb-2">Product Preview</h3>
+                  <ProductGallery 
+                    images={productImages.slice(0, 3)} 
+                    productName={getSubcategoryDisplayName(selectedSubcategory)} 
+                  />
+                </div>
               </div>
             </div>
           </TabsContent>
