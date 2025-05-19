@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -60,6 +61,7 @@ const ShopCalculator = () => {
   const [zipCodeValid, setZipCodeValid] = useState<boolean>(false);
   const [productImages, setProductImages] = useState<string[]>([]);
   const [discountApplied, setDiscountApplied] = useState<boolean>(false);
+  const [lastCalculatedTons, setLastCalculatedTons] = useState<number>(0);
 
   const { toast } = useToast();
   const { addToCart } = useCart();
@@ -158,6 +160,16 @@ const ShopCalculator = () => {
   
   const calculations = useCalculator(areas, depth, extraPercentage, selectedProductPrice, tonYardRatio, manualTons);
 
+  // Store the calculated tons when not manually set
+  useEffect(() => {
+    if (manualTons === undefined) {
+      setLastCalculatedTons(calculations.totalTons);
+    }
+  }, [calculations.totalTons, manualTons]);
+
+  // Use lastCalculatedTons when manual tons is not set
+  const displayTons = manualTons !== undefined ? manualTons : lastCalculatedTons;
+
   const handleTonsChange = (newTons: number) => {
     // Ensure we're always using integer values
     setManualTons(Math.floor(newTons));
@@ -185,7 +197,7 @@ const ShopCalculator = () => {
       
       addToCart({
         ...adjustedProduct,
-        tons: calculations.totalTons,
+        tons: manualTons !== undefined ? manualTons : calculations.totalTons,
         yards: calculations.totalCubicYards,
         contactInfo: {
           name: formData.name,
@@ -199,8 +211,8 @@ const ShopCalculator = () => {
       });
       
       const message = discountApplied 
-        ? `${Math.floor(calculations.totalTons)} tons of ${product.name} added to your cart with a $50 discount applied.`
-        : `${Math.floor(calculations.totalTons)} tons of ${product.name} added to your cart.`;
+        ? `${Math.floor(manualTons !== undefined ? manualTons : calculations.totalTons)} tons of ${product.name} added to your cart with a $50 discount applied.`
+        : `${Math.floor(manualTons !== undefined ? manualTons : calculations.totalTons)} tons of ${product.name} added to your cart.`;
         
       toast({
         title: "Added to Cart",
@@ -212,8 +224,9 @@ const ShopCalculator = () => {
   const handleApplyDiscount = () => {
     // Validate form first
     const isValid = form.formState.isValid;
+    const consentGiven = form.getValues().consent;
     
-    if (isValid) {
+    if (isValid && consentGiven) {
       setDiscountApplied(true);
       toast({
         title: "Discount Applied!",
@@ -224,7 +237,7 @@ const ShopCalculator = () => {
       form.trigger();
       toast({
         title: "Please complete the form",
-        description: "Fill out all required fields to get your discount.",
+        description: "Fill out all required fields and accept communications to get your discount.",
         variant: "destructive"
       });
     }
@@ -269,12 +282,13 @@ const ShopCalculator = () => {
         <ZipCodeSection
           zipCode={zipCode}
           validateZipCodeAndGetPrice={validateZipCodeAndGetPrice}
-          totalTons={calculations.totalTons}
+          totalTons={manualTons !== undefined ? manualTons : calculations.totalTons}
           handleTonsChange={handleTonsChange}
-          estimatedCost={discountApplied ? calculations.discountedCost : calculations.estimatedCost}
+          estimatedCost={calculations.estimatedCost}
           discountedCost={calculations.discountedCost}
           onAddToCart={handleAddToCart}
           zipCodeValid={zipCodeValid}
+          discountApplied={discountApplied}
         />
       </div>
 

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Minus, Check } from 'lucide-react';
+import { Plus, Minus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import ZipCodeSearch from '@/components/zip-code/ZipCodeSearch';
 
@@ -14,6 +14,7 @@ type ZipCodeSectionProps = {
   discountedCost: number;
   onAddToCart: () => void;
   zipCodeValid: boolean;
+  discountApplied: boolean;
 };
 
 const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
@@ -24,7 +25,8 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
   estimatedCost,
   discountedCost,
   onAddToCart,
-  zipCodeValid
+  zipCodeValid,
+  discountApplied
 }) => {
   const [inputZip, setInputZip] = useState(zipCode || '');
   
@@ -52,11 +54,6 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
                 className="w-full" 
                 variant="minimal"
               />
-              {zipCodeValid && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <Check className="h-5 w-5 text-primary" />
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -97,7 +94,14 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
           <div className="flex items-end gap-2">
             <div>
               <p className="text-sm text-primary">Sale Price</p>
-              <p className="text-3xl font-bold text-primary">${estimatedCost.toFixed(2)}</p>
+              {discountApplied ? (
+                <>
+                  <p className="text-3xl font-bold text-primary line-through">${estimatedCost.toFixed(2)}</p>
+                  <p className="text-3xl font-bold text-green-600">Discount Price: ${discountedCost.toFixed(2)}</p>
+                </>
+              ) : (
+                <p className="text-3xl font-bold text-primary">${estimatedCost.toFixed(2)}</p>
+              )}
             </div>
           </div>
         </div>
