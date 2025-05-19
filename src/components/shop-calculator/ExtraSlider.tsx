@@ -20,7 +20,7 @@ const ExtraSlider: React.FC<ExtraSliderProps> = ({ extraPercentage, setExtraPerc
         min={0}
         max={30}
         step={1}
-        className="[&>.relative>.absolute]:bg-green-500"
+        className="[&>.relative>.absolute]:bg-primary"
       />
       <div className="flex justify-between text-xs text-gray-500 mt-1">
         <span>0%</span>

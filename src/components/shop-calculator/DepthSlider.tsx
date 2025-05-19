@@ -20,7 +20,7 @@ const DepthSlider: React.FC<DepthSliderProps> = ({ depth, setDepth }) => {
         min={1}
         max={36}
         step={1}
-        className="[&>.relative>.absolute]:bg-green-500"
+        className="[&>.relative>.absolute]:bg-primary"
       />
       <div className="flex justify-between text-xs text-gray-500 mt-1">
         <span>1"</span>
