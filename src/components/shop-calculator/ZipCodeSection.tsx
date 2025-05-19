@@ -110,7 +110,7 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
           <Button 
             onClick={onAddToCart}
             size="lg"
-            disabled={!zipCodeValid}
+            disabled={!zipCode}
             className="px-8"
           >
             Add to Cart

@@ -33,6 +33,7 @@ export type MaterialSubcategory =
   // Base subcategories
   '57-crushed-stone' | 'crusher-run' | 'road-base' | 'rca-crushed-concrete' | 'drainage-rock' |
   // Gravel subcategories
+  'driveway' | 'walkway' | 'landscape' | 'natural' | 'construction' |
   'pea-gravel' | 'river-rock' | 'crushed-stone' | 'decorative-gravel' | 'drainage-gravel';
 
 // Form schema for contact info
@@ -46,7 +47,7 @@ const contactSchema = z.object({
 const ShopCalculator = () => {
   // Material selection state
   const [selectedCategory, setSelectedCategory] = useState<MaterialCategory>('gravel');
-  const [selectedSubcategory, setSelectedSubcategory] = useState<MaterialSubcategory>('pea-gravel');
+  const [selectedSubcategory, setSelectedSubcategory] = useState<MaterialSubcategory>('driveway');
   const [selectedApplication, setSelectedApplication] = useState<ApplicationType>('driveway');
   const [selectedSize, setSelectedSize] = useState<MaterialSize>('3/4"');
   
@@ -176,7 +177,7 @@ const ShopCalculator = () => {
   };
 
   const handleAddToCart = () => {
-    if (!zipCodeValid) {
+    if (!zipCode) {
       toast({
         title: "ZIP Code Required",
         description: "Please enter a valid delivery ZIP code",
