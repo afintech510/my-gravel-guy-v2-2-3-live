@@ -6,8 +6,8 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 
 type ContactFormProps = {
   form: UseFormReturn<{
-    name: string;
-    phone: string;
+    name?: string;
+    phone?: string;
   }, any, undefined>;
 };
 
