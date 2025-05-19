@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -38,7 +37,9 @@ export type MaterialSubcategory =
 // Form schema for contact info
 const contactSchema = z.object({
   name: z.string().min(2, 'Name required'),
+  email: z.string().email('Valid email required'),
   phone: z.string().regex(/^\d{10}$/, 'Valid phone number required'),
+  consent: z.boolean().default(false),
 });
 
 const ShopCalculator = () => {
@@ -58,6 +59,7 @@ const ShopCalculator = () => {
   const [priceAdjustment, setPriceAdjustment] = useState<number>(0);
   const [zipCodeValid, setZipCodeValid] = useState<boolean>(false);
   const [productImages, setProductImages] = useState<string[]>([]);
+  const [discountApplied, setDiscountApplied] = useState<boolean>(false);
 
   const { toast } = useToast();
   const { addToCart } = useCart();
@@ -67,7 +69,9 @@ const ShopCalculator = () => {
     resolver: zodResolver(contactSchema),
     defaultValues: {
       name: '',
+      email: '',
       phone: '',
+      consent: false,
     },
   });
 
@@ -185,18 +189,43 @@ const ShopCalculator = () => {
         yards: calculations.totalCubicYards,
         contactInfo: {
           name: formData.name,
-          email: '',
+          email: formData.email,
           phone: formData.phone,
           zipCode: zipCode || ''
         },
-        // Apply the $50 coupon automatically
-        couponApplied: true,
-        couponAmount: 50
+        // Apply the discount only if the user clicked the discount button
+        couponApplied: discountApplied,
+        couponAmount: discountApplied ? 50 : 0
       });
       
+      const message = discountApplied 
+        ? `${Math.floor(calculations.totalTons)} tons of ${product.name} added to your cart with a $50 discount applied.`
+        : `${Math.floor(calculations.totalTons)} tons of ${product.name} added to your cart.`;
+        
       toast({
         title: "Added to Cart",
-        description: `${Math.floor(calculations.totalTons)} tons of ${product.name} added to your cart with a $50 discount applied.`,
+        description: message,
+      });
+    }
+  };
+
+  const handleApplyDiscount = () => {
+    // Validate form first
+    const isValid = form.formState.isValid;
+    
+    if (isValid) {
+      setDiscountApplied(true);
+      toast({
+        title: "Discount Applied!",
+        description: "Your $50 discount has been applied to your order.",
+      });
+    } else {
+      // Trigger validation to show errors
+      form.trigger();
+      toast({
+        title: "Please complete the form",
+        description: "Fill out all required fields to get your discount.",
+        variant: "destructive"
       });
     }
   };
@@ -242,7 +271,7 @@ const ShopCalculator = () => {
           validateZipCodeAndGetPrice={validateZipCodeAndGetPrice}
           totalTons={calculations.totalTons}
           handleTonsChange={handleTonsChange}
-          estimatedCost={calculations.estimatedCost}
+          estimatedCost={discountApplied ? calculations.discountedCost : calculations.estimatedCost}
           discountedCost={calculations.discountedCost}
           onAddToCart={handleAddToCart}
           zipCodeValid={zipCodeValid}
@@ -251,7 +280,10 @@ const ShopCalculator = () => {
 
       {/* Contact Information */}
       <div className="mt-6">
-        <ContactForm form={form} />
+        <ContactForm 
+          form={form} 
+          onApplyDiscount={handleApplyDiscount}
+        />
       </div>
     </div>
   );
