@@ -42,6 +42,9 @@ const categoryStructure = {
 // Define main categories to display - limited to just the 6 main ones
 const mainCategories = ['all', 'gravel', 'dirt', 'base', 'sand', 'mulch'];
 
+// Define size options for gravel and base
+const sizeOptions = ['3/8"', '3/4"', '1"', '1½"', '2-3"'];
+
 // Define category icons - making sure each category has a valid icon
 const CategoryIcons = {
   'all': Grid3X3,
@@ -55,16 +58,20 @@ const CategoryIcons = {
 interface ProductSearchProps {
   onSearch: (term: string) => void;
   onSort: (option: string) => void;
-  onFilter: (category: string, subcategory?: string) => void;
+  onFilter: (category: string, subcategory?: string, size?: string) => void;
 }
 
 const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
   const [sortOrder, setSortOrder] = useState('nameAsc');
   const [category, setCategory] = useState('all');
   const [subcategory, setSubcategory] = useState('');
+  const [size, setSize] = useState('');
   const [categories, setCategories] = useState<string[]>(mainCategories);
   const [subcategories, setSubcategories] = useState<string[]>([]);
   const isMobile = useIsMobile();
+
+  // Helper to check if the current category should show size options
+  const shouldShowSizes = () => ['gravel', 'base'].includes(category);
 
   useEffect(() => {
     // Fetch unique categories from the database but only use our predefined main categories
@@ -93,6 +100,9 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
       setSubcategories(availableSubcategories);
       setSubcategory(''); // Reset subcategory when category changes
     }
+    
+    // Reset size when category changes
+    setSize('');
   }, [category]);
 
   const handleSortChange = (value: string) => {
@@ -103,6 +113,7 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
   const handleCategoryChange = (value: string) => {
     setCategory(value);
     setSubcategory('');
+    setSize(''); // Reset size when category changes
     onFilter(value);
     console.log(`Category changed to: ${value}, subcategory reset to empty`);
   };
@@ -114,7 +125,16 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
     // This ensures that when we select a subcategory, we still filter by the main category
     const effectiveSubcategory = value === 'all' ? '' : value;
     console.log(`Subcategory changed to: ${value} (effective: ${effectiveSubcategory}), category: ${category}`);
-    onFilter(category, effectiveSubcategory);
+    onFilter(category, effectiveSubcategory, size);
+  };
+
+  const handleSizeChange = (value: string) => {
+    setSize(value);
+    console.log(`Size changed to: ${value}, category: ${category}, subcategory: ${subcategory}`);
+    
+    // Update filters with new size
+    const effectiveSubcategory = subcategory === 'all' ? '' : subcategory;
+    onFilter(category, effectiveSubcategory, value);
   };
 
   // Format name for display
@@ -196,6 +216,41 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
                 ))}
               </ToggleGroup>
             )}
+
+            {/* Size selector - only shown for gravel and base categories */}
+            {shouldShowSizes() && (
+              <div className="mt-1">
+                <h3 className="font-medium text-sm mb-2">Size</h3>
+                <ToggleGroup
+                  type="single"
+                  value={size}
+                  onValueChange={(value) => value && handleSizeChange(value)}
+                  className="grid grid-cols-3 sm:grid-cols-5 gap-2 w-full"
+                >
+                  <ToggleGroupItem 
+                    value=""
+                    className={`flex-1 py-3 text-xs ${size === '' ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
+                              data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-md transition-colors duration-200`}
+                  >
+                    <div className="flex flex-col items-center">
+                      <span>All Sizes</span>
+                    </div>
+                  </ToggleGroupItem>
+                  {sizeOptions.map((sizeOption) => (
+                    <ToggleGroupItem 
+                      key={sizeOption} 
+                      value={sizeOption}
+                      className={`flex-1 py-3 text-xs ${sizeOption === size ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
+                                data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-md transition-colors duration-200`}
+                    >
+                      <div className="flex flex-col items-center">
+                        <span>{sizeOption}</span>
+                      </div>
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </div>
+            )}
           </div>
         ) : (
           <DropdownMenu>
@@ -239,6 +294,28 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
                         <div className="flex items-center space-x-2 py-1" key={sub}>
                           <RadioGroupItem value={sub} id={`subcategory-${sub}`} />
                           <Label htmlFor={`subcategory-${sub}`}>{formatName(sub)}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                </>
+              )}
+
+              {/* Size selector in mobile view */}
+              {shouldShowSizes() && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel>Size</DropdownMenuLabel>
+                  <div className="p-2">
+                    <RadioGroup value={size} onValueChange={handleSizeChange}>
+                      <div className="flex items-center space-x-2 py-1">
+                        <RadioGroupItem value="" id="size-all" />
+                        <Label htmlFor="size-all">All Sizes</Label>
+                      </div>
+                      {sizeOptions.map((sizeOption) => (
+                        <div className="flex items-center space-x-2 py-1" key={sizeOption}>
+                          <RadioGroupItem value={sizeOption} id={`size-${sizeOption}`} />
+                          <Label htmlFor={`size-${sizeOption}`}>{sizeOption}</Label>
                         </div>
                       ))}
                     </RadioGroup>

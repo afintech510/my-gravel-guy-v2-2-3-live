@@ -10,7 +10,8 @@ const Products = () => {
     search: '',
     sort: 'nameAsc',
     category: 'all',
-    subcategory: ''
+    subcategory: '',
+    size: ''
   });
   const { toast } = useToast();
 
@@ -22,8 +23,8 @@ const Products = () => {
     setFilters(prev => ({ ...prev, sort: option }));
   };
 
-  const handleFilter = (category: string, subcategory: string = '') => {
-    console.log(`Products: handleFilter called with category=${category}, subcategory=${subcategory}`);
+  const handleFilter = (category: string, subcategory: string = '', size: string = '') => {
+    console.log(`Products: handleFilter called with category=${category}, subcategory=${subcategory}, size=${size}`);
     
     // If subcategory is "all", treat it as no specific subcategory
     const effectiveSubcategory = subcategory === 'all' ? '' : subcategory;
@@ -31,7 +32,8 @@ const Products = () => {
     setFilters(prev => ({ 
       ...prev, 
       category, 
-      subcategory: effectiveSubcategory 
+      subcategory: effectiveSubcategory,
+      size
     }));
     
     let toastMessage = '';
@@ -43,8 +45,16 @@ const Products = () => {
           .join(' ');
         
         toastMessage = `Showing ${formattedSubcategory} ${category} products`;
+        
+        if (size && ['gravel', 'base'].includes(category)) {
+          toastMessage += ` (${size})`;
+        }
       } else {
         toastMessage = `Showing all ${category} products`;
+        
+        if (size && ['gravel', 'base'].includes(category)) {
+          toastMessage += ` (${size})`;
+        }
       }
       
       toast({

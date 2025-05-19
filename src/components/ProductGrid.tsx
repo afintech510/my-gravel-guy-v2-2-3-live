@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import { getProducts } from '../services/productService';
@@ -13,12 +14,13 @@ interface ProductGridProps {
     sort: string;
     category: string;
     subcategory?: string;
+    size?: string;
   };
   limit?: number; // Prop to limit number of products
 }
 
 const ProductGrid = ({ 
-  filters = { search: '', sort: 'nameAsc', category: 'all', subcategory: '' }, 
+  filters = { search: '', sort: 'nameAsc', category: 'all', subcategory: '', size: '' }, 
   limit = 100 // Changed default from 9 to 100 products
 }: ProductGridProps) => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -289,6 +291,25 @@ const ProductGrid = ({
         });
         
         console.log(`After subcategory filter: ${result.length} products (removed ${beforeCount - result.length})`);
+      }
+
+      // Filter by size if present and category is gravel or base
+      if (filters.size && ['gravel', 'base'].includes(filters.category)) {
+        console.log(`Applying size filter: ${filters.size}`);
+        const beforeCount = result.length;
+        
+        result = result.filter(product => {
+          // Check if product has size information
+          if (!product.size) return false;
+          
+          // Normalize sizes by removing spaces for comparison
+          const normalizedProductSize = product.size.replace(/\s+/g, '').toLowerCase();
+          const normalizedFilterSize = filters.size!.replace(/\s+/g, '').toLowerCase();
+          
+          return normalizedProductSize.includes(normalizedFilterSize);
+        });
+        
+        console.log(`After size filter: ${result.length} products (removed ${beforeCount - result.length})`);
       }
     }
 
