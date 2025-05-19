@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,14 +10,12 @@ import { Product } from '../../services/productTypes';
 import { useZipCode } from '../../contexts/ZipCodeContext';
 import { useCalculator } from '../../hooks/useCalculator';
 import MaterialCategorySelector from './MaterialCategorySelector';
-import SizeSelector from './SizeSelector';
 import ShopAreaInputs from './ShopAreaInputs';
 import ShopCalculationDisplay from './ShopCalculationDisplay';
 import DepthSlider from './DepthSlider';
 import ExtraSlider from './ExtraSlider';
 import ZipCodeSection from './ZipCodeSection';
 import ContactForm from './ContactForm';
-import ProductGallery from './ProductGallery';
 
 // Define material categories
 export type MaterialCategory = 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base';
@@ -106,6 +105,11 @@ const ShopCalculator = () => {
       // Update product images - Use single image and convert to array if needed
       if (filteredProducts[0].image) {
         setProductImages([filteredProducts[0].image]);
+      } else {
+        // Fallback images based on category
+        setProductImages([
+          `https://images.unsplash.com/photo-1523712999610-f77fbcfc3843?category=${selectedCategory}`
+        ]);
       }
     }
   }, [selectedCategory, selectedSubcategory, products]);
@@ -199,22 +203,16 @@ const ShopCalculator = () => {
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
-      {/* Material Category and Subcategory Selectors */}
+      {/* Material Category and Subcategory Selectors with Tabs */}
       <MaterialCategorySelector 
         selectedCategory={selectedCategory}
         setSelectedCategory={setSelectedCategory}
         selectedSubcategory={selectedSubcategory}
         setSelectedSubcategory={setSelectedSubcategory}
+        selectedSize={selectedSize}
+        setSelectedSize={setSelectedSize}
+        productImages={productImages}
       />
-
-      {/* Size Selection */}
-      <div className="mt-6">
-        <h3 className="font-medium text-gray-700 mb-2">Size</h3>
-        <SizeSelector
-          selectedSize={selectedSize}
-          setSelectedSize={setSelectedSize}
-        />
-      </div>
 
       {/* Area Inputs */}
       <div className="mt-6">
@@ -254,12 +252,6 @@ const ShopCalculator = () => {
       {/* Contact Information */}
       <div className="mt-6">
         <ContactForm form={form} />
-      </div>
-
-      {/* Product Gallery */}
-      <div className="mt-8">
-        <h3 className="font-medium text-gray-700 mb-4">Product Images</h3>
-        <ProductGallery images={productImages} productName={selectedProductObj?.name || ''} />
       </div>
     </div>
   );

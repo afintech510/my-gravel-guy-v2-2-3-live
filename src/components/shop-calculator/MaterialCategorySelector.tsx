@@ -1,26 +1,34 @@
 
 import React from 'react';
 import { Truck, Map, Shovel, Trees, Building, ChevronDown } from 'lucide-react';
-import { MaterialCategory, ApplicationType, MaterialSubcategory } from './ShopCalculator';
+import { MaterialCategory, ApplicationType, MaterialSubcategory, MaterialSize } from './ShopCalculator';
 import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from "@/components/ui/tabs";
+import ProductGallery from './ProductGallery';
+import SizeSelector from './SizeSelector';
 
 type MaterialCategorySelectorProps = {
   selectedCategory: MaterialCategory;
   setSelectedCategory: (category: MaterialCategory) => void;
   selectedSubcategory: MaterialSubcategory;
   setSelectedSubcategory: (subcategory: MaterialSubcategory) => void;
+  selectedSize: MaterialSize;
+  setSelectedSize: (size: MaterialSize) => void;
+  productImages: string[];
 };
 
 const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
   selectedCategory,
   setSelectedCategory,
   selectedSubcategory,
-  setSelectedSubcategory
+  setSelectedSubcategory,
+  selectedSize,
+  setSelectedSize,
+  productImages
 }) => {
   const categories = [
     { id: 'gravel' as MaterialCategory, name: 'Gravel', icon: <Truck className="h-5 w-5" /> },
@@ -38,6 +46,10 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
     base: ['57-crushed-stone', 'crusher-run', 'road-base', 'rca-crushed-concrete', 'drainage-rock'],
     gravel: ['pea-gravel', 'river-rock', 'crushed-stone', 'decorative-gravel', 'drainage-gravel']
   };
+
+  // Categories that should show size selection
+  const categoriesWithSizes: MaterialCategory[] = ['gravel', 'base'];
+  const showSizeSelector = categoriesWithSizes.includes(selectedCategory);
 
   // Get formatted display name for subcategory
   const getSubcategoryDisplayName = (subcategory: MaterialSubcategory): string => {
@@ -74,79 +86,106 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
     ).join(' ');
   };
 
-  // When category changes, select first subcategory by default
-  React.useEffect(() => {
-    if (subcategories[selectedCategory] && subcategories[selectedCategory].length > 0) {
-      setSelectedSubcategory(subcategories[selectedCategory][0]);
+  // Handle tab change
+  const handleTabChange = (value: string) => {
+    const category = value as MaterialCategory;
+    setSelectedCategory(category);
+    if (subcategories[category] && subcategories[category].length > 0) {
+      setSelectedSubcategory(subcategories[category][0]);
     }
-  }, [selectedCategory, setSelectedSubcategory]);
+  };
+  
+  // Get description based on selected category and subcategory
+  const getDescription = (category: MaterialCategory, subcategory: MaterialSubcategory): string => {
+    if (category === 'gravel') {
+      return `Our premium ${getSubcategoryDisplayName(subcategory)} is perfect for driveways, landscaping, and drainage applications.`;
+    } else if (category === 'sand') {
+      return `${getSubcategoryDisplayName(subcategory)} is ideal for construction, playgrounds, and landscaping projects.`;
+    } else if (category === 'dirt') {
+      return `${getSubcategoryDisplayName(subcategory)} is perfect for your gardening, landscaping, and construction needs.`;
+    } else if (category === 'mulch') {
+      return `${getSubcategoryDisplayName(subcategory)} mulch enhances your landscape while protecting plants and improving soil health.`;
+    } else if (category === 'base') {
+      return `${getSubcategoryDisplayName(subcategory)} provides a sturdy foundation for driveways, patios, and construction projects.`;
+    }
+    return '';
+  };
 
   return (
     <div>
       <h3 className="font-medium text-gray-700 mb-2">Material</h3>
       
-      {/* Material Categories */}
-      <div className="grid grid-cols-5 gap-2 mb-3">
+      <Tabs 
+        defaultValue={selectedCategory} 
+        value={selectedCategory}
+        onValueChange={handleTabChange}
+        className="w-full"
+      >
+        <TabsList className="grid grid-cols-5 mb-6">
+          {categories.map(category => (
+            <TabsTrigger 
+              key={category.id} 
+              value={category.id}
+              className="flex flex-col items-center justify-center p-3 data-[state=active]:bg-green-500 data-[state=active]:text-white"
+            >
+              {category.icon}
+              <span className="mt-1 text-xs font-medium">{category.name}</span>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        
         {categories.map(category => (
-          <button
-            key={category.id}
-            onClick={() => setSelectedCategory(category.id)}
-            className={`flex flex-col items-center justify-center p-3 rounded-lg transition-colors ${
-              selectedCategory === category.id 
-                ? 'bg-green-500 text-white' 
-                : 'bg-gray-100 hover:bg-gray-200'
-            }`}
-          >
-            {category.icon}
-            <span className="mt-1 text-xs font-medium">{category.name}</span>
-          </button>
+          <TabsContent key={category.id} value={category.id} className="space-y-6">
+            <div className="space-y-4">
+              <h3 className="font-medium text-gray-700">Type</h3>
+              
+              {/* Subcategory Selection */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {subcategories[category.id].map(subcategory => (
+                  <button
+                    key={subcategory}
+                    onClick={() => setSelectedSubcategory(subcategory)}
+                    className={`p-3 rounded-lg text-sm transition-colors ${
+                      selectedSubcategory === subcategory && selectedCategory === category.id
+                        ? 'bg-green-500 text-white'
+                        : 'bg-gray-100 hover:bg-gray-200'
+                    }`}
+                  >
+                    {getSubcategoryDisplayName(subcategory)}
+                  </button>
+                ))}
+              </div>
+              
+              {/* Size Selector (only for applicable categories) */}
+              {categoriesWithSizes.includes(category.id) && (
+                <div className="mt-6">
+                  <h3 className="font-medium text-gray-700 mb-2">Size</h3>
+                  <SizeSelector
+                    selectedSize={selectedSize}
+                    setSelectedSize={setSelectedSize}
+                  />
+                </div>
+              )}
+              
+              {/* Description */}
+              <div className="mt-4 p-3 bg-gray-50 rounded-md">
+                <p className="text-sm text-gray-600">
+                  {getDescription(category.id, selectedCategory === category.id ? selectedSubcategory : subcategories[category.id][0])}
+                </p>
+              </div>
+              
+              {/* Product Gallery */}
+              <div className="mt-6">
+                <h3 className="font-medium text-gray-700 mb-2">Product Preview</h3>
+                <ProductGallery 
+                  images={productImages} 
+                  productName={getSubcategoryDisplayName(selectedSubcategory)} 
+                />
+              </div>
+            </div>
+          </TabsContent>
         ))}
-      </div>
-
-      {/* Dynamic Subcategories Dropdown */}
-      <div className="mb-4">
-        <h3 className="font-medium text-gray-700 mb-2">Type</h3>
-        <DropdownMenu>
-          <DropdownMenuTrigger className="w-full flex items-center justify-between p-2 border rounded-lg bg-white">
-            <span>{getSubcategoryDisplayName(selectedSubcategory)}</span>
-            <ChevronDown className="h-4 w-4" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56 bg-white">
-            {subcategories[selectedCategory].map((subcategory) => (
-              <DropdownMenuItem 
-                key={subcategory}
-                onClick={() => setSelectedSubcategory(subcategory)}
-                className={`cursor-pointer ${
-                  selectedSubcategory === subcategory ? 'bg-green-100' : ''
-                }`}
-              >
-                {getSubcategoryDisplayName(subcategory)}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      {/* Description */}
-      <div className="mt-4 p-3 bg-gray-50 rounded-md">
-        <p className="text-sm text-gray-600">
-          {selectedCategory === 'gravel' && (
-            <>Our premium {getSubcategoryDisplayName(selectedSubcategory)} is perfect for driveways, landscaping, and drainage applications.</>
-          )}
-          {selectedCategory === 'sand' && (
-            <>{getSubcategoryDisplayName(selectedSubcategory)} is ideal for construction, playgrounds, and landscaping projects.</>
-          )}
-          {selectedCategory === 'dirt' && (
-            <>{getSubcategoryDisplayName(selectedSubcategory)} is perfect for your gardening, landscaping, and construction needs.</>
-          )}
-          {selectedCategory === 'mulch' && (
-            <>{getSubcategoryDisplayName(selectedSubcategory)} mulch enhances your landscape while protecting plants and improving soil health.</>
-          )}
-          {selectedCategory === 'base' && (
-            <>{getSubcategoryDisplayName(selectedSubcategory)} provides a sturdy foundation for driveways, patios, and construction projects.</>
-          )}
-        </p>
-      </div>
+      </Tabs>
     </div>
   );
 };
