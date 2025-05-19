@@ -43,10 +43,9 @@ const ShopAreaInputs: React.FC<ShopAreaInputsProps> = ({ areas, setAreas }) => {
   return (
     <div className="space-y-4">
       {areas.map((area, index) => (
-        <div key={index} className="flex items-center gap-4 bg-gray-50 p-3 rounded-md">
+        <div key={index} className="flex items-center gap-4 bg-gray-50 p-2 rounded-md">
           <div className="flex flex-col sm:flex-row items-center gap-2 flex-grow">
             <div className="w-full sm:w-1/2">
-              <label className="block text-sm text-gray-600 mb-1">Length (ft)</label>
               <div className="flex items-center">
                 <Button 
                   type="button" 
@@ -63,6 +62,7 @@ const ShopAreaInputs: React.FC<ShopAreaInputsProps> = ({ areas, setAreas }) => {
                   value={area.length}
                   onChange={(e) => handleInputChange(index, 'length', parseInt(e.target.value) || 1)}
                   className="h-8 text-center rounded-none border-x-0"
+                  placeholder="Length (ft)"
                 />
                 <Button 
                   type="button" 
@@ -77,7 +77,6 @@ const ShopAreaInputs: React.FC<ShopAreaInputsProps> = ({ areas, setAreas }) => {
             </div>
 
             <div className="w-full sm:w-1/2">
-              <label className="block text-sm text-gray-600 mb-1">Width (ft)</label>
               <div className="flex items-center">
                 <Button 
                   type="button" 
@@ -94,6 +93,7 @@ const ShopAreaInputs: React.FC<ShopAreaInputsProps> = ({ areas, setAreas }) => {
                   value={area.width}
                   onChange={(e) => handleInputChange(index, 'width', parseInt(e.target.value) || 1)}
                   className="h-8 text-center rounded-none border-x-0"
+                  placeholder="Width (ft)"
                 />
                 <Button 
                   type="button" 
@@ -114,9 +114,9 @@ const ShopAreaInputs: React.FC<ShopAreaInputsProps> = ({ areas, setAreas }) => {
               variant="destructive"
               size="sm" 
               onClick={() => handleRemoveArea(index)}
-              className="h-8 px-2"
+              className="h-8 w-8 p-0 flex items-center justify-center"
             >
-              Remove
+              <Minus className="h-4 w-4" />
             </Button>
           )}
         </div>
