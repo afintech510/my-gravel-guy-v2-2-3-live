@@ -33,7 +33,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center">
             <img 
-              src="/lovable-uploads/6699f86e-637e-4e5c-a6af-130238db0a3f.png" 
+              src="/lovable-uploads/a6be5117-8980-4436-b8d3-4762ecced179.png" 
               alt="My Gravel Guy Logo" 
               className="h-10 w-auto" 
             />
