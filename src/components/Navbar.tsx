@@ -1,7 +1,7 @@
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, ShoppingCart, NotebookPen, Calculator, Store, ThumbsUp, Phone, House, MapPin, DollarSign } from "lucide-react";
+import { Menu, ShoppingCart, NotebookPen, Calculator, Store, ThumbsUp, Phone, House, MapPin, DollarSign, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart } from '../contexts/CartContext';
 import { useZipCode } from '../contexts/ZipCodeContext';
@@ -25,6 +25,10 @@ const Navbar = () => {
 
   const handleMenuClick = () => {
     setIsOpen(false);
+  };
+
+  const handleClearZipCode = () => {
+    clearZipCode();
   };
 
   return (
@@ -90,18 +94,30 @@ const Navbar = () => {
               <SheetContent side="right" className="w-[300px]">
                 <div className="flex flex-col space-y-4 mt-4">
                   {zipCode && zipCodeData && (
-                    <div className="px-3 py-2 rounded-md bg-primary/5 flex items-center text-sm mb-2">
-                      <MapPin className="h-4 w-4 mr-2 text-primary" />
-                      <div>
-                        <div className="font-medium">{zipCodeData.city}, {zipCodeData.state_id}</div>
-                        <div className="text-xs text-gray-500">ZIP: {zipCode}</div>
+                    <div className="px-3 py-2 rounded-md bg-primary/5 flex items-center justify-between text-sm mb-2">
+                      <div className="flex items-center">
+                        <MapPin className="h-4 w-4 mr-2 text-primary" />
+                        <div>
+                          <div className="font-medium">{zipCodeData.city}, {zipCodeData.state_id}</div>
+                          <div className="text-xs text-gray-500">ZIP: {zipCode}</div>
+                        </div>
                       </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0" 
+                        onClick={handleClearZipCode}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
                   )}
                   
-                  <div className="px-3 py-2">
-                    <ZipCodeSearch variant="minimal" />
-                  </div>
+                  {!zipCode && (
+                    <div className="px-3 py-2">
+                      <ZipCodeSearch variant="minimal" />
+                    </div>
+                  )}
                   
                   {links.map((link) => (
                     <Link
