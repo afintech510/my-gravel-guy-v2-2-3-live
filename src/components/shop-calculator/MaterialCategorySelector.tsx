@@ -33,8 +33,8 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
   const categories = [
     { id: 'gravel' as MaterialCategory, name: 'Gravel', icon: <Truck className="h-7 w-7" /> },
     { id: 'base' as MaterialCategory, name: 'Base', icon: <Building className="h-7 w-7" /> },
-    { id: 'sand' as MaterialCategory, name: 'Sand', icon: <Map className="h-7 w-7" /> },
     { id: 'dirt' as MaterialCategory, name: 'Dirt', icon: <Shovel className="h-7 w-7" /> },
+    { id: 'sand' as MaterialCategory, name: 'Sand', icon: <Map className="h-7 w-7" /> },
     { id: 'mulch' as MaterialCategory, name: 'Mulch', icon: <Trees className="h-7 w-7" /> }
   ];
 
