@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -214,9 +213,12 @@ const ShopCalculator = () => {
           phone: formData.phone,
           zipCode: zipCode || ''
         },
-        // Additional delivery details that will be useful for cart display
+        // Fix: Provide all required fields for deliveryAddress
         deliveryAddress: {
-          zip: zipCode
+          street: '', // Empty placeholder that will be filled later
+          city: '',   // Empty placeholder that will be filled later
+          state: '',  // Empty placeholder that will be filled later
+          zip: zipCode || ''
         },
         // Apply the discount only if the user clicked the discount button
         couponApplied: discountApplied,

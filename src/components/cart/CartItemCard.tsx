@@ -158,13 +158,33 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery }: CartItemCardProps) =
           </div>
         </div>
         
-        {/* Delivery Form */}
+        {/* Delivery Form - Now we pass the item prop */}
         {isDeliveryFormOpen && (
           <div className="mt-4 pt-4 border-t">
             <DeliveryForm
               item={item}
+              initialData={item.deliveryAddress ? {
+                street: item.deliveryAddress.street,
+                city: item.deliveryAddress.city,
+                state: item.deliveryAddress.state,
+                zip: item.deliveryAddress.zip,
+                contactPhone: item.contactPhone,
+                deliveryTimePreference: item.deliveryTimePreference,
+                deliveryInstructions: item.deliveryInstructions
+              } : undefined}
+              zipCode={item.deliveryAddress?.zip || item.contactInfo?.zipCode}
               onSubmit={(details) => {
-                onUpdateDelivery(item.id, details);
+                onUpdateDelivery(item.id, {
+                  deliveryAddress: {
+                    street: details.street,
+                    city: details.city,
+                    state: details.state,
+                    zip: details.zip
+                  },
+                  contactPhone: details.contactPhone,
+                  deliveryTimePreference: details.deliveryTimePreference,
+                  deliveryInstructions: details.deliveryInstructions
+                });
                 setIsDeliveryFormOpen(false);
               }}
             />

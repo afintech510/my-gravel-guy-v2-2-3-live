@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -11,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Upload, X } from "lucide-react";
 import { findZipCodeMatch } from "../../utils/zipCode";
 import { useToast } from "@/hooks/use-toast";
+import { CartItem } from "../../contexts/CartContext";
 
 const deliverySchema = z.object({
   street: z.string().min(1, "Street address is required"),
@@ -29,9 +29,10 @@ interface DeliveryFormProps {
   zipCode?: string;
   onSubmit: (data: DeliveryFormData) => void;
   lockZipCode?: boolean;
+  item?: CartItem; // Add the item prop to the interface
 }
 
-const DeliveryForm = ({ initialData, zipCode, onSubmit, lockZipCode = false }: DeliveryFormProps) => {
+const DeliveryForm = ({ initialData, zipCode, onSubmit, lockZipCode = false, item }: DeliveryFormProps) => {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const { toast } = useToast();
@@ -40,13 +41,13 @@ const DeliveryForm = ({ initialData, zipCode, onSubmit, lockZipCode = false }: D
   const form = useForm<DeliveryFormData>({
     resolver: zodResolver(deliverySchema),
     defaultValues: {
-      street: initialData?.street || '',
-      city: initialData?.city || '',
-      state: initialData?.state || '',
-      zip: initialData?.zip || zipCode || '',
-      contactPhone: initialData?.contactPhone || '',
-      deliveryTimePreference: initialData?.deliveryTimePreference,
-      deliveryInstructions: initialData?.deliveryInstructions || ''
+      street: initialData?.street || item?.deliveryAddress?.street || '',
+      city: initialData?.city || item?.deliveryAddress?.city || '',
+      state: initialData?.state || item?.deliveryAddress?.state || '',
+      zip: initialData?.zip || item?.deliveryAddress?.zip || zipCode || '',
+      contactPhone: initialData?.contactPhone || item?.contactPhone || '',
+      deliveryTimePreference: initialData?.deliveryTimePreference || item?.deliveryTimePreference,
+      deliveryInstructions: initialData?.deliveryInstructions || item?.deliveryInstructions || ''
     }
   });
 
