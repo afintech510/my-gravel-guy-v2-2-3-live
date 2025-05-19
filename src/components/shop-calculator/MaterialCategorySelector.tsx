@@ -1,20 +1,26 @@
 
 import React from 'react';
-import { Truck, Map, Shovel, Trees, Building } from 'lucide-react';
-import { MaterialCategory, ApplicationType } from './ShopCalculator';
+import { Truck, Map, Shovel, Trees, Building, ChevronDown } from 'lucide-react';
+import { MaterialCategory, ApplicationType, MaterialSubcategory } from './ShopCalculator';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 
 type MaterialCategorySelectorProps = {
   selectedCategory: MaterialCategory;
   setSelectedCategory: (category: MaterialCategory) => void;
-  selectedApplication: ApplicationType;
-  setSelectedApplication: (application: ApplicationType) => void;
+  selectedSubcategory: MaterialSubcategory;
+  setSelectedSubcategory: (subcategory: MaterialSubcategory) => void;
 };
 
 const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
   selectedCategory,
   setSelectedCategory,
-  selectedApplication,
-  setSelectedApplication
+  selectedSubcategory,
+  setSelectedSubcategory
 }) => {
   const categories = [
     { id: 'gravel' as MaterialCategory, name: 'Gravel', icon: <Truck className="h-5 w-5" /> },
@@ -24,13 +30,56 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
     { id: 'base' as MaterialCategory, name: 'Base', icon: <Building className="h-5 w-5" /> }
   ];
 
-  const applications = [
-    { id: 'driveway' as ApplicationType, name: 'Driveway' },
-    { id: 'walkway' as ApplicationType, name: 'Walkway' },
-    { id: 'landscape' as ApplicationType, name: 'Landscape' },
-    { id: 'natural' as ApplicationType, name: 'Natural' },
-    { id: 'construction' as ApplicationType, name: 'Construction' }
-  ];
+  // Define subcategories for each material category
+  const subcategories: Record<MaterialCategory, MaterialSubcategory[]> = {
+    sand: ['washed-sand', 'mason-sand', 'playground-sand', 'pool-sand', 'beach-sand'],
+    dirt: ['fill-dirt', 'top-soil', 'compost', 'loam', 'sandy-loam'],
+    mulch: ['natural', 'black', 'chocolate-brown', 'red', 'request'],
+    base: ['57-crushed-stone', 'crusher-run', 'road-base', 'rca-crushed-concrete', 'drainage-rock'],
+    gravel: ['pea-gravel', 'river-rock', 'crushed-stone', 'decorative-gravel', 'drainage-gravel']
+  };
+
+  // Get formatted display name for subcategory
+  const getSubcategoryDisplayName = (subcategory: MaterialSubcategory): string => {
+    const nameMap: Record<MaterialSubcategory, string> = {
+      'washed-sand': 'Washed Sand',
+      'mason-sand': 'Mason Sand',
+      'playground-sand': 'Playground Sand',
+      'pool-sand': 'Pool Sand',
+      'beach-sand': 'Beach Sand',
+      'fill-dirt': 'Fill Dirt',
+      'top-soil': 'Topsoil',
+      'compost': 'Compost',
+      'loam': 'Loam',
+      'sandy-loam': 'Sandy Loam',
+      'natural': 'Natural',
+      'black': 'Black',
+      'chocolate-brown': 'Chocolate Brown',
+      'red': 'Red',
+      'request': 'Request',
+      '57-crushed-stone': '#57 Crushed Stone',
+      'crusher-run': 'Crusher Run',
+      'road-base': 'Road Base',
+      'rca-crushed-concrete': 'RCA / Crushed Concrete',
+      'drainage-rock': 'Drainage Rock',
+      'pea-gravel': 'Pea Gravel',
+      'river-rock': 'River Rock',
+      'crushed-stone': 'Crushed Stone',
+      'decorative-gravel': 'Decorative Gravel',
+      'drainage-gravel': 'Drainage Gravel'
+    };
+    
+    return nameMap[subcategory] || subcategory.split('-').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  };
+
+  // When category changes, select first subcategory by default
+  React.useEffect(() => {
+    if (subcategories[selectedCategory] && subcategories[selectedCategory].length > 0) {
+      setSelectedSubcategory(subcategories[selectedCategory][0]);
+    }
+  }, [selectedCategory, setSelectedSubcategory]);
 
   return (
     <div>
@@ -54,40 +103,47 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
         ))}
       </div>
 
-      {/* Applications */}
-      <div className="grid grid-cols-5 gap-2">
-        {applications.map(application => (
-          <button
-            key={application.id}
-            onClick={() => setSelectedApplication(application.id)}
-            className={`p-2 text-xs rounded-lg transition-colors ${
-              selectedApplication === application.id 
-                ? 'bg-green-500 text-white' 
-                : 'bg-gray-100 hover:bg-gray-200'
-            }`}
-          >
-            {application.name}
-          </button>
-        ))}
+      {/* Dynamic Subcategories Dropdown */}
+      <div className="mb-4">
+        <h3 className="font-medium text-gray-700 mb-2">Type</h3>
+        <DropdownMenu>
+          <DropdownMenuTrigger className="w-full flex items-center justify-between p-2 border rounded-lg bg-white">
+            <span>{getSubcategoryDisplayName(selectedSubcategory)}</span>
+            <ChevronDown className="h-4 w-4" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56 bg-white">
+            {subcategories[selectedCategory].map((subcategory) => (
+              <DropdownMenuItem 
+                key={subcategory}
+                onClick={() => setSelectedSubcategory(subcategory)}
+                className={`cursor-pointer ${
+                  selectedSubcategory === subcategory ? 'bg-green-100' : ''
+                }`}
+              >
+                {getSubcategoryDisplayName(subcategory)}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Description */}
       <div className="mt-4 p-3 bg-gray-50 rounded-md">
         <p className="text-sm text-gray-600">
           {selectedCategory === 'gravel' && (
-            <>Our premium {selectedCategory} is perfect for {selectedApplication} applications. Available in various sizes to meet your specific needs.</>
+            <>Our premium {getSubcategoryDisplayName(selectedSubcategory)} is perfect for driveways, landscaping, and drainage applications.</>
           )}
           {selectedCategory === 'sand' && (
-            <>High-quality {selectedCategory} ideal for {selectedApplication} projects. Clean, consistent grain size for reliable performance.</>
+            <>{getSubcategoryDisplayName(selectedSubcategory)} is ideal for construction, playgrounds, and landscaping projects.</>
           )}
           {selectedCategory === 'dirt' && (
-            <>Premium topsoil and {selectedCategory} options perfect for {selectedApplication} needs. Rich in nutrients for healthy plant growth.</>
+            <>{getSubcategoryDisplayName(selectedSubcategory)} is perfect for your gardening, landscaping, and construction needs.</>
           )}
           {selectedCategory === 'mulch' && (
-            <>Organic {selectedCategory} options that enhance your {selectedApplication} while protecting plants and improving soil health.</>
+            <>{getSubcategoryDisplayName(selectedSubcategory)} mulch enhances your landscape while protecting plants and improving soil health.</>
           )}
           {selectedCategory === 'base' && (
-            <>Sturdy {selectedCategory} materials designed specifically for {selectedApplication} projects requiring solid foundation support.</>
+            <>{getSubcategoryDisplayName(selectedSubcategory)} provides a sturdy foundation for driveways, patios, and construction projects.</>
           )}
         </p>
       </div>
