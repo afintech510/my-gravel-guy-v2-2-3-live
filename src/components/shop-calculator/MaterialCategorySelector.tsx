@@ -31,11 +31,11 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
   productImages
 }) => {
   const categories = [
-    { id: 'gravel' as MaterialCategory, name: 'Gravel', icon: <Truck className="h-6 w-6" /> },
-    { id: 'sand' as MaterialCategory, name: 'Sand', icon: <Map className="h-6 w-6" /> },
-    { id: 'dirt' as MaterialCategory, name: 'Dirt', icon: <Shovel className="h-6 w-6" /> },
-    { id: 'mulch' as MaterialCategory, name: 'Mulch', icon: <Trees className="h-6 w-6" /> },
-    { id: 'base' as MaterialCategory, name: 'Base', icon: <Building className="h-6 w-6" /> }
+    { id: 'gravel' as MaterialCategory, name: 'Gravel', icon: <Truck className="h-7 w-7" /> },
+    { id: 'sand' as MaterialCategory, name: 'Sand', icon: <Map className="h-7 w-7" /> },
+    { id: 'dirt' as MaterialCategory, name: 'Dirt', icon: <Shovel className="h-7 w-7" /> },
+    { id: 'mulch' as MaterialCategory, name: 'Mulch', icon: <Trees className="h-7 w-7" /> },
+    { id: 'base' as MaterialCategory, name: 'Base', icon: <Building className="h-7 w-7" /> }
   ];
 
   // Define subcategories for each material category
@@ -77,7 +77,6 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
       'driveway': 'Driveway',
       'walkway': 'Walkway',
       'landscape': 'Landscape',
-      'natural': 'Natural',
       'construction': 'Construction',
       'pea-gravel': 'Pea Gravel',
       'river-rock': 'River Rock',
@@ -134,7 +133,9 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
               className="flex flex-col items-center justify-center p-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
               {category.icon}
-              <span className="mt-1 text-sm font-medium">{category.name}</span>
+              <span className="mt-1 text-base font-medium">
+                {category.name}
+              </span>
             </TabsTrigger>
           ))}
         </TabsList>
@@ -150,7 +151,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
                   <button
                     key={subcategory}
                     onClick={() => setSelectedSubcategory(subcategory)}
-                    className={`p-2 rounded-lg text-sm transition-colors ${
+                    className={`p-2 rounded-lg text-sm transition-colors w-full ${
                       selectedSubcategory === subcategory && selectedCategory === category.id
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-gray-100 hover:bg-gray-200'
