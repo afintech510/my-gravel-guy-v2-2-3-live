@@ -189,6 +189,7 @@ const ShopCalculator = () => {
     const product = products.find(p => p.id.toString() === selectedProduct);
     if (product) {
       const formData = form.getValues();
+      const finalTons = manualTons !== undefined ? manualTons : calculations.totalTons;
       
       // Apply price adjustment to the product price
       const adjustedProduct = {
@@ -196,24 +197,37 @@ const ShopCalculator = () => {
         price: selectedProductPrice // Use the ZIP code adjusted price
       };
       
-      addToCart({
+      // Enhanced product metadata to include all selected options
+      const enhancedProduct = {
         ...adjustedProduct,
-        tons: manualTons !== undefined ? manualTons : calculations.totalTons,
+        tons: finalTons,
         yards: calculations.totalCubicYards,
+        materialCategory: selectedCategory,
+        materialSubcategory: selectedSubcategory,
+        materialSize: selectedSize,
+        applicationType: selectedApplication,
+        depth: depth,
+        // Contact info
         contactInfo: {
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
           zipCode: zipCode || ''
         },
+        // Additional delivery details that will be useful for cart display
+        deliveryAddress: {
+          zip: zipCode
+        },
         // Apply the discount only if the user clicked the discount button
         couponApplied: discountApplied,
         couponAmount: discountApplied ? 50 : 0
-      });
+      };
+      
+      addToCart(enhancedProduct);
       
       const message = discountApplied 
-        ? `${Math.floor(manualTons !== undefined ? manualTons : calculations.totalTons)} tons of ${product.name} added to your cart with a $50 discount applied.`
-        : `${Math.floor(manualTons !== undefined ? manualTons : calculations.totalTons)} tons of ${product.name} added to your cart.`;
+        ? `${Math.floor(finalTons)} tons of ${selectedCategory} (${selectedSubcategory}, ${selectedSize}) added to your cart with a $50 discount applied.`
+        : `${Math.floor(finalTons)} tons of ${selectedCategory} (${selectedSubcategory}, ${selectedSize}) added to your cart.`;
         
       toast({
         title: "Added to Cart",
