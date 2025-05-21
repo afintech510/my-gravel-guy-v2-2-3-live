@@ -142,6 +142,7 @@ const ProductDetail = () => {
             <MiniCalculator
               pricePerTon={adjustedPrice ?? product.price}
               onQuantityCalculated={handleQuantityCalculated}
+              tonYardRatio={product.tonYardRatio}
             />
           </div>
         </div>
