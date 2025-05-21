@@ -68,6 +68,7 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
   const [size, setSize] = useState('');
   const [categories, setCategories] = useState<string[]>(mainCategories);
   const [subcategories, setSubcategories] = useState<string[]>([]);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const isMobile = useIsMobile();
 
   // Helper to check if the current category should show size options
@@ -141,6 +142,10 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
   const formatName = (name: string) => {
     if (name === 'all') return 'All Products';
     return name.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  };
+
+  const toggleMobileFilters = () => {
+    setShowMobileFilters(!showMobileFilters);
   };
 
   return (
@@ -253,100 +258,150 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
             )}
           </div>
         ) : (
+          <div className="w-full">
+            <div className="flex justify-between items-center mb-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={toggleMobileFilters}
+                className="flex items-center text-sm"
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                Filter Products
+                <ChevronDown className="h-4 w-4 ml-2" />
+              </Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    {sortOrder.includes('Desc') ? (
+                      <SortDesc className="h-4 w-4" />
+                    ) : (
+                      <SortAsc className="h-4 w-4" />
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-white">
+                  <DropdownMenuLabel>Sort By</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuRadioGroup value={sortOrder} onValueChange={handleSortChange}>
+                    <DropdownMenuRadioItem value="nameAsc">Name (A-Z)</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="nameDesc">Name (Z-A)</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="priceAsc">Price (Low-High)</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="priceDesc">Price (High-Low)</DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            
+            {showMobileFilters && (
+              <div className="space-y-6 mb-6 bg-gray-50 p-4 rounded-lg">
+                {/* Mobile Category Selection Buttons */}
+                <div className="space-y-2">
+                  <h3 className="font-medium text-sm mb-2">Categories</h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    {categories.map((cat) => {
+                      // Safe guard for categories that don't have defined icons
+                      const IconComponent = CategoryIcons[cat as keyof typeof CategoryIcons] || Grid3X3;
+                      return (
+                        <button
+                          key={cat}
+                          onClick={() => handleCategoryChange(cat)}
+                          className={`flex flex-col items-center justify-center p-3 rounded-md ${
+                            cat === category ? 'bg-primary text-primary-foreground' : 'bg-white border border-gray-200'
+                          }`}
+                        >
+                          <IconComponent className="h-5 w-5 mb-1" />
+                          <span className="text-xs font-medium">{formatName(cat)}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                
+                {/* Mobile Subcategory Selection - only shown when a main category is selected */}
+                {category !== 'all' && subcategories.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="font-medium text-sm mb-2">Type</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => handleSubcategoryChange('all')}
+                        className={`py-2 px-3 text-xs rounded-md ${
+                          subcategory === 'all' ? 'bg-primary text-primary-foreground' : 'bg-white border border-gray-200'
+                        }`}
+                      >
+                        All {formatName(category)}
+                      </button>
+                      {subcategories.map((sub) => (
+                        <button
+                          key={sub}
+                          onClick={() => handleSubcategoryChange(sub)}
+                          className={`py-2 px-3 text-xs rounded-md ${
+                            sub === subcategory ? 'bg-primary text-primary-foreground' : 'bg-white border border-gray-200'
+                          }`}
+                        >
+                          {formatName(sub)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Mobile Size Selection - only shown for gravel and base categories */}
+                {shouldShowSizes() && (
+                  <div className="space-y-2">
+                    <h3 className="font-medium text-sm mb-2">Size</h3>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        onClick={() => handleSizeChange('')}
+                        className={`py-2 px-3 text-xs rounded-md ${
+                          size === '' ? 'bg-primary text-primary-foreground' : 'bg-white border border-gray-200'
+                        }`}
+                      >
+                        All Sizes
+                      </button>
+                      {sizeOptions.map((sizeOption) => (
+                        <button
+                          key={sizeOption}
+                          onClick={() => handleSizeChange(sizeOption)}
+                          className={`py-2 px-3 text-xs rounded-md ${
+                            sizeOption === size ? 'bg-primary text-primary-foreground' : 'bg-white border border-gray-200'
+                          }`}
+                        >
+                          {sizeOption}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {!isMobile && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="flex items-center">
-                <Filter className="h-4 w-4 mr-2" />
-                <ChevronDown className="h-4 w-4" />
+              <Button variant="outline" size="icon">
+                {sortOrder.includes('Desc') ? (
+                  <SortDesc className="h-4 w-4" />
+                ) : (
+                  <SortAsc className="h-4 w-4" />
+                )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-64 bg-white">
-              <DropdownMenuLabel>Category</DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-48 bg-white">
+              <DropdownMenuLabel>Sort By</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <div className="p-2">
-                <RadioGroup value={category} onValueChange={handleCategoryChange}>
-                  {categories.map((cat) => {
-                    // Safe guard for categories that don't have defined icons
-                    const IconComponent = CategoryIcons[cat as keyof typeof CategoryIcons] || Grid3X3;
-                    return (
-                      <div className="flex items-center space-x-2 py-1" key={cat}>
-                        <RadioGroupItem value={cat} id={`category-${cat}`} />
-                        <Label htmlFor={`category-${cat}`} className="flex items-center gap-2">
-                          <IconComponent className="h-4 w-4" /> {formatName(cat)}
-                        </Label>
-                      </div>
-                    );
-                  })}
-                </RadioGroup>
-              </div>
-              
-              {category !== 'all' && subcategories.length > 0 && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuLabel>Type</DropdownMenuLabel>
-                  <div className="p-2">
-                    <RadioGroup value={subcategory} onValueChange={handleSubcategoryChange}>
-                      <div className="flex items-center space-x-2 py-1">
-                        <RadioGroupItem value="all" id="subcategory-all" />
-                        <Label htmlFor="subcategory-all">All {formatName(category)}</Label>
-                      </div>
-                      {subcategories.map((sub) => (
-                        <div className="flex items-center space-x-2 py-1" key={sub}>
-                          <RadioGroupItem value={sub} id={`subcategory-${sub}`} />
-                          <Label htmlFor={`subcategory-${sub}`}>{formatName(sub)}</Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                </>
-              )}
-
-              {/* Size selector in mobile view */}
-              {shouldShowSizes() && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuLabel>Size</DropdownMenuLabel>
-                  <div className="p-2">
-                    <RadioGroup value={size} onValueChange={handleSizeChange}>
-                      <div className="flex items-center space-x-2 py-1">
-                        <RadioGroupItem value="" id="size-all" />
-                        <Label htmlFor="size-all">All Sizes</Label>
-                      </div>
-                      {sizeOptions.map((sizeOption) => (
-                        <div className="flex items-center space-x-2 py-1" key={sizeOption}>
-                          <RadioGroupItem value={sizeOption} id={`size-${sizeOption}`} />
-                          <Label htmlFor={`size-${sizeOption}`}>{sizeOption}</Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                </>
-              )}
+              <DropdownMenuRadioGroup value={sortOrder} onValueChange={handleSortChange}>
+                <DropdownMenuRadioItem value="nameAsc">Name (A-Z)</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="nameDesc">Name (Z-A)</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="priceAsc">Price (Low-High)</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="priceDesc">Price (High-Low)</DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         )}
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon">
-              {sortOrder.includes('Desc') ? (
-                <SortDesc className="h-4 w-4" />
-              ) : (
-                <SortAsc className="h-4 w-4" />
-              )}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-white">
-            <DropdownMenuLabel>Sort By</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuRadioGroup value={sortOrder} onValueChange={handleSortChange}>
-              <DropdownMenuRadioItem value="nameAsc">Name (A-Z)</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="nameDesc">Name (Z-A)</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="priceAsc">Price (Low-High)</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="priceDesc">Price (High-Low)</DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
     </div>
   );
