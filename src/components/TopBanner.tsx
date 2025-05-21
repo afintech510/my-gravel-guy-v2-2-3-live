@@ -43,7 +43,7 @@ const TopBanner = ({ className }: TopBannerProps) => {
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <button className="inline-flex items-center underline hover:text-white transition-colors">
-                <ChevronsRight className="h-5 w-5 ml-0.5" />
+                <ChevronsRight className="h-3 w-5 ml-1" />
                 {locationText}
                 <MapPin className="h-3 w-3 ml-0.5" />
               </button>
