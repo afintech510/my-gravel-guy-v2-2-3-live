@@ -7,12 +7,15 @@ import { useZipCode } from '../contexts/ZipCodeContext';
 import { Product } from '../services/productTypes';
 import { ImageOff, Columns3, Cog } from 'lucide-react';
 
+// Default product image
+const DEFAULT_PRODUCT_IMAGE = '/lovable-uploads/85eef0fe-9a59-406e-ba6b-54e1aaf6f56b.png';
+
 const ProductCard = ({ product }: { product: Product }) => {
   const { zipCode } = useZipCode();
   const [imageError, setImageError] = useState(false);
   
   // Use the image path directly from the product data
-  const imagePath = product.image || "/placeholder.svg";
+  const imagePath = product.image || DEFAULT_PRODUCT_IMAGE;
 
   return (
     <Card className="w-full max-w-sm h-full flex flex-col transition-all duration-200 hover:shadow-md">

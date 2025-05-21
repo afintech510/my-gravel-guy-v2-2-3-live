@@ -3,6 +3,9 @@ import React, { useState } from 'react';
 import { Product } from '@/services/productTypes';
 import { ImageOff } from 'lucide-react';
 
+// Default product image
+const DEFAULT_PRODUCT_IMAGE = '/lovable-uploads/85eef0fe-9a59-406e-ba6b-54e1aaf6f56b.png';
+
 interface ProductImagesProps {
   product: Product;
 }
@@ -11,7 +14,7 @@ const ProductImages = ({ product }: ProductImagesProps) => {
   const [imageError, setImageError] = useState(false);
   
   // Use the image path directly from the product data
-  const imagePath = product?.image || "/placeholder.svg";
+  const imagePath = product?.image || DEFAULT_PRODUCT_IMAGE;
   
   return (
     <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
