@@ -173,7 +173,7 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
                   <ToggleGroupItem 
                     key={cat} 
                     value={cat}
-                    className={`flex-1 py-6 ${cat === category ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
+                    className={`flex-1 py-8 ${cat === category ? 'bg-primary text-primary-foreground' : 'bg-background dark:bg-secondary'} 
                               data-[state=on]:bg-primary data-[state=on]:text-primary-foreground rounded-md transition-colors duration-200`}
                   >
                     <div className="flex flex-col items-center gap-3">
