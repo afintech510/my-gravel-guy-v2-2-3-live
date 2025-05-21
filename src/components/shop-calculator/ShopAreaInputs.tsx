@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Plus, Minus, PlusCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -52,26 +53,25 @@ const ShopAreaInputs: React.FC<ShopAreaInputsProps> = ({ areas, setAreas }) => {
                   size="sm" 
                   variant="outline"
                   onClick={() => adjustValue(index, 'length', -1)}
-                  className="h-12 w-12 rounded-full p-0 flex items-center justify-center border-2"
+                  className="h-10 w-10 rounded-r-none border-r-0"
                 >
-                  <Minus className="h-5 w-5" />
+                  <Minus className="h-4 w-4" />
                 </Button>
                 <Input
                   type="number"
                   min="1"
                   value={area.length}
                   onChange={(e) => handleInputChange(index, 'length', parseInt(e.target.value) || 1)}
-                  className="h-12 text-center mx-2 rounded-xl w-[60%] text-lg font-montserrat font-medium"
-                  placeholder="Length (ft)"
+                  className="h-10 text-center rounded-none border-x-0"
                 />
                 <Button 
                   type="button" 
                   size="sm"
                   variant="outline" 
                   onClick={() => adjustValue(index, 'length', 1)}
-                  className="h-12 w-12 rounded-full p-0 flex items-center justify-center border-2"
+                  className="h-10 w-10 rounded-l-none border-l-0"
                 >
-                  <Plus className="h-5 w-5" />
+                  <Plus className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -83,26 +83,25 @@ const ShopAreaInputs: React.FC<ShopAreaInputsProps> = ({ areas, setAreas }) => {
                   size="sm" 
                   variant="outline"
                   onClick={() => adjustValue(index, 'width', -1)}
-                  className="h-12 w-12 rounded-full p-0 flex items-center justify-center border-2"
+                  className="h-10 w-10 rounded-r-none border-r-0"
                 >
-                  <Minus className="h-5 w-5" />
+                  <Minus className="h-4 w-4" />
                 </Button>
                 <Input
                   type="number"
                   min="1"
                   value={area.width}
                   onChange={(e) => handleInputChange(index, 'width', parseInt(e.target.value) || 1)}
-                  className="h-12 text-center mx-2 rounded-xl w-[60%] text-lg font-montserrat font-medium"
-                  placeholder="Width (ft)"
+                  className="h-10 text-center rounded-none border-x-0"
                 />
                 <Button 
                   type="button" 
                   size="sm"
                   variant="outline" 
                   onClick={() => adjustValue(index, 'width', 1)}
-                  className="h-12 w-12 rounded-full p-0 flex items-center justify-center border-2"
+                  className="h-10 w-10 rounded-l-none border-l-0"
                 >
-                  <Plus className="h-5 w-5" />
+                  <Plus className="h-4 w-4" />
                 </Button>
               </div>
             </div>
