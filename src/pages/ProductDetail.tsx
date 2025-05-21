@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,7 +29,7 @@ const ProductDetail = () => {
   // State for selected tons from mini calculator
   const [calculatedTons, setCalculatedTons] = useState<number | null>(null);
 
-  // Track product view when product data is loaded - THIS MUST BE ALWAYS RENDERED
+  // Track product view when product data is loaded
   useEffect(() => {
     if (product) {
       // Track view_item event for Google Analytics
@@ -44,17 +43,6 @@ const ProductDetail = () => {
       ]);
     }
   }, [product, adjustedPrice]);
-
-  // Debugging log - ALWAYS RENDER THIS HOOK REGARDLESS OF PRODUCT STATE
-  useEffect(() => {
-    if (product) {
-      console.log("Product data:", {
-        name: product.name,
-        images: product.images,
-        image: product.image
-      });
-    }
-  }, [product]);
 
   if (loading) {
     return (

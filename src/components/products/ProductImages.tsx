@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Product } from '@/services/productTypes';
 import { ImageOff } from 'lucide-react';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 // Default product image
 const DEFAULT_PRODUCT_IMAGE = '/lovable-uploads/85eef0fe-9a59-406e-ba6b-54e1aaf6f56b.png';
@@ -11,17 +12,12 @@ interface ProductImagesProps {
 
 const ProductImages = ({ product }: ProductImagesProps) => {
   const [selectedImage, setSelectedImage] = useState<number>(0);
-  const [imageError, setImageError] = useState<boolean[]>([]);
+  const [imageError, setImageError] = useState(false);
   
   // Parse images from product data
   const getProductImages = (): string[] => {
-    // Special case for specific product types
-    if (product?.name?.toLowerCase().includes('crushed stone')) {
-      return ['/lovable-uploads/85eef0fe-9a59-406e-ba6b-54e1aaf6f56b.png'];
-    }
-
     // If images array exists and has entries, use it
-    if (product?.images && Array.isArray(product.images) && product.images.length > 0) {
+    if (product?.images && product.images.length > 0) {
       return product.images;
     }
     
@@ -32,24 +28,10 @@ const ProductImages = ({ product }: ProductImagesProps) => {
   
   const images = getProductImages();
   
-  const handleImageError = (index: number) => {
-    console.log(`Image failed to load at index ${index}:`, images[index]);
-    const newImageError = [...imageError];
-    newImageError[index] = true;
-    setImageError(newImageError);
-  };
-
-  const getImageOrFallback = (index: number) => {
-    if (imageError[index]) {
-      return DEFAULT_PRODUCT_IMAGE;
-    }
-    return images[index];
-  };
-  
   return (
     <div className="space-y-3">
       <div className="relative overflow-hidden rounded-lg border border-gray-200" style={{ height: '380px' }}>
-        {imageError[selectedImage] ? (
+        {imageError ? (
           <div className="w-full h-full flex items-center justify-center">
             <ImageOff className="h-12 w-12 text-gray-400" />
           </div>
@@ -59,7 +41,8 @@ const ProductImages = ({ product }: ProductImagesProps) => {
             alt={`${product?.name} - View ${selectedImage + 1}`}
             className="object-cover w-full h-full"
             onError={() => {
-              handleImageError(selectedImage);
+              console.log(`Image failed to load for ${product?.name}:`, images[selectedImage]);
+              setImageError(true);
             }}
           />
         )}
@@ -72,6 +55,7 @@ const ProductImages = ({ product }: ProductImagesProps) => {
               key={index}
               onClick={() => {
                 setSelectedImage(index);
+                setImageError(false); // Reset error state when changing images
               }}
               className={`cursor-pointer rounded-md overflow-hidden border-2 h-12 w-12 flex-shrink-0 transition-all ${
                 selectedImage === index ? "border-primary" : "border-transparent opacity-70 hover:opacity-100"
@@ -81,9 +65,6 @@ const ProductImages = ({ product }: ProductImagesProps) => {
                 src={image} 
                 alt={`${product?.name} thumbnail ${index + 1}`} 
                 className="object-cover w-full h-full"
-                onError={() => {
-                  handleImageError(index);
-                }}
               />
             </div>
           ))}
