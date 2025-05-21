@@ -84,7 +84,7 @@ const QuoteFormProduct = ({ product }: QuoteFormProductProps) => {
             QUOTE FORM
           </div>
         </div>
-        <h2 className="text-3xl font-bold text-center mb-2 text-green-500">
+        <h2 className="text-3xl font-bold text-center mb-2 text-black">
           FILL OUT BELOW FOR A FREE QUOTE
         </h2>
         <p className="text-gray-600 text-center">
