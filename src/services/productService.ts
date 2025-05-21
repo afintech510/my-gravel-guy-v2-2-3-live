@@ -236,11 +236,11 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
       // Check if row has a slug property first
       const hasSlugProperty = Object.prototype.hasOwnProperty.call(row, 'slug');
       // If not, create a slug from the name or use an index-based fallback
-      const slug = hasSlugProperty && row.slug 
-        ? row.slug 
-        : row.name 
-          ? row.name.toLowerCase().replace(/\s+/g, '-') 
-          : `product-${index + 1}`;
+      const slug = hasSlugProperty ? 
+                   (row as any).slug || "" : // Use type assertion to avoid TypeScript error
+                   (row.name ? 
+                    row.name.toLowerCase().replace(/\s+/g, '-') : 
+                    `product-${index + 1}`);
       
       // Process images using the new focused function
       const productImages = processProductImages(row);
