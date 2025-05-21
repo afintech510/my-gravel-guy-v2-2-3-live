@@ -42,6 +42,7 @@ const ShopAreaInputs: React.FC<ShopAreaInputsProps> = ({ areas, setAreas }) => {
 
   return (
     <div className="space-y-4 font-montserrat">
+      <h3 className="font-medium text-gray-700 mb-2">Area to Cover (sq ft)</h3>
       {areas.map((area, index) => (
         <div key={index} className="flex items-center gap-4 bg-gray-50 p-3 rounded-lg">
           <div className="flex flex-col sm:flex-row items-center gap-3 flex-grow">
