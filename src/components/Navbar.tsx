@@ -35,7 +35,7 @@ const Navbar = () => {
     <nav className="bg-white border-b z-40"> {/* Removed pt-14 padding */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14"> {/* Reduced height from 16 to 14 */}
-          <div className="flex-1"></div> {/* Space filler where logo was */}
+          <div className="flex-1">LOGO</div> {/* Space filler where logo was */}
 
           <div className="hidden md:flex items-center space-x-4">
             {zipCode && zipCodeData && !isSearchLocked && (
