@@ -41,6 +41,7 @@ export const useCalculator = (
   };
 
   const calculateEstimatedCost = (tons: number): number => {
+    // Ensure we're using exact tons for pricing, without rounding
     return +(tons * productPrice).toFixed(2);
   };
 
@@ -52,8 +53,8 @@ export const useCalculator = (
   let totalTons: number;
 
   if (manualTons !== undefined) {
-    // When manual tons is set, ensure it's an integer and reverse the calculation
-    totalTons = Math.floor(manualTons);
+    // When manual tons is set, use the exact value provided (may be rounded in UI)
+    totalTons = manualTons;
     totalCubicYards = calculateCubicYardsFromTons(totalTons);
   } else {
     // Normal flow: area -> cubic yards -> tons
@@ -61,6 +62,7 @@ export const useCalculator = (
     totalTons = calculateTotalTons(totalCubicYards);
   }
 
+  // Calculate costs based on exact tons (rounding only happens in UI)
   const estimatedCost = calculateEstimatedCost(totalTons);
   const discountedCost = +(estimatedCost - 50).toFixed(2);
 

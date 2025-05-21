@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -272,7 +273,7 @@ const ShopCalculator = () => {
     const product = products.find(p => p.id.toString() === selectedProduct);
     if (product) {
       const formData = form.getValues();
-      // Round to nearest integer
+      // Always use the rounded tons value for cart and pricing
       const finalTons = Math.round(manualTons !== undefined ? manualTons : calculations.totalTons);
       
       // Apply price adjustment to the product price
