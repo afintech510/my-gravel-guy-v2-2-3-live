@@ -232,8 +232,15 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
       }
 
       // Generate a slug if one doesn't exist
-      // FIX: Handle case where row doesn't have slug property
-      const slug = row.slug || (row.name ? row.name.toLowerCase().replace(/\s+/g, '-') : `product-${index + 1}`);
+      // Handle case where row doesn't have slug property
+      // Check if row has a slug property first
+      const hasSlugProperty = Object.prototype.hasOwnProperty.call(row, 'slug');
+      // If not, create a slug from the name or use an index-based fallback
+      const slug = hasSlugProperty && row.slug 
+        ? row.slug 
+        : row.name 
+          ? row.name.toLowerCase().replace(/\s+/g, '-') 
+          : `product-${index + 1}`;
       
       // Process images using the new focused function
       const productImages = processProductImages(row);
