@@ -11,7 +11,6 @@ import {
 import ProductGallery from './ProductGallery';
 import SizeSelector from './SizeSelector';
 import { cn } from "@/lib/utils";
-import { useIsMobile } from '@/hooks/use-mobile';
 
 type MaterialCategorySelectorProps = {
   selectedCategory: MaterialCategory;
@@ -32,7 +31,6 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
   setSelectedSize,
   productImages
 }) => {
-  const isMobile = useIsMobile();
   const categories = [
     { id: 'gravel' as MaterialCategory, name: 'Gravel', icon: <Truck className="h-7 w-7" /> },
     { id: 'base' as MaterialCategory, name: 'Base', icon: <Building className="h-7 w-7" /> },
@@ -164,48 +162,37 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
         onValueChange={handleTabChange}
         className="w-full"
       >
-        {/* Row 1: Material Category Tabs (with icons) - Now more mobile-friendly */}
-        <TabsList className={cn(
-          "grid mb-6 bg-gray-100 p-1 rounded-lg",
-          isMobile ? "grid-cols-3 gap-y-2" : "grid-cols-5"
-        )}>
+        {/* Row 1: Material Category Tabs (with icons) */}
+        <TabsList className="h-50 grid grid-cols-5 mb-6 bg-gray-100 p-1 rounded-lg">
           {categories.map(category => (
-            <div key={category.id} className="flex justify-center">
-              <TabsTrigger 
-                value={category.id}
-                className={cn(
-                  "flex flex-col items-center justify-center p-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
-                  isMobile ? "w-full" : ""
-                )}
-              >
-                {category.icon}
-                <span className="mt-1 text-base font-medium">
-                  {category.name}
-                </span>
-              </TabsTrigger>
-            </div>
+            <TabsTrigger 
+              key={category.id} 
+              value={category.id}
+              className="flex flex-col items-center justify-center p-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              {category.icon}
+              <span className="mt-1 text-base font-medium">
+                {category.name}
+              </span>
+            </TabsTrigger>
           ))}
         </TabsList>
         
         {categories.map(category => (
           <TabsContent key={category.id} value={category.id} className="space-y-6">
             <div className="space-y-8">
-              {/* Row 2: Subcategory Selection - Mobile-friendly with wrapping */}
+              {/* Row 2: Subcategory Selection styled like Row 3 */}
               <div className="mt-4 mb-8">
-                <div className={cn(
-                  "flex flex-wrap gap-2",
-                  isMobile ? "justify-center" : "justify-between"
-                )}>
+                <div className="flex justify-between gap-2">
                   {subcategories[category.id].map(subcategory => (
                     <button
                       key={subcategory}
                       onClick={() => setSelectedSubcategory(subcategory)}
                       className={cn(
-                        "px-4 py-2 rounded-lg transition-colors font-montserrat font-bold text-base",
+                        "px-4 py-2 rounded-lg transition-colors w-full font-montserrat font-bold text-base",
                         selectedSubcategory === subcategory && selectedCategory === category.id
                           ? 'bg-primary text-black'
-                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700',
-                        isMobile ? "flex-grow min-w-[45%] max-w-full text-sm" : "w-auto"
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                       )}
                     >
                       {getSubcategoryDisplayName(subcategory)}
@@ -214,23 +201,19 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
                 </div>
               </div>
               
-              {/* Row 3: Third-level options - Also mobile-friendly */}
+              {/* Row 3: Third-level options */}
               {thirdLevelOptions.length > 0 && (
                 <div className="mb-8">
-                  <div className={cn(
-                    "flex flex-wrap gap-2",
-                    isMobile ? "justify-center" : "justify-between"
-                  )}>
+                  <div className="flex justify-between gap-2">
                     {thirdLevelOptions.map(option => (
                       <button
                         key={option}
                         onClick={() => setSelectedThirdOption(option)}
                         className={cn(
-                          "px-4 py-2 rounded-lg transition-colors font-montserrat font-bold text-base",
+                          "px-4 py-2 rounded-lg transition-colors w-full font-montserrat font-bold text-base",
                           selectedThirdOption === option
                             ? 'bg-primary text-black'
-                            : 'bg-gray-100 hover:bg-gray-200 text-gray-700',
-                          isMobile ? "flex-grow min-w-[45%] text-sm" : "w-auto"
+                            : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                         )}
                       >
                         {getThirdLevelDisplayName(option)}
@@ -240,7 +223,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
                 </div>
               )}
               
-              {/* Size Selector - Also made mobile-friendly */}
+              {/* Size Selector */}
               {categoriesWithSizes.includes(category.id) && (
                 <div className="mb-8">
                   <SizeSelector
@@ -250,11 +233,8 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
                 </div>
               )}
               
-              {/* Description and Product Gallery in flex layout - Stack on mobile */}
-              <div className={cn(
-                "flex gap-6 mt-6",
-                isMobile ? "flex-col" : "flex-row"
-              )}>
+              {/* Description and Product Gallery in flex layout */}
+              <div className="flex flex-col md:flex-row gap-6 mt-6">
                 {/* Description */}
                 <div className="flex-1 p-4 bg-gray-50 rounded-md">
                   <p className="text-sm text-gray-600">
@@ -263,9 +243,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
                 </div>
                 
                 {/* Product Gallery */}
-                <div className={cn(
-                  isMobile ? "w-full" : "md:w-1/3 md:max-w-[300px]"
-                )}>
+                <div className="md:w-1/3 md:max-w-[300px]">
                   <ProductGallery 
                     images={productImages.slice(0, 3)} 
                     productName={getSubcategoryDisplayName(selectedSubcategory)} 

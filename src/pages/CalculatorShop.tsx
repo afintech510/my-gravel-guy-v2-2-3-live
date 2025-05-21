@@ -6,14 +6,14 @@ import TrustBanner from '../components/products/trust/TrustBanner';
 
 const CalculatorShop = () => {
   return (
-    <div className="py-8 px-4 sm:px-6 bg-gray-50">
+    <div className="py-8 px-4 bg-gray-50">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-4 sm:mb-6 font-montserrat">Material Calculator</h1>
-        <p className="text-center text-gray-600 mb-6 sm:mb-8 font-montserrat text-sm sm:text-base">Choose your material type and calculate how much you need for your project</p>
+        <h1 className="text-3xl font-bold text-center mb-6 font-montserrat">Material Calculator</h1>
+        <p className="text-center text-gray-600 mb-8 font-montserrat">Choose your material type and calculate how much you need for your project</p>
         <ShopCalculator />
         
         {/* Quote Form Component */}
-        <div className="mt-12 sm:mt-16">
+        <div className="mt-16">
           <QuoteFormProduct />
         </div>
         
