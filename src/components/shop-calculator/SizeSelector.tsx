@@ -25,7 +25,7 @@ const SizeSelector: React.FC<SizeSelectorProps> = ({
             className={cn(
               "px-4 py-2 rounded-lg transition-colors font-montserrat font-bold text-base",
               selectedSize === size 
-                ? 'bg-green-500 text-black' 
+                ? 'bg-primary text-black' 
                 : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
             )}
           >
