@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/tabs";
 import ProductGallery from './ProductGallery';
 import SizeSelector from './SizeSelector';
+import { cn } from "@/lib/utils";
 
 type MaterialCategorySelectorProps = {
   selectedCategory: MaterialCategory;
@@ -161,6 +162,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
         onValueChange={handleTabChange}
         className="w-full"
       >
+        {/* Row 1: Material Category Tabs (with icons) */}
         <TabsList className="grid grid-cols-5 mb-6 bg-gray-100 p-1 rounded-lg">
           {categories.map(category => (
             <TabsTrigger 
@@ -178,37 +180,41 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
         
         {categories.map(category => (
           <TabsContent key={category.id} value={category.id} className="space-y-6">
-            <div className="space-y-6">
-              {/* Subcategory Selection */}
-              <div className="grid grid-cols-5 gap-2">
-                {subcategories[category.id].map(subcategory => (
-                  <button
-                    key={subcategory}
-                    onClick={() => setSelectedSubcategory(subcategory)}
-                    className={`p-2 rounded-lg text-sm transition-colors w-full ${
-                      selectedSubcategory === subcategory && selectedCategory === category.id
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-gray-100 hover:bg-gray-200'
-                    }`}
-                  >
-                    {getSubcategoryDisplayName(subcategory)}
-                  </button>
-                ))}
+            <div className="space-y-8">
+              {/* Row 2: Subcategory Selection styled like Row 3 */}
+              <div className="mt-4 mb-8">
+                <div className="flex justify-between gap-2">
+                  {subcategories[category.id].map(subcategory => (
+                    <button
+                      key={subcategory}
+                      onClick={() => setSelectedSubcategory(subcategory)}
+                      className={cn(
+                        "px-4 py-2 rounded-lg transition-colors w-full font-montserrat font-bold text-base",
+                        selectedSubcategory === subcategory && selectedCategory === category.id
+                          ? 'bg-primary text-black'
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                      )}
+                    >
+                      {getSubcategoryDisplayName(subcategory)}
+                    </button>
+                  ))}
+                </div>
               </div>
               
-              {/* Third-level options with improved styling */}
+              {/* Row 3: Third-level options */}
               {thirdLevelOptions.length > 0 && (
-                <div className="mt-8">
+                <div className="mb-8">
                   <div className="flex justify-between gap-2">
                     {thirdLevelOptions.map(option => (
                       <button
                         key={option}
                         onClick={() => setSelectedThirdOption(option)}
-                        className={`px-4 py-2 rounded-lg transition-colors w-full font-montserrat font-bold text-base ${
+                        className={cn(
+                          "px-4 py-2 rounded-lg transition-colors w-full font-montserrat font-bold text-base",
                           selectedThirdOption === option
                             ? 'bg-primary text-black'
                             : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                        }`}
+                        )}
                       >
                         {getThirdLevelDisplayName(option)}
                       </button>
@@ -219,7 +225,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
               
               {/* Size Selector */}
               {categoriesWithSizes.includes(category.id) && (
-                <div className="mt-8">
+                <div className="mb-8">
                   <SizeSelector
                     selectedSize={selectedSize}
                     setSelectedSize={setSelectedSize}
