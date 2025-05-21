@@ -36,33 +36,7 @@ const Products = () => {
       size
     }));
     
-    let toastMessage = '';
-    if (category !== 'all') {
-      if (effectiveSubcategory) {
-        const formattedSubcategory = effectiveSubcategory
-          .split('-')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
-        
-        toastMessage = `Showing ${formattedSubcategory} ${category} products`;
-        
-        if (size && ['gravel', 'base'].includes(category)) {
-          toastMessage += ` (${size})`;
-        }
-      } else {
-        toastMessage = `Showing all ${category} products`;
-        
-        if (size && ['gravel', 'base'].includes(category)) {
-          toastMessage += ` (${size})`;
-        }
-      }
-      
-      toast({
-        title: "Category selected",
-        description: toastMessage,
-        duration: 2000,
-      });
-    }
+    // Removed toast notifications for category changes
   };
 
   return (
