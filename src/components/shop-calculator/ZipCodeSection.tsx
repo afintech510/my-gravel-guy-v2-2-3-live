@@ -30,6 +30,9 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
 }) => {
   const [inputZip, setInputZip] = useState(zipCode || '');
   
+  // Round to nearest integer for display and calculations
+  const roundedTons = Math.round(totalTons);
+  
   const handleZipCodeSelected = () => {
     if (zipCode) {
       validateZipCodeAndGetPrice(zipCode);
@@ -37,8 +40,7 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
   };
 
   const adjustTons = (amount: number) => {
-    const currentTons = Math.floor(totalTons);
-    const newTons = Math.max(1, currentTons + amount);
+    const newTons = Math.max(1, roundedTons + amount);
     handleTonsChange(newTons);
   };
 
@@ -66,14 +68,14 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
               variant="outline" 
               onClick={() => adjustTons(-1)}
               className="h-10 w-10 rounded-full"
-              disabled={Math.floor(totalTons) <= 1}
+              disabled={roundedTons <= 1}
             >
               <Minus className="h-4 w-4" />
             </Button>
             <Input
               type="number"
               min="1"
-              value={Math.floor(totalTons)}
+              value={roundedTons}
               onChange={(e) => handleTonsChange(parseInt(e.target.value) || 1)}
               className="h-10 mx-2 text-center"
             />
@@ -123,3 +125,4 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
 };
 
 export default ZipCodeSection;
+

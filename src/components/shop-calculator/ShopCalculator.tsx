@@ -169,7 +169,8 @@ const ShopCalculator = () => {
   // Store the calculated tons when not manually set
   useEffect(() => {
     if (manualTons === undefined) {
-      setLastCalculatedTons(calculations.totalTons);
+      // Round to nearest integer when storing calculated tons
+      setLastCalculatedTons(Math.round(calculations.totalTons));
     }
   }, [calculations.totalTons, manualTons]);
 
@@ -178,7 +179,7 @@ const ShopCalculator = () => {
 
   const handleTonsChange = (newTons: number) => {
     // Ensure we're always using integer values
-    setManualTons(Math.floor(newTons));
+    setManualTons(Math.round(newTons));
   };
 
   const handleFormSubmit = async (formData: {
@@ -199,7 +200,7 @@ const ShopCalculator = () => {
     setIsSubmitting(true);
     
     try {
-      const finalTons = manualTons !== undefined ? manualTons : calculations.totalTons;
+      const finalTons = Math.round(manualTons !== undefined ? manualTons : calculations.totalTons);
       const currentPrice = discountApplied ? calculations.discountedCost : calculations.estimatedCost;
       
       // Prepare email data
@@ -271,7 +272,8 @@ const ShopCalculator = () => {
     const product = products.find(p => p.id.toString() === selectedProduct);
     if (product) {
       const formData = form.getValues();
-      const finalTons = manualTons !== undefined ? manualTons : calculations.totalTons;
+      // Round to nearest integer
+      const finalTons = Math.round(manualTons !== undefined ? manualTons : calculations.totalTons);
       
       // Apply price adjustment to the product price
       const adjustedProduct = {
@@ -311,8 +313,8 @@ const ShopCalculator = () => {
       addToCart(enhancedProduct);
       
       const message = discountApplied 
-        ? `${Math.floor(finalTons)} tons of ${selectedCategory} (${selectedSubcategory}, ${selectedSize}) added to your cart with a $50 discount applied.`
-        : `${Math.floor(finalTons)} tons of ${selectedCategory} (${selectedSubcategory}, ${selectedSize}) added to your cart.`;
+        ? `${finalTons} tons of ${selectedCategory} (${selectedSubcategory}, ${selectedSize}) added to your cart with a $50 discount applied.`
+        : `${finalTons} tons of ${selectedCategory} (${selectedSubcategory}, ${selectedSize}) added to your cart.`;
         
       toast({
         title: "Added to Cart",
@@ -369,7 +371,7 @@ const ShopCalculator = () => {
         <ZipCodeSection
           zipCode={zipCode}
           validateZipCodeAndGetPrice={validateZipCodeAndGetPrice}
-          totalTons={manualTons !== undefined ? manualTons : calculations.totalTons}
+          totalTons={displayTons}
           handleTonsChange={handleTonsChange}
           estimatedCost={calculations.estimatedCost}
           discountedCost={calculations.discountedCost}
