@@ -39,11 +39,11 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-14">
           <div className="flex-1">
                   {/* Logo floating above banner and navbar */}
-                      <Link to="/" className="absolute left-4 md:left-[calc((100%-72rem)/2+1rem)] -top-1 z-50">
+                      <Link to="/" className="absolute left-4 md:left-[calc((100%-72rem)/2+1rem)] -top-2 z-50">
                         <img 
                           src="/lovable-uploads/04048679-bd9f-42de-b2d0-70fddf60125e.png" 
                           alt="My Gravel Guy Logo" 
-                          className="h-24 w-auto"
+                          className="h-32 w-auto"
                         />  
                       </Link>
           </div>
