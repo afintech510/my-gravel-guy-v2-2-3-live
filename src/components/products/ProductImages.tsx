@@ -4,7 +4,7 @@ import { Product } from '@/services/productTypes';
 import { ImageOff } from 'lucide-react';
 
 // Default product image
-const DEFAULT_PRODUCT_IMAGE = '/assets/river-rocks.png';
+const DEFAULT_PRODUCT_IMAGE = 'https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//mygravelguy_logo_305x400.png';
 
 interface ProductImagesProps {
   product: Product;
