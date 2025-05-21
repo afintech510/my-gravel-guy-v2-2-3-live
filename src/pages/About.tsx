@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ZipCodeSearch from '../components/zip-code/ZipCodeSearch';
 
@@ -6,6 +7,13 @@ const About = () => {
     <div className="min-h-screen bg-white">
       <div className="py-20 px-4 bg-gray-50">
         <div className="max-w-4xl mx-auto text-center">
+          <div className="mb-8 flex justify-center">
+            <img 
+              src="/lovable-uploads/4ed875b4-fd42-46f3-8b63-d65844a33ff0.png" 
+              alt="My Gravel Guy Logo" 
+              className="h-48 w-auto"
+            />
+          </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-6">About Our Service</h1>
           <p className="text-xl text-gray-600">
             Connecting you with the best local gravel, sand, and dirt suppliers nationwide.
