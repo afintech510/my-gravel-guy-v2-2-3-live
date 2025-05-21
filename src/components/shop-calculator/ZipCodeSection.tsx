@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Minus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -33,9 +33,13 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
   // Round to nearest integer for display and calculations
   const roundedTons = Math.round(totalTons);
   
-  // Calculate actual price based on the rounded tons value
-  const actualEstimatedCost = estimatedCost / totalTons * roundedTons;
-  const actualDiscountedCost = discountedCost / totalTons * roundedTons;
+  // Calculate sale price based on per-ton price and rounded tons
+  const perTonPrice = estimatedCost / totalTons;
+  const perTonDiscountedPrice = discountedCost / totalTons;
+  
+  // Calculate final prices using the rounded tons value
+  const actualEstimatedCost = perTonPrice * roundedTons;
+  const actualDiscountedCost = perTonDiscountedPrice * roundedTons;
   
   const handleZipCodeSelected = () => {
     if (zipCode) {
