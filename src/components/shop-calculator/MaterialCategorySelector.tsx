@@ -163,7 +163,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
         className="w-full"
       >
         {/* Row 1: Material Category Tabs (with icons) */}
-        <TabsList className="grid grid-cols-5 mb-6 bg-gray-100 p-1 rounded-lg">
+        <TabsList className="h-50 grid grid-cols-5 mb-6 bg-gray-100 p-1 rounded-lg">
           {categories.map(category => (
             <TabsTrigger 
               key={category.id} 
