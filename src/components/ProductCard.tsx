@@ -14,8 +14,15 @@ const ProductCard = ({ product }: { product: Product }) => {
   const { zipCode } = useZipCode();
   const [imageError, setImageError] = useState(false);
   
-  // Use the image path directly from the product data
-  const imagePath = product.image || DEFAULT_PRODUCT_IMAGE;
+  // Get the image to display - use first image from images array if available, fallback to image field
+  const determineImagePath = () => {
+    if (product.images && product.images.length > 0) {
+      return product.images[0];
+    }
+    return product.image || DEFAULT_PRODUCT_IMAGE;
+  };
+  
+  const imagePath = determineImagePath();
 
   return (
     <Card className="w-full max-w-sm h-full flex flex-col transition-all duration-200 hover:shadow-md">

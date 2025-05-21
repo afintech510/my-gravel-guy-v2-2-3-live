@@ -1,4 +1,3 @@
-
 import { Product, ZipCodeData } from './productTypes';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -20,6 +19,7 @@ const SAMPLE_PRODUCTS: Product[] = [
     description: 'Smooth rounded stones perfect for landscaping and garden paths.',
     price: 45.99,
     image: '/assets/river-rocks.png',
+    images: ['/assets/river-rocks.png', DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_IMAGE],
     category: 'gravel',
     categories: ['gravel', 'landscaping', 'garden'],
     slug: 'river-rock-gravel',
@@ -38,6 +38,7 @@ const SAMPLE_PRODUCTS: Product[] = [
     description: 'Fine grain washed sand suitable for concrete mixing and play areas.',
     price: 38.50,
     image: DEFAULT_PRODUCT_IMAGE,
+    images: [DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_IMAGE],
     category: 'sand',
     categories: ['sand', 'construction', 'playground'],
     slug: 'washed-sand',
@@ -107,28 +108,66 @@ const SAMPLE_PRODUCTS: Product[] = [
 ];
 
 /**
- * Process image paths to ensure they work correctly
+ * Process image paths to ensure they work correctly and parse multiple images if available
  */
-function processImagePath(imagePath: string | null | undefined, productName: string): string {
-  if (!imagePath) return DEFAULT_PRODUCT_IMAGE;
+function processImagePaths(imagePath: string | null | undefined, productName: string): string[] {
+  // Default image to use if no valid images are found
+  const defaultImage = DEFAULT_PRODUCT_IMAGE;
   
-  // Special case for River Rock products - use our local asset
+  // Special cases for specific product types
   if (productName.toLowerCase().includes('river rock')) {
-    return '/assets/river-rocks.png';
+    return ['/assets/river-rocks.png', defaultImage];
   }
   
-  // Special case for Crushed Stone products - use our local asset
   if (productName.toLowerCase().includes('crushed stone')) {
-    return '/assets/crushed-stone.png';
+    return ['/assets/crushed-stone.png', defaultImage];
   }
   
+  // Handle case when imagePath is null/undefined
+  if (!imagePath) return [defaultImage];
+  
+  // Check if imagePath is already an array (stored as JSON string in database)
+  try {
+    if (imagePath.startsWith('[') && imagePath.endsWith(']')) {
+      const parsedImages = JSON.parse(imagePath);
+      if (Array.isArray(parsedImages) && parsedImages.length > 0) {
+        return parsedImages.map(img => img || defaultImage);
+      }
+    }
+  } catch (e) {
+    console.error('Failed to parse image array:', e);
+  }
+  
+  // Handle comma-separated image paths
+  if (imagePath.includes(',')) {
+    return imagePath.split(',')
+      .map(img => img.trim())
+      .filter(Boolean)
+      .map(img => {
+        // Fix paths if needed
+        if (img.startsWith('/src/assets/')) {
+          return img.replace('/src/', '/');
+        }
+        return img;
+      });
+  }
+  
+  // Handle single image path (legacy format)
   // If the path starts with /src/assets/, replace with /assets/
   if (imagePath.startsWith('/src/assets/')) {
-    return imagePath.replace('/src/', '/');
+    return [imagePath.replace('/src/', '/')];
   }
   
-  // Return the image path as is
-  return imagePath;
+  // Return single image in array format
+  return [imagePath];
+}
+
+/**
+ * Process single image path for backward compatibility
+ */
+function processImagePath(imagePath: string | null | undefined, productName: string): string {
+  const images = processImagePaths(imagePath, productName);
+  return images[0] || DEFAULT_PRODUCT_IMAGE;
 }
 
 /**
@@ -229,8 +268,9 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
       // Generate a slug if one doesn't exist
       const slug = row.name ? row.name.toLowerCase().replace(/\s+/g, '-') : `product-${index + 1}`;
       
-      // Use the image path directly from the database
-      const productImage = row.image || "/placeholder.svg";
+      // Process images - get both single and array versions for backward compatibility
+      const productImage = processImagePath(row.image, row.name || "");
+      const productImages = processImagePaths(row.image, row.name || "");
 
       // Create the product object with appropriate fallbacks for all fields
       return {
@@ -239,6 +279,7 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
         description: row.description || "",
         price: parseFloat(String(row.price)) || 0,
         image: productImage,
+        images: productImages,
         category: mainCategory,
         categories: categories,
         slug: slug,
