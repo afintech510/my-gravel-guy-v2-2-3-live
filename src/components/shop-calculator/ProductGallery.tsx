@@ -4,6 +4,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 
+// Default product image
+const DEFAULT_PRODUCT_IMAGE = '/lovable-uploads/85eef0fe-9a59-406e-ba6b-54e1aaf6f56b.png';
+
 type ProductGalleryProps = {
   images: string[];
   productName: string;
@@ -14,10 +17,10 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ images, productName }) 
   
   // Fallback images if no product images are available
   const fallbackImages = [
-    'https://images.unsplash.com/photo-1523712999610-f77fbcfc3843',
-    'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
-    'https://images.unsplash.com/photo-1501854140801-50d01698950b',
-  ].map(url => `${url}?w=600&h=400&fit=crop&auto=format`);
+    DEFAULT_PRODUCT_IMAGE,
+    DEFAULT_PRODUCT_IMAGE,
+    DEFAULT_PRODUCT_IMAGE,
+  ];
   
   const displayImages = images && images.length > 0 ? images : fallbackImages;
   // Limit to maximum 3 images

@@ -9,6 +9,9 @@ let zipCodesCache: ZipCodeData[] | null = null;
 let lastFetchTimestamp = 0;
 const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
 
+// Default product image
+const DEFAULT_PRODUCT_IMAGE = '/lovable-uploads/85eef0fe-9a59-406e-ba6b-54e1aaf6f56b.png';
+
 // Sample products to use when database is empty or when there's an error
 const SAMPLE_PRODUCTS: Product[] = [
   {
@@ -34,7 +37,7 @@ const SAMPLE_PRODUCTS: Product[] = [
     name: 'Washed Sand',
     description: 'Fine grain washed sand suitable for concrete mixing and play areas.',
     price: 38.50,
-    image: '/placeholder.svg',
+    image: DEFAULT_PRODUCT_IMAGE,
     category: 'sand',
     categories: ['sand', 'construction', 'playground'],
     slug: 'washed-sand',
@@ -52,7 +55,7 @@ const SAMPLE_PRODUCTS: Product[] = [
     name: 'Premium Topsoil',
     description: 'Rich organic topsoil perfect for gardening and lawn preparation.',
     price: 32.99,
-    image: '/placeholder.svg',
+    image: DEFAULT_PRODUCT_IMAGE,
     category: 'dirt',
     categories: ['dirt', 'soil', 'gardening'],
     slug: 'premium-topsoil',
@@ -70,7 +73,7 @@ const SAMPLE_PRODUCTS: Product[] = [
     name: 'Decorative Mulch',
     description: 'Premium wood mulch for garden beds and landscaping projects.',
     price: 28.75,
-    image: '/placeholder.svg',
+    image: DEFAULT_PRODUCT_IMAGE,
     category: 'mulch',
     categories: ['mulch', 'landscaping', 'garden'],
     slug: 'decorative-mulch',
@@ -107,7 +110,7 @@ const SAMPLE_PRODUCTS: Product[] = [
  * Process image paths to ensure they work correctly
  */
 function processImagePath(imagePath: string | null | undefined, productName: string): string {
-  if (!imagePath) return "/placeholder.svg";
+  if (!imagePath) return DEFAULT_PRODUCT_IMAGE;
   
   // Special case for River Rock products - use our local asset
   if (productName.toLowerCase().includes('river rock')) {
