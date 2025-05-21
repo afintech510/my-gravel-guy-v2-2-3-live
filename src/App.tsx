@@ -59,13 +59,7 @@ function App() {
                       <TopBanner />
                       <Navbar />
                       {/* Logo floating above banner and navbar */}
-                      <Link to="/" className="-top-3 z-50">
-                        <img 
-                          src="/lovable-uploads/04048679-bd9f-42de-b2d0-70fddf60125e.png" 
-                          alt="My Gravel Guy Logo" 
-                          className="h-24 w-auto" /* Slightly reduced height from 28 to 24 */
-                        />
-                      </Link>
+                     
                     </div>
                   </div>
                   <Routes>
