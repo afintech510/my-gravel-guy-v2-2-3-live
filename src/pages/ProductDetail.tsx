@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,6 +17,7 @@ import TrustBanner from '@/components/products/trust/TrustBanner';
 import { useProduct } from '@/hooks/useProduct';
 import { Product } from '@/services/productTypes';
 import { trackEcommerce, trackEvent } from '@/utils/analytics';
+import QuoteFormProduct from '@/components/forms/QuoteFormProduct';
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -130,10 +132,15 @@ const ProductDetail = () => {
 
         <ProductTabs product={product} />
         
+        {/* Add Quote Form Component Above Trust Banner */}
+        <div className="mt-16">
+          <QuoteFormProduct product={product} />
+        </div>
+        
         <TrustBanner 
           badgeSize="normal"
           title="Why Choose My Gravel Guy" 
-          className="mt-16 mb-12"
+          className="mb-12"
         />
       </div>
     </div>
