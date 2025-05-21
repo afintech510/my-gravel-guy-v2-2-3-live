@@ -20,17 +20,20 @@ const CalculationDisplay = ({
   onTonsChange,
   isManualTons = false
 }: CalculationDisplayProps) => {
+  // Round tons to nearest integer for display and calculations
+  const roundedTons = Math.round(tons);
+  
   const handleIncrement = () => {
     if (onTonsChange) {
-      // Changed to increment by 1 whole number
-      onTonsChange(Math.floor(tons + 1));
+      // Increment by 1 whole number
+      onTonsChange(roundedTons + 1);
     }
   };
 
   const handleDecrement = () => {
-    if (onTonsChange && tons > 1) {
-      // Changed to decrement by 1 whole number with minimum of 1
-      onTonsChange(Math.floor(tons - 1));
+    if (onTonsChange && roundedTons > 1) {
+      // Decrement by 1 whole number with minimum of 1
+      onTonsChange(Math.max(1, roundedTons - 1));
     }
   };
 
@@ -52,12 +55,12 @@ const CalculationDisplay = ({
               variant="outline" 
               size="icon" 
               onClick={handleDecrement} 
-              disabled={tons <= 1}
+              disabled={roundedTons <= 1}
             >
               <Minus className="h-4 w-4" />
             </Button>
             <div className="w-20 h-10 flex items-center justify-center border rounded-md bg-background text-2xl font-bold">
-              {Math.floor(tons)}
+              {roundedTons}
             </div>
             <Button 
               variant="outline" 
@@ -68,7 +71,7 @@ const CalculationDisplay = ({
             </Button>
           </div>
         ) : (
-          <p className="text-2xl font-bold">{Math.floor(tons)}</p>
+          <p className="text-2xl font-bold">{roundedTons}</p>
         )}
       </div>
       <div>
