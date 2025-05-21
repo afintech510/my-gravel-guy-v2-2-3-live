@@ -43,7 +43,7 @@ const Navbar = () => {
                         <img 
                           src="/lovable-uploads/04048679-bd9f-42de-b2d0-70fddf60125e.png" 
                           alt="My Gravel Guy Logo" 
-                          className="h-26 w-auto"
+                          className="h-25 w-auto"
                         />  
                       </Link>
           </div>
