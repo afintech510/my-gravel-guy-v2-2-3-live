@@ -57,15 +57,15 @@ function App() {
                   <div className="sticky top-0 z-40 w-full">
                     <div className="relative">
                       <TopBanner />
-                      {/* Logo centered above the navbar */}
-                      <Link to="/" className="absolute left-1/2 -translate-x-1/2 -top-6 z-50 flex justify-center">
+                      <Navbar />
+                      {/* Logo floating above banner and navbar */}
+                      <Link to="/" className="absolute left-4 -top-3 z-50">
                         <img 
                           src="/lovable-uploads/04048679-bd9f-42de-b2d0-70fddf60125e.png" 
                           alt="My Gravel Guy Logo" 
-                          className="h-20 w-auto" 
+                          className="h-24 w-auto" /* Slightly reduced height from 28 to 24 */
                         />
                       </Link>
-                      <Navbar />
                     </div>
                   </div>
                   <Routes>
