@@ -38,7 +38,7 @@ const TopBanner = ({ className }: TopBannerProps) => {
     )}>
       <div className="max-w-6xl mx-auto flex items-center justify-center">
         <h3 className="text-sm font-semibold">
-          FREE DELIVERY {' '} 
+          FREE DELIVERY{' '} 
            
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
