@@ -33,11 +33,11 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
   // Round to nearest integer for display and calculations
   const roundedTons = Math.round(totalTons);
   
-  // Calculate sale price based on per-ton price and rounded tons
+  // Get per-ton pricing from the parent component
   const perTonPrice = estimatedCost / totalTons;
   const perTonDiscountedPrice = discountedCost / totalTons;
   
-  // Calculate final prices using the rounded tons value
+  // Calculate final prices based solely on the rounded ton value
   const actualEstimatedCost = perTonPrice * roundedTons;
   const actualDiscountedCost = perTonDiscountedPrice * roundedTons;
   
