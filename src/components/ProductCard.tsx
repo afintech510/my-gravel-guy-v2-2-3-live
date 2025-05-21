@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Link } from 'react-router-dom';
 import { useZipCode } from '../contexts/ZipCodeContext';
 import { Product } from '../services/productTypes';
-import { ImageOff, Columns3Cog } from 'lucide-react';
+import { ImageOff, Columns3, Cog } from 'lucide-react';
 
 const ProductCard = ({ product }: { product: Product }) => {
   const { zipCode } = useZipCode();
@@ -48,7 +48,7 @@ const ProductCard = ({ product }: { product: Product }) => {
       <CardFooter className="pt-2">
         <Button asChild className="w-full">
           <Link to={`/products/${encodeURIComponent(product.slug)}`}>
-            Shop <Columns3Cog className="ml-1" />
+            Shop <Columns3 className="ml-1" />
           </Link>
         </Button>
       </CardFooter>
