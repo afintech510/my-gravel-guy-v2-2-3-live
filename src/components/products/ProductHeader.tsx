@@ -18,6 +18,7 @@ const ProductHeader = ({ product, zipCode }: ProductHeaderProps) => {
       {zipCode && (
         <p className="text-sm mb-6">
           Delivery available to ZIP {zipCode}
+          3 ton Minimum Order
         </p>
       )}
     </div>
