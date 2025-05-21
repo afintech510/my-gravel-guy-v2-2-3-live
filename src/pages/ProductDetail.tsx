@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,7 +30,7 @@ const ProductDetail = () => {
   // State for selected tons from mini calculator
   const [calculatedTons, setCalculatedTons] = useState<number | null>(null);
 
-  // Track product view when product data is loaded
+  // Track product view when product data is loaded - THIS MUST BE ALWAYS RENDERED
   useEffect(() => {
     if (product) {
       // Track view_item event for Google Analytics
@@ -43,6 +44,17 @@ const ProductDetail = () => {
       ]);
     }
   }, [product, adjustedPrice]);
+
+  // Debugging log - ALWAYS RENDER THIS HOOK REGARDLESS OF PRODUCT STATE
+  useEffect(() => {
+    if (product) {
+      console.log("Product data:", {
+        name: product.name,
+        images: product.images,
+        image: product.image
+      });
+    }
+  }, [product]);
 
   if (loading) {
     return (
@@ -108,17 +120,6 @@ const ProductDetail = () => {
       description: `${tons} tons has been set as your selected amount.`,
     });
   };
-
-  // Log product data for debugging
-  useEffect(() => {
-    if (product) {
-      console.log("Product data:", {
-        name: product.name,
-        images: product.images,
-        image: product.image
-      });
-    }
-  }, [product]);
 
   return (
     <div className="min-h-screen bg-white py-16 px-4">
