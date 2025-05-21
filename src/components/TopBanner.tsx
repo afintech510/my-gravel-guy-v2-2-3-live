@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import ZipCodeSearch from './zip-code/ZipCodeSearch';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 
 interface TopBannerProps {
   className?: string;
@@ -32,7 +33,7 @@ const TopBanner = ({ className }: TopBannerProps) => {
   
   return (
     <div className={cn(
-      "bg-primary text-primary-foreground py-2 px-4 text-center z-50", 
+      "bg-primary text-primary-foreground py-2 px-4 text-center z-50 relative", 
       className
     )}>
       <div className="max-w-6xl mx-auto flex items-center justify-center">
