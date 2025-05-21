@@ -23,6 +23,9 @@ const CalculationDisplay = ({
   // Round tons to nearest integer for display and calculations
   const roundedTons = Math.round(tons);
   
+  // Calculate actual cost based on rounded tons
+  const actualEstimatedCost = isManualTons ? estimatedCost : (estimatedCost / tons * roundedTons);
+  
   const handleIncrement = () => {
     if (onTonsChange) {
       // Increment by 1 whole number
@@ -76,7 +79,7 @@ const CalculationDisplay = ({
       </div>
       <div>
         <p className="text-sm text-muted-foreground">Estimated Cost</p>
-        <p className="text-2xl font-bold">${estimatedCost.toFixed(2)}</p>
+        <p className="text-2xl font-bold">${actualEstimatedCost.toFixed(2)}</p>
       </div>
     </div>
   );

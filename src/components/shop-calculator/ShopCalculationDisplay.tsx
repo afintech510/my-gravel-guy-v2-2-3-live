@@ -34,4 +34,3 @@ const ShopCalculationDisplay: React.FC<ShopCalculationDisplayProps> = ({
 };
 
 export default ShopCalculationDisplay;
-

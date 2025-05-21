@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Minus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -32,6 +32,10 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
   
   // Round to nearest integer for display and calculations
   const roundedTons = Math.round(totalTons);
+  
+  // Calculate actual price based on the rounded tons value
+  const actualEstimatedCost = estimatedCost / totalTons * roundedTons;
+  const actualDiscountedCost = discountedCost / totalTons * roundedTons;
   
   const handleZipCodeSelected = () => {
     if (zipCode) {
@@ -98,11 +102,11 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
               <p className="text-sm text-black">Sale Price</p>
               {discountApplied ? (
                 <>
-                  <p className="text-3xl font-bold text-black line-through">${estimatedCost.toFixed(2)}</p>
-                  <p className="text-3xl font-bold text-black">Discount Price: ${discountedCost.toFixed(2)}</p>
+                  <p className="text-3xl font-bold text-black line-through">${actualEstimatedCost.toFixed(2)}</p>
+                  <p className="text-3xl font-bold text-black">Discount Price: ${actualDiscountedCost.toFixed(2)}</p>
                 </>
               ) : (
-                <p className="text-3xl font-bold text-black">${estimatedCost.toFixed(2)}</p>
+                <p className="text-3xl font-bold text-black">${actualEstimatedCost.toFixed(2)}</p>
               )}
             </div>
           </div>
@@ -125,4 +129,3 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
 };
 
 export default ZipCodeSection;
-
