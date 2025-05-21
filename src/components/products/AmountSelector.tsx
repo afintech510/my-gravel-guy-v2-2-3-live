@@ -32,7 +32,7 @@ const AmountSelector = ({
   
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
+      <div className="flex items-center justify-between">
         <div className="space-y-4 w-2/3">
           <label className="text-sm font-medium">Select Amount (tons)</label>
           
@@ -94,7 +94,9 @@ const AmountSelector = ({
                 onClick={() => onSelectAmount(amount)}
                 className={cn(
                   "h-10 min-w-[2.5rem] font-montserrat",
-                  selectedAmount === amount && "bg-primary text-primary-foreground"
+                  selectedAmount === amount && "bg-primary text-primary-foreground",
+                  // Make the selected 50 button green like in the screenshot
+                  selectedAmount === 50 && amount === 50 && "bg-green-500 text-white hover:bg-green-600 border-green-500"
                 )}
               >
                 {amount}
@@ -111,7 +113,7 @@ const AmountSelector = ({
           </div>
         </div>
         
-        <div className="w-1/3 flex justify-end">
+        <div className="w-1/3 flex items-center justify-end h-full">
           <h1 className="text-4xl font-bold">{selectedAmount} tons</h1>
         </div>
       </div>
