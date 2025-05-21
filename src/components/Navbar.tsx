@@ -32,16 +32,10 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white border-b z-40">
+    <nav className="bg-white border-b z-40 pt-14"> {/* Added pt-14 for logo space */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center">
-            <img 
-              src="/lovable-uploads/a6be5117-8980-4436-b8d3-4762ecced179.png" 
-              alt="My Gravel Guy Logo" 
-              className="h-11 w-auto" // Increased from h-10 to h-11 (10% increase)
-            />
-          </Link>
+          <div className="flex-1"></div> {/* Space filler where logo was */}
 
           <div className="hidden md:flex items-center space-x-4">
             {zipCode && zipCodeData && !isSearchLocked && (
