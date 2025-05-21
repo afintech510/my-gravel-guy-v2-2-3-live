@@ -10,6 +10,7 @@ import TestQueryButton from '../components/TestQueryButton';
 import { Button } from '@/components/ui/button';
 import { useZipCode } from '../contexts/ZipCodeContext';
 import TrustBanner from '../components/products/trust/TrustBanner';
+import { Store, Calculator, DollarSign } from 'lucide-react';
 
 const Index = () => {
   const { zipCode } = useZipCode();
@@ -27,17 +28,29 @@ const Index = () => {
             Get gravel, sand, and dirt delivered right to your location. Fast, reliable, and competitively priced.
           </p>
           <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-            <Link to="/quiz">
-              <Button variant="outline" size="lg">Build a Project Plan</Button>
+            <Link to="/products">
+              <Button variant="outline" size="lg">
+                <Store className="mr-2 h-4 w-4" />
+                Shop Now
+              </Button>
             </Link>
             <Link to="/calculator-shop">
-              <Button variant="secondary" size="lg">Gravel Guy Calculator</Button>
+              <Button variant="secondary" size="lg">
+                <Calculator className="mr-2 h-4 w-4" />
+                Gravel Guy Calculator
+              </Button>
+            </Link>
+            <Link to="/contact">
+              <Button variant="default" size="lg">
+                <DollarSign className="mr-2 h-4 w-4" />
+                Custom Quote
+              </Button>
             </Link>
           </div>
         </div>
       </section>
 
-     {/* Location Product Hero - Shows always below ZIP search */}
+      {/* Location Product Hero - Shows always below ZIP search */}
       <section className="py-6 px-4">
         <div className="max-w-6xl mx-auto">
           <LocationProductHero />
