@@ -68,7 +68,7 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
   const [size, setSize] = useState('');
   const [categories, setCategories] = useState<string[]>(mainCategories);
   const [subcategories, setSubcategories] = useState<string[]>([]);
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(true); // Changed to true by default
   const isMobile = useIsMobile();
 
   // Helper to check if the current category should show size options
