@@ -105,11 +105,22 @@ const MiniCalculator = ({
         </div>
 
         {totalSquareFeet > 0 && (
-          <div className="py-3 space-y-1">
-            <p className="text-sm text-gray-600">Results:</p>
-            <p className="text-base font-montserrat"><strong>{Math.round(totalSquareFeet)}</strong> sq ft</p>
-            <p className="text-base font-montserrat"><strong>{totalCubicYards.toFixed(2)}</strong> cu yards</p>
-            <p className="text-base font-montserrat"><strong>{Math.round(totalTons)}</strong> tons</p>
+          <div className="py-3">
+            <p className="text-sm text-gray-600 mb-2">Results:</p>
+            <div className="flex justify-between items-end">
+              <div className="text-center">
+                <span className="text-xl font-bold">{Math.round(totalSquareFeet)}</span>
+                <span className="text-xs block text-gray-500">sq ft</span>
+              </div>
+              <div className="text-center">
+                <span className="text-xl font-bold">{totalCubicYards.toFixed(2)}</span>
+                <span className="text-xs block text-gray-500">cu yards</span>
+              </div>
+              <div className="text-center">
+                <span className="text-xl font-bold">{Math.round(totalTons)}</span>
+                <span className="text-xs block text-gray-500">tons</span>
+              </div>
+            </div>
           </div>
         )}
 
