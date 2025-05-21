@@ -1,23 +1,36 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import TonSelector from './TonSelector';
 import DeliveryDatePicker from './DeliveryDatePicker';
 import { Product } from '@/services/productTypes';
+import AmountSelector from './AmountSelector';
 
 interface ProductActionsProps {
   product: Product;
   adjustedPrice: number;
   onAddToCart: (product: Product & { tons: number, deliveryDate: Date }) => void;
+  initialTons?: number; // New prop to set initial tons from calculator
 }
 
-const ProductActions = ({ product, adjustedPrice, onAddToCart }: ProductActionsProps) => {
+const ProductActions = ({ 
+  product, 
+  adjustedPrice, 
+  onAddToCart,
+  initialTons 
+}: ProductActionsProps) => {
   const { toast } = useToast();
-  const [selectedTons, setSelectedTons] = React.useState("3");
+  const [selectedTons, setSelectedTons] = React.useState<number>(3);
   const [deliveryDate, setDeliveryDate] = React.useState<Date>();
 
-  const totalPrice = adjustedPrice * parseInt(selectedTons);
+  // Update selectedTons when initialTons prop changes
+  useEffect(() => {
+    if (initialTons) {
+      setSelectedTons(initialTons);
+    }
+  }, [initialTons]);
+
+  const totalPrice = adjustedPrice * selectedTons;
 
   const handleAddToCart = () => {
     if (!deliveryDate) {
@@ -32,17 +45,16 @@ const ProductActions = ({ product, adjustedPrice, onAddToCart }: ProductActionsP
     onAddToCart({
       ...product,
       price: adjustedPrice,
-      tons: parseInt(selectedTons),
+      tons: selectedTons,
       deliveryDate
     });
   };
 
   return (
     <div className="space-y-8">
-      <TonSelector 
-        value={selectedTons} 
-        onValueChange={setSelectedTons} 
-        tonYardRatio={product.tonYardRatio}
+      <AmountSelector 
+        selectedAmount={selectedTons}
+        onSelectAmount={setSelectedTons}
       />
 
       <DeliveryDatePicker 
