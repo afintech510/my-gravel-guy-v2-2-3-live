@@ -345,8 +345,7 @@ const ShopCalculator = () => {
       />
 
       {/* Area Inputs */}
-      <div className="mt-6">
-        <h3 className="font-medium text-gray-700 mb-2">Area to Cover</h3>
+      <div className="mt-6"> 
         <ShopAreaInputs areas={areas} setAreas={setAreas} />
       </div>
 
