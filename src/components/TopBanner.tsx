@@ -39,10 +39,11 @@ const TopBanner = ({ className }: TopBannerProps) => {
       <div className="max-w-6xl mx-auto flex items-center justify-center">
         <h3 className="text-sm font-semibold">
           FREE DELIVERY {' '} 
-           <ChevronsRight className="h-3 w-3 ml-0.5" />
+           
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <button className="inline-flex items-center underline hover:text-white transition-colors">
+                <ChevronsRight className="h-5 w-5 ml-0.5" />
                 {locationText}
                 <MapPin className="h-3 w-3 ml-0.5" />
               </button>
