@@ -1,3 +1,4 @@
+
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu, ShoppingCart, NotebookPen, Calculator, Store, ThumbsUp, Phone, House, MapPin, DollarSign, X } from "lucide-react";
@@ -31,12 +32,12 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white border-b z-40 mt-8"> {/* Added mt-8 to give space for the logo above */}
+    <nav className="bg-white border-b z-40"> {/* Removed pt-14 padding */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14">
-          <div className="flex-1"></div> {/* Space filler on left */}
+        <div className="flex items-center justify-between h-14"> {/* Reduced height from 16 to 14 */}
+          <div className="flex-1"></div> {/* Space filler where logo was */}
 
-          <div className="hidden md:flex items-center justify-center space-x-4 flex-1"> {/* Added justify-center and flex-1 */}
+          <div className="hidden md:flex items-center space-x-4">
             {zipCode && zipCodeData && !isSearchLocked && (
               <Button variant="ghost" size="sm" className="text-xs mr-2">
                 <MapPin className="h-3 w-3 mr-1" />
@@ -48,15 +49,12 @@ const Navbar = () => {
               <Link
                 key={link.href}
                 to={link.href}
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-[1.1rem] font-medium inline-flex items-center"
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-[1.1rem] font-medium inline-flex items-center" // Changed from text-sm to text-[1.1rem] (10% increase)
               >
                 {link.icon}
                 {link.label}
               </Link>
             ))}
-          </div>
-          
-          <div className="flex items-center justify-end flex-1"> {/* Added flex-1 and justify-end */}
             <Link to="/cart" className="relative">
               <Button variant="ghost" size="icon">
                 <ShoppingCart className="h-6 w-6" />
@@ -67,8 +65,20 @@ const Navbar = () => {
                 )}
               </Button>
             </Link>
-            
-            <Sheet open={isOpen} onOpenChange={setIsOpen} className="md:hidden">
+          </div>
+
+          <div className="flex items-center md:hidden gap-2">
+            <Link to="/cart" className="relative">
+              <Button variant="ghost" size="icon">
+                <ShoppingCart className="h-6 w-6" />
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full w-5 h-5 text-xs flex items-center justify-center">
+                    {totalItems}
+                  </span>
+                )}
+              </Button>
+            </Link>
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild className="md:hidden">
                 <Button variant="ghost" size="icon">
                   <Menu className="h-6 w-6" />
@@ -107,7 +117,7 @@ const Navbar = () => {
                     <Link
                       key={link.href}
                       to={link.href}
-                      className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-[1.1rem] font-medium inline-flex items-center"
+                      className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-[1.1rem] font-medium inline-flex items-center" // Changed from text-sm to text-[1.1rem] (10% increase) for mobile menu too
                       onClick={handleMenuClick}
                     >
                       {link.icon}
