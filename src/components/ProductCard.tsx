@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Link } from 'react-router-dom';
 import { useZipCode } from '../contexts/ZipCodeContext';
 import { Product } from '../services/productTypes';
-import { ImageOff, Columns3 } from 'lucide-react';
+import { ImageOff, Columns3, Cog } from 'lucide-react';
 
 // Default product image
 const DEFAULT_PRODUCT_IMAGE = '/lovable-uploads/85eef0fe-9a59-406e-ba6b-54e1aaf6f56b.png';
@@ -16,15 +16,9 @@ const ProductCard = ({ product }: { product: Product }) => {
   
   // Get the image to display - use first image from images array if available, fallback to image field
   const determineImagePath = () => {
-    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+    if (product.images && product.images.length > 0) {
       return product.images[0];
     }
-    
-    // Special case for specific product types
-    if (product.name.toLowerCase().includes('crushed stone')) {
-      return '/lovable-uploads/85eef0fe-9a59-406e-ba6b-54e1aaf6f56b.png';
-    }
-    
     return product.image || DEFAULT_PRODUCT_IMAGE;
   };
   

@@ -20,9 +20,6 @@ const ProductHeader = ({ product, zipCode }: ProductHeaderProps) => {
           Delivery available to ZIP {zipCode}
         </p>
       )}
-        <p className="text-sm mb-6">
-          3 ton Minimum Order
-        </p>
     </div>
   );
 };
