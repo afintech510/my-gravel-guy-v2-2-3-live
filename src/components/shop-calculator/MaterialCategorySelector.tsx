@@ -178,7 +178,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
         
         {categories.map(category => (
           <TabsContent key={category.id} value={category.id} className="space-y-6">
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Subcategory Selection */}
               <div className="grid grid-cols-5 gap-2">
                 {subcategories[category.id].map(subcategory => (
@@ -196,18 +196,18 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
                 ))}
               </div>
               
-              {/* Third-level options */}
+              {/* Third-level options with improved styling */}
               {thirdLevelOptions.length > 0 && (
-                <div className="mt-6">
-                  <div className="grid grid-cols-5 gap-2">
+                <div className="mt-8">
+                  <div className="flex justify-between gap-2">
                     {thirdLevelOptions.map(option => (
                       <button
                         key={option}
                         onClick={() => setSelectedThirdOption(option)}
-                        className={`p-2 rounded-lg text-sm transition-colors w-full font-montserrat font-bold ${
+                        className={`px-4 py-2 rounded-lg transition-colors w-full font-montserrat font-bold text-base ${
                           selectedThirdOption === option
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-gray-100 hover:bg-gray-200'
+                            ? 'bg-primary text-black'
+                            : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                         }`}
                       >
                         {getThirdLevelDisplayName(option)}
@@ -219,7 +219,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
               
               {/* Size Selector */}
               {categoriesWithSizes.includes(category.id) && (
-                <div className="mt-6">
+                <div className="mt-8">
                   <SizeSelector
                     selectedSize={selectedSize}
                     setSelectedSize={setSelectedSize}
