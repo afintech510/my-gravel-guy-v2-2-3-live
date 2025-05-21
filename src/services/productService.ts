@@ -1,3 +1,4 @@
+
 import { Product, ZipCodeData } from './productTypes';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -231,6 +232,7 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
       }
 
       // Generate a slug if one doesn't exist
+      // FIX: Handle case where row doesn't have slug property
       const slug = row.slug || (row.name ? row.name.toLowerCase().replace(/\s+/g, '-') : `product-${index + 1}`);
       
       // Process images using the new focused function
