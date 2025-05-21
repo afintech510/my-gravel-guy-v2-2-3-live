@@ -36,8 +36,8 @@ export const useCalculator = (
   };
 
   const calculateTotalTons = (cubicYards: number): number => {
-    // Round to whole number when calculating tons
-    return Math.floor(cubicYards * tonYardRatio);
+    // Use the provided tonYardRatio for conversion
+    return +(cubicYards * tonYardRatio).toFixed(2);
   };
 
   const calculateEstimatedCost = (tons: number): number => {

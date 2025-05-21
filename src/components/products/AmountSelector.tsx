@@ -23,7 +23,7 @@ const AmountSelector = ({
   );
   
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 font-montserrat">
       <label className="text-sm font-medium">Select Amount (tons)</label>
       
       <ScrollArea className="w-full whitespace-nowrap pb-2">
@@ -35,7 +35,7 @@ const AmountSelector = ({
               size="sm"
               onClick={() => onSelectAmount(amount)}
               className={cn(
-                "min-w-[3rem]",
+                "min-w-[3rem] font-montserrat",
                 selectedAmount === amount && "bg-primary text-primary-foreground"
               )}
             >

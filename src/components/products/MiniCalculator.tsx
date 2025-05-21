@@ -9,9 +9,14 @@ import { useCalculator } from "@/hooks/useCalculator";
 interface MiniCalculatorProps {
   onQuantityCalculated: (tons: number) => void;
   pricePerTon: number;
+  tonYardRatio?: number;
 }
 
-const MiniCalculator = ({ onQuantityCalculated, pricePerTon }: MiniCalculatorProps) => {
+const MiniCalculator = ({ 
+  onQuantityCalculated, 
+  pricePerTon,
+  tonYardRatio = 1.5 // Default if not provided
+}: MiniCalculatorProps) => {
   const [length, setLength] = useState<number>(0);
   const [width, setWidth] = useState<number>(0);
   const [depth, setDepth] = useState<number>(2); // Default 2 inches
@@ -21,7 +26,8 @@ const MiniCalculator = ({ onQuantityCalculated, pricePerTon }: MiniCalculatorPro
     [{ length, width }],
     depth,
     extraPercentage,
-    pricePerTon
+    pricePerTon,
+    tonYardRatio
   );
 
   const handleCalculate = () => {
@@ -30,7 +36,7 @@ const MiniCalculator = ({ onQuantityCalculated, pricePerTon }: MiniCalculatorPro
   };
 
   return (
-    <div className="border rounded-lg overflow-hidden">
+    <div className="border rounded-lg overflow-hidden font-montserrat">
       <div className="bg-gray-50 p-4 border-b">
         <div className="flex items-center gap-2">
           <Calculator className="h-5 w-5" />
@@ -101,15 +107,15 @@ const MiniCalculator = ({ onQuantityCalculated, pricePerTon }: MiniCalculatorPro
         {totalSquareFeet > 0 && (
           <div className="py-3 space-y-1">
             <p className="text-sm text-gray-600">Results:</p>
-            <p className="text-base"><strong>{Math.round(totalSquareFeet)}</strong> sq ft</p>
-            <p className="text-base"><strong>{totalCubicYards.toFixed(2)}</strong> cu yards</p>
-            <p className="text-base"><strong>{Math.round(totalTons)}</strong> tons</p>
+            <p className="text-base font-montserrat"><strong>{Math.round(totalSquareFeet)}</strong> sq ft</p>
+            <p className="text-base font-montserrat"><strong>{totalCubicYards.toFixed(2)}</strong> cu yards</p>
+            <p className="text-base font-montserrat"><strong>{Math.round(totalTons)}</strong> tons</p>
           </div>
         )}
 
         <Button 
           onClick={handleCalculate} 
-          className="w-full"
+          className="w-full font-montserrat"
         >
           Use This Amount
         </Button>
