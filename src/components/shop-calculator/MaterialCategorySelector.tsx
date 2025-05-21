@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Truck, Building, Shovel, Map, Trees, ChevronDown } from 'lucide-react';
+import { Truck, Map, Shovel, Trees, Building, ChevronDown } from 'lucide-react';
 import { MaterialCategory, ApplicationType, MaterialSubcategory, MaterialSize } from './ShopCalculator';
 import { 
   Tabs, 
@@ -177,30 +177,28 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
         </TabsList>
         
         {categories.map(category => (
-          <TabsContent key={category.id} value={category.id}>
-            <div className="flex flex-col space-y-10">
-              {/* First Row: Subcategory Selection with fixed height container */}
-              <div className="h-16">
-                <div className="grid grid-cols-5 gap-2">
-                  {subcategories[category.id].map(subcategory => (
-                    <button
-                      key={subcategory}
-                      onClick={() => setSelectedSubcategory(subcategory)}
-                      className={`p-2 rounded-lg text-sm transition-colors w-full ${
-                        selectedSubcategory === subcategory && selectedCategory === category.id
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-gray-100 hover:bg-gray-200'
-                      }`}
-                    >
-                      {getSubcategoryDisplayName(subcategory)}
-                    </button>
-                  ))}
-                </div>
+          <TabsContent key={category.id} value={category.id} className="space-y-6">
+            <div className="space-y-6">
+              {/* Subcategory Selection */}
+              <div className="grid grid-cols-5 gap-2">
+                {subcategories[category.id].map(subcategory => (
+                  <button
+                    key={subcategory}
+                    onClick={() => setSelectedSubcategory(subcategory)}
+                    className={`p-2 rounded-lg text-sm transition-colors w-full ${
+                      selectedSubcategory === subcategory && selectedCategory === category.id
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-gray-100 hover:bg-gray-200'
+                    }`}
+                  >
+                    {getSubcategoryDisplayName(subcategory)}
+                  </button>
+                ))}
               </div>
               
-              {/* Second Row: Third-level options with improved styling and spacing */}
+              {/* Third-level options with improved styling */}
               {thirdLevelOptions.length > 0 && (
-                <div className="h-16">
+                <div className="mt-8">
                   <div className="flex justify-between gap-2">
                     {thirdLevelOptions.map(option => (
                       <button
@@ -219,9 +217,9 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
                 </div>
               )}
               
-              {/* Third Row: Size Selector with spacing */}
+              {/* Size Selector */}
               {categoriesWithSizes.includes(category.id) && (
-                <div className="h-16">
+                <div className="mt-8">
                   <SizeSelector
                     selectedSize={selectedSize}
                     setSelectedSize={setSelectedSize}
