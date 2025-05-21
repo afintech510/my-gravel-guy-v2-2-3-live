@@ -33,22 +33,24 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ images, productName }) 
 
   return (
     <div className="space-y-3">
-      <div className="relative overflow-hidden rounded-lg border border-gray-200" style={{ height: '380px' }}>
-        {imageError ? (
-          <div className="w-full h-full flex items-center justify-center bg-gray-100">
-            <ImageOff className="h-12 w-12 text-gray-400" />
-          </div>
-        ) : (
-          <img
-            src={limitedImages[selectedImage]}
-            alt={`${productName} - View ${selectedImage + 1}`}
-            className="object-cover w-full h-full"
-            onError={() => {
-              console.log(`Image failed to load for ${productName}:`, limitedImages[selectedImage]);
-              setImageError(true);
-            }}
-          />
-        )}
+      <div className="relative overflow-hidden rounded-lg border border-gray-200">
+        <AspectRatio ratio={1} className="bg-gray-100">
+          {imageError ? (
+            <div className="w-full h-full flex items-center justify-center">
+              <ImageOff className="h-12 w-12 text-gray-400" />
+            </div>
+          ) : (
+            <img
+              src={limitedImages[selectedImage]}
+              alt={`${productName} - View ${selectedImage + 1}`}
+              className="object-cover w-full h-full"
+              onError={() => {
+                console.log(`Image failed to load for ${productName}:`, limitedImages[selectedImage]);
+                setImageError(true);
+              }}
+            />
+          )}
+        </AspectRatio>
       </div>
       
       {limitedImages.length > 1 && (
