@@ -48,7 +48,7 @@ const ProductCard = ({ product }: { product: Product }) => {
       <CardFooter className="pt-2">
         <Button asChild className="w-full">
           <Link to={`/products/${encodeURIComponent(product.slug)}`}>
-            View Details
+            Shop
           </Link>
         </Button>
       </CardFooter>
