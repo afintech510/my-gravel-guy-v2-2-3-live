@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { MapPin } from 'lucide-react';
+import { MapPin, ChevronsRight } from 'lucide-react';
 import { useZipCode } from '../contexts/ZipCodeContext';
 import { 
   Dialog,
@@ -38,7 +38,8 @@ const TopBanner = ({ className }: TopBannerProps) => {
     )}>
       <div className="max-w-6xl mx-auto flex items-center justify-center">
         <h3 className="text-sm font-semibold">
-          FREE Delivery to{' '}
+          FREE DELIVERY {' '} 
+           <ChevronsRight className="h-3 w-3 ml-0.5" />
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <button className="inline-flex items-center underline hover:text-white transition-colors">
