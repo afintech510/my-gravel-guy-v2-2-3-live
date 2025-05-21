@@ -53,7 +53,7 @@ const ShopAreaInputs: React.FC<ShopAreaInputsProps> = ({ areas, setAreas }) => {
                   size="sm" 
                   variant="outline"
                   onClick={() => adjustValue(index, 'length', -1)}
-                  className="h-10 w-10 rounded-r-none border-r-0"
+                  className="h-10 w-10 rounded-full"
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
@@ -62,14 +62,14 @@ const ShopAreaInputs: React.FC<ShopAreaInputsProps> = ({ areas, setAreas }) => {
                   min="1"
                   value={area.length}
                   onChange={(e) => handleInputChange(index, 'length', parseInt(e.target.value) || 1)}
-                  className="h-10 text-center rounded-none border-x-0"
+                  className="h-10 mx-2 text-center"
                 />
                 <Button 
                   type="button" 
                   size="sm"
                   variant="outline" 
                   onClick={() => adjustValue(index, 'length', 1)}
-                  className="h-10 w-10 rounded-l-none border-l-0"
+                  className="h-10 w-10 rounded-full"
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -83,7 +83,7 @@ const ShopAreaInputs: React.FC<ShopAreaInputsProps> = ({ areas, setAreas }) => {
                   size="sm" 
                   variant="outline"
                   onClick={() => adjustValue(index, 'width', -1)}
-                  className="h-10 w-10 rounded-r-none border-r-0"
+                  className="h-10 w-10 rounded-full"
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
@@ -92,14 +92,14 @@ const ShopAreaInputs: React.FC<ShopAreaInputsProps> = ({ areas, setAreas }) => {
                   min="1"
                   value={area.width}
                   onChange={(e) => handleInputChange(index, 'width', parseInt(e.target.value) || 1)}
-                  className="h-10 text-center rounded-none border-x-0"
+                  className="h-10 mx-2 text-center"
                 />
                 <Button 
                   type="button" 
                   size="sm"
                   variant="outline" 
                   onClick={() => adjustValue(index, 'width', 1)}
-                  className="h-10 w-10 rounded-l-none border-l-0"
+                  className="h-10 w-10 rounded-full"
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
