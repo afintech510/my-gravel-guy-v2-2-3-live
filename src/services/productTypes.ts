@@ -5,6 +5,7 @@ export interface Product {
   description: string;
   price: number;
   image: string;
+  images?: string[]; // New field for multiple images
   category: 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base';
   categories?: string[]; // Added for multiple categories per product
   slug: string;
