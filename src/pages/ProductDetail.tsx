@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +26,9 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
   
   const { product, adjustedPrice, loading, error } = useProduct(slug, zipCode);
+  
+  // State for selected tons from mini calculator
+  const [calculatedTons, setCalculatedTons] = useState<number | null>(null);
 
   // Track product view when product data is loaded
   useEffect(() => {
@@ -94,6 +98,18 @@ const ProductDetail = () => {
     });
   };
 
+  // Handle quantity from calculator
+  const handleQuantityCalculated = (tons: number) => {
+    // Update the selected tons
+    setCalculatedTons(tons);
+    
+    // Show toast notification
+    toast({
+      title: "Amount updated",
+      description: `${tons} tons has been set as your selected amount.`,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-white py-16 px-4">
       <div className="max-w-6xl mx-auto">
@@ -120,11 +136,12 @@ const ProductDetail = () => {
               product={product}
               adjustedPrice={adjustedPrice ?? product.price}
               onAddToCart={handleAddToCart}
+              initialTons={calculatedTons ?? undefined}
             />
 
             <MiniCalculator
               pricePerTon={adjustedPrice ?? product.price}
-              onQuantityCalculated={(tons) => console.log(tons)}
+              onQuantityCalculated={handleQuantityCalculated}
             />
           </div>
         </div>
