@@ -20,7 +20,7 @@ const ProductActions = ({
   initialTons 
 }: ProductActionsProps) => {
   const { toast } = useToast();
-  const [selectedTons, setSelectedTons] = React.useState<number>(3);
+  const [selectedTons, setSelectedTons] = React.useState<number>(initialTons || 10);
   const [deliveryDate, setDeliveryDate] = React.useState<Date>();
 
   // Update selectedTons when initialTons prop changes
