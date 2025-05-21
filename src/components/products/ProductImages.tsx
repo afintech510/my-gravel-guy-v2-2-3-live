@@ -14,7 +14,7 @@ const ProductImages = ({ product }: ProductImagesProps) => {
   const [imageError, setImageError] = useState(false);
   
   // Use the image path directly from the product data
-  const imagePath = product?.image || DEFAULT_PRODUCT_IMAGE;
+  const imagePath = products?.image || DEFAULT_PRODUCT_IMAGE;
   
   return (
     <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
