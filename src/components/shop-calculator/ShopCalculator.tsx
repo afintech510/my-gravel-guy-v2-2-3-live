@@ -136,6 +136,7 @@ const ShopCalculator = () => {
         setPriceAdjustment(adjustment);
         return true;
       } else {
+        // Only show toast for critical errors like delivery unavailability
         toast({
           title: "Delivery Not Available",
           description: `We don't currently deliver to ${zipCode}. Please try another ZIP code.`,
@@ -180,7 +181,8 @@ const ShopCalculator = () => {
       toast({
         title: "ZIP Code Required",
         description: "Please enter a valid delivery ZIP code",
-        variant: "destructive"
+        variant: "destructive",
+        className: "border-green-500 border-2 shadow-[0_0_15px_rgba(20,255,106,0.5)]"
       });
       return;
     }
@@ -234,6 +236,7 @@ const ShopCalculator = () => {
       toast({
         title: "Added to Cart",
         description: message,
+        className: "border-green-500 border-2 shadow-[0_0_15px_rgba(20,255,106,0.5)]"
       });
     }
   };
@@ -245,17 +248,21 @@ const ShopCalculator = () => {
     
     if (isValid && consentGiven) {
       setDiscountApplied(true);
+      // We'll still keep this toast as it's an important confirmation
       toast({
         title: "Discount Applied!",
         description: "Your $50 discount has been applied to your order.",
+        className: "border-green-500 border-2 shadow-[0_0_15px_rgba(20,255,106,0.5)]"
       });
     } else {
       // Trigger validation to show errors
       form.trigger();
+      // Keep critical errors
       toast({
         title: "Please complete the form",
         description: "Fill out all required fields and accept communications to get your discount.",
-        variant: "destructive"
+        variant: "destructive",
+        className: "border-green-500 border-2 shadow-[0_0_15px_rgba(20,255,106,0.5)]"
       });
     }
   };

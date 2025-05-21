@@ -1,6 +1,9 @@
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Product } from '../services/productTypes';
+import { useToast } from '@/hooks/use-toast';
+import { ToastAction } from '@/components/ui/toast';
+import { Undo } from 'lucide-react';
 
 export interface DeliveryAddress {
   street: string;
@@ -69,6 +72,8 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [lastRemovedItem, setLastRemovedItem] = useState<CartItem | null>(null);
+  const { toast } = useToast();
 
   // Modified to add each product as a new cart item (never combine)
   const addToCart = useCallback((product: Product & { 
@@ -108,9 +113,42 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ]);
   }, []);
 
+  // New function to restore the last removed item
+  const restoreLastRemovedItem = useCallback(() => {
+    if (lastRemovedItem) {
+      setItems(currentItems => [...currentItems, lastRemovedItem]);
+      setLastRemovedItem(null);
+    }
+  }, [lastRemovedItem]);
+
+  // Modified to store the removed item and display toast with undo action
   const removeFromCart = useCallback((productId: string | number) => {
-    setItems(currentItems => currentItems.filter(item => item.id !== productId));
-  }, []);
+    setItems(currentItems => {
+      const itemToRemove = currentItems.find(item => item.id === productId);
+      if (itemToRemove) {
+        setLastRemovedItem(itemToRemove);
+        
+        // Show toast with undo button
+        const itemDescription = itemToRemove.materialCategory 
+          ? `${itemToRemove.tons} tons of ${itemToRemove.materialCategory}`
+          : itemToRemove.name;
+          
+        toast({
+          title: "Item Removed",
+          description: `${itemDescription} has been removed from your cart.`,
+          action: (
+            <ToastAction altText="Undo" onClick={restoreLastRemovedItem}>
+              <span className="flex items-center">
+                <Undo className="mr-1 h-4 w-4" /> Undo
+              </span>
+            </ToastAction>
+          ),
+          className: "border-green-500 border-2 shadow-[0_0_15px_rgba(20,255,106,0.5)]"
+        });
+      }
+      return currentItems.filter(item => item.id !== productId);
+    });
+  }, [toast, restoreLastRemovedItem]);
 
   // New function to update delivery details for a specific cart item
   const updateDeliveryDetails = useCallback((
