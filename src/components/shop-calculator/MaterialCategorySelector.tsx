@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Truck, Map, Shovel, Trees, Building, ChevronDown } from 'lucide-react';
 import { MaterialCategory, ApplicationType, MaterialSubcategory, MaterialSize } from './ShopCalculator';
@@ -162,15 +161,17 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
         onValueChange={handleTabChange}
         className="w-full"
       >
-        {/* Row 1: Material Category Tabs (with icons) */}
+        {/* Row 1: Material Category Tabs (with icons) - Increased height */}
         <TabsList className="grid grid-cols-5 mb-6 bg-gray-100 p-1 rounded-lg">
           {categories.map(category => (
             <TabsTrigger 
               key={category.id} 
               value={category.id}
-              className="flex flex-col items-center justify-center p-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="flex flex-col items-center justify-center p-4 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
-              {category.icon}
+              <div className="mb-2">
+                {category.icon}
+              </div>
               <span className="mt-1 text-base font-medium">
                 {category.name}
               </span>
