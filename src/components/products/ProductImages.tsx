@@ -4,7 +4,7 @@ import { Product } from '@/services/productTypes';
 import { ImageOff } from 'lucide-react';
 
 // Default product image
-const DEFAULT_PRODUCT_IMAGE = '/lovable-uploads/85eef0fe-9a59-406e-ba6b-54e1aaf6f56b.png';
+const DEFAULT_PRODUCT_IMAGE = '/assets/river-rocks.png';
 
 interface ProductImagesProps {
   product: Product;
