@@ -1,6 +1,8 @@
 
 import React from 'react';
 import ShopCalculator from '../components/shop-calculator/ShopCalculator';
+import QuoteFormProduct from '../components/forms/QuoteFormProduct';
+import TrustBanner from '../components/products/trust/TrustBanner';
 
 const CalculatorShop = () => {
   return (
@@ -9,6 +11,18 @@ const CalculatorShop = () => {
         <h1 className="text-3xl font-bold text-center mb-6 font-montserrat">Material Calculator</h1>
         <p className="text-center text-gray-600 mb-8 font-montserrat">Choose your material type and calculate how much you need for your project</p>
         <ShopCalculator />
+        
+        {/* Quote Form Component */}
+        <div className="mt-16">
+          <QuoteFormProduct />
+        </div>
+        
+        {/* Trust Banner */}
+        <TrustBanner 
+          badgeSize="normal"
+          title="Why Choose My Gravel Guy" 
+          className="my-12"
+        />
       </div>
     </div>
   );
