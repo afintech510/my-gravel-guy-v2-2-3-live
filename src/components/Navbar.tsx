@@ -7,12 +7,14 @@ import { useCart } from '../contexts/CartContext';
 import { useZipCode } from '../contexts/ZipCodeContext';
 import ZipCodeSearch from './zip-code/ZipCodeSearch';
 import { useState } from 'react';
+import { useIsMobile } from '../hooks/use-mobile';
 
 const Navbar = () => {
   const { items } = useCart();
   const { zipCode, zipCodeData, clearZipCode, isSearchLocked } = useZipCode();
   const totalItems = items.reduce((sum, item) => sum + item.tons, 0);
   const [isOpen, setIsOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const links = [
     { href: "/", label: "Home", icon: <House className="h-4 w-4 mr-1" /> },
@@ -32,19 +34,19 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white border-b z-40"> {/* Removed pt-14 padding */}
+    <nav className="bg-white border-b z-40">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14"> {/* Reduced height from 16 to 14 */}
+        <div className="flex items-center justify-between h-14">
           <div className="flex-1">
                   {/* Logo floating above banner and navbar */}
-                      <Link to="/" className="absolute left-[calc((100%-72rem)/2+1rem)] -top-1 z-50">
+                      <Link to="/" className="absolute left-4 md:left-[calc((100%-72rem)/2+1rem)] -top-1 z-50">
                         <img 
                           src="/lovable-uploads/04048679-bd9f-42de-b2d0-70fddf60125e.png" 
                           alt="My Gravel Guy Logo" 
-                          className="h-24 w-auto" /* Slightly reduced height from 28 to 24 */
+                          className="h-24 w-auto"
                         />  
                       </Link>
-          </div> {/* Space filler where logo was */}
+          </div>
 
           <div className="hidden md:flex items-center space-x-4">
             {zipCode && zipCodeData && !isSearchLocked && (
@@ -58,7 +60,7 @@ const Navbar = () => {
               <Link
                 key={link.href}
                 to={link.href}
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-[1.1rem] font-medium inline-flex items-center" // Changed from text-sm to text-[1.1rem] (10% increase)
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-[1.1rem] font-medium inline-flex items-center"
               >
                 {link.icon}
                 {link.label}
@@ -126,7 +128,7 @@ const Navbar = () => {
                     <Link
                       key={link.href}
                       to={link.href}
-                      className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-[1.1rem] font-medium inline-flex items-center" // Changed from text-sm to text-[1.1rem] (10% increase) for mobile menu too
+                      className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-[1.1rem] font-medium inline-flex items-center"
                       onClick={handleMenuClick}
                     >
                       {link.icon}
