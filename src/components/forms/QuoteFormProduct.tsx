@@ -79,11 +79,13 @@ const QuoteFormProduct = ({ product }: QuoteFormProductProps) => {
   return (
     <div className="bg-white rounded-lg border shadow-sm p-6 mb-12">
       <div className="relative mb-8">
+        {/* Trapezoid Quote Form header */}
         <div className="absolute -top-10 left-0 right-0 flex justify-center">
-          <div className="bg-green-500 text-center px-8 py-2 font-semibold text-white transform skew-x-12">
+          <div className="bg-green-500 text-center px-8 py-2 font-semibold text-black transform skew-x-12">
             QUOTE FORM
           </div>
         </div>
+        
         <h2 className="text-3xl font-bold text-center mb-2 text-black">
           FILL OUT BELOW FOR A FREE QUOTE
         </h2>
