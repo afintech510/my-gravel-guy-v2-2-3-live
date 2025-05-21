@@ -113,12 +113,12 @@ const MiniCalculator = ({
                 <span className="text-xs block text-gray-500">sq ft</span>
               </div>
               <div className="text-center">
-                <span className="text-xl font-bold">{totalCubicYards.toFixed(2)}</span>
-                <span className="text-xs block text-gray-500">cu yards</span>
-              </div>
-              <div className="text-center">
                 <span className="text-xl font-bold">{Math.round(totalTons)}</span>
                 <span className="text-xs block text-gray-500">tons</span>
+              </div>
+              <div className="text-center">
+                <span className="text-xl font-bold">{totalCubicYards.toFixed(2)}</span>
+                <span className="text-xs block text-gray-500">cu yards</span>
               </div>
             </div>
           </div>
