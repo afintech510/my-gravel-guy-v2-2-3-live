@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Truck, Map, Shovel, Trees, Building, ChevronDown } from 'lucide-react';
 import { MaterialCategory, ApplicationType, MaterialSubcategory, MaterialSize } from './ShopCalculator';
@@ -116,8 +117,6 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
 
   return (
     <div>
-      <h3 className="font-medium text-gray-700 mb-2">Material</h3>
-      
       <Tabs 
         defaultValue={selectedCategory} 
         value={selectedCategory}
@@ -142,9 +141,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
         {categories.map(category => (
           <TabsContent key={category.id} value={category.id} className="space-y-6">
             <div className="space-y-4">
-              <h3 className="font-medium text-gray-700">Type</h3>
-              
-              {/* Subcategory Selection */}
+              {/* Subcategory Selection - Removed "Type" heading */}
               <div className="grid grid-cols-5 gap-2">
                 {subcategories[category.id].map(subcategory => (
                   <button
@@ -161,10 +158,9 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
                 ))}
               </div>
               
-              {/* Size Selector (only for applicable categories) */}
+              {/* Size Selector - Removed "Size" heading */}
               {categoriesWithSizes.includes(category.id) && (
                 <div className="mt-6">
-                  <h3 className="font-medium text-gray-700 mb-2">Size</h3>
                   <SizeSelector
                     selectedSize={selectedSize}
                     setSelectedSize={setSelectedSize}
@@ -172,17 +168,16 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
                 </div>
               )}
               
-              {/* Description and Product Gallery in flex layout */}
+              {/* Description and Product Gallery in flex layout - Removed "Description" heading */}
               <div className="flex flex-col md:flex-row gap-6 mt-6">
                 {/* Description */}
                 <div className="flex-1 p-4 bg-gray-50 rounded-md">
-                  <h3 className="font-medium text-gray-700 mb-2">Description</h3>
                   <p className="text-sm text-gray-600">
                     {getDescription(category.id, selectedCategory === category.id ? selectedSubcategory : subcategories[category.id][0])}
                   </p>
                 </div>
                 
-                {/* Product Gallery - Removed the h3 title and adjusted the div for more height */}
+                {/* Product Gallery */}
                 <div className="md:w-1/3 md:max-w-[300px]">
                   <ProductGallery 
                     images={productImages.slice(0, 3)} 
