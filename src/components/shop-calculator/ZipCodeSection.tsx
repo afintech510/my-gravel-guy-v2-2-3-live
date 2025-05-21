@@ -65,7 +65,7 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
               type="button" 
               variant="outline" 
               onClick={() => adjustTons(-1)}
-              className="h-10 w-10 rounded-r-none border-r-0"
+              className="h-10 w-10 rounded-full"
               disabled={Math.floor(totalTons) <= 1}
             >
               <Minus className="h-4 w-4" />
@@ -75,13 +75,13 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
               min="1"
               value={Math.floor(totalTons)}
               onChange={(e) => handleTonsChange(parseInt(e.target.value) || 1)}
-              className="h-10 text-center rounded-none border-x-0"
+              className="h-10 mx-2 text-center"
             />
             <Button 
               type="button" 
               variant="outline" 
               onClick={() => adjustTons(1)}
-              className="h-10 w-10 rounded-l-none border-l-0"
+              className="h-10 w-10 rounded-full"
             >
               <Plus className="h-4 w-4" />
             </Button>
