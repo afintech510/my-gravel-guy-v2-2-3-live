@@ -234,7 +234,7 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
     return (
       <div className="space-y-2 mt-4">
         <label className="text-sm font-medium">{title}</label>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-12">
           {options.map((option) => {
             const isAvailable = availableOptions.includes(option);
             return (
