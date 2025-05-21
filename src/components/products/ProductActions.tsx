@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -50,7 +51,7 @@ const ProductActions = ({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <AmountSelector 
         selectedAmount={selectedTons}
         onSelectAmount={setSelectedTons}
@@ -63,17 +64,13 @@ const ProductActions = ({
 
       <div className="space-y-4">
         <div className="border-t border-b py-4 space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="text-sm">Price per ton:</span>
-            <span className="font-medium">${adjustedPrice.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm">Amount:</span>
-            <span className="font-medium">{selectedTons} tons</span>
-          </div>
           <div className="flex justify-between items-center text-lg font-bold">
             <span>Total:</span>
             <span>${totalPrice.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between items-center text-sm text-gray-600">
+            <span>Shipping:</span>
+            <span className="text-green-600 font-medium">FREE</span>
           </div>
         </div>
         
