@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
@@ -132,7 +131,7 @@ const ProductDetail = () => {
 
         <ProductTabs product={product} />
         
-        {/* Add Quote Form Component Above Trust Banner */}
+        {/* Quote Form Component Above Trust Banner */}
         <div className="mt-16">
           <QuoteFormProduct product={product} />
         </div>

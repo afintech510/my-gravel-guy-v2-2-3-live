@@ -80,11 +80,11 @@ const QuoteFormProduct = ({ product }: QuoteFormProductProps) => {
     <div className="bg-white rounded-lg border shadow-sm p-6 mb-12">
       <div className="relative mb-8">
         <div className="absolute -top-10 left-0 right-0 flex justify-center">
-          <div className="bg-yellow-400 text-center px-8 py-2 font-semibold text-white transform skew-x-12">
+          <div className="bg-green-500 text-center px-8 py-2 font-semibold text-white transform skew-x-12">
             QUOTE FORM
           </div>
         </div>
-        <h2 className="text-3xl font-bold text-center mb-2 text-gray-800">
+        <h2 className="text-3xl font-bold text-center mb-2 text-green-500">
           FILL OUT BELOW FOR A FREE QUOTE
         </h2>
         <p className="text-gray-600 text-center">
@@ -216,7 +216,7 @@ const QuoteFormProduct = ({ product }: QuoteFormProductProps) => {
 
           <Button 
             type="submit" 
-            className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold"
+            className="w-full bg-green-500 hover:bg-green-600 text-black font-bold"
           >
             SUBMIT
           </Button>
