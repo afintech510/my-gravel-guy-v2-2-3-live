@@ -43,6 +43,7 @@ const Navbar = () => {
                           alt="My Gravel Guy Logo" 
                           className="h-24 w-auto" /* Slightly reduced height from 28 to 24 */
                         />  
+                      </Link>
           </div> {/* Space filler where logo was */}
 
           <div className="hidden md:flex items-center space-x-4">
