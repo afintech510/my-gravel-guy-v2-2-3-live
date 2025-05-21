@@ -203,7 +203,7 @@ const QuoteFormProduct = ({ product }: QuoteFormProductProps) => {
                 <FormItem>
                   <FormControl>
                     <Textarea
-                      placeholder="Details about the job, aggregate and anything else we'll need to know."
+                      placeholder="Details about the job, timeframe, aggregate material, accessibility and anything else we'll need to know."
                       className="min-h-[120px]"
                       {...field}
                     />
