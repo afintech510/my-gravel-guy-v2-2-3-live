@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Truck, Map, Shovel, Trees, Building, ChevronDown } from 'lucide-react';
 import { MaterialCategory, ApplicationType, MaterialSubcategory, MaterialSize } from './ShopCalculator';
 import { 
@@ -47,9 +47,32 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
     gravel: ['driveway', 'walkway', 'landscape', 'natural', 'construction']
   };
 
+  // Define third-level options for specific subcategories
+  const [thirdLevelOptions, setThirdLevelOptions] = useState<string[]>([]);
+  const [selectedThirdOption, setSelectedThirdOption] = useState<string>('');
+
+  // Define third-level options mapping
+  const thirdLevelMapping: Record<string, Record<string, string[]>> = {
+    'gravel': {
+      'landscape': ['river-rock', 'pea-gravel'],
+      'construction': ['rca-crushed-concrete', 'road-base', 'crusher-run']
+    }
+  };
+
   // Categories that should show size selection
   const categoriesWithSizes: MaterialCategory[] = ['gravel', 'base'];
   const showSizeSelector = categoriesWithSizes.includes(selectedCategory);
+
+  // Update third-level options when category or subcategory changes
+  useEffect(() => {
+    const options = thirdLevelMapping[selectedCategory]?.[selectedSubcategory] || [];
+    setThirdLevelOptions(options);
+    if (options.length > 0) {
+      setSelectedThirdOption(options[0]);
+    } else {
+      setSelectedThirdOption('');
+    }
+  }, [selectedCategory, selectedSubcategory]);
 
   // Get formatted display name for subcategory
   const getSubcategoryDisplayName = (subcategory: MaterialSubcategory): string => {
@@ -86,6 +109,21 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
     };
     
     return nameMap[subcategory] || subcategory.split('-').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  };
+
+  // Get formatted display name for third-level options
+  const getThirdLevelDisplayName = (option: string): string => {
+    const nameMap: Record<string, string> = {
+      'river-rock': 'River Rock',
+      'pea-gravel': 'Pea Gravel',
+      'rca-crushed-concrete': 'RCA #1',
+      'road-base': 'Road Base',
+      'crusher-run': 'Crusher Run'
+    };
+    
+    return nameMap[option] || option.split('-').map(word => 
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
   };
@@ -141,7 +179,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
         {categories.map(category => (
           <TabsContent key={category.id} value={category.id} className="space-y-6">
             <div className="space-y-4">
-              {/* Subcategory Selection - Removed "Type" heading */}
+              {/* Subcategory Selection */}
               <div className="grid grid-cols-5 gap-2">
                 {subcategories[category.id].map(subcategory => (
                   <button
@@ -158,7 +196,28 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
                 ))}
               </div>
               
-              {/* Size Selector - Removed "Size" heading */}
+              {/* Third-level options */}
+              {thirdLevelOptions.length > 0 && (
+                <div className="mt-6">
+                  <div className="grid grid-cols-5 gap-2">
+                    {thirdLevelOptions.map(option => (
+                      <button
+                        key={option}
+                        onClick={() => setSelectedThirdOption(option)}
+                        className={`p-2 rounded-lg text-sm transition-colors w-full font-montserrat font-bold ${
+                          selectedThirdOption === option
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-gray-100 hover:bg-gray-200'
+                        }`}
+                      >
+                        {getThirdLevelDisplayName(option)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Size Selector */}
               {categoriesWithSizes.includes(category.id) && (
                 <div className="mt-6">
                   <SizeSelector
@@ -168,7 +227,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
                 </div>
               )}
               
-              {/* Description and Product Gallery in flex layout - Removed "Description" heading */}
+              {/* Description and Product Gallery in flex layout */}
               <div className="flex flex-col md:flex-row gap-6 mt-6">
                 {/* Description */}
                 <div className="flex-1 p-4 bg-gray-50 rounded-md">
