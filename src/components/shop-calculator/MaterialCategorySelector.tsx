@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Truck, Map, Shovel, Trees, Building, ChevronDown } from 'lucide-react';
 import { MaterialCategory, ApplicationType, MaterialSubcategory, MaterialSize } from './ShopCalculator';
@@ -183,9 +182,8 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
                   </p>
                 </div>
                 
-                {/* Product Gallery */}
+                {/* Product Gallery - Removed the h3 title and adjusted the div for more height */}
                 <div className="md:w-1/3 md:max-w-[300px]">
-                  <h3 className="font-medium text-gray-700 mb-2">Product Preview</h3>
                   <ProductGallery 
                     images={productImages.slice(0, 3)} 
                     productName={getSubcategoryDisplayName(selectedSubcategory)} 

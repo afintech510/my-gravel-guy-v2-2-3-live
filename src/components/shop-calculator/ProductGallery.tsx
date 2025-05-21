@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 type ProductGalleryProps = {
   images: string[];
@@ -24,11 +25,11 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ images, productName }) 
 
   return (
     <div className="space-y-3">
-      <div className="relative overflow-hidden rounded-lg border border-gray-200" style={{ maxHeight: '300px' }}>
+      <div className="relative overflow-hidden rounded-lg border border-gray-200" style={{ height: '380px' }}>
         <img
           src={limitedImages[selectedImage]}
           alt={`${productName} - View ${selectedImage + 1}`}
-          className="object-cover w-full h-full max-h-[300px]"
+          className="object-cover w-full h-full"
         />
       </div>
       
