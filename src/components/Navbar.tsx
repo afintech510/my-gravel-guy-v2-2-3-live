@@ -35,7 +35,15 @@ const Navbar = () => {
     <nav className="bg-white border-b z-40"> {/* Removed pt-14 padding */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14"> {/* Reduced height from 16 to 14 */}
-          <div className="flex-1">LOGO</div> {/* Space filler where logo was */}
+          <div className="flex-1">
+                  {/* Logo floating above banner and navbar */}
+                      <Link to="/" className="absolute left-4 -top-3 z-50">
+                        <img 
+                          src="/lovable-uploads/04048679-bd9f-42de-b2d0-70fddf60125e.png" 
+                          alt="My Gravel Guy Logo" 
+                          className="h-24 w-auto" /* Slightly reduced height from 28 to 24 */
+                        />  
+          </div> {/* Space filler where logo was */}
 
           <div className="hidden md:flex items-center space-x-4">
             {zipCode && zipCodeData && !isSearchLocked && (
