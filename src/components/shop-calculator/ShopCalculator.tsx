@@ -8,6 +8,7 @@ import { getProducts, validateZipCode, applyZipCodeAdjustment } from '../../serv
 import { Product } from '../../services/productTypes';
 import { useZipCode } from '../../contexts/ZipCodeContext';
 import { useCalculator } from '../../hooks/useCalculator';
+import { sendCalculatorEmail, EmailData } from '../../utils/emailService';
 import MaterialCategorySelector from './MaterialCategorySelector';
 import ShopAreaInputs from './ShopAreaInputs';
 import ShopCalculationDisplay from './ShopCalculationDisplay';
@@ -39,12 +40,13 @@ export type MaterialSubcategory =
 const contactSchema = z.object({
   name: z.string().min(2, 'Name required'),
   email: z.string().email('Valid email required'),
-  phone: z.string().regex(/^\d{10}$/, 'Valid phone number required'),
+  phone: z.string().min(10, 'Valid phone number required'),
   consent: z.boolean().default(false),
 });
 
 const ShopCalculator = () => {
-  // Material selection state
+  // Material selection state variables
+  
   const [selectedCategory, setSelectedCategory] = useState<MaterialCategory>('gravel');
   const [selectedSubcategory, setSelectedSubcategory] = useState<MaterialSubcategory>('driveway');
   const [selectedApplication, setSelectedApplication] = useState<ApplicationType>('driveway');
@@ -62,6 +64,7 @@ const ShopCalculator = () => {
   const [productImages, setProductImages] = useState<string[]>([]);
   const [discountApplied, setDiscountApplied] = useState<boolean>(false);
   const [lastCalculatedTons, setLastCalculatedTons] = useState<number>(0);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const { toast } = useToast();
   const { addToCart } = useCart();
@@ -77,6 +80,8 @@ const ShopCalculator = () => {
     },
   });
 
+  // useEffect hooks and helper functions
+  
   // Load products on component mount
   useEffect(() => {
     const loadProducts = async () => {
@@ -176,6 +181,82 @@ const ShopCalculator = () => {
     setManualTons(Math.floor(newTons));
   };
 
+  const handleFormSubmit = async (formData: {
+    name: string;
+    email: string;
+    phone: string;
+    consent: boolean;
+  }) => {
+    if (!zipCode) {
+      toast({
+        title: "ZIP Code Required",
+        description: "Please enter a valid delivery ZIP code",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      const finalTons = manualTons !== undefined ? manualTons : calculations.totalTons;
+      const currentPrice = discountApplied ? calculations.discountedCost : calculations.estimatedCost;
+      
+      // Prepare email data
+      const emailData: EmailData = {
+        materialCategory: selectedCategory,
+        materialSubcategory: selectedSubcategory,
+        materialSize: selectedSize,
+        applicationType: selectedApplication,
+        areas: areas,
+        depth: depth,
+        extraPercentage: extraPercentage,
+        totalArea: calculations.totalSquareFeet,
+        cubicYards: calculations.totalCubicYards,
+        tons: finalTons,
+        zipCode: zipCode,
+        price: calculations.estimatedCost,
+        discountedPrice: calculations.discountedCost,
+        discountApplied: discountApplied,
+        contactInfo: {
+          name: formData.name,
+          email: formData.email, 
+          phone: formData.phone,
+          consent: formData.consent
+        }
+      };
+      
+      // Send the email
+      const emailSent = await sendCalculatorEmail(emailData);
+      
+      if (emailSent) {
+        toast({
+          title: "Quote Sent!",
+          description: "Your request has been sent to our team. We'll be in touch soon!",
+          className: "border-green-500 border-2 shadow-[0_0_15px_rgba(20,255,106,0.5)]"
+        });
+        
+        // Apply the discount after successful submission
+        setDiscountApplied(true);
+      } else {
+        toast({
+          title: "Quote Request Failed",
+          description: "There was a problem sending your request. Please try again.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Error sending email:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again later.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleAddToCart = () => {
     if (!zipCode) {
       toast({
@@ -242,29 +323,12 @@ const ShopCalculator = () => {
   };
 
   const handleApplyDiscount = () => {
-    // Validate form first
-    const isValid = form.formState.isValid;
-    const consentGiven = form.getValues().consent;
-    
-    if (isValid && consentGiven) {
-      setDiscountApplied(true);
-      // We'll still keep this toast as it's an important confirmation
-      toast({
-        title: "Discount Applied!",
-        description: "Your $50 discount has been applied to your order.",
-        className: "border-green-500 border-2 shadow-[0_0_15px_rgba(20,255,106,0.5)]"
-      });
-    } else {
-      // Trigger validation to show errors
-      form.trigger();
-      // Keep critical errors
-      toast({
-        title: "Please complete the form",
-        description: "Fill out all required fields and accept communications to get your discount.",
-        variant: "destructive",
-        className: "border-green-500 border-2 shadow-[0_0_15px_rgba(20,255,106,0.5)]"
-      });
-    }
+    setDiscountApplied(true);
+    toast({
+      title: "Discount Applied!",
+      description: "Your $50 discount has been applied to your order.",
+      className: "border-green-500 border-2 shadow-[0_0_15px_rgba(20,255,106,0.5)]"
+    });
   };
 
   return (
@@ -321,6 +385,8 @@ const ShopCalculator = () => {
         <ContactForm 
           form={form} 
           onApplyDiscount={handleApplyDiscount}
+          onSubmit={handleFormSubmit}
+          loading={isSubmitting}
         />
       </div>
     </div>
