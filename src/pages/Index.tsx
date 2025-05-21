@@ -29,19 +29,19 @@ const Index = () => {
           </p>
           <div className="flex flex-col md:flex-row items-center justify-center gap-4">
             <Link to="/products">
-              <Button variant="outline" size="lg">
+              <Button variant="outline" size="lg" className="bg-white hover:bg-primary hover:text-primary-foreground">
                 <Store className="mr-2 h-4 w-4" />
                 Shop Now
               </Button>
             </Link>
             <Link to="/calculator-shop">
-              <Button variant="secondary" size="lg">
+              <Button variant="outline" size="lg" className="bg-white hover:bg-primary hover:text-primary-foreground">
                 <Calculator className="mr-2 h-4 w-4" />
                 Gravel Guy Calculator
               </Button>
             </Link>
             <Link to="/contact">
-              <Button variant="default" size="lg">
+              <Button variant="outline" size="lg" className="bg-white hover:bg-primary hover:text-primary-foreground">
                 <DollarSign className="mr-2 h-4 w-4" />
                 Custom Quote
               </Button>
