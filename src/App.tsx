@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -53,16 +54,16 @@ function App() {
                 <ScrollToTop />
                 <RouteTracker />
                 <div className="min-h-screen bg-gray-50 flex flex-col">
-                  <div className="sticky top-0 z-50 w-full">
+                  <div className="sticky top-0 z-40 w-full">
                     <div className="relative">
                       <TopBanner />
                       <Navbar />
-                      {/* Logo spanning across banner and navbar - adjusted positioning */}
-                      <Link to="/" className="absolute left-4 -top-1 z-50 pt-2">
+                      {/* Logo floating above banner and navbar */}
+                      <Link to="/" className="absolute left-4 -top-3 z-50">
                         <img 
                           src="/lovable-uploads/04048679-bd9f-42de-b2d0-70fddf60125e.png" 
                           alt="My Gravel Guy Logo" 
-                          className="h-28 w-auto"
+                          className="h-24 w-auto" /* Slightly reduced height from 28 to 24 */
                         />
                       </Link>
                     </div>

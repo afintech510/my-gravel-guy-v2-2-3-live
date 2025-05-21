@@ -33,7 +33,7 @@ const TopBanner = ({ className }: TopBannerProps) => {
   
   return (
     <div className={cn(
-      "bg-primary text-primary-foreground py-1 px-4 text-center z-50 relative", 
+      "bg-primary text-primary-foreground py-0.5 px-4 text-center z-50 relative", /* Reduced padding from py-1 to py-0.5 */
       className
     )}>
       <div className="max-w-6xl mx-auto flex items-center justify-center">
