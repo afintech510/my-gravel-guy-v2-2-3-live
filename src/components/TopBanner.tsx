@@ -33,7 +33,7 @@ const TopBanner = ({ className }: TopBannerProps) => {
   
   return (
     <div className={cn(
-      "bg-primary text-primary-foreground py-0.5 px-4 text-center z-50 relative", /* Reduced padding from py-1 to py-0.5 */
+      "bg-primary text-primary-foreground py-0.5 px-4 text-center z-50 relative",
       className
     )}>
       <div className="max-w-6xl mx-auto flex items-center justify-center">
@@ -62,7 +62,6 @@ const TopBanner = ({ className }: TopBannerProps) => {
               </div>
             </DialogContent>
           </Dialog>
-          {' '}  only Quality Gravel & Construction Aggregates
         </h3>
       </div>
     </div>
