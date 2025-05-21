@@ -14,25 +14,27 @@ const ProductImages = ({ product }: ProductImagesProps) => {
   const [selectedImage, setSelectedImage] = useState<number>(0);
   const [imageError, setImageError] = useState(false);
   
-  // Parse images from product data
+  // Get product images directly from the product.images array
   const getProductImages = (): string[] => {
     // If images array exists and has entries, use it
-    if (product?.images && product.images.length > 0) {
+    if (product?.images && Array.isArray(product.images) && product.images.length > 0) {
+      console.log(`ProductImages: Using images array for ${product.name}:`, product.images);
       return product.images;
     }
     
     // Otherwise fall back to the single image or default
-    const singleImage = product?.image || DEFAULT_PRODUCT_IMAGE;
-    return [singleImage];
+    console.log(`ProductImages: No images array for ${product.name}, falling back to default`);
+    return [DEFAULT_PRODUCT_IMAGE];
   };
   
   const images = getProductImages();
+  console.log('ProductImages - Images to display:', images);
   
   return (
     <div className="space-y-3">
       <div className="relative overflow-hidden rounded-lg border border-gray-200" style={{ height: '380px' }}>
         {imageError ? (
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="w-full h-full flex items-center justify-center bg-gray-100">
             <ImageOff className="h-12 w-12 text-gray-400" />
           </div>
         ) : (
@@ -65,6 +67,10 @@ const ProductImages = ({ product }: ProductImagesProps) => {
                 src={image} 
                 alt={`${product?.name} thumbnail ${index + 1}`} 
                 className="object-cover w-full h-full"
+                onError={(e) => {
+                  console.log(`Thumbnail failed to load for ${product?.name}:`, image);
+                  e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+                }}
               />
             </div>
           ))}

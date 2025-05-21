@@ -14,12 +14,15 @@ const ProductCard = ({ product }: { product: Product }) => {
   const { zipCode } = useZipCode();
   const [imageError, setImageError] = useState(false);
   
-  // Get the image to display - use first image from images array if available, fallback to image field
+  // Get the image to display - use first image from images array if available
   const determineImagePath = () => {
-    if (product.images && product.images.length > 0) {
+    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+      console.log(`ProductCard: Using first image from images array for ${product.name}:`, product.images[0]);
       return product.images[0];
     }
-    return product.image || DEFAULT_PRODUCT_IMAGE;
+    
+    console.log(`ProductCard: No images array for ${product.name}, falling back to default`);
+    return DEFAULT_PRODUCT_IMAGE;
   };
   
   const imagePath = determineImagePath();

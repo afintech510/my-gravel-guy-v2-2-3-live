@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { ImageOff } from 'lucide-react';
 
 // Default product image
 const DEFAULT_PRODUCT_IMAGE = '/lovable-uploads/85eef0fe-9a59-406e-ba6b-54e1aaf6f56b.png';
@@ -14,6 +15,7 @@ type ProductGalleryProps = {
 
 const ProductGallery: React.FC<ProductGalleryProps> = ({ images, productName }) => {
   const [selectedImage, setSelectedImage] = useState<number>(0);
+  const [imageError, setImageError] = useState(false);
   
   // Fallback images if no product images are available
   const fallbackImages = [
@@ -25,15 +27,28 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ images, productName }) 
   const displayImages = images && images.length > 0 ? images : fallbackImages;
   // Limit to maximum 3 images
   const limitedImages = displayImages.slice(0, 3);
+  
+  console.log('ProductGallery - images received:', images);
+  console.log('ProductGallery - using images:', limitedImages);
 
   return (
     <div className="space-y-3">
       <div className="relative overflow-hidden rounded-lg border border-gray-200" style={{ height: '380px' }}>
-        <img
-          src={limitedImages[selectedImage]}
-          alt={`${productName} - View ${selectedImage + 1}`}
-          className="object-cover w-full h-full"
-        />
+        {imageError ? (
+          <div className="w-full h-full flex items-center justify-center bg-gray-100">
+            <ImageOff className="h-12 w-12 text-gray-400" />
+          </div>
+        ) : (
+          <img
+            src={limitedImages[selectedImage]}
+            alt={`${productName} - View ${selectedImage + 1}`}
+            className="object-cover w-full h-full"
+            onError={() => {
+              console.log(`Image failed to load for ${productName}:`, limitedImages[selectedImage]);
+              setImageError(true);
+            }}
+          />
+        )}
       </div>
       
       {limitedImages.length > 1 && (
@@ -41,7 +56,10 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ images, productName }) 
           {limitedImages.map((image, index) => (
             <div 
               key={index}
-              onClick={() => setSelectedImage(index)}
+              onClick={() => {
+                setSelectedImage(index);
+                setImageError(false); // Reset error state when changing images
+              }}
               className={cn(
                 "cursor-pointer rounded-md overflow-hidden border-2 h-12 w-12 flex-shrink-0 transition-all",
                 selectedImage === index ? "border-primary" : "border-transparent opacity-70 hover:opacity-100"
@@ -51,6 +69,10 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ images, productName }) 
                 src={image} 
                 alt={`${productName} thumbnail ${index + 1}`} 
                 className="object-cover w-full h-full"
+                onError={(e) => {
+                  console.log(`Thumbnail failed to load for ${productName}:`, image);
+                  e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+                }}
               />
             </div>
           ))}

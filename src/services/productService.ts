@@ -108,66 +108,31 @@ const SAMPLE_PRODUCTS: Product[] = [
 ];
 
 /**
- * Process image paths to ensure they work correctly and parse multiple images if available
+ * Process image paths - simplified to focus on the images array format
  */
-function processImagePaths(imagePath: string | null | undefined, productName: string): string[] {
-  // Default image to use if no valid images are found
-  const defaultImage = DEFAULT_PRODUCT_IMAGE;
+function processProductImages(product: any): string[] {
+  console.log('Processing images for product:', product.name, 'Images data:', product.images);
   
-  // Special cases for specific product types
-  if (productName.toLowerCase().includes('river rock')) {
-    return ['/assets/river-rocks.png', defaultImage];
+  // If product.images exists and is an array, use it directly
+  if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+    console.log('Using images array directly:', product.images);
+    return product.images.map(img => img || DEFAULT_PRODUCT_IMAGE);
   }
   
-  if (productName.toLowerCase().includes('crushed stone')) {
-    return ['/assets/crushed-stone.png', defaultImage];
+  // Special cases for specific product types - these are fallbacks
+  if (product.name && product.name.toLowerCase().includes('river rock')) {
+    console.log('Using river rock special case images');
+    return ['/assets/river-rocks.png', DEFAULT_PRODUCT_IMAGE];
   }
   
-  // Handle case when imagePath is null/undefined
-  if (!imagePath) return [defaultImage];
-  
-  // Check if imagePath is already an array (stored as JSON string in database)
-  try {
-    if (imagePath.startsWith('[') && imagePath.endsWith(']')) {
-      const parsedImages = JSON.parse(imagePath);
-      if (Array.isArray(parsedImages) && parsedImages.length > 0) {
-        return parsedImages.map(img => img || defaultImage);
-      }
-    }
-  } catch (e) {
-    console.error('Failed to parse image array:', e);
+  if (product.name && product.name.toLowerCase().includes('crushed stone')) {
+    console.log('Using crushed stone special case images');
+    return ['/assets/crushed-stone.png', DEFAULT_PRODUCT_IMAGE];
   }
   
-  // Handle comma-separated image paths
-  if (imagePath.includes(',')) {
-    return imagePath.split(',')
-      .map(img => img.trim())
-      .filter(Boolean)
-      .map(img => {
-        // Fix paths if needed
-        if (img.startsWith('/src/assets/')) {
-          return img.replace('/src/', '/');
-        }
-        return img;
-      });
-  }
-  
-  // Handle single image path (legacy format)
-  // If the path starts with /src/assets/, replace with /assets/
-  if (imagePath.startsWith('/src/assets/')) {
-    return [imagePath.replace('/src/', '/')];
-  }
-  
-  // Return single image in array format
-  return [imagePath];
-}
-
-/**
- * Process single image path for backward compatibility
- */
-function processImagePath(imagePath: string | null | undefined, productName: string): string {
-  const images = processImagePaths(imagePath, productName);
-  return images[0] || DEFAULT_PRODUCT_IMAGE;
+  // Final fallback - return default image
+  console.log('Using default image fallback');
+  return [DEFAULT_PRODUCT_IMAGE];
 }
 
 /**
@@ -266,11 +231,10 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
       }
 
       // Generate a slug if one doesn't exist
-      const slug = row.name ? row.name.toLowerCase().replace(/\s+/g, '-') : `product-${index + 1}`;
+      const slug = row.slug || (row.name ? row.name.toLowerCase().replace(/\s+/g, '-') : `product-${index + 1}`);
       
-      // Process images - get both single and array versions for backward compatibility
-      const productImage = processImagePath(row.image, row.name || "");
-      const productImages = processImagePaths(row.image, row.name || "");
+      // Process images using the new focused function
+      const productImages = processProductImages(row);
 
       // Create the product object with appropriate fallbacks for all fields
       return {
@@ -278,7 +242,7 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
         name: row.name || `Product ${index + 1}`,
         description: row.description || "",
         price: parseFloat(String(row.price)) || 0,
-        image: productImage,
+        image: productImages[0], // For backward compatibility, use first image
         images: productImages,
         category: mainCategory,
         categories: categories,
