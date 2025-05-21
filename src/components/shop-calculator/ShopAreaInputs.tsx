@@ -41,10 +41,10 @@ const ShopAreaInputs: React.FC<ShopAreaInputsProps> = ({ areas, setAreas }) => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 font-montserrat">
       {areas.map((area, index) => (
-        <div key={index} className="flex items-center gap-4 bg-gray-50 p-2 rounded-md">
-          <div className="flex flex-col sm:flex-row items-center gap-2 flex-grow">
+        <div key={index} className="flex items-center gap-4 bg-gray-50 p-3 rounded-lg">
+          <div className="flex flex-col sm:flex-row items-center gap-3 flex-grow">
             <div className="w-full sm:w-1/2">
               <div className="flex items-center">
                 <Button 
@@ -52,16 +52,16 @@ const ShopAreaInputs: React.FC<ShopAreaInputsProps> = ({ areas, setAreas }) => {
                   size="sm" 
                   variant="outline"
                   onClick={() => adjustValue(index, 'length', -1)}
-                  className="h-8 px-2 rounded-r-none"
+                  className="h-10 w-10 rounded-full p-0 flex items-center justify-center border-2"
                 >
-                  <Minus className="h-3 w-3" />
+                  <Minus className="h-4 w-4" />
                 </Button>
                 <Input
                   type="number"
                   min="1"
                   value={area.length}
                   onChange={(e) => handleInputChange(index, 'length', parseInt(e.target.value) || 1)}
-                  className="h-8 text-center rounded-none border-x-0"
+                  className="h-10 text-center rounded-none border-x-0 text-lg font-montserrat mx-2 font-medium"
                   placeholder="Length (ft)"
                 />
                 <Button 
@@ -69,9 +69,9 @@ const ShopAreaInputs: React.FC<ShopAreaInputsProps> = ({ areas, setAreas }) => {
                   size="sm"
                   variant="outline" 
                   onClick={() => adjustValue(index, 'length', 1)}
-                  className="h-8 px-2 rounded-l-none"
+                  className="h-10 w-10 rounded-full p-0 flex items-center justify-center border-2"
                 >
-                  <Plus className="h-3 w-3" />
+                  <Plus className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -83,16 +83,16 @@ const ShopAreaInputs: React.FC<ShopAreaInputsProps> = ({ areas, setAreas }) => {
                   size="sm" 
                   variant="outline"
                   onClick={() => adjustValue(index, 'width', -1)}
-                  className="h-8 px-2 rounded-r-none"
+                  className="h-10 w-10 rounded-full p-0 flex items-center justify-center border-2"
                 >
-                  <Minus className="h-3 w-3" />
+                  <Minus className="h-4 w-4" />
                 </Button>
                 <Input
                   type="number"
                   min="1"
                   value={area.width}
                   onChange={(e) => handleInputChange(index, 'width', parseInt(e.target.value) || 1)}
-                  className="h-8 text-center rounded-none border-x-0"
+                  className="h-10 text-center rounded-none border-x-0 text-lg font-montserrat mx-2 font-medium"
                   placeholder="Width (ft)"
                 />
                 <Button 
@@ -100,9 +100,9 @@ const ShopAreaInputs: React.FC<ShopAreaInputsProps> = ({ areas, setAreas }) => {
                   size="sm"
                   variant="outline" 
                   onClick={() => adjustValue(index, 'width', 1)}
-                  className="h-8 px-2 rounded-l-none"
+                  className="h-10 w-10 rounded-full p-0 flex items-center justify-center border-2"
                 >
-                  <Plus className="h-3 w-3" />
+                  <Plus className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -114,7 +114,7 @@ const ShopAreaInputs: React.FC<ShopAreaInputsProps> = ({ areas, setAreas }) => {
               variant="destructive"
               size="sm" 
               onClick={() => handleRemoveArea(index)}
-              className="h-8 w-8 p-0 flex items-center justify-center"
+              className="h-10 w-10 p-0 flex items-center justify-center rounded-full"
             >
               <Minus className="h-4 w-4" />
             </Button>
@@ -126,9 +126,9 @@ const ShopAreaInputs: React.FC<ShopAreaInputsProps> = ({ areas, setAreas }) => {
         type="button"
         onClick={handleAddArea}
         variant="outline"
-        className="mt-2 flex items-center gap-1"
+        className="mt-2 flex items-center gap-2 font-montserrat"
       >
-        <PlusCircle className="h-4 w-4" /> Add Another Area
+        <PlusCircle className="h-5 w-5" /> Add Another Area
       </Button>
     </div>
   );
