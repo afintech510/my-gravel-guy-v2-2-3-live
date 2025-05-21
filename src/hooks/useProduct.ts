@@ -18,7 +18,23 @@ export const useProduct = (slug: string | undefined, zipCode?: string) => {
         setError(null);
         // Decode the URL-encoded slug before fetching
         const decodedSlug = decodeURIComponent(slug);
+        
+        console.log(`Loading product for slug: ${decodedSlug}`);
+        
         const fetchedProduct = await getProductBySlug(decodedSlug);
+        
+        // Process any special case products
+        if (fetchedProduct.name.toLowerCase().includes('crushed stone') && 
+            (!fetchedProduct.images || !Array.isArray(fetchedProduct.images) || fetchedProduct.images.length === 0)) {
+          fetchedProduct.images = ['/lovable-uploads/85eef0fe-9a59-406e-ba6b-54e1aaf6f56b.png'];
+        }
+        
+        console.log(`Product loaded:`, {
+          name: fetchedProduct.name,
+          images: fetchedProduct.images,
+          image: fetchedProduct.image
+        });
+        
         setProduct(fetchedProduct);
         
         if (fetchedProduct && zipCode) {

@@ -109,6 +109,17 @@ const ProductDetail = () => {
     });
   };
 
+  // Log product data for debugging
+  useEffect(() => {
+    if (product) {
+      console.log("Product data:", {
+        name: product.name,
+        images: product.images,
+        image: product.image
+      });
+    }
+  }, [product]);
+
   return (
     <div className="min-h-screen bg-white py-16 px-4">
       <div className="max-w-6xl mx-auto">
