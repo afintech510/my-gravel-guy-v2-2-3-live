@@ -93,14 +93,14 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
         <div className="mb-4 md:mb-0">
           <div className="flex items-end gap-2">
             <div>
-              <p className="text-sm text-primary">Sale Price</p>
+              <p className="text-sm text-black">Sale Price</p>
               {discountApplied ? (
                 <>
-                  <p className="text-3xl font-bold text-primary line-through">${estimatedCost.toFixed(2)}</p>
-                  <p className="text-3xl font-bold text-green-600">Discount Price: ${discountedCost.toFixed(2)}</p>
+                  <p className="text-3xl font-bold text-black line-through">${estimatedCost.toFixed(2)}</p>
+                  <p className="text-3xl font-bold text-black">Discount Price: ${discountedCost.toFixed(2)}</p>
                 </>
               ) : (
-                <p className="text-3xl font-bold text-primary">${estimatedCost.toFixed(2)}</p>
+                <p className="text-3xl font-bold text-black">${estimatedCost.toFixed(2)}</p>
               )}
             </div>
           </div>
@@ -115,7 +115,7 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
           >
             Add to Cart
           </Button>
-          <p className="text-xs font-semibold text-primary mt-1">FREE SHIPPING!!</p>
+          <p className="text-xs font-semibold text-black mt-1">FREE SHIPPING!!</p>
         </div>
       </div>
     </div>
