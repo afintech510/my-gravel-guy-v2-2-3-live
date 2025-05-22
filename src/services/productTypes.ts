@@ -32,7 +32,7 @@ export interface Product {
 
 export interface PriceTier {
   id: string;
-  product_id: string | number;
+  product_id: string[] | string | number; // Updated to allow array of product IDs
   min_tons: number;
   max_tons: number | null;
   multiplier: number;

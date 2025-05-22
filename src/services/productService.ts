@@ -111,28 +111,28 @@ const SAMPLE_PRODUCTS: Product[] = [
 const SAMPLE_PRICE_TIERS: PriceTier[] = [
   {
     id: 'tier-1',
-    product_id: 'sample-1',
+    product_id: ['sample-1', 'sample-2'],
     min_tons: 0,
     max_tons: 5,
     multiplier: 1.0
   },
   {
     id: 'tier-2',
-    product_id: 'sample-1',
+    product_id: ['sample-1', 'sample-2'],
     min_tons: 6,
     max_tons: 10,
     multiplier: 0.95 // 5% discount
   },
   {
     id: 'tier-3',
-    product_id: 'sample-1',
+    product_id: ['sample-1', 'sample-2'],
     min_tons: 11,
     max_tons: 20,
     multiplier: 0.9 // 10% discount
   },
   {
     id: 'tier-4',
-    product_id: 'sample-1',
+    product_id: ['sample-1', 'sample-2'],
     min_tons: 21,
     max_tons: null, // null means unlimited
     multiplier: 0.85 // 15% discount
@@ -330,12 +330,14 @@ export async function getPriceTiers(productId: string | number): Promise<PriceTi
   try {
     console.log('Fetching price tiers for product:', productId);
     
-    // Try to fetch directly, and if that fails, return sample data
+    // Try to fetch tiers where product_id array contains this product ID
     try {
+      const productIdStr = productId.toString();
+      
       const { data, error } = await supabase
         .from('price_tiers')
         .select('*')
-        .eq('product_id', productId.toString());
+        .contains('product_id', [productIdStr]);
         
       if (error) {
         throw error;
@@ -347,12 +349,10 @@ export async function getPriceTiers(productId: string | number): Promise<PriceTi
         // Transform to PriceTier objects
         return data.map(row => ({
           id: row.id || `generated-${Math.random().toString(36).substr(2, 9)}`,
-          product_id: productId,
-          min_tons: typeof row.min_tons === 'number' ? row.min_tons : parseFloat(String(row.min_tons || 0)),
-          max_tons: row.max_tons === null ? null : 
-                   typeof row.max_tons === 'number' ? row.max_tons : 
-                   parseFloat(String(row.max_tons)),
-          multiplier: typeof row.multiplier === 'number' ? row.multiplier : parseFloat(String(row.multiplier || 1.0)),
+          product_id: row.product_id || [],
+          min_tons: parseFloat(String(row.min_tons || 0)),
+          max_tons: row.max_tons === null ? null : parseFloat(String(row.max_tons)),
+          multiplier: parseFloat(String(row.multiplier || 1.0)),
           created_at: row.created_at
         }));
       }
@@ -363,20 +363,33 @@ export async function getPriceTiers(productId: string | number): Promise<PriceTi
     // If we got here, either no data was found or there was an error
     // Return sample tiers for this product
     console.warn('No price tiers found for product! Using sample tiers instead.');
-    const sampleTiers = SAMPLE_PRICE_TIERS.map(tier => ({
-      ...tier,
-      product_id: productId
-    }));
+    const sampleTiers = SAMPLE_PRICE_TIERS.map(tier => {
+      // Create a deep copy of the tier to avoid modifying the original
+      const tierCopy = { ...tier };
+      // If the tier doesn't already include this product ID, add it
+      if (Array.isArray(tierCopy.product_id) && !tierCopy.product_id.includes(productId.toString())) {
+        tierCopy.product_id = [...tierCopy.product_id, productId.toString()];
+      } else if (!Array.isArray(tierCopy.product_id)) {
+        tierCopy.product_id = [productId.toString()];
+      }
+      return tierCopy;
+    });
     return sampleTiers;
     
   } catch (error) {
     console.error("Failed to fetch price tiers:", error);
     
     // Return sample tiers for this product
-    const sampleTiers = SAMPLE_PRICE_TIERS.map(tier => ({
-      ...tier,
-      product_id: productId
-    }));
+    const sampleTiers = SAMPLE_PRICE_TIERS.map(tier => {
+      // Create a copy with this product ID
+      const tierCopy = { ...tier };
+      if (Array.isArray(tierCopy.product_id)) {
+        tierCopy.product_id = [...tierCopy.product_id, productId.toString()];
+      } else {
+        tierCopy.product_id = [productId.toString()];
+      }
+      return tierCopy;
+    });
     return sampleTiers;
   }
 }
