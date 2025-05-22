@@ -148,14 +148,14 @@ const ProductDetail = () => {
               priceDetails={priceDetails}
               onAddToCart={handleAddToCart}
               onQuantityChange={handleProductQuantityChange}
-              selectedTons={currentTons} // Pass current tons directly (renamed from initialTons)
+              selectedTons={currentTons} // Pass current tons directly 
             />
 
             {/* Keep mini calculator separate */}
             <MiniCalculator
               pricePerTon={adjustedPrice ?? product.price}
               onQuantityCalculated={handleCalculatorQuantity}
-              tonYardRatio={product.tonYardRatio}
+              tonYardRatio={product?.tonYardRatio}
             />
           </div>
         </div>

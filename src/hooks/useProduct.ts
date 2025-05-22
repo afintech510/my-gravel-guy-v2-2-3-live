@@ -1,10 +1,24 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Product } from '@/services/productTypes';
-import { getProductBySlug, getPriceAdjustmentForZipCode, applyZipCodeAdjustment, getPriceMultiplierForQuantity } from '@/services/productService';
+import { 
+  getProductBySlug, 
+  getPriceAdjustmentForZipCode, 
+  applyZipCodeAdjustment, 
+  getPriceMultiplierForQuantity,
+  getPriceTiersForProduct 
+} from '@/services/productService';
+
+interface PriceTier {
+  min_tons: number;
+  max_tons?: number | null;
+  multiplier: number;
+}
 
 export const useProduct = (slug: string | undefined, zipCode?: string, tons: number = 10) => {
   const [product, setProduct] = useState<Product | undefined>(undefined);
+  const [priceTiers, setPriceTiers] = useState<PriceTier[]>([]);
+  const [zipAdjustment, setZipAdjustment] = useState<number>(0);
   const [adjustedPrice, setAdjustedPrice] = useState<number | undefined>(undefined);
   const [priceDetails, setPriceDetails] = useState<{
     basePrice: number;
@@ -15,6 +29,48 @@ export const useProduct = (slug: string | undefined, zipCode?: string, tons: num
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  // Function to calculate price based on stored tiers and ZIP adjustment
+  const calculatePrice = useCallback((product: Product | undefined, tons: number) => {
+    if (!product) return;
+    
+    // Get base price from product
+    const basePrice = product.price;
+    
+    // Find appropriate tier for the quantity
+    let multiplier = 1;
+    const tier = priceTiers.find(t => {
+      // If tier has max_tons, check if tons is in range
+      if (t.max_tons !== null && t.max_tons !== undefined) {
+        return tons >= t.min_tons && tons <= t.max_tons;
+      }
+      // If no max_tons, this is for "tons >= min_tons"
+      return tons >= t.min_tons;
+    });
+    
+    // Use the multiplier from the matching tier, or 1 if no tier found
+    if (tier) {
+      multiplier = tier.multiplier;
+    }
+    
+    // Apply volume multiplier to get adjusted base price
+    let volumeAdjustedPrice = basePrice * multiplier;
+    
+    // Apply ZIP code adjustment
+    volumeAdjustedPrice = applyZipCodeAdjustment(volumeAdjustedPrice, zipAdjustment);
+    
+    // Set the final adjusted price
+    setAdjustedPrice(volumeAdjustedPrice);
+    
+    // Save price calculation details for UI display
+    setPriceDetails({
+      basePrice,
+      multiplier,
+      zipAdjustment,
+      pricePerTon: volumeAdjustedPrice
+    });
+  }, [priceTiers, zipAdjustment]);
+
+  // Load product data and pricing tiers
   useEffect(() => {
     async function loadProduct() {
       if (!slug) return;
@@ -22,39 +78,25 @@ export const useProduct = (slug: string | undefined, zipCode?: string, tons: num
       try {
         setLoading(true);
         setError(null);
+        
         // Decode the URL-encoded slug before fetching
         const decodedSlug = decodeURIComponent(slug);
         const fetchedProduct = await getProductBySlug(decodedSlug);
         setProduct(fetchedProduct);
         
         if (fetchedProduct) {
-          // Get base price from product
-          const basePrice = fetchedProduct.price;
+          // Fetch all price tiers for this product
+          const tiers = await getPriceTiersForProduct(fetchedProduct.id);
+          setPriceTiers(tiers);
           
-          // Get volume-based price multiplier
-          const multiplier = await getPriceMultiplierForQuantity(fetchedProduct.id, tons);
-          
-          // Apply volume multiplier to get adjusted base price
-          let volumeAdjustedPrice = basePrice * multiplier;
-          
-          // If we have a ZIP code, apply ZIP-based adjustment
-          let zipAdjustment = 0;
+          // If we have a ZIP code, fetch the adjustment
           if (zipCode) {
-            zipAdjustment = await getPriceAdjustmentForZipCode(zipCode);
-            // Apply ZIP code adjustment on top of volume-adjusted price
-            volumeAdjustedPrice = applyZipCodeAdjustment(volumeAdjustedPrice, zipAdjustment);
+            const adjustment = await getPriceAdjustmentForZipCode(zipCode);
+            setZipAdjustment(adjustment);
           }
           
-          // Set the final adjusted price
-          setAdjustedPrice(volumeAdjustedPrice);
-          
-          // Save price calculation details for UI display
-          setPriceDetails({
-            basePrice,
-            multiplier,
-            zipAdjustment,
-            pricePerTon: volumeAdjustedPrice
-          });
+          // Initial price calculation
+          calculatePrice(fetchedProduct, tons);
         }
       } catch (error) {
         console.error('Error loading product:', error);
@@ -65,7 +107,14 @@ export const useProduct = (slug: string | undefined, zipCode?: string, tons: num
     }
     
     loadProduct();
-  }, [slug, zipCode, tons]);
+  }, [slug, zipCode]);
+
+  // Recalculate price when tons change (without network calls)
+  useEffect(() => {
+    if (product) {
+      calculatePrice(product, tons);
+    }
+  }, [tons, product, calculatePrice]);
 
   return { product, adjustedPrice, priceDetails, loading, error };
 };
