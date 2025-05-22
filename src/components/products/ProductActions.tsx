@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import DeliveryDatePicker from './DeliveryDatePicker';
 import { Product } from '@/services/productTypes';
 import AmountSelector from './AmountSelector';
+import { Badge } from '@/components/ui/badge';
 
 interface ProductActionsProps {
   product: Product;
@@ -16,7 +17,8 @@ interface ProductActionsProps {
     pricePerTon: number;
   };
   onAddToCart: (product: Product & { tons: number, deliveryDate: Date }) => void;
-  initialTons?: number; // New prop to set initial tons from calculator
+  initialTons?: number; // Initial tons from calculator
+  onQuantityChange?: (tons: number) => void; // New callback for quantity changes
 }
 
 const ProductActions = ({ 
@@ -24,7 +26,8 @@ const ProductActions = ({
   adjustedPrice, 
   priceDetails,
   onAddToCart,
-  initialTons 
+  initialTons,
+  onQuantityChange 
 }: ProductActionsProps) => {
   const { toast } = useToast();
   const [selectedTons, setSelectedTons] = React.useState<number>(initialTons || 10);
@@ -32,12 +35,27 @@ const ProductActions = ({
 
   // Update selectedTons when initialTons prop changes
   useEffect(() => {
-    if (initialTons) {
+    if (initialTons && initialTons !== selectedTons) {
       setSelectedTons(initialTons);
     }
   }, [initialTons]);
+  
+  // Notify parent component when quantity changes
+  useEffect(() => {
+    if (onQuantityChange) {
+      onQuantityChange(selectedTons);
+    }
+  }, [selectedTons, onQuantityChange]);
 
   const totalPrice = adjustedPrice * selectedTons;
+  
+  // Handle local quantity change
+  const handleQuantityChange = (tons: number) => {
+    setSelectedTons(tons);
+    if (onQuantityChange) {
+      onQuantityChange(tons);
+    }
+  };
 
   const handleAddToCart = () => {
     if (!deliveryDate) {
@@ -62,13 +80,39 @@ const ProductActions = ({
   
   // Determine if ZIP code adjustment is applied
   const hasZipAdjustment = priceDetails && priceDetails.zipAdjustment !== 0;
+  
+  // Format the discount/surcharge percentage for display
+  const formatPercentage = (value: number) => {
+    if (value === 1) return "0%";
+    return value < 1 
+      ? `-${((1 - value) * 100).toFixed(0)}%` 
+      : `+${((value - 1) * 100).toFixed(0)}%`;
+  };
 
   return (
     <div className="space-y-6">
       <AmountSelector 
         selectedAmount={selectedTons}
-        onSelectAmount={setSelectedTons}
+        onSelectAmount={handleQuantityChange}
       />
+
+      {/* Volume discount information banner */}
+      {hasVolumeDiscount && (
+        <div className={`p-3 rounded-md ${priceDetails && priceDetails.multiplier < 1 ? 'bg-green-50 border border-green-100' : 'bg-amber-50 border border-amber-100'}`}>
+          <div className="flex items-center gap-2">
+            {priceDetails && priceDetails.multiplier < 1 ? (
+              <Badge className="bg-green-500">Volume Discount</Badge>
+            ) : (
+              <Badge variant="outline">Volume Pricing</Badge>
+            )}
+            <span className="text-sm">
+              {priceDetails && priceDetails.multiplier < 1 
+                ? `You're receiving a ${formatPercentage(priceDetails.multiplier)} discount for ordering ${selectedTons} tons`
+                : `Volume pricing applied to your ${selectedTons} ton order`}
+            </span>
+          </div>
+        </div>
+      )}
 
       <DeliveryDatePicker 
         selectedDate={deliveryDate}
@@ -89,11 +133,9 @@ const ProductActions = ({
               
               {hasVolumeDiscount && (
                 <div className="flex justify-between">
-                  <span>Volume Discount:</span>
-                  <span className="text-green-600">
-                    {priceDetails.multiplier < 1 
-                      ? `-${((1 - priceDetails.multiplier) * 100).toFixed(0)}%` 
-                      : `+${((priceDetails.multiplier - 1) * 100).toFixed(0)}%`}
+                  <span>Volume Discount ({selectedTons} tons):</span>
+                  <span className={priceDetails.multiplier < 1 ? "text-green-600" : "text-amber-600"}>
+                    {formatPercentage(priceDetails.multiplier)}
                   </span>
                 </div>
               )}

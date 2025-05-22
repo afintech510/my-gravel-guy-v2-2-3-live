@@ -25,14 +25,15 @@ const ProductDetail = () => {
   const { zipCode } = useZipCode();
   const { addToCart } = useCart();
   
-  // State for selected tons from mini calculator
+  // State for selected tons
   const [calculatedTons, setCalculatedTons] = useState<number | null>(null);
+  const [currentTons, setCurrentTons] = useState<number>(10); // Default to 10 tons
   
   // Use our enhanced useProduct hook with tons parameter
   const { product, adjustedPrice, priceDetails, loading, error } = useProduct(
     slug, 
     zipCode, 
-    calculatedTons || 10
+    currentTons // Use the current tons for pricing
   );
 
   // Track product view when product data is loaded
@@ -49,6 +50,45 @@ const ProductDetail = () => {
       ]);
     }
   }, [product, adjustedPrice]);
+
+  // Handle quantity changes both from calculator and direct selection
+  const handleQuantityChange = (tons: number) => {
+    setCurrentTons(tons);
+  };
+
+  // Handle quantity from calculator
+  const handleQuantityCalculated = (tons: number) => {
+    // Update both the calculated tons and current tons
+    setCalculatedTons(tons);
+    setCurrentTons(tons); // This will trigger a price recalculation
+    
+    // Show toast notification
+    toast({
+      title: "Amount updated",
+      description: `${tons} tons has been set as your selected amount.`,
+    });
+  };
+
+  const handleAddToCart = (productToAdd: Product & { tons: number, deliveryDate: Date }) => {
+    addToCart(productToAdd);
+    
+    // Track add_to_cart event
+    trackEcommerce('add_to_cart', [
+      {
+        item_id: productToAdd.id,
+        item_name: productToAdd.name,
+        price: adjustedPrice ?? productToAdd.price,
+        quantity: productToAdd.tons,
+        item_category: productToAdd.category
+      }
+    ], productToAdd.tons * (adjustedPrice ?? productToAdd.price));
+    
+    // Show toast notification
+    toast({
+      title: "Added to cart",
+      description: `${product.name} has been added to your cart for delivery on ${productToAdd.deliveryDate.toLocaleDateString()}.`,
+    });
+  };
 
   if (loading) {
     return (
@@ -82,39 +122,6 @@ const ProductDetail = () => {
     );
   }
 
-  const handleAddToCart = (productToAdd: Product & { tons: number, deliveryDate: Date }) => {
-    addToCart(productToAdd);
-    
-    // Track add_to_cart event
-    trackEcommerce('add_to_cart', [
-      {
-        item_id: productToAdd.id,
-        item_name: productToAdd.name,
-        price: adjustedPrice ?? productToAdd.price,
-        quantity: productToAdd.tons,
-        item_category: productToAdd.category
-      }
-    ], productToAdd.tons * (adjustedPrice ?? productToAdd.price));
-    
-    // Show toast notification
-    toast({
-      title: "Added to cart",
-      description: `${product.name} has been added to your cart for delivery on ${productToAdd.deliveryDate.toLocaleDateString()}.`,
-    });
-  };
-
-  // Handle quantity from calculator
-  const handleQuantityCalculated = (tons: number) => {
-    // Update the selected tons
-    setCalculatedTons(tons);
-    
-    // Show toast notification
-    toast({
-      title: "Amount updated",
-      description: `${tons} tons has been set as your selected amount.`,
-    });
-  };
-
   return (
     <div className="min-h-screen bg-white py-16 px-4">
       <div className="max-w-6xl mx-auto">
@@ -143,12 +150,14 @@ const ProductDetail = () => {
               priceDetails={priceDetails}
               onAddToCart={handleAddToCart}
               initialTons={calculatedTons ?? undefined}
+              onQuantityChange={handleQuantityChange}
             />
 
             <MiniCalculator
               pricePerTon={adjustedPrice ?? product.price}
               onQuantityCalculated={handleQuantityCalculated}
               tonYardRatio={product.tonYardRatio}
+              onPriceUpdate={handleQuantityChange}
             />
           </div>
         </div>
