@@ -110,11 +110,12 @@ const ShopAreaInputs: React.FC<ShopAreaInputsProps> = ({ areas, setAreas }) => {
           {areas.length > 1 && (
             <Button 
               type="button" 
+              variant="destructive"
               size="sm" 
               onClick={() => handleRemoveArea(index)}
-              className="h-10 w-10 p-0 flex items-center justify-center rounded-full bg-opacity-80 bg-rose-400 hover:bg-rose-500"
+              className="h-12 w-12 p-0 flex items-center justify-center rounded-full"
             >
-              <Minus className="h-4 w-4" />
+              <Minus className="h-5 w-5" />
             </Button>
           )}
         </div>
