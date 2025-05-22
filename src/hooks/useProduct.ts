@@ -17,7 +17,7 @@ interface PriceTier {
 export const useProduct = (slug: string | undefined, zipCode?: string, tons: number = 10) => {
   const [product, setProduct] = useState<Product | undefined>(undefined);
   const [priceTiers, setPriceTiers] = useState<PriceTier[]>([]);
-  const [zipAdjustment, setZipAdjustment] = useState<number>(1); // Changed to factor (multiplier) instead of percentage
+  const [zipAdjustment, setZipAdjustment] = useState<number>(1); // This is now a direct multiplier (e.g., 1.2)
   const [adjustedPrice, setAdjustedPrice] = useState<number | undefined>(undefined);
   const [priceDetails, setPriceDetails] = useState<{
     basePrice: number;
@@ -54,7 +54,7 @@ export const useProduct = (slug: string | undefined, zipCode?: string, tons: num
     // Apply volume multiplier to get adjusted base price
     let volumeAdjustedPrice = basePrice * multiplier;
     
-    // Apply ZIP code adjustment as a multiplier factor (not percentage)
+    // Apply ZIP code adjustment as a direct multiplier
     volumeAdjustedPrice = volumeAdjustedPrice * zipAdjustment;
     
     // Set the final adjusted price
@@ -90,10 +90,9 @@ export const useProduct = (slug: string | undefined, zipCode?: string, tons: num
           
           // If we have a ZIP code, fetch the adjustment
           if (zipCode) {
+            // Get the adjustment directly as a multiplier (e.g., 1.2 for +20%)
             const adjustment = await getPriceAdjustmentForZipCode(zipCode);
-            // Convert from percentage to multiplier factor
-            // e.g., if adjustment is 20 (meaning +20%), we store 1.2 as the factor
-            setZipAdjustment(1 + (adjustment / 100));
+            setZipAdjustment(adjustment);
           } else {
             setZipAdjustment(1); // Default to no adjustment (factor of 1)
           }
