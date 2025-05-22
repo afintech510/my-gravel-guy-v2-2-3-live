@@ -80,7 +80,23 @@ const ProductActions = ({
         onSelectAmount={handleQuantityChange}
       />
 
-     
+      {/* Volume discount information banner */}
+      {hasVolumeDiscount && (
+        <div className={`p-3 rounded-md ${priceDetails && priceDetails.multiplier < 1 ? 'bg-green-50 border border-green-100' : 'bg-amber-50 border border-amber-100'}`}>
+          <div className="flex items-center gap-2">
+            {priceDetails && priceDetails.multiplier < 1 ? (
+              <Badge className="bg-green-500">Volume Discount</Badge>
+            ) : (
+              <Badge variant="outline">Volume Pricing</Badge>
+            )}
+            <span className="text-sm">
+              {priceDetails && priceDetails.multiplier < 1 
+                ? `You're receiving a ${formatPercentage(priceDetails.multiplier)} discount for ordering ${selectedTons} tons`
+                : `Volume pricing applied to your ${selectedTons} ton order`}
+            </span>
+          </div>
+        </div>
+      )}
 
       <DeliveryDatePicker 
         selectedDate={deliveryDate}
