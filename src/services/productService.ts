@@ -1,14 +1,9 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Product, ProductWithLocations, Location, ZipCodeValidationResult, PriceTier, ZipCodeData } from './productTypes';
 
 // Define a constant for the products table name
 const PRODUCTS_TABLE = 'products';
-
-// Define a constant for the locations table name
-const LOCATIONS_TABLE = 'locations';
-
-// Define a constant for the service_areas table name
-const SERVICE_AREAS_TABLE = 'service_areas';
 
 /**
  * Gets all products from the database
@@ -26,7 +21,26 @@ export async function getProducts(): Promise<Product[]> {
       return [];
     }
 
-    return (data || []) as Product[];
+    // Transform the raw data to match the Product interface
+    const products: Product[] = (data || []).map(item => ({
+      id: item.id,
+      name: item.name,
+      description: item.description || '',
+      price: Number(item.price) || 0,
+      image: item.image || '',
+      images: item.images || [item.image || ''].filter(Boolean),
+      category: (item.category as Product['category']) || 'gravel',
+      slug: item.slug || '',
+      tonYardRatio: Number(item.ton_yard_ratio) || 1.5,
+      subtype: item.subtype as Product['subtype'],
+      size: item.size as Product['size'],
+      color: item.color as Product['color'],
+      specifications: item.specifications,
+      uses: item.uses,
+      faqs: item.faqs
+    }));
+
+    return products;
   } catch (error) {
     console.error('Failed to get products:', error);
     return [];
@@ -51,7 +65,28 @@ export async function getProduct(slug: string): Promise<Product | null> {
       return null;
     }
 
-    return (data || null) as Product | null;
+    if (!data) return null;
+    
+    // Transform the raw data to match the Product interface
+    const product: Product = {
+      id: data.id,
+      name: data.name,
+      description: data.description || '',
+      price: Number(data.price) || 0,
+      image: data.image || '',
+      images: data.images || [data.image || ''].filter(Boolean),
+      category: (data.category as Product['category']) || 'gravel',
+      slug: data.slug || '',
+      tonYardRatio: Number(data.ton_yard_ratio) || 1.5,
+      subtype: data.subtype as Product['subtype'],
+      size: data.size as Product['size'],
+      color: data.color as Product['color'],
+      specifications: data.specifications,
+      uses: data.uses,
+      faqs: data.faqs
+    };
+
+    return product;
   } catch (error) {
     console.error('Failed to get product:', error);
     return null;
@@ -76,7 +111,28 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
       return null;
     }
 
-    return (data || null) as Product | null;
+    if (!data) return null;
+    
+    // Transform the raw data to match the Product interface
+    const product: Product = {
+      id: data.id,
+      name: data.name,
+      description: data.description || '',
+      price: Number(data.price) || 0,
+      image: data.image || '',
+      images: data.images || [data.image || ''].filter(Boolean),
+      category: (data.category as Product['category']) || 'gravel',
+      slug: data.slug || '',
+      tonYardRatio: Number(data.ton_yard_ratio) || 1.5,
+      subtype: data.subtype as Product['subtype'],
+      size: data.size as Product['size'],
+      color: data.color as Product['color'],
+      specifications: data.specifications,
+      uses: data.uses,
+      faqs: data.faqs
+    };
+
+    return product;
   } catch (error) {
     console.error('Failed to get product:', error);
     return null;
@@ -102,7 +158,28 @@ export async function getProductById(id: string | number): Promise<Product | nul
       return null;
     }
 
-    return (data || null) as Product | null;
+    if (!data) return null;
+    
+    // Transform the raw data to match the Product interface
+    const product: Product = {
+      id: data.id,
+      name: data.name,
+      description: data.description || '',
+      price: Number(data.price) || 0,
+      image: data.image || '',
+      images: data.images || [data.image || ''].filter(Boolean),
+      category: (data.category as Product['category']) || 'gravel',
+      slug: data.slug || '',
+      tonYardRatio: Number(data.ton_yard_ratio) || 1.5,
+      subtype: data.subtype as Product['subtype'],
+      size: data.size as Product['size'],
+      color: data.color as Product['color'],
+      specifications: data.specifications,
+      uses: data.uses,
+      faqs: data.faqs
+    };
+
+    return product;
   } catch (error) {
     console.error('Failed to get product:', error);
     return null;
@@ -124,8 +201,9 @@ export async function getProductsWithLocations(): Promise<ProductWithLocations[]
       return [];
     }
 
+    // Get locations from the delivery_locations table instead
     const { data: locations, error: locationsError } = await supabase
-      .from(LOCATIONS_TABLE)
+      .from('delivery_locations')
       .select('*');
 
     if (locationsError) {
@@ -133,12 +211,47 @@ export async function getProductsWithLocations(): Promise<ProductWithLocations[]
       return [];
     }
 
-    const productsWithLocations = (products || []).map(product => ({
-      ...product,
-      locations: (locations || []).filter(location => location.product_id === product.id),
+    // Transform the raw data to match the Product interface
+    const transformedProducts: Product[] = (products || []).map(item => ({
+      id: item.id,
+      name: item.name,
+      description: item.description || '',
+      price: Number(item.price) || 0,
+      image: item.image || '',
+      images: item.images || [item.image || ''].filter(Boolean),
+      category: (item.category as Product['category']) || 'gravel',
+      slug: item.slug || '',
+      tonYardRatio: Number(item.ton_yard_ratio) || 1.5,
+      subtype: item.subtype as Product['subtype'],
+      size: item.size as Product['size'],
+      color: item.color as Product['color'],
+      specifications: item.specifications,
+      uses: item.uses,
+      faqs: item.faqs
     }));
 
-    return productsWithLocations as ProductWithLocations[];
+    // Transform the raw location data
+    const transformedLocations: Location[] = (locations || []).map(item => ({
+      id: item.id,
+      product_id: item.product_id || '',
+      product_name: item.product_name || item.title || '',
+      title: item.title || '',
+      description: item.description || '',
+      lat: Number(item.lat) || 0,
+      lng: Number(item.lng) || 0,
+      city: item.city || '',
+      state: item.state || '',
+      region: item.region || '',
+      slug: item.slug || '',
+      created_at: item.created_at || ''
+    }));
+
+    const productsWithLocations: ProductWithLocations[] = transformedProducts.map(product => ({
+      ...product,
+      locations: transformedLocations.filter(location => location.product_id === product.id.toString())
+    }));
+
+    return productsWithLocations;
   } catch (error) {
     console.error('Failed to get products with locations:', error);
     return [];
@@ -151,8 +264,9 @@ export async function getProductsWithLocations(): Promise<ProductWithLocations[]
  */
 export async function getLocations(): Promise<Location[]> {
   try {
+    // Use delivery_locations table instead
     const { data, error } = await supabase
-      .from(LOCATIONS_TABLE)
+      .from('delivery_locations')
       .select('*');
 
     if (error) {
@@ -160,7 +274,23 @@ export async function getLocations(): Promise<Location[]> {
       return [];
     }
 
-    return (data || []) as Location[];
+    // Transform the raw location data
+    const transformedLocations: Location[] = (data || []).map(item => ({
+      id: item.id,
+      product_id: item.product_id || '',
+      product_name: item.product_name || item.title || '',
+      title: item.title || '',
+      description: item.description || '',
+      lat: Number(item.lat) || 0,
+      lng: Number(item.lng) || 0,
+      city: item.city || '',
+      state: item.state || '',
+      region: item.region || '',
+      slug: item.slug || '',
+      created_at: item.created_at || ''
+    }));
+
+    return transformedLocations;
   } catch (error) {
     console.error('Failed to get locations:', error);
     return [];
@@ -174,8 +304,9 @@ export async function getLocations(): Promise<Location[]> {
  */
 export async function getLocation(id: string): Promise<Location | null> {
   try {
+    // Use delivery_locations table instead
     const { data, error } = await supabase
-      .from(LOCATIONS_TABLE)
+      .from('delivery_locations')
       .select('*')
       .eq('id', id)
       .single();
@@ -185,7 +316,25 @@ export async function getLocation(id: string): Promise<Location | null> {
       return null;
     }
 
-    return (data || null) as Location | null;
+    if (!data) return null;
+
+    // Transform the raw location data
+    const location: Location = {
+      id: data.id,
+      product_id: data.product_id || '',
+      product_name: data.product_name || data.title || '',
+      title: data.title || '',
+      description: data.description || '',
+      lat: Number(data.lat) || 0,
+      lng: Number(data.lng) || 0,
+      city: data.city || '',
+      state: data.state || '',
+      region: data.region || '',
+      slug: data.slug || '',
+      created_at: data.created_at || ''
+    };
+
+    return location;
   } catch (error) {
     console.error('Failed to get location:', error);
     return null;
@@ -222,26 +371,52 @@ export async function getUniqueCategories(): Promise<string[]> {
 }
 
 /**
- * Gets all service areas from the database for a specific state
- * @param state The state to get service areas for
- * @returns Array of service areas
+ * Gets all service areas from the database grouped by state
+ * @returns Record of service areas by state
  */
-export async function getServiceAreasByState(state: string): Promise<Location[]> {
+export async function getServiceAreasByState(): Promise<Record<string, ZipCodeData[]>> {
   try {
     const { data, error } = await supabase
-      .from(SERVICE_AREAS_TABLE)
+      .from('service_zip_codes')
       .select('*')
-      .eq('state', state);
+      .order('state_id', { ascending: true });
 
     if (error) {
       console.error('Error fetching service areas:', error);
-      return [];
+      return {};
     }
 
-    return (data || []) as Location[];
+    // Group zip codes by state
+    const zipsByState: Record<string, ZipCodeData[]> = {};
+    
+    (data || []).forEach(zipData => {
+      const zipCodeData: ZipCodeData = {
+        zip: zipData.zip || '',
+        lat: Number(zipData.lat) || 0,
+        lng: Number(zipData.lng) || 0,
+        city: zipData.city || '',
+        state_id: zipData.state_id || '',
+        state_name: zipData.state_name || '',
+        population: Number(zipData.population) || 0,
+        density: Number(zipData.density) || 0,
+        county_fips: zipData.county_fips || '',
+        county_name: zipData.county_name || '',
+        county_names_all: zipData.county_names_all || '',
+        county_fips_all: zipData.county_fips_all || '',
+        timezone: zipData.timezone || ''
+      };
+      
+      const state = zipData.state_id || 'Unknown';
+      if (!zipsByState[state]) {
+        zipsByState[state] = [];
+      }
+      zipsByState[state].push(zipCodeData);
+    });
+
+    return zipsByState;
   } catch (error) {
     console.error('Failed to get service areas:', error);
-    return [];
+    return {};
   }
 }
 
@@ -252,12 +427,9 @@ export async function getServiceAreasByState(state: string): Promise<Location[]>
  */
 export async function validateZipCode(zipCode: string): Promise<ZipCodeValidationResult> {
   try {
-    // Use the validate_zip_code RPC function - fix the type issue with a cast
+    // Use the validate_zip_code RPC function
     const { data, error } = await supabase
-      .rpc('validate_zip_code', { zip_code: zipCode }) as unknown as {
-        data: Array<{ in_service_area: boolean, price_adjustment: number }> | null,
-        error: Error | null
-      };
+      .rpc('validate_zip_code', { zip_code: zipCode });
 
     if (error) {
       console.error('Error validating ZIP code:', error);
@@ -265,7 +437,7 @@ export async function validateZipCode(zipCode: string): Promise<ZipCodeValidatio
     }
 
     // Check if data is not null and has the 'in_service_area' property
-    if (data && data.length > 0) {
+    if (data && data[0]) {
       return {
         inServiceArea: Boolean(data[0].in_service_area),
         priceAdjustment: Number(data[0].price_adjustment || 0)
@@ -287,12 +459,9 @@ export async function validateZipCode(zipCode: string): Promise<ZipCodeValidatio
  */
 export async function getPriceAdjustmentForZipCode(zipCode: string): Promise<number> {
   try {
-    // Fix the type issue with a cast
+    // Use validate_zip_code RPC function
     const { data, error } = await supabase
-      .rpc('validate_zip_code', { zip_code: zipCode }) as unknown as {
-        data: Array<{ price_adjustment: number }> | null,
-        error: Error | null
-      };
+      .rpc('validate_zip_code', { zip_code: zipCode });
 
     if (error) {
       console.error('Error validating ZIP code:', error);
@@ -300,7 +469,7 @@ export async function getPriceAdjustmentForZipCode(zipCode: string): Promise<num
     }
 
     // Check if data is not null and has the 'price_adjustment' property
-    if (data && data.length > 0 && data[0].price_adjustment !== null) {
+    if (data && data[0] && data[0].price_adjustment !== null) {
       return Number(data[0].price_adjustment || 0);
     } else {
       return 0;
@@ -329,25 +498,20 @@ export function applyZipCodeAdjustment(price: number, priceAdjustment: number): 
 export async function getPriceTiers(productId: string | number): Promise<PriceTier[]> {
   try {
     // First check if the price_tiers table exists
-    // Fix the type issue with a cast
     const { data: tables, error: tableError } = await supabase
-      .rpc('get_tables') as unknown as {
-        data: Array<{ table_name: string }> | null,
-        error: Error | null
-      };
+      .rpc('get_tables');
       
     if (tableError) {
       console.error('Error checking tables:', tableError);
       return [];
     }
     
-    const hasPriceTiersTable = tables && tables.some((t) => t.table_name === 'price_tiers');
+    const hasPriceTiersTable = tables && tables.some((t: any) => t.table_name === 'price_tiers');
     
     // If price_tiers table exists, query it
     if (hasPriceTiersTable) {
       const productIdStr = productId.toString();
       
-      // Use a cast to fix the TypeScript error
       const { data, error } = await supabase
         .from('price_tiers')
         .select('*')

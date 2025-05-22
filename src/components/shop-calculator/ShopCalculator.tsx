@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -47,7 +48,6 @@ const contactSchema = z.object({
 
 const ShopCalculator = () => {
   // Material selection state variables
-  
   const [selectedCategory, setSelectedCategory] = useState<MaterialCategory>('gravel');
   const [selectedSubcategory, setSelectedSubcategory] = useState<MaterialSubcategory>('driveway');
   const [selectedApplication, setSelectedApplication] = useState<ApplicationType>('driveway');
@@ -103,6 +103,15 @@ const ShopCalculator = () => {
     };
     loadProducts();
   }, []);
+
+  // Check ZIP code validity when it changes in context
+  useEffect(() => {
+    if (zipCode) {
+      validateZipCodeAndGetPrice(zipCode);
+    } else {
+      setZipCodeValid(false);
+    }
+  }, [zipCode]);
 
   // New useEffect hook to fetch price tiers when product selection changes
   useEffect(() => {
@@ -292,6 +301,15 @@ const ShopCalculator = () => {
         description: "Please enter a valid delivery ZIP code",
         variant: "destructive",
         className: "border-green-500 border-2 shadow-[0_0_15px_rgba(20,255,106,0.5)]"
+      });
+      return;
+    }
+    
+    if (!zipCodeValid) {
+      toast({
+        title: "Invalid ZIP Code",
+        description: "We don't currently deliver to this area. Please try another ZIP code.",
+        variant: "destructive"
       });
       return;
     }
