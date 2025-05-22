@@ -330,31 +330,45 @@ export async function getPriceTiers(productId: string | number): Promise<PriceTi
   try {
     console.log('Fetching price tiers for product:', productId);
     
-    const { data: tierData, error } = await supabase
-      .from('product_price_tiers')
-      .select('*')
-      .eq('product_id', productId)
-      .order('min_tons', { ascending: true });
+    // Try to fetch directly, and if that fails, return sample data
+    try {
+      const { data, error } = await supabase
+        .from('price_tiers')
+        .select('*')
+        .eq('product_id', productId.toString());
+        
+      if (error) {
+        throw error;
+      }
       
-    if (error) {
-      console.error('Supabase error when fetching price tiers:', error);
-      throw error;
+      if (data && data.length > 0) {
+        console.log('Price tier data from Supabase:', data);
+        
+        // Transform to PriceTier objects
+        return data.map(row => ({
+          id: row.id || `generated-${Math.random().toString(36).substr(2, 9)}`,
+          product_id: productId,
+          min_tons: typeof row.min_tons === 'number' ? row.min_tons : parseFloat(String(row.min_tons || 0)),
+          max_tons: row.max_tons === null ? null : 
+                   typeof row.max_tons === 'number' ? row.max_tons : 
+                   parseFloat(String(row.max_tons)),
+          multiplier: typeof row.multiplier === 'number' ? row.multiplier : parseFloat(String(row.multiplier || 1.0)),
+          created_at: row.created_at
+        }));
+      }
+    } catch (dbError) {
+      console.error('Error fetching from price_tiers table:', dbError);
     }
     
-    console.log('Raw price tier data from Supabase:', tierData);
+    // If we got here, either no data was found or there was an error
+    // Return sample tiers for this product
+    console.warn('No price tiers found for product! Using sample tiers instead.');
+    const sampleTiers = SAMPLE_PRICE_TIERS.map(tier => ({
+      ...tier,
+      product_id: productId
+    }));
+    return sampleTiers;
     
-    // If no tiers found, return default tiers for this product
-    if (!tierData || tierData.length === 0) {
-      console.warn('No price tiers found for product! Using sample tiers instead.');
-      // Return sample tiers filtered for this product ID
-      const sampleTiers = SAMPLE_PRICE_TIERS.map(tier => ({
-        ...tier,
-        product_id: productId
-      }));
-      return sampleTiers;
-    }
-    
-    return tierData as PriceTier[];
   } catch (error) {
     console.error("Failed to fetch price tiers:", error);
     
