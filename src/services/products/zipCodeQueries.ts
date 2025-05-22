@@ -1,13 +1,24 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { ZipCodeData } from './types';
-import { zipCodePricingCache, zipCodesCache, lastFetchTimestamp, CACHE_TTL } from './cache';
+import { 
+  getZipCodePricingCache, 
+  setZipCodePricingCache,
+  getZipCodesCache,
+  setZipCodesCache,
+  getLastFetchTimestamp,
+  updateLastFetchTimestamp,
+  CACHE_TTL 
+} from './cache';
 
 /**
  * Fetch ZIP code pricing data from Supabase
  */
 export async function getZipCodePricingMap(): Promise<Map<string, number>> {
   // Check cache first
+  const zipCodePricingCache = getZipCodePricingCache();
+  const lastFetchTimestamp = getLastFetchTimestamp();
+  
   if (zipCodePricingCache && (Date.now() - lastFetchTimestamp < CACHE_TTL)) {
     return zipCodePricingCache;
   }
@@ -40,8 +51,8 @@ export async function getZipCodePricingMap(): Promise<Map<string, number>> {
     console.log('Transformed ZIP code pricing data:', zipPricingMap);
     
     // Update cache
-    zipCodePricingCache = zipPricingMap;
-    lastFetchTimestamp = Date.now();
+    setZipCodePricingCache(zipPricingMap);
+    updateLastFetchTimestamp();
     
     return zipPricingMap;
   } catch (error) {
@@ -91,6 +102,9 @@ export async function getPriceAdjustmentForZipCode(zipCode: string): Promise<num
  */
 export async function getZipCodes(): Promise<ZipCodeData[]> {
   // Check cache first
+  const zipCodesCache = getZipCodesCache();
+  const lastFetchTimestamp = getLastFetchTimestamp();
+  
   if (zipCodesCache && (Date.now() - lastFetchTimestamp < CACHE_TTL)) {
     return zipCodesCache;
   }
@@ -128,8 +142,8 @@ export async function getZipCodes(): Promise<ZipCodeData[]> {
     console.log('Transformed ZIP codes data:', zipCodes.slice(0, 3)); // Log just first few for brevity
     
     // Update cache
-    zipCodesCache = zipCodes;
-    lastFetchTimestamp = Date.now();
+    setZipCodesCache(zipCodes);
+    updateLastFetchTimestamp();
     
     return zipCodes;
   } catch (error) {
