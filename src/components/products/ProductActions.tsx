@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import DeliveryDatePicker from './DeliveryDatePicker';
@@ -17,8 +17,8 @@ interface ProductActionsProps {
     pricePerTon: number;
   };
   onAddToCart: (product: Product & { tons: number, deliveryDate: Date }) => void;
-  initialTons?: number; // Initial tons from calculator
-  onQuantityChange?: (tons: number) => void; // New callback for quantity changes
+  onQuantityChange?: (tons: number) => void; // Callback for quantity changes
+  selectedTons: number; // Current selected tons (renamed from initialTons)
 }
 
 const ProductActions = ({ 
@@ -26,33 +26,16 @@ const ProductActions = ({
   adjustedPrice, 
   priceDetails,
   onAddToCart,
-  initialTons,
-  onQuantityChange 
+  onQuantityChange,
+  selectedTons
 }: ProductActionsProps) => {
   const { toast } = useToast();
-  const [selectedTons, setSelectedTons] = React.useState<number>(initialTons || 10);
   const [deliveryDate, setDeliveryDate] = React.useState<Date>();
-
-  // Update selectedTons when initialTons prop changes
-  useEffect(() => {
-    if (initialTons && initialTons !== selectedTons) {
-      setSelectedTons(initialTons);
-    }
-  }, [initialTons]);
   
-  // Notify parent component when quantity changes
-  useEffect(() => {
-    if (onQuantityChange) {
-      onQuantityChange(selectedTons);
-    }
-  }, [selectedTons, onQuantityChange]);
-
   const totalPrice = adjustedPrice * selectedTons;
   
-  // Handle local quantity change
+  // Handle local quantity change - directly pass to parent
   const handleQuantityChange = (tons: number) => {
-    setSelectedTons(tons);
-    // Call the callback immediately to trigger price recalculation
     if (onQuantityChange) {
       onQuantityChange(tons);
     }

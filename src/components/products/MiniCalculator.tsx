@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calculator } from "lucide-react";
@@ -10,16 +10,12 @@ interface MiniCalculatorProps {
   onQuantityCalculated: (tons: number) => void;
   pricePerTon: number;
   tonYardRatio?: number;
-  onPriceUpdate?: (tons: number) => void;
-  currentTons?: number; // Add currentTons prop to sync with external state
 }
 
 const MiniCalculator = ({ 
   onQuantityCalculated, 
   pricePerTon,
   tonYardRatio = 1.5, // Default if not provided
-  onPriceUpdate,
-  currentTons
 }: MiniCalculatorProps) => {
   const [length, setLength] = useState<number>(0);
   const [width, setWidth] = useState<number>(0);
@@ -34,14 +30,6 @@ const MiniCalculator = ({
     tonYardRatio
   );
 
-  // Sync with external tons value when it changes
-  useEffect(() => {
-    // Only update prices when totalTons is significant (user has entered dimensions)
-    if (totalTons > 0 && onPriceUpdate) {
-      onPriceUpdate(Math.round(totalTons));
-    }
-  }, [totalTons, onPriceUpdate]);
-
   const handleCalculate = () => {
     // Don't calculate if no dimensions entered
     if (length <= 0 || width <= 0) {
@@ -50,12 +38,8 @@ const MiniCalculator = ({
     
     // Round to integer value
     const roundedTons = Math.round(totalTons);
+    // Send the calculated tons to the parent
     onQuantityCalculated(roundedTons);
-    
-    // Also update the price if the callback exists
-    if (onPriceUpdate) {
-      onPriceUpdate(roundedTons);
-    }
   };
 
   return (

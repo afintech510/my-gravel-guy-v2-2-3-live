@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,9 +24,8 @@ const ProductDetail = () => {
   const { zipCode } = useZipCode();
   const { addToCart } = useCart();
   
-  // State for selected tons
-  const [calculatedTons, setCalculatedTons] = useState<number | null>(null);
-  const [currentTons, setCurrentTons] = useState<number>(10); // Default to 10 tons
+  // State for selected tons - start with 10 as default
+  const [currentTons, setCurrentTons] = useState<number>(10);
   
   // Use our enhanced useProduct hook with tons parameter
   const { product, adjustedPrice, priceDetails, loading, error } = useProduct(
@@ -51,18 +49,16 @@ const ProductDetail = () => {
     }
   }, [product, adjustedPrice]);
 
-  // Handle quantity changes both from calculator and direct selection
-  const handleQuantityChange = (tons: number) => {
-    console.log('Quantity changed to:', tons);
+  // Simple handler for direct quantity changes from the product actions component
+  const handleProductQuantityChange = (tons: number) => {
+    console.log('Product quantity changed to:', tons);
     setCurrentTons(tons);
   };
 
-  // Handle quantity from calculator
-  const handleQuantityCalculated = (tons: number) => {
-    console.log('Calculator quantity set to:', tons);
-    // Update both the calculated tons and current tons
-    setCalculatedTons(tons);
-    setCurrentTons(tons); // This will trigger a price recalculation
+  // Handler for when the calculator suggests a quantity
+  const handleCalculatorQuantity = (tons: number) => {
+    console.log('Calculator suggested quantity:', tons);
+    setCurrentTons(tons);
     
     // Show toast notification
     toast({
@@ -70,11 +66,6 @@ const ProductDetail = () => {
       description: `${tons} tons has been set as your selected amount.`,
     });
   };
-
-  // Debug logging to track state changes
-  useEffect(() => {
-    console.log('Current state:', { currentTons, calculatedTons, adjustedPrice, priceDetails });
-  }, [currentTons, calculatedTons, adjustedPrice, priceDetails]);
 
   const handleAddToCart = (productToAdd: Product & { tons: number, deliveryDate: Date }) => {
     addToCart(productToAdd);
@@ -156,16 +147,15 @@ const ProductDetail = () => {
               adjustedPrice={adjustedPrice ?? product.price}
               priceDetails={priceDetails}
               onAddToCart={handleAddToCart}
-              initialTons={calculatedTons ?? undefined}
-              onQuantityChange={handleQuantityChange}
+              onQuantityChange={handleProductQuantityChange}
+              selectedTons={currentTons} // Pass current tons directly (renamed from initialTons)
             />
 
+            {/* Keep mini calculator separate */}
             <MiniCalculator
               pricePerTon={adjustedPrice ?? product.price}
-              onQuantityCalculated={handleQuantityCalculated}
+              onQuantityCalculated={handleCalculatorQuantity}
               tonYardRatio={product.tonYardRatio}
-              onPriceUpdate={handleQuantityChange}
-              currentTons={currentTons} // Pass the current tons to the calculator
             />
           </div>
         </div>
