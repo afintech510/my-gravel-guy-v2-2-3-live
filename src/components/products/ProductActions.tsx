@@ -63,7 +63,7 @@ const ProductActions = ({
   const hasVolumeDiscount = priceDetails && priceDetails.multiplier !== 1;
   
   // Determine if ZIP code adjustment is applied
-  const hasZipAdjustment = priceDetails && priceDetails.zipAdjustment !== 0;
+  const hasZipAdjustment = priceDetails && priceDetails.zipAdjustment !== 1;
   
   // Format the discount/surcharge percentage for display
   const formatPercentage = (value: number) => {
@@ -127,8 +127,8 @@ const ProductActions = ({
               {hasZipAdjustment && (
                 <div className="flex justify-between">
                   <span>Location Adjustment:</span>
-                  <span className={priceDetails.zipAdjustment < 0 ? "text-green-600" : "text-amber-600"}>
-                    {priceDetails.zipAdjustment > 0 ? "+" : ""}{priceDetails.zipAdjustment.toFixed(0)}%
+                  <span className={priceDetails.zipAdjustment < 1 ? "text-green-600" : "text-amber-600"}>
+                    {formatPercentage(priceDetails.zipAdjustment)}
                   </span>
                 </div>
               )}

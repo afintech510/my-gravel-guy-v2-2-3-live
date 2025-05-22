@@ -1,4 +1,3 @@
-
 import { Product, ZipCodeData, PriceTier } from './productTypes';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -370,7 +369,8 @@ export async function getZipCodePricingMap(): Promise<Map<string, number>> {
 
 /**
  * Get price adjustment for a specific ZIP code
- * @returns Percentage adjustment (e.g., 10 for +10%, -5 for -5%)
+ * @returns Percentage adjustment (e.g., 10 for +10%, -5 for -5%) 
+ * or multiplier depending on how it's stored in the database
  */
 export async function getPriceAdjustmentForZipCode(zipCode: string): Promise<number> {
   try {
@@ -397,6 +397,8 @@ export async function getPriceAdjustmentForZipCode(zipCode: string): Promise<num
 
 /**
  * Apply ZIP code pricing adjustment to a product price
+ * This function is no longer used in the main price calculation flow
+ * but kept for backward compatibility
  */
 export function applyZipCodeAdjustment(basePrice: number, adjustment: number): number {
   // Adjustment is a percentage (e.g., 10 for +10%, -5 for -5%)
