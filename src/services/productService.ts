@@ -345,13 +345,13 @@ export async function getPriceTiers(productId: string | number): Promise<PriceTi
       
       const hasPriceTiersTable = tables && tables.some((t: any) => t.table_name === 'price_tiers');
       
-      // If price_tiers table exists, query it using type assertion to bypass TS error
+      // If price_tiers table exists, query it using proper type
       if (hasPriceTiersTable) {
         const productIdStr = productId.toString();
         
-        // Use type assertion to bypass TypeScript error
+        // Now we can use the table name directly since it's in the types
         const { data, error } = await supabase
-          .from('price_tiers' as any)
+          .from('price_tiers')
           .select('*');
           
         if (error) {
@@ -362,7 +362,7 @@ export async function getPriceTiers(productId: string | number): Promise<PriceTi
           console.log('Price tier data from Supabase:', data);
           
           // Filter tiers for this product (client-side filtering)
-          const relevantTiers = data.filter((tier: any) => {
+          const relevantTiers = data.filter((tier) => {
             // Check if product_id contains this product's ID
             if (Array.isArray(tier.product_id)) {
               return tier.product_id.includes(productIdStr);
@@ -374,7 +374,7 @@ export async function getPriceTiers(productId: string | number): Promise<PriceTi
           
           if (relevantTiers.length > 0) {
             // Transform to PriceTier objects
-            return relevantTiers.map((row: any) => ({
+            return relevantTiers.map((row) => ({
               id: row.id || `generated-${Math.random().toString(36).substr(2, 9)}`,
               product_id: row.product_id || [],
               min_tons: parseFloat(String(row.min_tons || 0)),
