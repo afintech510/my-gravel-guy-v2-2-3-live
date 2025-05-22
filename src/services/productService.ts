@@ -335,7 +335,7 @@ export async function getPriceTiers(productId: string | number): Promise<PriceTi
       // Instead of trying to query directly, first check if table exists
       // by getting its schema/definition
       const { data: tables, error: tableError } = await supabase
-        .rpc('get_tables')
+        .rpc('get_tables' as any)
         .select('*');
         
       if (tableError) {
@@ -345,13 +345,13 @@ export async function getPriceTiers(productId: string | number): Promise<PriceTi
       
       const hasPriceTiersTable = tables && tables.some((t: any) => t.table_name === 'price_tiers');
       
-      // If price_tiers table exists, query it using proper type
+      // If price_tiers table exists, query it using type assertion
       if (hasPriceTiersTable) {
         const productIdStr = productId.toString();
         
-        // Use type casting to fix the TypeScript error
+        // Use type assertion to fix the TypeScript error
         const { data, error } = await supabase
-          .from('price_tiers' as unknown as keyof typeof supabase.from)
+          .from('price_tiers' as any)
           .select('*');
           
         if (error) {
