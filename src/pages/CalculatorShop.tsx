@@ -12,9 +12,7 @@ const CalculatorShop = () => {
   useEffect(() => {
     const checkDbSetup = async () => {
       const { hasPriceTiersTable } = await checkRequiredTables();
-      // Since we're removing the volume discount tiers module,
-      // we don't need to show the setup helper even if the table doesn't exist
-      setShowSetupHelper(false);
+      setShowSetupHelper(!hasPriceTiersTable);
     };
     
     checkDbSetup();
@@ -28,7 +26,7 @@ const CalculatorShop = () => {
           Choose your material type and calculate how much you need for your project
         </p>
         <p className="text-center text-primary font-medium mb-8 font-montserrat">
-          Order online for convenience and savings!
+          Volume discounts available - The more you order, the more you save!
         </p>
         
         {showSetupHelper && (
