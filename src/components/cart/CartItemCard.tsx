@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Trash2, CalendarIcon, InfoIcon, TrendingDown } from 'lucide-react';
+import { Trash2, CalendarIcon, InfoIcon } from 'lucide-react';
 import { CartItem } from '../../contexts/CartContext';
 import DeliveryForm from './DeliveryForm';
 
@@ -26,18 +26,8 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery }: CartItemCardProps) =
   };
 
   // Calculate total price for this item
-  const baseItemTotal = item.price * item.tons;
-  
-  // Calculate discounted price if volume discount applied
-  const volumeDiscount = item.appliedMultiplier && item.appliedMultiplier < 1 
-    ? baseItemTotal * (1 - item.appliedMultiplier) 
-    : 0;
-    
-  // Apply any coupon discount
-  const couponDiscount = item.couponApplied && item.couponAmount ? item.couponAmount : 0;
-  
-  // Final price after all discounts
-  const finalTotal = baseItemTotal - volumeDiscount - couponDiscount;
+  const itemTotal = item.price * item.tons;
+  const discountedTotal = item.couponApplied ? itemTotal - (item.couponAmount || 0) : itemTotal;
 
   // Calculate and display yards if available
   const yards = item.tons / (item.tonYardRatio ? parseFloat(String(item.tonYardRatio)) : 1.5);
@@ -110,11 +100,6 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery }: CartItemCardProps) =
               <div>
                 <span className="text-muted-foreground">Price: </span>
                 <span className="font-medium">${item.price.toFixed(2)} per ton</span>
-                {item.appliedMultiplier && item.appliedMultiplier < 1 && (
-                  <span className="ml-1 text-green-600 text-xs">
-                    ({(100 * (1 - item.appliedMultiplier)).toFixed(0)}% volume discount applied)
-                  </span>
-                )}
               </div>
             </div>
             
@@ -145,32 +130,19 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery }: CartItemCardProps) =
           <div className="flex flex-col justify-between items-end gap-2">
             {/* Price display */}
             <div className="text-right">
-              {/* Show original price if any discount applied */}
-              {(volumeDiscount > 0 || couponDiscount > 0) && (
-                <div className="text-sm text-muted-foreground line-through">
-                  ${baseItemTotal.toFixed(2)}
-                </div>
-              )}
-              
-              {/* Show volume discount if applied */}
-              {volumeDiscount > 0 && (
-                <div className="flex items-center gap-1 text-green-600 text-sm">
-                  <TrendingDown className="h-3 w-3" />
-                  <span>${volumeDiscount.toFixed(2)} volume discount</span>
-                </div>
-              )}
-              
-              {/* Show coupon discount if applied */}
               {item.couponApplied && item.couponAmount && (
-                <div className="flex items-center gap-1 text-green-600 text-sm">
-                  <InfoIcon className="h-3 w-3" />
-                  <span>${item.couponAmount.toFixed(2)} coupon applied</span>
-                </div>
+                <>
+                  <div className="text-sm text-muted-foreground line-through">
+                    ${itemTotal.toFixed(2)}
+                  </div>
+                  <div className="flex items-center gap-1 text-green-600 text-sm">
+                    <InfoIcon className="h-3 w-3" />
+                    <span>${item.couponAmount.toFixed(2)} discount applied</span>
+                  </div>
+                </>
               )}
-              
-              {/* Final price */}
               <div className="text-lg font-bold">
-                ${finalTotal.toFixed(2)}
+                ${discountedTotal.toFixed(2)}
               </div>
             </div>
 
@@ -186,7 +158,7 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery }: CartItemCardProps) =
           </div>
         </div>
         
-        {/* Delivery Form */}
+        {/* Delivery Form - Now we pass the item prop */}
         {isDeliveryFormOpen && (
           <div className="mt-4 pt-4 border-t">
             <DeliveryForm

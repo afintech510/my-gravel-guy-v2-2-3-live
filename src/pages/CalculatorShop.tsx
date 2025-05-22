@@ -1,44 +1,19 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import ShopCalculator from '../components/shop-calculator/ShopCalculator';
 import QuoteFormProduct from '../components/forms/QuoteFormProduct';
 import TrustBanner from '../components/products/trust/TrustBanner';
-import DatabaseSetupHelper from '../components/setup/DatabaseSetupHelper';
-import { checkRequiredTables } from '../utils/dbSetup';
 
 const CalculatorShop = () => {
-  const [showSetupHelper, setShowSetupHelper] = useState(false);
-  
-  useEffect(() => {
-    const checkDbSetup = async () => {
-      const { hasPriceTiersTable } = await checkRequiredTables();
-      setShowSetupHelper(!hasPriceTiersTable);
-    };
-    
-    checkDbSetup();
-  }, []);
-  
   return (
-    <div className="py-8 px-4 bg-gray-50">
+    <div className="py-8 px-4 sm:px-6 bg-gray-50">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-3 font-montserrat">Material Calculator</h1>
-        <p className="text-center text-gray-600 mb-2 font-montserrat">
-          Choose your material type and calculate how much you need for your project
-        </p>
-        <p className="text-center text-primary font-medium mb-8 font-montserrat">
-          Volume discounts available - The more you order, the more you save!
-        </p>
-        
-        {showSetupHelper && (
-          <div className="mb-8">
-            <DatabaseSetupHelper />
-          </div>
-        )}
-        
+        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-4 sm:mb-6 font-montserrat">Material Calculator</h1>
+        <p className="text-center text-gray-600 mb-6 sm:mb-8 font-montserrat text-sm sm:text-base">Choose your material type and calculate how much you need for your project</p>
         <ShopCalculator />
         
         {/* Quote Form Component */}
-        <div className="mt-16">
+        <div className="mt-12 sm:mt-16">
           <QuoteFormProduct />
         </div>
         
