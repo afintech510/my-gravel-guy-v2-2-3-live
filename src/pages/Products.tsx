@@ -35,8 +35,6 @@ const Products = () => {
       subcategory: effectiveSubcategory,
       size
     }));
-    
-    // Removed toast notifications for category changes
   };
 
   return (
