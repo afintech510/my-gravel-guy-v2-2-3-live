@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calculator } from "lucide-react";
@@ -10,12 +10,14 @@ interface MiniCalculatorProps {
   onQuantityCalculated: (tons: number) => void;
   pricePerTon: number;
   tonYardRatio?: number;
+  onPriceUpdate?: (tons: number) => void;
 }
 
 const MiniCalculator = ({ 
   onQuantityCalculated, 
   pricePerTon,
-  tonYardRatio = 1.5 // Default if not provided
+  tonYardRatio = 1.5, // Default if not provided
+  onPriceUpdate
 }: MiniCalculatorProps) => {
   const [length, setLength] = useState<number>(0);
   const [width, setWidth] = useState<number>(0);
@@ -30,9 +32,22 @@ const MiniCalculator = ({
     tonYardRatio
   );
 
+  // When totalTons changes significantly, trigger the price update
+  useEffect(() => {
+    if (totalTons > 0 && onPriceUpdate) {
+      onPriceUpdate(Math.round(totalTons));
+    }
+  }, [totalTons, onPriceUpdate]);
+
   const handleCalculate = () => {
     // Round to integer value
-    onQuantityCalculated(Math.round(totalTons));
+    const roundedTons = Math.round(totalTons);
+    onQuantityCalculated(roundedTons);
+    
+    // Also update the price if the callback exists
+    if (onPriceUpdate) {
+      onPriceUpdate(roundedTons);
+    }
   };
 
   return (
@@ -105,7 +120,7 @@ const MiniCalculator = ({
         </div>
 
         {totalSquareFeet > 0 && (
-          <div className="py-3">
+          <div className="py-3 bg-gray-50 rounded-md p-3">
             <p className="text-sm text-gray-600 mb-2">Results:</p>
             <div className="flex justify-between items-end">
               <div className="text-center">
@@ -121,6 +136,18 @@ const MiniCalculator = ({
                 <span className="text-xs block text-gray-500">cu yards</span>
               </div>
             </div>
+            {pricePerTon > 0 && (
+              <div className="mt-2 pt-2 border-t border-gray-200">
+                <div className="flex justify-between text-sm">
+                  <span className="font-medium">Estimated Total:</span>
+                  <span className="font-bold">${(pricePerTon * Math.round(totalTons)).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>Price per ton:</span>
+                  <span>${pricePerTon.toFixed(2)}/ton</span>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
