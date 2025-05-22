@@ -45,6 +45,15 @@ export interface ZipCodeData {
   timezone: string;
 }
 
+export interface PriceTier {
+  id: string;
+  product_id: string[];
+  min_tons: number;
+  max_tons?: number | null;
+  multiplier: number;
+  created_at?: string;
+}
+
 export type MaterialCategory = Product['category'];
 export type MaterialUsage = NonNullable<Product['usage']>;
 export type MaterialSubtype = NonNullable<Product['subtype']>;
