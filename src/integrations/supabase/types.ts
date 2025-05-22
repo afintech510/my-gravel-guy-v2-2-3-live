@@ -34,6 +34,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      
+      price_tiers: {
+        Row: {
+          id: string;
+          product_id: string[];
+          min_tons: number;
+          max_tons: number;
+          multiplier: number;
+          created_at: string;
+        }
+        Insert: {
+          id?: string;
+          product_id: string[];
+          min_tons: number;
+          max_tons?: number;
+          multiplier: number;
+          created_at?: string;
+        }
+        Update: {
+          id?: string;
+          product_id?: string[];
+          min_tons?: number;
+          max_tons?: number;
+          multiplier?: number;
+          created_at?: string;
+        }
+        Relationships: []
+      }
+
       blog_categories: {
         Row: {
           created_at: string | null
