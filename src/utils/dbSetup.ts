@@ -9,11 +9,12 @@ export async function checkRequiredTables(): Promise<{
   hasPriceTiersTable: boolean;
 }> {
   try {
-    // Use the get_tables RPC function to list tables
-    // Use a type assertion to fix TypeScript error
+    // Fix the type issue with a cast
     const { data: tables, error } = await supabase
-      .rpc('get_tables' as any)
-      .select('*');
+      .rpc('get_tables') as unknown as {
+        data: Array<{ table_name: string }> | null,
+        error: Error | null
+      };
       
     if (error) {
       console.error('Error checking database tables:', error);
@@ -21,7 +22,7 @@ export async function checkRequiredTables(): Promise<{
     }
     
     // Check if price_tiers table exists
-    const hasPriceTiersTable = tables && tables.some((table: any) => 
+    const hasPriceTiersTable = tables && tables.some((table) => 
       table.table_name === 'price_tiers'
     );
     

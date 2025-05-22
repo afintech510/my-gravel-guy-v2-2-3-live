@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CircleCheck, AlertTriangle, TrendingDown, Minus, Plus } from 'lucide-react';
 import { useZipCode } from '@/contexts/ZipCodeContext';
@@ -38,32 +37,14 @@ const ZipCodeSection = ({
   appliedMultiplier
 }: ZipCodeSectionProps) => {
   const { setZipCode } = useZipCode();
-  const [zipCodeInput, setZipCodeInput] = useState(zipCode || '');
   const [validating, setValidating] = useState(false);
 
   useEffect(() => {
-    // Update input value if zipCode changes from context
+    // Check the ZIP code from context when component mounts
     if (zipCode) {
-      setZipCodeInput(zipCode);
+      validateZipCodeAndGetPrice(zipCode);
     }
   }, [zipCode]);
-
-  const handleZipCodeUpdate = async () => {
-    if (zipCodeInput.trim()) {
-      setValidating(true);
-      const isValid = await validateZipCodeAndGetPrice(zipCodeInput);
-      if (isValid) {
-        setZipCode(zipCodeInput);
-      }
-      setValidating(false);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleZipCodeUpdate();
-    }
-  };
 
   // Format prices for display
   const formatPrice = (price: number) => {
@@ -79,64 +60,25 @@ const ZipCodeSection = ({
   return (
     <Card className="bg-gray-50">
       <CardContent className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Left section - ZIP Code */}
-          <div className="md:col-span-5">
+          <div>
             <h3 className="text-lg font-semibold mb-4">Delivery Information</h3>
             
-            {/* Amount (tons) selector - Mobile version for small screens */}
-            <div className="mb-6 md:hidden">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="tons-mobile" className="font-bold text-lg">Amount</Label>
-                <div className="flex items-center border rounded-lg bg-white overflow-hidden">
-                  <Button 
-                    type="button" 
-                    variant="ghost"
-                    size="icon"
-                    className="rounded-none h-10 w-10 flex items-center justify-center focus:ring-0"
-                    onClick={() => adjustTons(-1)}
-                    disabled={totalTons <= 1}
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  
-                  <Input 
-                    id="tons-mobile"
-                    type="number"
-                    min="1"
-                    value={totalTons}
-                    onChange={(e) => handleTonsChange(parseInt(e.target.value) || 1)}
-                    className="w-16 text-center border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                  />
-                  
-                  <Button 
-                    type="button"
-                    variant="ghost"
-                    size="icon" 
-                    className="rounded-none h-10 w-10 flex items-center justify-center focus:ring-0"
-                    onClick={() => adjustTons(1)}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              <div className="text-right text-sm text-muted-foreground">
-                tons
-              </div>
-            </div>
-            
-            {/* ZIP Code Input - Using ZipCodeSearch component instead of raw input */}
+            {/* ZIP Code Input - Using ZipCodeSearch component */}
             <div className="space-y-4">
               <Label htmlFor="zipCode" className="mb-1 block">Enter ZIP Code for Delivery</Label>
-              <ZipCodeSearch 
-                variant="minimal" 
-                className="w-full"
-                onZipCodeSelected={() => {
-                  if (zipCode) {
-                    validateZipCodeAndGetPrice(zipCode);
-                  }
-                }}
-              />
+              <div className="relative">
+                <ZipCodeSearch 
+                  variant="minimal" 
+                  className="w-full"
+                  onZipCodeSelected={() => {
+                    if (zipCode) {
+                      validateZipCodeAndGetPrice(zipCode);
+                    }
+                  }}
+                />
+              </div>
               
               {/* ZIP Code validation status */}
               {zipCode && (
@@ -158,44 +100,43 @@ const ZipCodeSection = ({
           </div>
           
           {/* Right section - Price & Add to Cart */}
-          <div className="md:col-span-7 space-y-4">
-            <div className="flex justify-between items-start">
+          <div>
+            {/* Price Summary Header with Tons Counter */}
+            <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold">Price Summary</h3>
               
-              {/* Amount (tons) selector - Desktop version */}
-              <div className="hidden md:block">
-                <div className="flex items-center space-x-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="rounded-full h-8 w-8"
-                    onClick={() => adjustTons(-1)}
-                    disabled={totalTons <= 1}
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  
-                  <div className="text-center">
-                    <span className="text-3xl font-bold font-montserrat">{totalTons}</span>
-                    <div className="text-xs text-muted-foreground mt-1">tons</div>
-                  </div>
-                  
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="rounded-full h-8 w-8"
-                    onClick={() => adjustTons(1)}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
+              {/* Tons selector - Modern circular +/- design */}
+              <div className="flex items-center">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="rounded-full h-10 w-10 flex items-center justify-center"
+                  onClick={() => adjustTons(-1)}
+                  disabled={totalTons <= 1}
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                
+                <div className="text-center mx-4">
+                  <span className="text-4xl font-bold font-montserrat">{totalTons}</span>
+                  <div className="text-xs text-muted-foreground mt-1 text-center">tons</div>
                 </div>
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="rounded-full h-10 w-10 flex items-center justify-center"
+                  onClick={() => adjustTons(1)}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
             </div>
             
             {/* Price displays */}
-            <div className="space-y-1 mt-4">
+            <div className="space-y-2 mb-6">
               {/* If volume discount is applied, show original price and discount */}
               {savings && savings > 0 && originalCost && (
                 <>
@@ -237,16 +178,14 @@ const ZipCodeSection = ({
             </div>
             
             {/* Add to Cart button */}
-            <div className="pt-4">
-              <Button 
-                onClick={onAddToCart}
-                disabled={!zipCodeValid}
-                className="w-full bg-green-500 hover:bg-green-600 text-white"
-                size="lg"
-              >
-                Add to Cart
-              </Button>
-            </div>
+            <Button 
+              onClick={onAddToCart}
+              disabled={!zipCodeValid}
+              className="w-full bg-green-500 hover:bg-green-600 text-white"
+              size="lg"
+            >
+              Add to Cart
+            </Button>
           </div>
         </div>
       </CardContent>
