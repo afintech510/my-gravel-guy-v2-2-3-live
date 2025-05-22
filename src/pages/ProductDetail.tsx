@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,10 +25,15 @@ const ProductDetail = () => {
   const { zipCode } = useZipCode();
   const { addToCart } = useCart();
   
-  const { product, adjustedPrice, loading, error } = useProduct(slug, zipCode);
-  
   // State for selected tons from mini calculator
   const [calculatedTons, setCalculatedTons] = useState<number | null>(null);
+  
+  // Use our enhanced useProduct hook with tons parameter
+  const { product, adjustedPrice, priceDetails, loading, error } = useProduct(
+    slug, 
+    zipCode, 
+    calculatedTons || 10
+  );
 
   // Track product view when product data is loaded
   useEffect(() => {
@@ -134,6 +140,7 @@ const ProductDetail = () => {
             <ProductActions 
               product={product}
               adjustedPrice={adjustedPrice ?? product.price}
+              priceDetails={priceDetails}
               onAddToCart={handleAddToCart}
               initialTons={calculatedTons ?? undefined}
             />
