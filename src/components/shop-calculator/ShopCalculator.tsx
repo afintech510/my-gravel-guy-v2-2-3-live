@@ -399,15 +399,6 @@ const ShopCalculator = () => {
         />
       </div>
 
-      {/* Display Price Tiers */}
-      {priceTiers.length > 0 && (
-        <PriceTierDisplay 
-          priceTiers={priceTiers}
-          basePrice={selectedProductPrice}
-          appliedTier={calculations.appliedTier}
-        />
-      )}
-
       {/* Sliders */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         <DepthSlider depth={depth} setDepth={setDepth} />
