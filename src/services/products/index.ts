@@ -6,3 +6,4 @@ export * from './zipCodeQueries';
 export * from './pricingService';
 export * from './sampleData';
 export * from './imageUtils';
+export * from './priceUtils'; // Export the new price utilities

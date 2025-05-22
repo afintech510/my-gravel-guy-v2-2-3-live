@@ -1,8 +1,13 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Product, PriceTier, ZipCodeData } from './types';
 import { SAMPLE_PRODUCTS } from './sampleData';
-import { productsCache, zipCodePricingCache, zipCodesCache, lastFetchTimestamp, CACHE_TTL } from './cache';
+import { 
+  getProductsCache, 
+  setProductsCache, 
+  getLastFetchTimestamp,
+  updateLastFetchTimestamp,
+  CACHE_TTL 
+} from './cache';
 import { processProductImages } from './imageUtils';
 
 /**
@@ -10,6 +15,9 @@ import { processProductImages } from './imageUtils';
  */
 export async function getProducts(forceRefresh = false): Promise<Product[]> {
   // Check cache first, unless force refresh is requested
+  const productsCache = getProductsCache();
+  const lastFetchTimestamp = getLastFetchTimestamp();
+  
   if (!forceRefresh && productsCache && (Date.now() - lastFetchTimestamp < CACHE_TTL)) {
     console.log('Using cached products data:', productsCache.length, 'products found');
     return productsCache;
@@ -29,8 +37,8 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
 
     if (!productsData || productsData.length === 0) {
       console.warn('No products found in Supabase! Using sample products instead.');
-      productsCache = SAMPLE_PRODUCTS;
-      lastFetchTimestamp = Date.now();
+      setProductsCache(SAMPLE_PRODUCTS);
+      updateLastFetchTimestamp();
       return SAMPLE_PRODUCTS;
     }
 
@@ -143,8 +151,8 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
     console.log('Transformed products:', products);
     
     // Update cache
-    productsCache = products;
-    lastFetchTimestamp = Date.now();
+    setProductsCache(products);
+    updateLastFetchTimestamp();
     
     return products;
   } catch (error) {
