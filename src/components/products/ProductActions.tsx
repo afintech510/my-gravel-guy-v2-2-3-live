@@ -52,6 +52,7 @@ const ProductActions = ({
   // Handle local quantity change
   const handleQuantityChange = (tons: number) => {
     setSelectedTons(tons);
+    // Call the callback immediately to trigger price recalculation
     if (onQuantityChange) {
       onQuantityChange(tons);
     }
