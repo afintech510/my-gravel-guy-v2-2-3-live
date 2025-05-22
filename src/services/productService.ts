@@ -330,31 +330,59 @@ export async function getPriceTiers(productId: string | number): Promise<PriceTi
   try {
     console.log('Fetching price tiers for product:', productId);
     
-    // Try to fetch tiers where product_id array contains this product ID
+    // Check if the price_tiers table exists in Supabase
     try {
-      const productIdStr = productId.toString();
-      
-      const { data, error } = await supabase
-        .from('price_tiers')
-        .select('*')
-        .contains('product_id', [productIdStr]);
+      // Instead of trying to query directly, first check if table exists
+      // by getting its schema/definition
+      const { data: tables, error: tableError } = await supabase
+        .rpc('get_tables')
+        .select('*');
         
-      if (error) {
-        throw error;
+      if (tableError) {
+        console.error('Error checking tables:', tableError);
+        throw tableError;
       }
       
-      if (data && data.length > 0) {
-        console.log('Price tier data from Supabase:', data);
+      const hasPriceTiersTable = tables && tables.some((t: any) => t.table_name === 'price_tiers');
+      
+      // If price_tiers table exists, query it
+      if (hasPriceTiersTable) {
+        const productIdStr = productId.toString();
         
-        // Transform to PriceTier objects
-        return data.map(row => ({
-          id: row.id || `generated-${Math.random().toString(36).substr(2, 9)}`,
-          product_id: row.product_id || [],
-          min_tons: parseFloat(String(row.min_tons || 0)),
-          max_tons: row.max_tons === null ? null : parseFloat(String(row.max_tons)),
-          multiplier: parseFloat(String(row.multiplier || 1.0)),
-          created_at: row.created_at
-        }));
+        const { data, error } = await supabase
+          .from('price_tiers')
+          .select('*');
+          
+        if (error) {
+          throw error;
+        }
+        
+        if (data && data.length > 0) {
+          console.log('Price tier data from Supabase:', data);
+          
+          // Filter tiers for this product (client-side filtering)
+          const relevantTiers = data.filter((tier: any) => {
+            // Check if product_id contains this product's ID
+            if (Array.isArray(tier.product_id)) {
+              return tier.product_id.includes(productIdStr);
+            } else if (tier.product_id === productIdStr) {
+              return true;
+            }
+            return false;
+          });
+          
+          if (relevantTiers.length > 0) {
+            // Transform to PriceTier objects
+            return relevantTiers.map((row: any) => ({
+              id: row.id || `generated-${Math.random().toString(36).substr(2, 9)}`,
+              product_id: row.product_id || [],
+              min_tons: parseFloat(String(row.min_tons || 0)),
+              max_tons: row.max_tons === null ? null : parseFloat(String(row.max_tons)),
+              multiplier: parseFloat(String(row.multiplier || 1.0)),
+              created_at: row.created_at
+            }));
+          }
+        }
       }
     } catch (dbError) {
       console.error('Error fetching from price_tiers table:', dbError);
