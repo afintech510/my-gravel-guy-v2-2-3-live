@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { getServiceAreasByState } from '../services/productService';
-import { ZipCodeData } from '../services/productTypes';
+import { getServiceAreasByState, ZipCodeData } from '../services/productService';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Search } from 'lucide-react';

@@ -2,100 +2,109 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ZipCodeData } from '../../services/productTypes';
 import { formatZipCodeData } from './formatter';
+import { getDemoZipCodes, getDemoZipCode } from './demoData';
 
 /**
- * Find a full match for the input (exact ZIP code or a city/state match)
+ * Attempts to find a ZIP code match in the database
  */
-export async function findZipCodeMatch(input: string): Promise<ZipCodeData | null> {
-  try {
-    // First try exact ZIP code match
-    if (/^\d{5}$/.test(input)) {
-      const { data, error } = await supabase
-        .from('service_zip_codes')
-        .select('*')
-        .eq('zip', input)
-        .maybeSingle();
-        
-      if (!error && data) {
-        return formatZipCodeData(data);
-      }
-    }
-    
-    // Then try city name match
+export const findZipCodeMatch = async (searchValue: string): Promise<ZipCodeData | null> => {
+  console.log('Searching for:', searchValue);
+  
+  // First try exact match on zip code
+  let { data: zipData, error: zipError } = await supabase
+    .from('service_zip_codes')
+    .select('*')
+    .eq('zip', searchValue)
+    .maybeSingle();
+  
+  console.log('ZIP exact match result:', { zipData, zipError });
+  
+  // If no zip match, try city
+  if (!zipData) {
     const { data: cityData, error: cityError } = await supabase
       .from('service_zip_codes')
       .select('*')
-      .ilike('city', `${input.trim()}%`)
+      .ilike('city', `${searchValue}%`)
       .limit(1);
       
-    if (!cityError && cityData && cityData.length > 0) {
-      return formatZipCodeData(cityData[0]);
-    }
+    console.log('City search result:', { cityData, cityError });
     
-    // Then try state match
-    const { data: stateData, error: stateError } = await supabase
-      .from('service_zip_codes')
-      .select('*')
-      .or(`state_id.eq.${input},state_name.ilike.${input.trim()}%`)
-      .limit(1);
+    if (cityData && cityData.length > 0) {
+      zipData = cityData[0];
+    } else {
+      // Try state as last resort
+      const { data: stateData, error: stateError } = await supabase
+        .from('service_zip_codes')
+        .select('*')
+        .or(`state_id.ilike.${searchValue}%,state_name.ilike.${searchValue}%`)
+        .limit(1);
+        
+      console.log('State search result:', { stateData, stateError });
       
-    if (!stateError && stateData && stateData.length > 0) {
-      return formatZipCodeData(stateData[0]);
+      if (stateData && stateData.length > 0) {
+        zipData = stateData[0];
+      }
     }
-    
-    // No matching data found
-    return null;
-  } catch (err) {
-    console.error('Error finding ZIP code match:', err);
-    return null;
   }
-}
+
+  // If we've found a match, format and return it
+  if (zipData) {
+    return formatZipCodeData(zipData);
+  }
+  
+  return null;
+};
 
 /**
- * Get suggestions based on input (ZIP code, city, or state)
+ * Finds ZIP code suggestions based on input value
  */
-export async function findZipCodeSuggestions(input: string): Promise<ZipCodeData[]> {
+export const findZipCodeSuggestions = async (value: string): Promise<ZipCodeData[]> => {
+  if (value.length < 2) return [];
+  
   try {
-    if (input.length < 2) return [];
-    
-    const searchTerm = input.trim();
-    
-    // Search by ZIP, city, or state
+    console.log('Searching for suggestions:', value);
+    // Search for suggestions in zip codes, cities, and states
     const { data, error } = await supabase
       .from('service_zip_codes')
       .select('*')
-      .or(`zip.ilike.${searchTerm}%,city.ilike.${searchTerm}%,state_id.eq.${searchTerm.toUpperCase()},state_name.ilike.${searchTerm}%`)
+      .or(`zip.ilike.${value}%,city.ilike.${value}%,state_id.ilike.${value}%,state_name.ilike.${value}%`)
       .limit(5);
       
-    if (error || !data) {
-      console.error('Error finding ZIP code suggestions:', error);
-      return [];
+    console.log('Suggestions result:', { data, error });
+    
+    if (data && data.length > 0) {
+      // Convert to ZipCodeData format with proper type conversion
+      return data.map(item => formatZipCodeData(item));
     }
     
-    return data.map(zipData => formatZipCodeData(zipData));
+    // Check if the table has any data
+    if (value.length >= 3) {
+      const { count } = await supabase
+        .from('service_zip_codes')
+        .select('*', { count: 'exact', head: true });
+      
+      console.log('ZIP codes count for suggestions:', count);
+      
+      if (count === 0) {
+        // If table is empty, use demo suggestions
+        return getDemoZipCodes();
+      }
+    }
   } catch (err) {
-    console.error('Error finding ZIP code suggestions:', err);
-    return [];
+    console.error("Error fetching suggestions:", err);
   }
-}
+  
+  return [];
+};
 
 /**
- * Check if the service_zip_codes table exists and has data
+ * Checks if any ZIP code data exists in the database
  */
-export async function checkZipCodeTableExists(): Promise<number> {
-  try {
-    const { count, error } = await supabase
-      .from('service_zip_codes')
-      .select('*', { count: 'exact', head: true });
-      
-    if (error) {
-      console.error('Error checking ZIP code table:', error);
-      return 0;
-    }
+export const checkZipCodeTableExists = async (): Promise<number> => {
+  const { count, error: countError } = await supabase
+    .from('service_zip_codes')
+    .select('*', { count: 'exact', head: true });
     
-    return count || 0;
-  } catch (err) {
-    console.error('Error checking ZIP code table:', err);
-    return 0;
-  }
-}
+  console.log('ZIP codes count in DB:', { count, countError });
+  return count || 0;
+};

@@ -27,16 +27,6 @@ export interface Product {
     question: string;
     answer: string;
   }>;
-  priceTiers?: PriceTier[]; // New field for price tiers
-}
-
-export interface PriceTier {
-  id: string;
-  product_id: string[] | string | number; // Updated to allow array of product IDs
-  min_tons: number;
-  max_tons: number | null;
-  multiplier: number;
-  created_at?: string;
 }
 
 export interface ZipCodeData {
@@ -53,31 +43,6 @@ export interface ZipCodeData {
   county_names_all: string;
   county_fips_all: string;
   timezone: string;
-}
-
-// Adding missing interface exports
-export interface Location {
-  id: string;
-  product_id: string;
-  product_name: string;
-  title: string;
-  description: string;
-  lat: number;
-  lng: number;
-  city: string;
-  state: string;
-  region: string;
-  slug: string;
-  created_at: string;
-}
-
-export interface ProductWithLocations extends Product {
-  locations: Location[];
-}
-
-export interface ZipCodeValidationResult {
-  inServiceArea: boolean;
-  priceAdjustment?: number;
 }
 
 export type MaterialCategory = Product['category'];
