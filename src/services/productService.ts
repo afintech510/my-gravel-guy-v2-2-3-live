@@ -349,9 +349,9 @@ export async function getPriceTiers(productId: string | number): Promise<PriceTi
       if (hasPriceTiersTable) {
         const productIdStr = productId.toString();
         
-        // Now we can use the table name directly since it's in the types
+        // Use type casting to fix the TypeScript error
         const { data, error } = await supabase
-          .from('price_tiers')
+          .from('price_tiers' as unknown as keyof typeof supabase.from)
           .select('*');
           
         if (error) {
@@ -362,7 +362,7 @@ export async function getPriceTiers(productId: string | number): Promise<PriceTi
           console.log('Price tier data from Supabase:', data);
           
           // Filter tiers for this product (client-side filtering)
-          const relevantTiers = data.filter((tier) => {
+          const relevantTiers = data.filter((tier: any) => {
             // Check if product_id contains this product's ID
             if (Array.isArray(tier.product_id)) {
               return tier.product_id.includes(productIdStr);
@@ -374,7 +374,7 @@ export async function getPriceTiers(productId: string | number): Promise<PriceTi
           
           if (relevantTiers.length > 0) {
             // Transform to PriceTier objects
-            return relevantTiers.map((row) => ({
+            return relevantTiers.map((row: any) => ({
               id: row.id || `generated-${Math.random().toString(36).substr(2, 9)}`,
               product_id: row.product_id || [],
               min_tons: parseFloat(String(row.min_tons || 0)),
