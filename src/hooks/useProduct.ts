@@ -4,7 +4,6 @@ import { Product } from '@/services/productTypes';
 import { 
   getProductBySlug, 
   getPriceAdjustmentForZipCode, 
-  applyZipCodeAdjustment, 
   getPriceMultiplierForQuantity,
   getPriceTiersForProduct 
 } from '@/services/productService';
@@ -18,7 +17,7 @@ interface PriceTier {
 export const useProduct = (slug: string | undefined, zipCode?: string, tons: number = 10) => {
   const [product, setProduct] = useState<Product | undefined>(undefined);
   const [priceTiers, setPriceTiers] = useState<PriceTier[]>([]);
-  const [zipAdjustment, setZipAdjustment] = useState<number>(0);
+  const [zipAdjustment, setZipAdjustment] = useState<number>(1); // Changed to factor (multiplier) instead of percentage
   const [adjustedPrice, setAdjustedPrice] = useState<number | undefined>(undefined);
   const [priceDetails, setPriceDetails] = useState<{
     basePrice: number;
@@ -55,8 +54,8 @@ export const useProduct = (slug: string | undefined, zipCode?: string, tons: num
     // Apply volume multiplier to get adjusted base price
     let volumeAdjustedPrice = basePrice * multiplier;
     
-    // Apply ZIP code adjustment
-    volumeAdjustedPrice = applyZipCodeAdjustment(volumeAdjustedPrice, zipAdjustment);
+    // Apply ZIP code adjustment as a multiplier factor (not percentage)
+    volumeAdjustedPrice = volumeAdjustedPrice * zipAdjustment;
     
     // Set the final adjusted price
     setAdjustedPrice(volumeAdjustedPrice);
@@ -92,7 +91,11 @@ export const useProduct = (slug: string | undefined, zipCode?: string, tons: num
           // If we have a ZIP code, fetch the adjustment
           if (zipCode) {
             const adjustment = await getPriceAdjustmentForZipCode(zipCode);
-            setZipAdjustment(adjustment);
+            // Convert from percentage to multiplier factor
+            // e.g., if adjustment is 20 (meaning +20%), we store 1.2 as the factor
+            setZipAdjustment(1 + (adjustment / 100));
+          } else {
+            setZipAdjustment(1); // Default to no adjustment (factor of 1)
           }
           
           // Initial price calculation
