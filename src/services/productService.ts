@@ -1,5 +1,5 @@
 
-import { Product, ZipCodeData } from './productTypes';
+import { Product, ZipCodeData, PriceTier } from './productTypes';
 import { supabase } from '@/integrations/supabase/client';
 
 // In-memory cache with expiry
