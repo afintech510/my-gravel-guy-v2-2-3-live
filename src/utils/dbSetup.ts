@@ -10,8 +10,9 @@ export async function checkRequiredTables(): Promise<{
 }> {
   try {
     // Use the get_tables RPC function to list tables
+    // Use a type assertion to fix TypeScript error
     const { data: tables, error } = await supabase
-      .rpc('get_tables')
+      .rpc('get_tables' as any)
       .select('*');
       
     if (error) {
