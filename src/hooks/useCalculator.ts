@@ -26,7 +26,7 @@ export const useCalculator = (
   productPrice: number,
   tonYardRatio: number = 1.5, // Default ratio is 1.5 tons per cubic yard
   manualTons?: number, // Manual tons parameter
-  priceTiers?: PriceTier[] // New parameter for price tiers
+  priceTiers?: PriceTier[] // Optional parameter for price tiers
 ) => {
   const calculateTotalSquareFeet = (): number => {
     return areas.reduce((total, area) => total + (area.length * area.width), 0);
@@ -87,7 +87,7 @@ export const useCalculator = (
     ? getMultiplierForTons(priceTiers, totalTons)
     : 1.0;
   
-  // Find which tier was applied
+  // Find which tier was applied (if any)
   const appliedTier = priceTiers?.find(tier => {
     const meetsMinimum = totalTons >= tier.min_tons;
     const belowMaximum = tier.max_tons === null || totalTons <= tier.max_tons;
@@ -97,7 +97,7 @@ export const useCalculator = (
   // Calculate costs
   const originalCost = calculateOriginalCost(totalTons);
   const estimatedCost = calculateEstimatedCost(totalTons);
-  const savings = +(originalCost - estimatedCost).toFixed(2);
+  const savings = priceTiers && priceTiers.length > 0 ? +(originalCost - estimatedCost).toFixed(2) : 0;
   
   // Apply fixed discount (for compatibility with existing code)
   const discountedCost = +(estimatedCost - 50).toFixed(2);

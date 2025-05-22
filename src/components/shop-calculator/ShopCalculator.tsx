@@ -1,11 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '../../contexts/CartContext';
-import { getProducts, validateZipCode, applyZipCodeAdjustment, getPriceTiers } from '../../services/productService';
-import { Product, PriceTier } from '../../services/productTypes';
+import { getProducts, validateZipCode, applyZipCodeAdjustment } from '../../services/productService';
+import { Product } from '../../services/productTypes';
 import { useZipCode } from '../../contexts/ZipCodeContext';
 import { useCalculator } from '../../hooks/useCalculator';
 import { sendCalculatorEmail, EmailData } from '../../utils/emailService';
@@ -16,7 +17,6 @@ import DepthSlider from './DepthSlider';
 import ExtraSlider from './ExtraSlider';
 import ZipCodeSection from './ZipCodeSection';
 import ContactForm from './ContactForm';
-import PriceTierDisplay from './PriceTierDisplay';
 
 // Define material categories
 export type MaterialCategory = 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base';
@@ -66,7 +66,6 @@ const ShopCalculator = () => {
   const [discountApplied, setDiscountApplied] = useState<boolean>(false);
   const [lastCalculatedTons, setLastCalculatedTons] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [priceTiers, setPriceTiers] = useState<PriceTier[]>([]);
 
   const { toast } = useToast();
   const { addToCart } = useCart();
@@ -103,22 +102,6 @@ const ShopCalculator = () => {
     };
     loadProducts();
   }, []);
-
-  // New useEffect hook to fetch price tiers when product selection changes
-  useEffect(() => {
-    const fetchPriceTiers = async () => {
-      if (selectedProduct) {
-        try {
-          const tiers = await getPriceTiers(selectedProduct);
-          setPriceTiers(tiers);
-        } catch (error) {
-          console.error('Failed to load price tiers:', error);
-        }
-      }
-    };
-    
-    fetchPriceTiers();
-  }, [selectedProduct]);
 
   // Update product selection when category or subcategory changes
   useEffect(() => {
@@ -182,15 +165,14 @@ const ShopCalculator = () => {
     
   const tonYardRatio = selectedProductObj?.tonYardRatio ? parseFloat(String(selectedProductObj.tonYardRatio)) : 1.5;
   
-  // Pass price tiers to useCalculator
+  // Remove price tiers parameter from useCalculator call
   const calculations = useCalculator(
     areas, 
     depth, 
     extraPercentage, 
     selectedProductPrice, 
     tonYardRatio, 
-    manualTons,
-    priceTiers
+    manualTons
   );
 
   // Store the calculated tons when not manually set
@@ -308,9 +290,6 @@ const ShopCalculator = () => {
         price: selectedProductPrice // Use the ZIP code adjusted price
       };
       
-      // Get the appropriate multiplier for this quantity
-      const appliedMultiplier = calculations.appliedMultiplier || 1.0;
-      
       // Enhanced product metadata to include all selected options
       const enhancedProduct = {
         ...adjustedProduct,
@@ -321,9 +300,6 @@ const ShopCalculator = () => {
         materialSize: selectedSize,
         applicationType: selectedApplication,
         depth: depth,
-        // Add tier pricing information
-        priceTiers: priceTiers,
-        appliedMultiplier: appliedMultiplier,
         // Contact info
         contactInfo: {
           name: formData.name,
@@ -345,15 +321,9 @@ const ShopCalculator = () => {
       
       addToCart(enhancedProduct);
       
-      // Calculate savings message
-      let savingsMessage = "";
-      if (calculations.savings && calculations.savings > 0) {
-        savingsMessage = ` (Volume discount of $${calculations.savings.toFixed(2)} applied)`;
-      }
-      
       const message = discountApplied 
-        ? `${finalTons} tons of ${selectedCategory} (${selectedSubcategory}, ${selectedSize}) added to your cart with a $50 discount applied${savingsMessage}.`
-        : `${finalTons} tons of ${selectedCategory} (${selectedSubcategory}, ${selectedSize}) added to your cart${savingsMessage}.`;
+        ? `${finalTons} tons of ${selectedCategory} (${selectedSubcategory}, ${selectedSize}) added to your cart with a $50 discount applied.`
+        : `${finalTons} tons of ${selectedCategory} (${selectedSubcategory}, ${selectedSize}) added to your cart.`;
         
       toast({
         title: "Added to Cart",
@@ -398,15 +368,6 @@ const ShopCalculator = () => {
           tons={calculations.totalTons}
         />
       </div>
-
-      {/* Display Price Tiers */}
-      {priceTiers.length > 0 && (
-        <PriceTierDisplay 
-          priceTiers={priceTiers}
-          basePrice={selectedProductPrice}
-          appliedTier={calculations.appliedTier}
-        />
-      )}
 
       {/* Sliders */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
