@@ -11,13 +11,15 @@ interface MiniCalculatorProps {
   pricePerTon: number;
   tonYardRatio?: number;
   onPriceUpdate?: (tons: number) => void;
+  currentTons?: number; // Add currentTons prop to sync with external state
 }
 
 const MiniCalculator = ({ 
   onQuantityCalculated, 
   pricePerTon,
   tonYardRatio = 1.5, // Default if not provided
-  onPriceUpdate
+  onPriceUpdate,
+  currentTons
 }: MiniCalculatorProps) => {
   const [length, setLength] = useState<number>(0);
   const [width, setWidth] = useState<number>(0);
@@ -32,14 +34,20 @@ const MiniCalculator = ({
     tonYardRatio
   );
 
-  // When totalTons changes significantly, trigger the price update
+  // Sync with external tons value when it changes
   useEffect(() => {
+    // Only update prices when totalTons is significant (user has entered dimensions)
     if (totalTons > 0 && onPriceUpdate) {
       onPriceUpdate(Math.round(totalTons));
     }
   }, [totalTons, onPriceUpdate]);
 
   const handleCalculate = () => {
+    // Don't calculate if no dimensions entered
+    if (length <= 0 || width <= 0) {
+      return;
+    }
+    
     // Round to integer value
     const roundedTons = Math.round(totalTons);
     onQuantityCalculated(roundedTons);
@@ -154,6 +162,7 @@ const MiniCalculator = ({
         <Button 
           onClick={handleCalculate} 
           className="w-full font-montserrat"
+          disabled={length <= 0 || width <= 0}
         >
           Use This Amount
         </Button>

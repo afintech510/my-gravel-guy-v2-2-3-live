@@ -53,11 +53,13 @@ const ProductDetail = () => {
 
   // Handle quantity changes both from calculator and direct selection
   const handleQuantityChange = (tons: number) => {
+    console.log('Quantity changed to:', tons);
     setCurrentTons(tons);
   };
 
   // Handle quantity from calculator
   const handleQuantityCalculated = (tons: number) => {
+    console.log('Calculator quantity set to:', tons);
     // Update both the calculated tons and current tons
     setCalculatedTons(tons);
     setCurrentTons(tons); // This will trigger a price recalculation
@@ -68,6 +70,11 @@ const ProductDetail = () => {
       description: `${tons} tons has been set as your selected amount.`,
     });
   };
+
+  // Debug logging to track state changes
+  useEffect(() => {
+    console.log('Current state:', { currentTons, calculatedTons, adjustedPrice, priceDetails });
+  }, [currentTons, calculatedTons, adjustedPrice, priceDetails]);
 
   const handleAddToCart = (productToAdd: Product & { tons: number, deliveryDate: Date }) => {
     addToCart(productToAdd);
@@ -158,6 +165,7 @@ const ProductDetail = () => {
               onQuantityCalculated={handleQuantityCalculated}
               tonYardRatio={product.tonYardRatio}
               onPriceUpdate={handleQuantityChange}
+              currentTons={currentTons} // Pass the current tons to the calculator
             />
           </div>
         </div>
