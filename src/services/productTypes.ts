@@ -55,6 +55,28 @@ export interface ZipCodeData {
   timezone: string;
 }
 
+// Add missing interfaces needed by other files
+export interface Location {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  lat: number;
+  lng: number;
+  product_id?: string;
+}
+
+export interface ProductWithLocations extends Product {
+  locations: Location[];
+}
+
+export interface ZipCodeValidationResult {
+  inServiceArea: boolean;
+  priceAdjustment?: number;
+}
+
 export type MaterialCategory = Product['category'];
 export type MaterialUsage = NonNullable<Product['usage']>;
 export type MaterialSubtype = NonNullable<Product['subtype']>;

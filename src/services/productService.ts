@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Product, ProductWithLocations, Location, ZipCodeValidationResult, PriceTier, ZipCodeData } from './productTypes';
 
@@ -5,16 +6,16 @@ import { Product, ProductWithLocations, Location, ZipCodeValidationResult, Price
 const PRODUCTS_TABLE = 'products';
 
 // Define a constant for the locations table name
-const LOCATIONS_TABLE = 'locations';
+const LOCATIONS_TABLE = 'delivery_locations';
 
 // Define a constant for the service_areas table name
-const SERVICE_AREAS_TABLE = 'service_areas';
+const SERVICE_AREAS_TABLE = 'service_zip_codes';
 
 /**
  * Gets all products from the database
  * @returns Array of products
  */
-export async function getProducts(): Promise<Product[]> {
+export async function getProducts(forceRefresh = false): Promise<Product[]> {
   try {
     const { data, error } = await supabase
       .from(PRODUCTS_TABLE)
@@ -26,7 +27,24 @@ export async function getProducts(): Promise<Product[]> {
       return [];
     }
 
-    return (data || []) as Product[];
+    // Map database columns to Product interface
+    const products = (data || []).map(item => {
+      return {
+        id: item.id,
+        name: item.name,
+        description: item.description || '',
+        price: Number(item.price) || 0,
+        image: item.image || '',
+        category: (item.category as Product['category']) || 'gravel',
+        slug: item.slug || item.name.toLowerCase().replace(/\s+/g, '-'),
+        tonYardRatio: Number(item.ton_yard_ratio) || 1.5,
+        subtype: item.subtype as Product['subtype'],
+        size: item.size as Product['size'],
+        color: item.color as Product['color']
+      } as Product;
+    });
+
+    return products;
   } catch (error) {
     console.error('Failed to get products:', error);
     return [];
@@ -51,7 +69,24 @@ export async function getProduct(slug: string): Promise<Product | null> {
       return null;
     }
 
-    return (data || null) as Product | null;
+    if (!data) return null;
+
+    // Map database row to Product interface
+    const product: Product = {
+      id: data.id,
+      name: data.name,
+      description: data.description || '',
+      price: Number(data.price) || 0,
+      image: data.image || '',
+      category: (data.category as Product['category']) || 'gravel',
+      slug: data.slug || data.name.toLowerCase().replace(/\s+/g, '-'),
+      tonYardRatio: Number(data.ton_yard_ratio) || 1.5,
+      subtype: data.subtype as Product['subtype'],
+      size: data.size as Product['size'],
+      color: data.color as Product['color']
+    };
+
+    return product;
   } catch (error) {
     console.error('Failed to get product:', error);
     return null;
@@ -76,7 +111,24 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
       return null;
     }
 
-    return (data || null) as Product | null;
+    if (!data) return null;
+
+    // Map database row to Product interface
+    const product: Product = {
+      id: data.id,
+      name: data.name,
+      description: data.description || '',
+      price: Number(data.price) || 0,
+      image: data.image || '',
+      category: (data.category as Product['category']) || 'gravel',
+      slug: data.slug || data.name.toLowerCase().replace(/\s+/g, '-'),
+      tonYardRatio: Number(data.ton_yard_ratio) || 1.5,
+      subtype: data.subtype as Product['subtype'],
+      size: data.size as Product['size'],
+      color: data.color as Product['color']
+    };
+
+    return product;
   } catch (error) {
     console.error('Failed to get product:', error);
     return null;
@@ -102,7 +154,24 @@ export async function getProductById(id: string | number): Promise<Product | nul
       return null;
     }
 
-    return (data || null) as Product | null;
+    if (!data) return null;
+
+    // Map database row to Product interface
+    const product: Product = {
+      id: data.id,
+      name: data.name,
+      description: data.description || '',
+      price: Number(data.price) || 0,
+      image: data.image || '',
+      category: (data.category as Product['category']) || 'gravel',
+      slug: data.slug || data.name.toLowerCase().replace(/\s+/g, '-'),
+      tonYardRatio: Number(data.ton_yard_ratio) || 1.5,
+      subtype: data.subtype as Product['subtype'],
+      size: data.size as Product['size'],
+      color: data.color as Product['color']
+    };
+
+    return product;
   } catch (error) {
     console.error('Failed to get product:', error);
     return null;
@@ -133,12 +202,45 @@ export async function getProductsWithLocations(): Promise<ProductWithLocations[]
       return [];
     }
 
-    const productsWithLocations = (products || []).map(product => ({
-      ...product,
-      locations: (locations || []).filter(location => location.product_id === product.id),
-    }));
+    // Map database rows to ProductWithLocations interface
+    const productsWithLocations = (products || []).map(product => {
+      // Convert each product to the correct interface
+      const mappedProduct: Product = {
+        id: product.id,
+        name: product.name,
+        description: product.description || '',
+        price: Number(product.price) || 0,
+        image: product.image || '',
+        category: (product.category as Product['category']) || 'gravel',
+        slug: product.slug || product.name.toLowerCase().replace(/\s+/g, '-'),
+        tonYardRatio: Number(product.ton_yard_ratio) || 1.5,
+        subtype: product.subtype as Product['subtype'],
+        size: product.size as Product['size'],
+        color: product.color as Product['color']
+      };
 
-    return productsWithLocations as ProductWithLocations[];
+      // Filter and map locations for this product
+      const productLocations = (locations || [])
+        .filter(location => location.product_id === product.id)
+        .map(location => ({
+          id: location.id,
+          name: location.name || '',
+          address: location.address || '',
+          city: location.city || '',
+          state: location.state || '',
+          zip: location.zip || '',
+          lat: Number(location.lat) || 0,
+          lng: Number(location.lng) || 0,
+          product_id: location.product_id
+        }));
+
+      return {
+        ...mappedProduct,
+        locations: productLocations
+      };
+    });
+
+    return productsWithLocations;
   } catch (error) {
     console.error('Failed to get products with locations:', error);
     return [];
@@ -160,7 +262,18 @@ export async function getLocations(): Promise<Location[]> {
       return [];
     }
 
-    return (data || []) as Location[];
+    // Map database rows to Location interface
+    return (data || []).map(item => ({
+      id: item.id,
+      name: item.name || '',
+      address: item.address || '',
+      city: item.city || '',
+      state: item.state || '',
+      zip: item.zip || '',
+      lat: Number(item.lat) || 0,
+      lng: Number(item.lng) || 0,
+      product_id: item.product_id
+    }));
   } catch (error) {
     console.error('Failed to get locations:', error);
     return [];
@@ -185,7 +298,19 @@ export async function getLocation(id: string): Promise<Location | null> {
       return null;
     }
 
-    return (data || null) as Location | null;
+    if (!data) return null;
+
+    return {
+      id: data.id,
+      name: data.name || '',
+      address: data.address || '',
+      city: data.city || '',
+      state: data.state || '',
+      zip: data.zip || '',
+      lat: Number(data.lat) || 0,
+      lng: Number(data.lng) || 0,
+      product_id: data.product_id
+    };
   } catch (error) {
     console.error('Failed to get location:', error);
     return null;
@@ -226,22 +351,53 @@ export async function getUniqueCategories(): Promise<string[]> {
  * @param state The state to get service areas for
  * @returns Array of service areas
  */
-export async function getServiceAreasByState(state: string): Promise<Location[]> {
+export async function getServiceAreasByState(state?: string): Promise<Record<string, ZipCodeData[]>> {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from(SERVICE_AREAS_TABLE)
-      .select('*')
-      .eq('state', state);
+      .select('*');
+      
+    if (state) {
+      query = query.eq('state_id', state);
+    }
+    
+    const { data, error } = await query;
 
     if (error) {
       console.error('Error fetching service areas:', error);
-      return [];
+      return {};
     }
+    
+    // Group by state
+    const groupedByState: Record<string, ZipCodeData[]> = {};
+    
+    (data || []).forEach(zipData => {
+      const state = zipData.state_id;
+      if (!groupedByState[state]) {
+        groupedByState[state] = [];
+      }
+      
+      groupedByState[state].push({
+        zip: zipData.zip,
+        lat: zipData.lat,
+        lng: zipData.lng,
+        city: zipData.city,
+        state_id: zipData.state_id,
+        state_name: zipData.state_name,
+        population: zipData.population,
+        density: zipData.density,
+        county_fips: zipData.county_fips,
+        county_name: zipData.county_name,
+        county_names_all: zipData.county_names_all,
+        county_fips_all: zipData.county_fips_all,
+        timezone: zipData.timezone
+      });
+    });
 
-    return (data || []) as Location[];
+    return groupedByState;
   } catch (error) {
     console.error('Failed to get service areas:', error);
-    return [];
+    return {};
   }
 }
 

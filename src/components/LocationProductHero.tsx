@@ -26,7 +26,8 @@ const LocationProductHero = () => {
     setError(null);
     try {
       console.log("LocationProductHero: Fetching products");
-      const allProducts = await getProducts(forceRefresh);
+      // Fix: Call getProducts without an argument or pass forceRefresh
+      const allProducts = await getProducts();
       
       if (!allProducts || allProducts.length === 0) {
         console.log("LocationProductHero: No products found");

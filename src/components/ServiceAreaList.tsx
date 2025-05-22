@@ -17,6 +17,7 @@ const ServiceAreaList = () => {
     const fetchServiceAreas = async () => {
       try {
         setLoading(true);
+        // Now we call without arguments as the function accepts an optional state parameter
         const areas = await getServiceAreasByState();
         setServiceAreas(areas);
         setFilteredAreas(areas);
