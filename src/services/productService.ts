@@ -345,12 +345,13 @@ export async function getPriceTiers(productId: string | number): Promise<PriceTi
       
       const hasPriceTiersTable = tables && tables.some((t: any) => t.table_name === 'price_tiers');
       
-      // If price_tiers table exists, query it
+      // If price_tiers table exists, query it using type assertion to bypass TS error
       if (hasPriceTiersTable) {
         const productIdStr = productId.toString();
         
+        // Use type assertion to bypass TypeScript error
         const { data, error } = await supabase
-          .from('price_tiers')
+          .from('price_tiers' as any)
           .select('*');
           
         if (error) {
