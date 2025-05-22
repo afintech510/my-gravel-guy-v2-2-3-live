@@ -27,6 +27,16 @@ export interface Product {
     question: string;
     answer: string;
   }>;
+  priceTiers?: PriceTier[]; // New field for price tiers
+}
+
+export interface PriceTier {
+  id: string;
+  product_id: string | number;
+  min_tons: number;
+  max_tons: number | null;
+  multiplier: number;
+  created_at?: string;
 }
 
 export interface ZipCodeData {

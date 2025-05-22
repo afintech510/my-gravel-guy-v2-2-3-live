@@ -1,5 +1,4 @@
-
-import { Product, ZipCodeData } from './productTypes';
+import { Product, ZipCodeData, PriceTier } from './productTypes';
 import { supabase } from '@/integrations/supabase/client';
 
 // In-memory cache with expiry
@@ -105,6 +104,38 @@ const SAMPLE_PRODUCTS: Product[] = [
       coverage: 'Approximately 80 sq ft at 2" depth per ton'
     },
     uses: ['Driveways', 'Road base', 'Drainage', 'Walking paths']
+  }
+];
+
+// Sample price tiers to use when database is empty or when there's an error
+const SAMPLE_PRICE_TIERS: PriceTier[] = [
+  {
+    id: 'tier-1',
+    product_id: 'sample-1',
+    min_tons: 0,
+    max_tons: 5,
+    multiplier: 1.0
+  },
+  {
+    id: 'tier-2',
+    product_id: 'sample-1',
+    min_tons: 6,
+    max_tons: 10,
+    multiplier: 0.95 // 5% discount
+  },
+  {
+    id: 'tier-3',
+    product_id: 'sample-1',
+    min_tons: 11,
+    max_tons: 20,
+    multiplier: 0.9 // 10% discount
+  },
+  {
+    id: 'tier-4',
+    product_id: 'sample-1',
+    min_tons: 21,
+    max_tons: null, // null means unlimited
+    multiplier: 0.85 // 15% discount
   }
 ];
 
@@ -290,6 +321,105 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
     console.log('Returning sample products due to fetch error');
     return SAMPLE_PRODUCTS;
   }
+}
+
+/**
+ * Fetch price tiers for a specific product
+ */
+export async function getPriceTiers(productId: string | number): Promise<PriceTier[]> {
+  try {
+    console.log('Fetching price tiers for product:', productId);
+    
+    const { data: tierData, error } = await supabase
+      .from('product_price_tiers')
+      .select('*')
+      .eq('product_id', productId)
+      .order('min_tons', { ascending: true });
+      
+    if (error) {
+      console.error('Supabase error when fetching price tiers:', error);
+      throw error;
+    }
+    
+    console.log('Raw price tier data from Supabase:', tierData);
+    
+    // If no tiers found, return default tiers for this product
+    if (!tierData || tierData.length === 0) {
+      console.warn('No price tiers found for product! Using sample tiers instead.');
+      // Return sample tiers filtered for this product ID
+      const sampleTiers = SAMPLE_PRICE_TIERS.map(tier => ({
+        ...tier,
+        product_id: productId
+      }));
+      return sampleTiers;
+    }
+    
+    return tierData as PriceTier[];
+  } catch (error) {
+    console.error("Failed to fetch price tiers:", error);
+    
+    // Return sample tiers for this product
+    const sampleTiers = SAMPLE_PRICE_TIERS.map(tier => ({
+      ...tier,
+      product_id: productId
+    }));
+    return sampleTiers;
+  }
+}
+
+/**
+ * Get the appropriate multiplier for a given quantity of tons
+ */
+export function getMultiplierForTons(priceTiers: PriceTier[], tons: number): number {
+  if (!priceTiers || priceTiers.length === 0) {
+    return 1.0; // Default multiplier if no tiers available
+  }
+  
+  // Find the tier that applies to this quantity
+  const applicableTier = priceTiers.find(tier => {
+    const meetsMinimum = tons >= tier.min_tons;
+    const belowMaximum = tier.max_tons === null || tons <= tier.max_tons;
+    return meetsMinimum && belowMaximum;
+  });
+  
+  return applicableTier ? applicableTier.multiplier : 1.0;
+}
+
+/**
+ * Calculate the final price with tier-based pricing
+ */
+export function calculateTieredPrice(basePrice: number, tons: number, priceTiers: PriceTier[], zipAdjustment: number = 0): {
+  finalPrice: number;
+  originalPrice: number;
+  savings: number;
+  appliedMultiplier: number;
+  appliedTier?: PriceTier;
+} {
+  // First apply ZIP code adjustment to get adjusted base price
+  const adjustedBasePrice = applyZipCodeAdjustment(basePrice, zipAdjustment);
+  
+  // Get the right multiplier for this quantity
+  const multiplier = getMultiplierForTons(priceTiers, tons);
+  
+  // Find which tier was applied
+  const appliedTier = priceTiers.find(tier => {
+    const meetsMinimum = tons >= tier.min_tons;
+    const belowMaximum = tier.max_tons === null || tons <= tier.max_tons;
+    return meetsMinimum && belowMaximum;
+  });
+  
+  // Calculate prices
+  const originalPrice = adjustedBasePrice * tons; // Price without tier discount
+  const finalPrice = adjustedBasePrice * multiplier * tons; // Price with tier discount
+  const savings = originalPrice - finalPrice;
+  
+  return {
+    finalPrice,
+    originalPrice,
+    savings,
+    appliedMultiplier: multiplier,
+    appliedTier
+  };
 }
 
 /**
@@ -644,4 +774,4 @@ export async function getUniqueCategories(): Promise<string[]> {
 }
 
 // Re-export types from productTypes for convenience
-export { type Product, type ZipCodeData };
+export { type Product, type ZipCodeData, type PriceTier };

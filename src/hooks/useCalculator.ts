@@ -1,10 +1,17 @@
 
+import { PriceTier } from '../services/productTypes';
+import { getMultiplierForTons } from '../services/productService';
+
 interface CalculationResult {
   totalSquareFeet: number;
   totalCubicYards: number;
   totalTons: number;
   estimatedCost: number;
   discountedCost: number;
+  appliedMultiplier?: number;
+  appliedTier?: PriceTier;
+  originalCost?: number; // Cost without tier discount
+  savings?: number; // Amount saved with tier discount
 }
 
 interface AreaInput {
@@ -18,7 +25,8 @@ export const useCalculator = (
   extraPercentage: number,
   productPrice: number,
   tonYardRatio: number = 1.5, // Default ratio is 1.5 tons per cubic yard
-  manualTons?: number // Manual tons parameter
+  manualTons?: number, // Manual tons parameter
+  priceTiers?: PriceTier[] // New parameter for price tiers
 ) => {
   const calculateTotalSquareFeet = (): number => {
     return areas.reduce((total, area) => total + (area.length * area.width), 0);
@@ -41,7 +49,19 @@ export const useCalculator = (
   };
 
   const calculateEstimatedCost = (tons: number): number => {
-    // Ensure we're using exact tons for pricing, without rounding
+    // If we have price tiers, apply the appropriate multiplier
+    if (priceTiers && priceTiers.length > 0) {
+      const multiplier = getMultiplierForTons(priceTiers, tons);
+      // Apply tier-based pricing
+      return +(tons * productPrice * multiplier).toFixed(2);
+    }
+    
+    // Traditional pricing if no tiers available
+    return +(tons * productPrice).toFixed(2);
+  };
+  
+  const calculateOriginalCost = (tons: number): number => {
+    // Cost without any tier discount
     return +(tons * productPrice).toFixed(2);
   };
 
@@ -62,8 +82,24 @@ export const useCalculator = (
     totalTons = calculateTotalTons(totalCubicYards);
   }
 
-  // Calculate costs based on exact tons (rounding only happens in UI)
+  // Get the appropriate multiplier for this quantity
+  const appliedMultiplier = priceTiers && priceTiers.length > 0 
+    ? getMultiplierForTons(priceTiers, totalTons)
+    : 1.0;
+  
+  // Find which tier was applied
+  const appliedTier = priceTiers?.find(tier => {
+    const meetsMinimum = totalTons >= tier.min_tons;
+    const belowMaximum = tier.max_tons === null || totalTons <= tier.max_tons;
+    return meetsMinimum && belowMaximum;
+  });
+
+  // Calculate costs
+  const originalCost = calculateOriginalCost(totalTons);
   const estimatedCost = calculateEstimatedCost(totalTons);
+  const savings = +(originalCost - estimatedCost).toFixed(2);
+  
+  // Apply fixed discount (for compatibility with existing code)
   const discountedCost = +(estimatedCost - 50).toFixed(2);
 
   return {
@@ -71,6 +107,10 @@ export const useCalculator = (
     totalCubicYards,
     totalTons,
     estimatedCost,
-    discountedCost
+    discountedCost,
+    appliedMultiplier,
+    appliedTier,
+    originalCost,
+    savings
   };
 };

@@ -1,11 +1,13 @@
 
 import React, { useState } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { Plus, Minus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import ZipCodeSearch from '@/components/zip-code/ZipCodeSearch';
+import { Label } from '@/components/ui/label';
+import { CircleCheck, AlertTriangle, TrendingDown } from 'lucide-react';
+import { useZipCode } from '@/contexts/ZipCodeContext';
 
-type ZipCodeSectionProps = {
+interface ZipCodeSectionProps {
   zipCode: string | null;
   validateZipCodeAndGetPrice: (zipCode: string) => Promise<boolean>;
   totalTons: number;
@@ -15,9 +17,12 @@ type ZipCodeSectionProps = {
   onAddToCart: () => void;
   zipCodeValid: boolean;
   discountApplied: boolean;
-};
+  originalCost?: number;
+  savings?: number;
+  appliedMultiplier?: number;
+}
 
-const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
+const ZipCodeSection = ({
   zipCode,
   validateZipCodeAndGetPrice,
   totalTons,
@@ -26,109 +31,163 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({
   discountedCost,
   onAddToCart,
   zipCodeValid,
-  discountApplied
-}) => {
-  const [inputZip, setInputZip] = useState(zipCode || '');
-  
-  // Round to nearest integer for display and calculations
-  const roundedTons = Math.round(totalTons);
-  
-  // Get per-ton pricing from the parent component
-  const perTonPrice = estimatedCost / totalTons;
-  const perTonDiscountedPrice = discountedCost / totalTons;
-  
-  // Calculate final prices based solely on the rounded ton value
-  const actualEstimatedCost = perTonPrice * roundedTons;
-  const actualDiscountedCost = perTonDiscountedPrice * roundedTons;
-  
-  const handleZipCodeSelected = () => {
-    if (zipCode) {
-      validateZipCodeAndGetPrice(zipCode);
+  discountApplied,
+  originalCost,
+  savings,
+  appliedMultiplier
+}: ZipCodeSectionProps) => {
+  const { setZipCode } = useZipCode();
+  const [zipCodeInput, setZipCodeInput] = useState(zipCode || '');
+  const [validating, setValidating] = useState(false);
+
+  const handleZipCodeUpdate = async () => {
+    if (zipCodeInput.trim()) {
+      setValidating(true);
+      const isValid = await validateZipCodeAndGetPrice(zipCodeInput);
+      if (isValid) {
+        setZipCode(zipCodeInput);
+      }
+      setValidating(false);
     }
   };
 
-  const adjustTons = (amount: number) => {
-    const newTons = Math.max(1, roundedTons + amount);
-    handleTonsChange(newTons);
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleZipCodeUpdate();
+    }
+  };
+
+  // Format prices for display
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price);
   };
 
   return (
-    <div className="border-2 border-primary rounded-lg p-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium mb-2">Delivery ZIP Code</label>
-          <div className="flex space-x-2">
-            <div className="relative flex-grow">
-              <ZipCodeSearch 
-                onZipCodeSelected={handleZipCodeSelected}
-                className="w-full" 
-                variant="minimal"
-              />
+    <Card className="bg-gray-50">
+      <CardContent className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          {/* Left section - ZIP Code */}
+          <div className="md:col-span-5">
+            <h3 className="text-lg font-semibold mb-4">Delivery Information</h3>
+            
+            <div className="space-y-4">
+              {/* ZIP Code Input */}
+              <div>
+                <Label htmlFor="zipCode" className="mb-1 block">Enter ZIP Code for Delivery</Label>
+                <div className="flex space-x-2">
+                  <Input
+                    id="zipCode"
+                    type="text"
+                    placeholder="ZIP Code"
+                    value={zipCodeInput}
+                    onChange={(e) => setZipCodeInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    className="flex-1"
+                    maxLength={5}
+                  />
+                  <Button 
+                    onClick={handleZipCodeUpdate}
+                    disabled={validating}
+                    variant="outline"
+                  >
+                    {validating ? 'Checking...' : 'Check'}
+                  </Button>
+                </div>
+                
+                {/* ZIP Code validation status */}
+                {zipCode && (
+                  <div className="mt-2 flex items-center">
+                    {zipCodeValid ? (
+                      <>
+                        <CircleCheck className="h-4 w-4 text-green-500 mr-1" />
+                        <span className="text-sm text-green-600">Delivery available to {zipCode}</span>
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle className="h-4 w-4 text-amber-500 mr-1" />
+                        <span className="text-sm text-amber-600">Delivery not available to this area</span>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              {/* Tons Input */}
+              <div>
+                <Label htmlFor="tons" className="mb-1 block">Amount (tons)</Label>
+                <Input
+                  id="tons"
+                  type="number"
+                  min="1"
+                  value={totalTons}
+                  onChange={(e) => handleTonsChange(parseInt(e.target.value) || 1)}
+                  className="w-full"
+                />
+              </div>
             </div>
           </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">Total Tons</label>
-          <div className="flex items-center">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => adjustTons(-1)}
-              className="h-10 w-10 rounded-full"
-              disabled={roundedTons <= 1}
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-            <Input
-              type="number"
-              min="1"
-              value={roundedTons}
-              onChange={(e) => handleTonsChange(parseInt(e.target.value) || 1)}
-              className="h-10 mx-2 text-center"
-            />
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => adjustTons(1)}
-              className="h-10 w-10 rounded-full"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-6 flex flex-col md:flex-row justify-between items-center">
-        <div className="mb-4 md:mb-0">
-          <div className="flex items-end gap-2">
-            <div>
-              <p className="text-sm text-black">Sale Price</p>
-              {discountApplied ? (
+          
+          {/* Right section - Price & Add to Cart */}
+          <div className="md:col-span-7 space-y-4">
+            <h3 className="text-lg font-semibold mb-4">Price Summary</h3>
+            
+            {/* Price displays */}
+            <div className="space-y-1">
+              {/* If volume discount is applied, show original price and discount */}
+              {savings && savings > 0 && originalCost && (
                 <>
-                  <p className="text-3xl font-bold text-black line-through">${actualEstimatedCost.toFixed(2)}</p>
-                  <p className="text-3xl font-bold text-black">Discount Price: ${actualDiscountedCost.toFixed(2)}</p>
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>Regular price:</span>
+                    <span className="line-through">{formatPrice(originalCost)}</span>
+                  </div>
+                
+                  <div className="flex justify-between text-sm">
+                    <div className="flex items-center">
+                      <TrendingDown className="h-4 w-4 text-green-600 mr-1" />
+                      <span className="text-green-600">Volume discount ({(100 * (1 - (appliedMultiplier || 1))).toFixed(0)}%):</span>
+                    </div>
+                    <span className="text-green-600">-{formatPrice(savings)}</span>
+                  </div>
                 </>
-              ) : (
-                <p className="text-3xl font-bold text-black">${actualEstimatedCost.toFixed(2)}</p>
+              )}
+              
+              {/* Always show the current price */}
+              <div className="flex justify-between text-lg font-semibold">
+                <span>Total price:</span>
+                <span>{formatPrice(estimatedCost)}</span>
+              </div>
+              
+              {/* Show promotional discount if applied */}
+              {discountApplied && (
+                <>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-green-600">Promotional discount:</span>
+                    <span className="text-green-600">-$50.00</span>
+                  </div>
+                  
+                  <div className="flex justify-between text-lg font-bold mt-2">
+                    <span>Final price:</span>
+                    <span>{formatPrice(discountedCost)}</span>
+                  </div>
+                </>
               )}
             </div>
+            
+            {/* Add to Cart button */}
+            <div className="pt-4">
+              <Button 
+                onClick={onAddToCart}
+                disabled={!zipCodeValid}
+                className="w-full"
+                size="lg"
+              >
+                Add to Cart
+              </Button>
+            </div>
           </div>
         </div>
-
-        <div className="text-center">
-          <Button 
-            onClick={onAddToCart}
-            size="lg"
-            disabled={!zipCode}
-            className="px-8"
-          >
-            Add to Cart
-          </Button>
-          <p className="text-xs font-semibold text-black mt-1">FREE SHIPPING!!</p>
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

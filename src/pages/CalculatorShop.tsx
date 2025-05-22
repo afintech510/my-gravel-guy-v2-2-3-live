@@ -8,8 +8,14 @@ const CalculatorShop = () => {
   return (
     <div className="py-8 px-4 bg-gray-50">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-6 font-montserrat">Material Calculator</h1>
-        <p className="text-center text-gray-600 mb-8 font-montserrat">Choose your material type and calculate how much you need for your project</p>
+        <h1 className="text-3xl font-bold text-center mb-3 font-montserrat">Material Calculator</h1>
+        <p className="text-center text-gray-600 mb-2 font-montserrat">
+          Choose your material type and calculate how much you need for your project
+        </p>
+        <p className="text-center text-primary font-medium mb-8 font-montserrat">
+          Volume discounts available - The more you order, the more you save!
+        </p>
+        
         <ShopCalculator />
         
         {/* Quote Form Component */}
