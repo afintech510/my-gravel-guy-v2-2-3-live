@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,7 +9,7 @@ import { Product } from '../../services/productTypes';
 import { useZipCode } from '../../contexts/ZipCodeContext';
 import { useCalculator } from '../../hooks/useCalculator';
 import { sendCalculatorEmail, EmailData } from '../../utils/emailService';
-import MaterialCategorySelector from './MaterialCategorySelector';
+import ShopMaterialSelector from './ShopMaterialSelector';
 import ShopAreaInputs from './ShopAreaInputs';
 import ShopCalculationDisplay from './ShopCalculationDisplay';
 import DepthSlider from './DepthSlider';
@@ -336,8 +335,8 @@ const ShopCalculator = () => {
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
-      {/* Material Category and Subcategory Selectors with Tabs */}
-      <MaterialCategorySelector 
+      {/* Replace MaterialCategorySelector with our new ShopMaterialSelector */}
+      <ShopMaterialSelector 
         selectedCategory={selectedCategory}
         setSelectedCategory={setSelectedCategory}
         selectedSubcategory={selectedSubcategory}
