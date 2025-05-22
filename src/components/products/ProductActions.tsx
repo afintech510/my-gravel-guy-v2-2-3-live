@@ -17,8 +17,8 @@ interface ProductActionsProps {
     pricePerTon: number;
   };
   onAddToCart: (product: Product & { tons: number, deliveryDate: Date }) => void;
-  onQuantityChange?: (tons: number) => void; // Callback for quantity changes
-  selectedTons: number; // Current selected tons (renamed from initialTons)
+  onQuantityChange?: (tons: number) => void;
+  selectedTons: number;
 }
 
 const ProductActions = ({ 
