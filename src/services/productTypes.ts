@@ -14,7 +14,7 @@ export interface Product {
   subtype?: 'crushed' | 'round' | 'natural' | 'concrete' | 'mason-sand' | 'playground-sand' | 'beach-sand' | 'washed-sand' | 
             'top-soil' | 'compost' | 'fill-dirt' | 'loam' | 'sandy-loam' |
             'road-base' | 'concrete-rca' | 'crusher-base';
-  size?: '3/8"' | '3/4"' | '1-1/2"';
+  size?: string;
   color?: 'chocolate' | 'jet-black' | 'red' | 'natural-dark' | 'wood-chips';
   specifications?: {
     density?: string;
@@ -54,8 +54,9 @@ export interface PriceTier {
   created_at?: string;
 }
 
+// Updated type definition for MaterialSize to be a string instead of specific literal types
 export type MaterialCategory = Product['category'];
 export type MaterialUsage = NonNullable<Product['usage']>;
 export type MaterialSubtype = NonNullable<Product['subtype']>;
-export type MaterialSize = NonNullable<Product['size']>;
+export type MaterialSize = string;
 export type MaterialColor = NonNullable<Product['color']>;

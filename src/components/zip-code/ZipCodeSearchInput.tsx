@@ -3,35 +3,71 @@ import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from 'lucide-react';
+import { useZipCodeSearch } from '@/hooks/useZipCodeSearch';
 
 interface ZipCodeSearchInputProps {
-  inputValue: string;
-  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onSearch: (e: React.FormEvent) => void;
-  error: string | null;
-  loading: boolean;
-  searchCompleted: boolean;
+  inputValue?: string;
+  onInputChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSearch?: (e: React.FormEvent) => void;
+  error?: string | null;
+  loading?: boolean;
+  searchCompleted?: boolean;
   variant?: 'default' | 'minimal';
 }
 
-const ZipCodeSearchInput = ({
-  inputValue,
-  onInputChange,
-  onSearch,
-  error,
-  loading,
-  searchCompleted,
+const ZipCodeSearchInput: React.FC<ZipCodeSearchInputProps> = ({
+  inputValue: externalInputValue,
+  onInputChange: externalOnInputChange,
+  onSearch: externalOnSearch,
+  error: externalError,
+  loading: externalLoading,
+  searchCompleted: externalSearchCompleted,
   variant = 'default'
-}: ZipCodeSearchInputProps) => {
+}) => {
+  // When used standalone without props, use the hook to get functionality
+  const {
+    inputValue: hookInputValue,
+    loading: hookLoading,
+    error: hookError,
+    searchCompleted: hookSearchCompleted,
+    handleInputChange: hookHandleInputChange,
+    handleSearch: hookHandleSearch
+  } = useZipCodeSearch();
+  
+  // Use either provided props or fallback to hook values
+  const inputValue = externalInputValue !== undefined ? externalInputValue : hookInputValue;
+  const loading = externalLoading !== undefined ? externalLoading : hookLoading;
+  const error = externalError !== undefined ? externalError : hookError;
+  const searchCompleted = externalSearchCompleted !== undefined ? externalSearchCompleted : hookSearchCompleted;
+  
+  // Handle input change - use external handler if provided, otherwise use hook's handler
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (externalOnInputChange) {
+      externalOnInputChange(e);
+    } else {
+      hookHandleInputChange(e);
+    }
+  };
+  
+  // Handle search - use external handler if provided, otherwise use hook's handler
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (externalOnSearch) {
+      externalOnSearch(e);
+    } else {
+      hookHandleSearch(e);
+    }
+  };
+  
   return (
-    <form onSubmit={onSearch} className="w-full">
+    <form onSubmit={handleSearch} className="w-full">
       <div className="relative flex gap-2">
         <div className="relative flex-grow">
           <Input
             type="text"
             placeholder="Enter ZIP code, city or state"
             value={inputValue}
-            onChange={onInputChange}
+            onChange={handleInputChange}
             className={searchCompleted ? "pl-3" : "pl-9"}
           />
           {!searchCompleted && (

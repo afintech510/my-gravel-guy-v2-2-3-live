@@ -1,156 +1,155 @@
 
 import React, { useState, useEffect } from 'react';
-import { getProducts } from '@/services/productService';
-import { Product } from '@/services/productTypes';
-import { useZipCode } from '@/contexts/ZipCodeContext';
+import { Card } from "@/components/ui/card";
 import ShopAreaInputs from './ShopAreaInputs';
-import DepthSlider from './DepthSlider';
-import ExtraSlider from './ExtraSlider';
 import ShopCalculationDisplay from './ShopCalculationDisplay';
+import ShopMaterialSelector from './ShopMaterialSelector';
 import ZipCodeSection from './ZipCodeSection';
 import ContactForm from './ContactForm';
-import ShopMaterialSelector from './ShopMaterialSelector';
+import { Product } from '@/services/productTypes';
 
-// Define types for material selector
+// Update type definition to use string for sizes
 export type MaterialCategory = 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base';
-export type MaterialSubcategory = string;
+export type ApplicationType = 'driveway' | 'walkway' | 'landscape' | 'drainage' | 'foundation';
+export type MaterialSubcategory = 
+  'washed-sand' | 'mason-sand' | 'playground-sand' | 'pool-sand' | 'beach-sand' | 
+  'fill-dirt' | 'top-soil' | 'compost' | 'loam' | 'sandy-loam' |
+  'natural' | 'black' | 'chocolate-brown' | 'red' | 'request' |
+  '57-crushed-stone' | 'crusher-run' | 'road-base' | 'rca-crushed-concrete' | 'drainage-rock' |
+  'driveway' | 'walkway' | 'landscape' | 'natural' | 'construction' |
+  'pea-gravel' | 'river-rock' | 'crushed-stone' | 'decorative-gravel' | 'drainage-gravel';
 export type MaterialSize = string;
-export type ApplicationType = string;
+
+export interface AreaDimensions {
+  length: number;
+  width: number;
+  depth: number;
+  extra: number;
+}
 
 interface ShopCalculatorProps {
   onProductSelected?: (product: Product | null) => void;
   selectedProduct?: Product | null;
 }
 
-// Define the type for ShopAreaInputs props to fix TypeScript error
-interface ShopAreaInputsProps {
-  areas: { length: number; width: number }[];
-  setAreas: React.Dispatch<React.SetStateAction<{ length: number; width: number }[]>>;
-}
-
-const ShopCalculator: React.FC<ShopCalculatorProps> = ({
+const ShopCalculator: React.FC<ShopCalculatorProps> = ({ 
   onProductSelected,
-  selectedProduct
+  selectedProduct: initialSelectedProduct 
 }) => {
-  // State for areas (length, width)
-  const [areas, setAreas] = useState([{ length: 10, width: 10 }]);
-  
-  // State for depth (in inches)
-  const [depth, setDepth] = useState(4);
-  
-  // State for extra percentage
-  const [extraPercentage, setExtraPercentage] = useState(10);
-  
   // Material selection state
-  const [materialCategory, setMaterialCategory] = useState<MaterialCategory>('gravel');
-  const [materialSubcategory, setMaterialSubcategory] = useState<MaterialSubcategory>('driveway');
-  const [materialSize, setMaterialSize] = useState<MaterialSize>('3/4"');
+  const [selectedCategory, setSelectedCategory] = useState<MaterialCategory>('gravel');
+  const [selectedSubcategory, setSelectedSubcategory] = useState<MaterialSubcategory>('driveway');
+  const [selectedSize, setSelectedSize] = useState<MaterialSize>('3/4"');
   
+  // Area dimensions state
+  const [areaDimensions, setAreaDimensions] = useState<AreaDimensions>({
+    length: 10,
+    width: 10,
+    depth: 2,
+    extra: 10,
+  });
+
+  // Sample product images based on category
+  const productImages = {
+    gravel: ['/assets/crushed-stone.png', '/assets/river-rocks.png'],
+    sand: ['/assets/sand.jpg', '/assets/playground-sand.jpg'],
+    dirt: ['/assets/topsoil.jpg', '/assets/fill-dirt.jpg'],
+    mulch: ['/assets/mulch.jpg', '/assets/black-mulch.jpg'],
+    base: ['/assets/road-base.jpg', '/assets/crushed-concrete.jpg'],
+  };
+
   // Product state
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProduct, setFilteredProduct] = useState<Product | null>(null);
-  const [productImages, setProductImages] = useState<string[]>([
-    '/assets/crushed-stone.png',
-    '/assets/river-rocks.png'
-  ]);
-  
-  // ZIP code context
-  const { zipCode } = useZipCode();
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialSelectedProduct || null);
 
-  // Load products
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const fetchedProducts = await getProducts();
-        setProducts(fetchedProducts);
-      } catch (error) {
-        console.error('Error loading products:', error);
-      }
-    };
-    
-    fetchProducts();
-  }, []);
-
-  // When a product is selected via ShopMaterialSelector
+  // Function to handle product selection
   const handleProductSelected = (product: Product | null) => {
-    console.log('ShopCalculator: Selected product:', product?.name || 'None');
-    setFilteredProduct(product);
+    console.log("ShopCalculator: Product selected:", product?.name || 'None');
+    setSelectedProduct(product);
     
-    // Update product images if available
-    if (product?.images && product.images.length > 0) {
-      setProductImages(product.images);
-    }
-    
-    // Notify parent component if callback provided
+    // Call parent callback if provided
     if (onProductSelected) {
       onProductSelected(product);
     }
   };
 
-  // Apply discount handler (passed to ContactForm)
-  const handleApplyDiscount = () => {
-    console.log('ShopCalculator: Applying discount');
-    // You could implement discount logic here
+  // Calculate cubic yards and tons based on dimensions
+  const calculateMaterial = () => {
+    const { length, width, depth, extra } = areaDimensions;
+    
+    // Convert inches to feet for depth
+    const depthInFeet = depth / 12;
+    
+    // Calculate cubic yards
+    let cubicYards = (length * width * depthInFeet) / 27;
+    
+    // Add extra percentage
+    cubicYards = cubicYards * (1 + (extra / 100));
+    
+    // Calculate tons (varies by material)
+    // Use tonYardRatio from selected product if available, else use default ratio
+    const tonYardRatio = selectedProduct?.tonYardRatio || 1.5;
+    const tons = cubicYards * tonYardRatio;
+    
+    return {
+      cubicYards: Math.round(cubicYards * 100) / 100,
+      tons: Math.round(tons * 100) / 100
+    };
   };
 
+  const materialCalculation = calculateMaterial();
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-      {/* Left column: Material selection and calculator inputs */}
-      <div className="p-6">
-        <ShopMaterialSelector
-          selectedCategory={materialCategory}
-          setSelectedCategory={setMaterialCategory}
-          selectedSubcategory={materialSubcategory}
-          setSelectedSubcategory={setMaterialSubcategory}
-          selectedSize={materialSize}
-          setSelectedSize={setMaterialSize}
-          productImages={productImages}
-          onProductSelected={handleProductSelected}
-        />
-      </div>
-      
-      {/* Right column: Measurement inputs, calculator, and contact form */}
-      <div className="p-6 border-t lg:border-t-0 lg:border-l border-gray-100">
-        <div className="space-y-6">
-          <h2 className="font-bold text-lg">Calculate Amount Needed</h2>
-          
-          <ShopAreaInputs
-            areas={areas}
-            setAreas={setAreas}
-          />
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <DepthSlider
-              depth={depth}
-              setDepth={setDepth}
-            />
-            
-            <ExtraSlider
-              extraPercentage={extraPercentage}
-              setExtraPercentage={setExtraPercentage}
-            />
-          </div>
-          
-          <ShopCalculationDisplay
-            areas={areas}
-            depth={depth}
-            extraPercentage={extraPercentage}
-            product={filteredProduct}
-            materialCategory={materialCategory}
-            materialSize={materialSize}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* LEFT COLUMN: Material Selection */}
+      <div className="md:col-span-2">
+        <Card className="p-6">
+          <h2 className="text-2xl font-semibold mb-6">Material Selection</h2>
+          <ShopMaterialSelector 
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            selectedSubcategory={selectedSubcategory}
+            setSelectedSubcategory={setSelectedSubcategory}
+            selectedSize={selectedSize}
+            setSelectedSize={setSelectedSize}
+            productImages={productImages[selectedCategory] || []}
+            onProductSelected={handleProductSelected}
           />
           
           <div className="mt-8">
-            <ZipCodeSection product={filteredProduct} />
-          </div>
-          
-          <div className="mt-8 pt-6 border-t border-gray-100">
-            <ContactForm 
-              product={filteredProduct} 
-              onApplyDiscount={handleApplyDiscount} 
+            <h2 className="text-2xl font-semibold mb-6">Area Calculator</h2>
+            <ShopAreaInputs
+              dimensions={areaDimensions}
+              onDimensionsChange={setAreaDimensions}
             />
           </div>
-        </div>
+        </Card>
+      </div>
+      
+      {/* RIGHT COLUMN: Calculation, ZIP Code, Contact Form */}
+      <div className="space-y-6">
+        <ShopCalculationDisplay 
+          cubicYards={materialCalculation.cubicYards} 
+          tons={materialCalculation.tons}
+          materialInfo={{
+            category: selectedCategory,
+            subcategory: selectedSubcategory,
+            size: selectedSize
+          }}
+          selectedProduct={selectedProduct}
+        />
+        
+        <ZipCodeSection product={selectedProduct} />
+        
+        <Card className="p-6">
+          <h2 className="text-xl font-semibold mb-4">Contact Us</h2>
+          <ContactForm 
+            productInfo={{
+              name: selectedProduct?.name || `${selectedSubcategory} ${selectedCategory}`,
+              quantity: materialCalculation.tons,
+              category: selectedCategory
+            }}
+          />
+        </Card>
       </div>
     </div>
   );

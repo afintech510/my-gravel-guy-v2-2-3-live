@@ -162,9 +162,9 @@ const ProductDetail = () => {
 
         <ProductTabs product={product} />
         
-        {/* Quote Form Component Above Trust Banner */}
+        {/* Quote Form Component Above Trust Banner - Updated to use selectedProduct prop */}
         <div className="mt-16">
-          <QuoteFormProduct product={product} />
+          <QuoteFormProduct selectedProduct={product} />
         </div>
         
         <TrustBanner 
