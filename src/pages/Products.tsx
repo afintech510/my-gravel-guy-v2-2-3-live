@@ -13,6 +13,7 @@ const Products = () => {
     subcategory: '',
     size: ''
   });
+  const [availableSizes, setAvailableSizes] = useState<string[]>([]);
   const { toast } = useToast();
 
   const handleSearch = (term: string) => {
@@ -37,6 +38,11 @@ const Products = () => {
     }));
   };
 
+  const handleAvailableSizesChange = (sizes: string[]) => {
+    console.log("Products: Received available sizes:", sizes);
+    setAvailableSizes(sizes);
+  };
+
   return (
     <div className="min-h-screen bg-white py-8 px-4">
       <div className="max-w-7xl mx-auto">
@@ -46,10 +52,15 @@ const Products = () => {
             onSearch={handleSearch}
             onSort={handleSort}
             onFilter={handleFilter}
+            availableSizes={availableSizes}
           />
         </div>
         
-        <ProductGrid filters={filters} limit={100} />
+        <ProductGrid 
+          filters={filters} 
+          limit={100}
+          onAvailableSizesChange={handleAvailableSizesChange} 
+        />
         
         {/* Trust Banner Section */}
         <div className="mt-16 mb-12">

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import { getProducts } from '../services/productService';
@@ -17,17 +16,20 @@ interface ProductGridProps {
     size?: string;
   };
   limit?: number; // Prop to limit number of products
+  onAvailableSizesChange?: (sizes: string[]) => void; // New prop to report available sizes
 }
 
 const ProductGrid = ({ 
   filters = { search: '', sort: 'nameAsc', category: 'all', subcategory: '', size: '' }, 
-  limit = 100 // Changed default from 9 to 100 products
+  limit = 100,
+  onAvailableSizesChange
 }: ProductGridProps) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [availableSizes, setAvailableSizes] = useState<string[]>([]);
 
   const loadProducts = async (forceRefresh = false) => {
     try {
@@ -53,6 +55,63 @@ const ProductGrid = ({
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await loadProducts(true); // Force refresh
+  };
+
+  // Function to normalize size strings for comparison
+  const normalizeSize = (size: string): string => {
+    if (!size) return '';
+    
+    // Remove spaces, convert to lowercase
+    let normalized = size.toLowerCase().replace(/\s+/g, '');
+    
+    // Handle common variations
+    normalized = normalized
+      .replace(/inch(es)?/g, '"')
+      .replace(/^(\d+)([/])(\d+)$/g, '$1/$3"') // Add inch symbol if missing
+      .replace(/^(\d+)[-](\d+)$/g, '$1-$2"') // Add inch symbol if missing
+      .replace('½', '1/2')
+      .replace('¼', '1/4')
+      .replace('¾', '3/4')
+      .replace('⅛', '1/8')
+      .replace('⅜', '3/8');
+    
+    return normalized;
+  };
+  
+  // Function to match product size against filter size
+  const sizeMatches = (productSize: string | undefined, filterSize: string): boolean => {
+    if (!productSize || !filterSize) return false;
+    
+    const normalizedProductSize = normalizeSize(productSize);
+    const normalizedFilterSize = normalizeSize(filterSize);
+    
+    // Direct match
+    if (normalizedProductSize === normalizedFilterSize) return true;
+    
+    // Looser match - product size contains filter size
+    if (normalizedProductSize.includes(normalizedFilterSize)) return true;
+    
+    // Special case for fraction handling
+    // Convert "1½"" to "1-1/2"" for comparison
+    const specialCases: Record<string, string[]> = {
+      '3/8"': ['3/8"', '0.375"', '3/8inch', '3/8in', '3-8"'],
+      '3/4"': ['3/4"', '0.75"', '3/4inch', '3/4in', '3-4"'],
+      '1"': ['1"', '1inch', '1in', '1.0"'],
+      '1½"': ['1½"', '1-1/2"', '1.5"', '1-1/2inch', '1-1/2in', '1-5"'],
+      '2-3"': ['2-3"', '2-3inch', '2-3in', '2to3"']
+    };
+    
+    // Check if either normalized string matches any of the special cases
+    for (const [standard, variants] of Object.entries(specialCases)) {
+      if (standard === normalizedFilterSize && variants.includes(normalizedProductSize)) {
+        return true;
+      }
+      if (variants.includes(normalizedFilterSize) && standard === normalizedProductSize) {
+        return true;
+      }
+    }
+    
+    return false;
   };
 
   useEffect(() => {
@@ -293,6 +352,22 @@ const ProductGrid = ({
         console.log(`After subcategory filter: ${result.length} products (removed ${beforeCount - result.length})`);
       }
 
+      // Extract available sizes after category and subcategory filtering but before size filtering
+      const categoryFilteredSizes = result
+        .map(product => product.size)
+        .filter((size): size is string => !!size)
+        .filter((value, index, self) => self.indexOf(value) === index); // Get unique sizes
+      
+      console.log("Available sizes after category/subcategory filtering:", categoryFilteredSizes);
+      
+      // Set the available sizes state and notify parent if callback provided
+      if (JSON.stringify(availableSizes) !== JSON.stringify(categoryFilteredSizes)) {
+        setAvailableSizes(categoryFilteredSizes);
+        if (onAvailableSizesChange) {
+          onAvailableSizesChange(categoryFilteredSizes);
+        }
+      }
+
       // Filter by size if present and category is gravel or base
       if (filters.size && ['gravel', 'base'].includes(filters.category)) {
         console.log(`Applying size filter: ${filters.size}`);
@@ -302,14 +377,16 @@ const ProductGrid = ({
           // Check if product has size information
           if (!product.size) return false;
           
-          // Normalize sizes by removing spaces for comparison
-          const normalizedProductSize = product.size.replace(/\s+/g, '').toLowerCase();
-          const normalizedFilterSize = filters.size!.replace(/\s+/g, '').toLowerCase();
-          
-          return normalizedProductSize.includes(normalizedFilterSize);
+          // Use the new robust size matching function
+          return sizeMatches(product.size, filters.size!);
         });
         
         console.log(`After size filter: ${result.length} products (removed ${beforeCount - result.length})`);
+        
+        // If no products match the size filter, log a warning
+        if (result.length === 0) {
+          console.warn(`No products match the size filter: ${filters.size}. Available sizes were: ${categoryFilteredSizes.join(', ')}`);
+        }
       }
     }
 
@@ -331,7 +408,7 @@ const ProductGrid = ({
     const limitedResult = limit ? result.slice(0, limit) : result;
     console.log(`Final filtered products: ${limitedResult.length} products displayed (limit: ${limit})`);
     setFilteredProducts(limitedResult);
-  }, [products, filters, limit]);
+  }, [products, filters, limit, onAvailableSizesChange]);
 
   if (loading) {
     return (
