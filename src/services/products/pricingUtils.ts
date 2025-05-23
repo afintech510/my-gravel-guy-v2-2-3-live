@@ -55,7 +55,7 @@ export async function getPriceAdjustmentForZipCode(zipCode: string): Promise<num
         return 1;
       }
       console.error(`[pricingUtils] Error fetching ZIP price adjustment:`, error);
-      return 1;
+      return 1; // Default to no adjustment on error
     }
     
     if (!data || typeof data.price_adjustment !== 'number') {
@@ -63,7 +63,7 @@ export async function getPriceAdjustmentForZipCode(zipCode: string): Promise<num
       return 1;
     }
     
-    // Make sure to use price_adjustment, not adjustment
+    // Use price_adjustment, not adjustment
     const adjustmentMultiplier = data.price_adjustment;
     console.log(`[pricingUtils] ZIP ${zipCode} has adjustment multiplier: ${adjustmentMultiplier}`);
     
