@@ -17,7 +17,6 @@ import Index from "./pages/Index";
 import Products from "./pages/Products";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
-import ProductCalculator from "./pages/ProductCalculator";
 import LocationPage from "./pages/LocationPage";
 import LocationsIndex from "./pages/LocationsIndex";
 import About from "./pages/About";
@@ -26,6 +25,10 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import Quiz from "./pages/Quiz";
+import Calculator from "./pages/Calculator";
+import CalculatorShop from "./pages/CalculatorShop";
+import ProductCalculator from "./pages/ProductCalculator";
 import FAQ from "./pages/FAQ";
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import TermsOfService from "./pages/legal/TermsOfService";
@@ -37,6 +40,7 @@ import BlogPost from "./pages/BlogPost";
 import BlogCategory from "./pages/BlogCategory";
 import StripeTest from "./pages/StripeTest";
 import Reviews from "./pages/Reviews";
+import { Link } from "react-router-dom";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +61,8 @@ function App() {
                     <div className="relative">
                       <TopBanner />
                       <Navbar />
+                      {/* Logo floating above banner and navbar */}
+                     
                     </div>
                   </div>
                   <Routes>
@@ -64,13 +70,16 @@ function App() {
                     <Route path="/products" element={<Products />} />
                     <Route path="/shop" element={<Shop />} />
                     <Route path="/products/:slug" element={<ProductDetail />} />
-                    <Route path="/product-calculator" element={<ProductCalculator />} />
                     <Route path="/locations" element={<LocationsIndex />} />
                     <Route path="/locations/:slug" element={<LocationPage />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/cart" element={<Cart />} />
                     <Route path="/checkout" element={<Checkout />} />
+                    <Route path="/quiz" element={<Quiz />} />
+                    <Route path="/calculator" element={<Calculator />} />
+                    <Route path="/calculator-shop" element={<CalculatorShop />} />
+                    <Route path="/product-calculator" element={<ProductCalculator />} />
                     <Route path="/payment-success" element={<PaymentSuccess />} />
                     <Route path="/privacy" element={<PrivacyPolicy />} />
                     <Route path="/terms" element={<TermsOfService />} />

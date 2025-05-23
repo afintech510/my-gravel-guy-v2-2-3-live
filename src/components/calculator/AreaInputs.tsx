@@ -1,13 +1,13 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Minus } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Plus, Minus } from "lucide-react";
 
-type AreaInput = {
+interface AreaInput {
   length: number;
   width: number;
-};
+}
 
 interface AreaInputsProps {
   areas: AreaInput[];
@@ -15,62 +15,73 @@ interface AreaInputsProps {
 }
 
 const AreaInputs = ({ areas, onAreaChange }: AreaInputsProps) => {
+  const updateAreaValue = (index: number, field: keyof AreaInput, value: string) => {
+    const newValue = parseFloat(value) || 0;
+    const newAreas = [...areas];
+    newAreas[index] = { ...newAreas[index], [field]: newValue };
+    onAreaChange(newAreas);
+  };
+
   const addArea = () => {
     onAreaChange([...areas, { length: 10, width: 10 }]);
   };
 
   const removeArea = (index: number) => {
     if (areas.length > 1) {
-      onAreaChange(areas.filter((_, i) => i !== index));
+      const newAreas = areas.filter((_, i) => i !== index);
+      onAreaChange(newAreas);
     }
-  };
-
-  const updateArea = (index: number, field: 'length' | 'width', value: number) => {
-    const newAreas = [...areas];
-    newAreas[index] = { ...newAreas[index], [field]: value };
-    onAreaChange(newAreas);
   };
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Project Areas</h3>
+      <h3 className="text-lg font-medium">Areas to Cover</h3>
       {areas.map((area, index) => (
-        <div key={index} className="flex items-center gap-4 p-4 border rounded-lg">
-          <div className="flex-1 grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium">Length (ft)</label>
-              <Input
-                type="number"
-                value={area.length}
-                onChange={(e) => updateArea(index, 'length', Number(e.target.value))}
-                min="0"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Width (ft)</label>
-              <Input
-                type="number"
-                value={area.width}
-                onChange={(e) => updateArea(index, 'width', Number(e.target.value))}
-                min="0"
-              />
-            </div>
+        <div key={index} className="flex gap-4 items-center">
+          <div className="flex-1">
+            <Input
+              type="number"
+              placeholder="Length (ft)"
+              value={area.length}
+              onChange={(e) => updateAreaValue(index, 'length', e.target.value)}
+              step="0.1"
+              min="0"
+            />
           </div>
-          {areas.length > 1 && (
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => removeArea(index)}
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-          )}
+          <div className="flex-1">
+            <Input
+              type="number"
+              placeholder="Width (ft)"
+              value={area.width}
+              onChange={(e) => updateAreaValue(index, 'width', e.target.value)}
+              step="0.1"
+              min="0"
+            />
+          </div>
+          <div className="flex gap-2">
+            {areas.length > 1 && index !== 0 && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => removeArea(index)}
+                type="button"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+            )}
+            {index === 0 && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={addArea}
+                type="button"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
       ))}
-      <Button variant="outline" onClick={addArea} className="w-full">
-        <Plus className="h-4 w-4 mr-2" />
-        Add Another Area
-      </Button>
     </div>
   );
 };
