@@ -61,11 +61,9 @@ export default function ProductFilterSelector({ onProductSelected, selectedProdu
         
         switch (selectedCategory) {
           case 'gravel':
-            // Only products with exact "gravel" category
-            return productCategory === 'gravel';
+            return productCategory === 'gravel' || productCategories.includes('gravel');
           
           case 'rock':
-            // Products with "rock" OR "stone" category
             return productCategory === 'rock' || productCategory === 'stone' || 
                    productCategories.includes('rock') || productCategories.includes('stone');
           
