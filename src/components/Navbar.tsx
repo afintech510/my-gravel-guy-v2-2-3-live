@@ -25,6 +25,11 @@ const Navbar = () => {
     { href: "/contact", label: "Quote", icon: <DollarSign className="h-4 w-4 mr-1" /> },
   ];
 
+  const mobileLinks = [
+    { href: "/products", label: "Shop", icon: <Store className="h-6 w-6" /> },
+    { href: "/product-calculator", label: "Calculator", icon: <Calculator className="h-6 w-6" /> },
+  ];
+
   const handleMenuClick = () => {
     setIsOpen(false);
   };
@@ -38,14 +43,14 @@ const Navbar = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14">
           <div className="flex-1">
-                  {/* Logo floating above banner and navbar */}
-                      <Link to="/" className="absolute left-4 md:left-[calc((100%-72rem)/2+1rem)] -top-1 z-50">
-                        <img 
-                          src="/lovable-uploads/04048679-bd9f-42de-b2d0-70fddf60125e.png" 
-                          alt="My Gravel Guy Logo" 
-                          className="h-32 w-auto"
-                        />  
-                      </Link>
+            {/* Logo floating above banner and navbar */}
+            <Link to="/" className="absolute left-4 md:left-[calc((100%-72rem)/2+1rem)] -top-1 z-50">
+              <img 
+                src="/lovable-uploads/04048679-bd9f-42de-b2d0-70fddf60125e.png" 
+                alt="My Gravel Guy Logo" 
+                className="h-32 w-auto"
+              />  
+            </Link>
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
@@ -79,6 +84,20 @@ const Navbar = () => {
           </div>
 
           <div className="flex items-center md:hidden gap-2">
+            {/* Mobile links with icons */}
+            {mobileLinks.map((link) => (
+              <Link
+                key={link.href}
+                to={link.href}
+                className="relative"
+              >
+                <Button variant="ghost" size="icon">
+                  {link.icon}
+                  <span className="sr-only">{link.label}</span>
+                </Button>
+              </Link>
+            ))}
+            
             <Link to="/cart" className="relative">
               <Button variant="ghost" size="icon">
                 <ShoppingCart className="h-6 w-6" />
