@@ -15,6 +15,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
+import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
 import LocationPage from "./pages/LocationPage";
 import LocationsIndex from "./pages/LocationsIndex";
@@ -27,7 +28,7 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import Quiz from "./pages/Quiz";
 import Calculator from "./pages/Calculator";
 import CalculatorShop from "./pages/CalculatorShop";
-import ProductCalculator from "./pages/ProductCalculator"; // Add import for the new page
+import ProductCalculator from "./pages/ProductCalculator";
 import FAQ from "./pages/FAQ";
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import TermsOfService from "./pages/legal/TermsOfService";
@@ -67,6 +68,7 @@ function App() {
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/products" element={<Products />} />
+                    <Route path="/shop" element={<Shop />} />
                     <Route path="/products/:slug" element={<ProductDetail />} />
                     <Route path="/locations" element={<LocationsIndex />} />
                     <Route path="/locations/:slug" element={<LocationPage />} />
@@ -77,7 +79,7 @@ function App() {
                     <Route path="/quiz" element={<Quiz />} />
                     <Route path="/calculator" element={<Calculator />} />
                     <Route path="/calculator-shop" element={<CalculatorShop />} />
-                    <Route path="/product-calculator" element={<ProductCalculator />} /> {/* Add new route */}
+                    <Route path="/product-calculator" element={<ProductCalculator />} />
                     <Route path="/payment-success" element={<PaymentSuccess />} />
                     <Route path="/privacy" element={<PrivacyPolicy />} />
                     <Route path="/terms" element={<TermsOfService />} />

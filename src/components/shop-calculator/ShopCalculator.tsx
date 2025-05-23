@@ -9,7 +9,7 @@ import ContactForm from './ContactForm';
 import { Product } from '@/services/productTypes';
 
 // Update type definition to use string for sizes
-export type MaterialCategory = 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base';
+export type MaterialCategory = 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base' | 'soil' | 'stone' | 'rock' | 'crushed-gravel' | 'crushed-concrete';
 export type ApplicationType = 'driveway' | 'walkway' | 'landscape' | 'drainage' | 'foundation';
 export type MaterialSubcategory = 
   'washed-sand' | 'mason-sand' | 'playground-sand' | 'pool-sand' | 'beach-sand' | 
