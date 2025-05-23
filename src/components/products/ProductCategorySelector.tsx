@@ -32,12 +32,10 @@ export default function ProductCategorySelector({
 }: ProductCategorySelectorProps) {
   const isMobile = useIsMobile();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
   const [sortOrder, setSortOrder] = useState('nameAsc');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSize, setSelectedSize] = useState('');
   
-  // Hardcoded categories with Lucide icons - same as ProductFilterSelector
+  // Updated categories with proper mapping to match ProductGrid filtering
   const categories = [
     { id: 'all', label: 'All Products', icon: <Package className="h-5 w-5" /> },
     { id: 'gravel', label: 'Gravel', icon: <Layers className="h-5 w-5" /> },
@@ -48,42 +46,36 @@ export default function ProductCategorySelector({
     { id: 'sand', label: 'Sand', icon: <Waves className="h-5 w-5" /> },
     { id: 'mulch', label: 'Mulch', icon: <Flower className="h-5 w-5" /> },
   ];
-  
-  // Define subcategories mapping
-  const subcategories: Record<string, string[]> = {
-    'gravel': ['all', 'driveway', 'walkway', 'decorative', 'drainage'],
-    'rock': ['all', 'river-rock', 'boulders', 'flagstone', 'limestone'],
-    'crushed-gravel': ['all', 'standard', 'fine', 'course'],
-    'crushed-concrete': ['all', 'rca', 'recycled-base'],
-    'soil-dirt': ['all', 'top-soil', 'fill-dirt', 'garden-mix', 'compost'],
-    'sand': ['all', 'concrete', 'mason', 'play', 'fill'],
-    'mulch': ['all', 'black', 'brown', 'red', 'natural']
-  };
-
-  // Determine if we show size options - like ProductFilterSelector
-  const categoriesWithSizes = ['gravel', 'rock', 'crushed-gravel', 'crushed-concrete'];
-  const showSizeSelector = selectedCategory !== 'all' && categoriesWithSizes.includes(selectedCategory);
 
   // Handle category selection
   const handleCategorySelect = (category: string) => {
+    console.log(`ProductCategorySelector: Selected category ${category}`);
     setSelectedCategory(category);
-    setSelectedSubcategory('');
-    setSelectedSize('');
-    onFilter(category);
-  };
-
-  // Handle subcategory selection
-  const handleSubcategorySelect = (subcategory: string) => {
-    setSelectedSubcategory(subcategory);
-    const effectiveSubcategory = subcategory === 'all' ? '' : subcategory;
-    onFilter(selectedCategory, effectiveSubcategory, selectedSize);
-  };
-
-  // Handle size selection
-  const handleSizeSelect = (size: string) => {
-    setSelectedSize(size);
-    const effectiveSubcategory = selectedSubcategory === 'all' ? '' : selectedSubcategory;
-    onFilter(selectedCategory, effectiveSubcategory, size);
+    
+    // Map the UI category to the actual category used in ProductGrid
+    let mappedCategory = category;
+    
+    // Handle special mappings for categories that don't match exactly
+    switch (category) {
+      case 'soil-dirt':
+        mappedCategory = 'dirt'; // Map to 'dirt' as used in ProductGrid
+        break;
+      case 'crushed-concrete':
+        mappedCategory = 'base'; // Map to 'base' as used in ProductGrid  
+        break;
+      case 'crushed-gravel':
+        mappedCategory = 'base'; // Map to 'base' as used in ProductGrid
+        break;
+      case 'rock':
+        mappedCategory = 'rock'; // Keep as 'rock'
+        break;
+      default:
+        mappedCategory = category; // Keep original for gravel, sand, mulch, all
+        break;
+    }
+    
+    console.log(`ProductCategorySelector: Mapped ${category} to ${mappedCategory}`);
+    onFilter(mappedCategory);
   };
 
   // Handle search
@@ -159,69 +151,6 @@ export default function ProductCategorySelector({
           ))}
         </div>
       </div>
-      
-      {/* Subcategory Selection - Only show if a category is selected and it's not "all" */}
-      {selectedCategory !== 'all' && subcategories[selectedCategory] && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium text-gray-700">Type</h3>
-          <div className="flex flex-wrap gap-2">
-            {subcategories[selectedCategory].map(subcategory => (
-              <button
-                key={subcategory}
-                onClick={() => handleSubcategorySelect(subcategory)}
-                className={cn(
-                  "px-4 py-2 rounded-md border transition-colors",
-                  selectedSubcategory === subcategory
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
-                )}
-              >
-                {subcategory === 'all' ? 'All' : 
-                  subcategory.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {/* Size Selection - Only show for certain categories */}
-      {showSizeSelector && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium text-gray-700">Size</h3>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => handleSizeSelect('')}
-              className={cn(
-                "px-4 py-2 rounded-md border transition-colors",
-                selectedSize === ''
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
-              )}
-            >
-              All Sizes
-            </button>
-            {availableSizes.map(size => (
-              <button
-                key={size}
-                onClick={() => handleSizeSelect(size)}
-                className={cn(
-                  "px-4 py-2 rounded-md border transition-colors",
-                  selectedSize === size
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
-                )}
-              >
-                {size}
-              </button>
-            ))}
-            {availableSizes.length === 0 && showSizeSelector && (
-              <div className="text-sm text-gray-500 py-2">
-                No sizes available for current selection
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
