@@ -11,7 +11,7 @@ interface ZipCodeSectionProps {
 
 const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({ product }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const { zipCode, locationName, setZipCode } = useZipCode();
+  const { zipCode, setZipCode, zipCodeData } = useZipCode();
 
   return (
     <Card className="p-6">
@@ -21,14 +21,22 @@ const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({ product }) => {
       </p>
       
       <ZipCodeSearchInput 
-        onZipCodeSelect={(zip) => setZipCode(zip)}
-        defaultValue={zipCode}
+        inputValue={zipCode || ''}
+        onInputChange={(e) => {}} 
+        onSearch={(e) => {
+          e.preventDefault();
+          const inputElement = e.currentTarget.querySelector('input');
+          if (inputElement && inputElement.value) {
+            setZipCode(inputElement.value);
+          }
+        }}
+        variant="default"
       />
       
-      {zipCode && locationName && (
+      {zipCode && zipCodeData && (
         <div className="mt-4 p-3 bg-green-50 border border-green-100 rounded-md">
           <p className="text-sm text-green-700">
-            Delivery is available to {locationName} ({zipCode})
+            Delivery is available to {zipCodeData.city} ({zipCode})
           </p>
         </div>
       )}
