@@ -3,6 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Product, PriceTier } from './types';
 import { applyZipCodeAdjustment } from './priceUtils';
 
+// Cache for pricing tiers to avoid repeated database calls
+const priceTierCache = new Map<string, PriceTier[]>();
+const zipCodeAdjustmentCache = new Map<string, number>();
+
 /**
  * Fetch price tiers for a specific product from the database
  * @param productId The product ID to fetch tiers for
@@ -10,6 +14,13 @@ import { applyZipCodeAdjustment } from './priceUtils';
 export async function getPriceTiersForProduct(productId: string | number): Promise<PriceTier[]> {
   try {
     console.log(`[pricingUtils] Fetching price tiers for product ID: ${productId}`);
+    
+    // Check cache first
+    const cacheKey = productId.toString();
+    if (priceTierCache.has(cacheKey)) {
+      console.log(`[pricingUtils] Using cached price tiers for product ID: ${productId}`);
+      return priceTierCache.get(cacheKey) || [];
+    }
     
     // Convert productId to string for consistent comparison
     const productIdString = productId.toString();
@@ -25,6 +36,10 @@ export async function getPriceTiersForProduct(productId: string | number): Promi
     }
     
     console.log(`[pricingUtils] Found ${data?.length || 0} price tiers for product ${productId}:`, data);
+    
+    // Cache the result
+    priceTierCache.set(cacheKey, data || []);
+    
     return data || [];
   } catch (error) {
     console.error("[pricingUtils] Error fetching price tiers:", error);
@@ -40,6 +55,12 @@ export async function getPriceTiersForProduct(productId: string | number): Promi
 export async function getPriceAdjustmentForZipCode(zipCode: string): Promise<number> {
   try {
     console.log(`[pricingUtils] Getting price adjustment for ZIP code: ${zipCode}`);
+    
+    // Check cache first
+    if (zipCodeAdjustmentCache.has(zipCode)) {
+      console.log(`[pricingUtils] Using cached adjustment for ZIP: ${zipCode}`);
+      return zipCodeAdjustmentCache.get(zipCode) || 1;
+    }
     
     // Query the service_zip_codes table (not zip_code_pricing)
     const { data, error } = await supabase
@@ -66,6 +87,9 @@ export async function getPriceAdjustmentForZipCode(zipCode: string): Promise<num
     // Use price_adjustment, not adjustment
     const adjustmentMultiplier = data.price_adjustment;
     console.log(`[pricingUtils] ZIP ${zipCode} has adjustment multiplier: ${adjustmentMultiplier}`);
+    
+    // Cache the result
+    zipCodeAdjustmentCache.set(zipCode, adjustmentMultiplier);
     
     return adjustmentMultiplier;
   } catch (error) {
@@ -181,4 +205,11 @@ export async function calculateFinalPrice(
       pricePerTon: product.price
     };
   }
+}
+
+// Method to clear cache (useful for testing or when data is known to have changed)
+export function clearPricingCache() {
+  priceTierCache.clear();
+  zipCodeAdjustmentCache.clear();
+  console.log("[pricingUtils] Pricing cache cleared");
 }
