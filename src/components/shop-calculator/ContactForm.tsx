@@ -1,35 +1,78 @@
 
-import React from 'react';
-import { UseFormReturn } from 'react-hook-form';
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { Input } from '@/components/ui/input';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Product } from '@/services/productTypes';
+import { useToast } from '@/components/ui/use-toast';
+
+// Define form schema with validation
+const formSchema = z.object({
+  name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
+  email: z.string().email({ message: 'Please enter a valid email address' }),
+  phone: z.string().min(5, { message: 'Please enter a valid phone number' }),
+  consent: z.boolean().refine(val => val === true, {
+    message: 'You must agree to be contacted'
+  })
+});
 
 type ContactFormProps = {
-  form: UseFormReturn<{
-    name?: string;
-    email?: string;
-    phone?: string;
-    consent?: boolean;
-  }, any, undefined>;
-  onApplyDiscount: () => void;
-  onSubmit: (data: { name: string; email: string; phone: string; consent: boolean }) => void;
-  loading?: boolean;
+  product: Product | null;
+  onApplyDiscount?: () => void;
 };
 
-const ContactForm: React.FC<ContactFormProps> = ({ form, onApplyDiscount, onSubmit, loading = false }) => {
-  const handleSubmit = form.handleSubmit((data) => {
-    // Ensure all fields exist
-    const formData = {
-      name: data.name || '',
-      email: data.email || '',
-      phone: data.phone || '',
-      consent: data.consent || false
-    };
+const ContactForm: React.FC<ContactFormProps> = ({ product, onApplyDiscount }) => {
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+  
+  // Initialize the form
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      consent: false
+    }
+  });
+
+  const handleSubmit = form.handleSubmit(async (data) => {
+    setLoading(true);
     
-    onSubmit(formData);
-    onApplyDiscount(); // Apply discount after form submission
+    try {
+      // Log submission
+      console.log('ContactForm: Submitting form data:', {
+        ...data,
+        product: product?.name || 'Not selected'
+      });
+      
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Show success toast
+      toast({
+        title: "Thanks for your information!",
+        description: "You've qualified for our discount offer.",
+      });
+      
+      // Apply discount if callback provided
+      if (onApplyDiscount) {
+        onApplyDiscount();
+      }
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+      toast({
+        variant: "destructive",
+        title: "Something went wrong",
+        description: "Please try again later.",
+      });
+    } finally {
+      setLoading(false);
+    }
   });
 
   return (

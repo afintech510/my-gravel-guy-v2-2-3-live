@@ -22,6 +22,12 @@ interface ShopCalculatorProps {
   selectedProduct?: Product | null;
 }
 
+// Define the type for ShopAreaInputs props to fix TypeScript error
+interface ShopAreaInputsProps {
+  areas: { length: number; width: number }[];
+  setAreas: React.Dispatch<React.SetStateAction<{ length: number; width: number }[]>>;
+}
+
 const ShopCalculator: React.FC<ShopCalculatorProps> = ({
   onProductSelected,
   selectedProduct
@@ -81,6 +87,12 @@ const ShopCalculator: React.FC<ShopCalculatorProps> = ({
     }
   };
 
+  // Apply discount handler (passed to ContactForm)
+  const handleApplyDiscount = () => {
+    console.log('ShopCalculator: Applying discount');
+    // You could implement discount logic here
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
       {/* Left column: Material selection and calculator inputs */}
@@ -104,7 +116,7 @@ const ShopCalculator: React.FC<ShopCalculatorProps> = ({
           
           <ShopAreaInputs
             areas={areas}
-            onAreasChange={setAreas}
+            setAreas={setAreas}
           />
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -133,7 +145,10 @@ const ShopCalculator: React.FC<ShopCalculatorProps> = ({
           </div>
           
           <div className="mt-8 pt-6 border-t border-gray-100">
-            <ContactForm product={filteredProduct} />
+            <ContactForm 
+              product={filteredProduct} 
+              onApplyDiscount={handleApplyDiscount} 
+            />
           </div>
         </div>
       </div>
