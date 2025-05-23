@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Truck, Map, Shovel, Trees, Building, ChevronDown } from 'lucide-react';
-import { MaterialCategory, ApplicationType, MaterialSubcategory, MaterialSize } from './ShopCalculator';
+import { MaterialCategory, ApplicationType, MaterialSubcategory } from './ShopCalculator';
+import { MaterialSize } from '@/services/productTypes';
 import { 
   Tabs, 
   TabsContent, 
