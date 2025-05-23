@@ -1,10 +1,18 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import ShopCalculator from '../components/shop-calculator/ShopCalculator';
 import QuoteFormProduct from '../components/forms/QuoteFormProduct';
 import TrustBanner from '../components/products/trust/TrustBanner';
+import { Product } from '@/services/productTypes';
 
 const CalculatorShop = () => {
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  const handleProductSelected = (product: Product | null) => {
+    setSelectedProduct(product);
+    console.log('CalculatorShop: Product selected:', product?.name || 'None');
+  };
+
   return (
     <div className="py-8 px-4 sm:px-6 bg-gray-50">
       <div className="max-w-6xl mx-auto">
@@ -13,12 +21,15 @@ const CalculatorShop = () => {
         
         {/* Updated container for the calculator */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <ShopCalculator />
+          <ShopCalculator 
+            onProductSelected={handleProductSelected} 
+            selectedProduct={selectedProduct}
+          />
         </div>
         
         {/* Quote Form Component */}
         <div className="mt-12 sm:mt-16">
-          <QuoteFormProduct />
+          <QuoteFormProduct selectedProduct={selectedProduct} />
         </div>
         
         {/* Trust Banner */}

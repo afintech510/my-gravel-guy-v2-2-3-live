@@ -31,9 +31,6 @@ const categoryStructure = {
 // Define main categories to display - limited to just the 6 main ones
 const mainCategories = ['all', 'gravel', 'dirt', 'base', 'sand', 'mulch'];
 
-// Define size options for gravel and base
-const sizeOptions = ['3/8"', '3/4"', '1"', '1½"', '2-3"'];
-
 // Define category icons - making sure each category has a valid icon
 const CategoryIcons = {
   'all': Grid3X3,
@@ -48,9 +45,15 @@ interface ProductSearchProps {
   onSearch: (term: string) => void;
   onSort: (option: string) => void;
   onFilter: (category: string, subcategory?: string, size?: string) => void;
+  availableSizes?: string[]; // New prop for available sizes
 }
 
-const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
+const ProductSearch = ({ 
+  onSearch, 
+  onSort, 
+  onFilter, 
+  availableSizes = [] // Default to empty array
+}: ProductSearchProps) => {
   const [sortOrder, setSortOrder] = useState('nameAsc');
   const [category, setCategory] = useState('all');
   const [subcategory, setSubcategory] = useState('');
@@ -94,6 +97,15 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
     // Reset size when category changes
     setSize('');
   }, [category]);
+
+  // Update size when available sizes change
+  useEffect(() => {
+    // If current size is not in available sizes, reset it
+    if (size && availableSizes.length > 0 && !availableSizes.includes(size)) {
+      setSize('');
+      console.log('Size reset because current selection is not available:', size, 'Available sizes:', availableSizes);
+    }
+  }, [availableSizes, size]);
 
   const handleSortChange = (value: string) => {
     setSortOrder(value);
@@ -269,7 +281,8 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
                         >
                           All Sizes
                         </button>
-                        {sizeOptions.map((sizeOption) => (
+                        {/* Only show sizes that are available based on the current category/subcategory filters */}
+                        {availableSizes.map((sizeOption) => (
                           <button
                             key={sizeOption}
                             onClick={() => handleSizeChange(sizeOption)}
@@ -280,6 +293,11 @@ const ProductSearch = ({ onSearch, onSort, onFilter }: ProductSearchProps) => {
                             {sizeOption}
                           </button>
                         ))}
+                        {availableSizes.length === 0 && shouldShowSizes() && (
+                          <div className="col-span-5 py-2 text-xs text-gray-500">
+                            No sizes available for the current selection
+                          </div>
+                        )}
                       </div>
                     </div>
                   </Card>

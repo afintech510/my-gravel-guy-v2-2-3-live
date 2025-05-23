@@ -6,13 +6,19 @@ import { cn } from "@/lib/utils";
 type SizeSelectorProps = {
   selectedSize: MaterialSize;
   setSelectedSize: (size: MaterialSize) => void;
+  availableSizes?: MaterialSize[]; // New prop for available sizes
 };
 
 const SizeSelector: React.FC<SizeSelectorProps> = ({
   selectedSize,
-  setSelectedSize
+  setSelectedSize,
+  availableSizes // New prop
 }) => {
-  const sizes: MaterialSize[] = ['3/8"', '3/4"', '1"', '1½"', '2-3"'];
+  // Default sizes if none provided, matching the standard sizes in the database
+  const defaultSizes: MaterialSize[] = ['3/8"', '3/4"', '1"', '1½"', '2-3"'];
+  
+  // Use available sizes if provided, otherwise fall back to defaults
+  const sizes = availableSizes && availableSizes.length > 0 ? availableSizes : defaultSizes;
   
   return (
     <div>
