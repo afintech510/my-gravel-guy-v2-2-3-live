@@ -1,0 +1,90 @@
+
+import React from 'react';
+import { useZipCode } from '@/contexts/ZipCodeContext';
+import { Check, MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useZipCodeSearch } from '@/hooks/useZipCodeSearch';
+import { cn } from '@/lib/utils';
+
+export default function ZipCodeChecker() {
+  const { zipCode, zipCodeData, clearZipCode } = useZipCode();
+  const { 
+    inputValue, 
+    handleInputChange, 
+    handleSearch, 
+    handleUnlockSearch, 
+    isSearchLocked,
+    loading,
+    error
+  } = useZipCodeSearch();
+
+  // Check if delivery is available (for now, we'll assume it is if we have zip code data)
+  const isDeliveryAvailable = !!zipCodeData;
+
+  return (
+    <div className="space-y-4">
+      <h3 className="text-base font-semibold text-gray-800">Delivery Availability</h3>
+      
+      {isDeliveryAvailable ? (
+        <div className="flex items-center space-x-3">
+          <div className="bg-green-100 p-2 rounded-full">
+            <Check className="h-5 w-5 text-green-600" />
+          </div>
+          <div>
+            <p className="text-green-700 font-medium">
+              Available for delivery
+            </p>
+            <p className="text-sm text-gray-600">
+              to {zipCodeData.city}, {zipCodeData.state_id} ({zipCode})
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <p className="text-sm text-gray-600 mb-3">
+            Enter your ZIP code to check delivery availability in your area.
+          </p>
+          
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <div className="relative flex-grow">
+              <MapPin className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Input
+                placeholder="Enter ZIP code"
+                value={inputValue}
+                onChange={handleInputChange}
+                className={cn(
+                  "pl-9",
+                  isSearchLocked ? "bg-gray-50" : "",
+                  error ? "border-red-300" : ""
+                )}
+                disabled={isSearchLocked || loading}
+              />
+            </div>
+            
+            {isSearchLocked ? (
+              <Button 
+                type="button"
+                variant="outline" 
+                onClick={handleUnlockSearch}
+              >
+                Change
+              </Button>
+            ) : (
+              <Button 
+                type="submit"
+                disabled={loading}
+              >
+                Check
+              </Button>
+            )}
+          </form>
+          
+          {error && (
+            <p className="text-red-500 text-sm mt-1">{error}</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
