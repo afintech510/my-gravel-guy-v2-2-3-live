@@ -56,7 +56,7 @@ export default function ZipCodeChecker() {
               </div>
               <div>
                 <p className="text-green-700 font-medium">
-                  Available for delivery
+                  FREE Delivery Available
                 </p>
                 <p className="text-sm text-gray-600">
                   to {zipCodeData.city}, {zipCodeData.state_id} ({zipCode})
