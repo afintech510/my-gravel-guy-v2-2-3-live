@@ -5,8 +5,8 @@ import ShopAreaInputs, { AreaDimensions } from './ShopAreaInputs';
 import ShopCalculationDisplay from './ShopCalculationDisplay';
 import ShopMaterialSelector from './ShopMaterialSelector';
 import ZipCodeSection from './ZipCodeSection';
+import ContactForm from './ContactForm';
 import { Product } from '@/services/productTypes';
-import { getProducts } from '@/services/productService';
 
 // Update type definition to use string for sizes
 export type MaterialCategory = 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base';
@@ -34,9 +34,6 @@ const ShopCalculator: React.FC<ShopCalculatorProps> = ({
   const [selectedSubcategory, setSelectedSubcategory] = useState<MaterialSubcategory>('driveway');
   const [selectedSize, setSelectedSize] = useState<MaterialSize>('3/4"');
   
-  // Products state
-  const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
-  
   // Area dimensions state - updated to use the new structure
   const [areaDimensions, setAreaDimensions] = useState<AreaDimensions>({
     areas: [{ length: 10, width: 10 }],
@@ -56,20 +53,6 @@ const ShopCalculator: React.FC<ShopCalculatorProps> = ({
   // Product state
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialSelectedProduct || null);
 
-  // Load products
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const products = await getProducts();
-        setAvailableProducts(products);
-      } catch (error) {
-        console.error("Failed to load products:", error);
-      }
-    };
-    
-    fetchProducts();
-  }, []);
-
   // Function to handle product selection
   const handleProductSelected = (product: Product | null) => {
     console.log("ShopCalculator: Product selected:", product?.name || 'None');
@@ -80,34 +63,6 @@ const ShopCalculator: React.FC<ShopCalculatorProps> = ({
       onProductSelected(product);
     }
   };
-
-  // Function to filter products based on selected category and subcategory
-  const filterProductsBySelection = () => {
-    if (!availableProducts || availableProducts.length === 0) return [];
-    
-    return availableProducts.filter(product => {
-      // Match category
-      const categoryMatch = product.category === selectedCategory ||
-        (product.categories && product.categories.includes(selectedCategory));
-      
-      if (!categoryMatch) return false;
-      
-      // Match subcategory
-      const subcategoryMatch = 
-        (product.subtype && product.subtype.toLowerCase().includes(selectedSubcategory)) ||
-        (product.categories && product.categories.some(cat => 
-          cat.toLowerCase().includes(selectedSubcategory)
-        )) ||
-        (product.description && product.description.toLowerCase().includes(selectedSubcategory)) ||
-        (product.uses && product.uses.some(use => 
-          use.toLowerCase().includes(selectedSubcategory)
-        ));
-        
-      return subcategoryMatch;
-    });
-  };
-
-  const filteredProducts = filterProductsBySelection();
 
   // Calculate cubic yards and tons based on dimensions
   const calculateMaterial = () => {
@@ -177,11 +132,11 @@ const ShopCalculator: React.FC<ShopCalculatorProps> = ({
             size: selectedSize
           }}
           selectedProduct={selectedProduct}
-          filteredProducts={filteredProducts}
-          onProductSelected={handleProductSelected}
         />
         
         <ZipCodeSection product={selectedProduct} />
+        
+        
       </div>
     </div>
   );
