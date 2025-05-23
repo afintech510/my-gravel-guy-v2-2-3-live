@@ -1,11 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { getProducts } from '@/services/productService';
 import { Product } from '@/services/productTypes';
 import { cn } from '@/lib/utils';
-import { Package, Layers, Mountain, RockingChair, Building2, Shovel, Waves, Flower, X } from 'lucide-react';
+import { Package, Layers, Mountain, RockingChair, Building2, Shovel, Waves, Flower } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Button } from '@/components/ui/button';
 
 interface ProductFilterSelectorProps {
   onProductSelected: (product: Product | null) => void;
@@ -129,134 +127,86 @@ export default function ProductFilterSelector({ onProductSelected, selectedProdu
   const handleProductSelect = (product: Product) => {
     onProductSelected(product);
   };
-  
-  // Deselect a product
-  const handleProductDeselect = () => {
-    onProductSelected(null);
-  };
 
   return (
     <div className="space-y-6">
-      {/* Category Selection - Only show when no product is selected */}
-      {!selectedProduct && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium text-gray-700">Material Category</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-            {categories.map(category => (
+      {/* Category Selection */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium text-gray-700">Material Category</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+          {categories.map(category => (
+            <button
+              key={category.id}
+              onClick={() => setSelectedCategory(category.id)}
+              className={cn(
+                "flex items-center justify-center p-3 border rounded-md transition-colors",
+                selectedCategory === category.id
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
+              )}
+            >
+              {category.icon}
+              <span className={cn("ml-2", isMobile ? "text-xs" : "text-sm")}>
+                {category.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+      
+      {/* Products List */}
+      <div className="mt-6">
+        <h3 className="text-sm font-medium text-gray-700 mb-3">Available Materials</h3>
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <p className="text-gray-500">Loading products...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {filteredProducts.slice(0, 10).map(product => (
               <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
+                key={product.id}
+                onClick={() => handleProductSelect(product)}
                 className={cn(
-                  "flex items-center justify-center p-3 border rounded-md transition-colors",
-                  selectedCategory === category.id
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
+                  "text-left p-4 border rounded-md transition-all hover:shadow-md",
+                  selectedProduct?.id === product.id 
+                    ? "border-primary bg-primary/5" 
+                    : "border-gray-200 bg-white"
                 )}
               >
-                {category.icon}
-                <span className={cn("ml-2", isMobile ? "text-xs" : "text-sm")}>
-                  {category.label}
-                </span>
+                <div className="flex items-start">
+                  {product.image && (
+                    <div className="w-16 h-16 bg-gray-100 rounded flex-shrink-0 mr-4">
+                      <img 
+                        src={product.image} 
+                        alt={product.name} 
+                        className="w-full h-full object-cover rounded"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <h4 className="font-medium text-gray-900">{product.name}</h4>
+                    {product.price > 0 && (
+                      <p className="text-primary font-semibold mt-1">
+                        ${product.price.toFixed(2)}/ton
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1 line-clamp-1">
+                      {product.size || product.specifications?.size || ""}
+                    </p>
+                  </div>
+                </div>
               </button>
             ))}
-          </div>
-        </div>
-      )}
-      
-      {/* Selected Material Section */}
-      {selectedProduct ? (
-        <div className="mt-6">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Selected Material</h3>
-          <div className="border border-primary rounded-md p-4 bg-primary/5">
-            <div className="flex items-start justify-between">
-              <div className="flex items-start">
-                {selectedProduct.image && (
-                  <div className="w-16 h-16 bg-gray-100 rounded flex-shrink-0 mr-4">
-                    <img 
-                      src={selectedProduct.image} 
-                      alt={selectedProduct.name} 
-                      className="w-full h-full object-cover rounded"
-                    />
-                  </div>
-                )}
-                <div>
-                  <h4 className="font-medium text-gray-900">{selectedProduct.name}</h4>
-                  {selectedProduct.price > 0 && (
-                    <p className="text-primary font-semibold mt-1">
-                      ${selectedProduct.price.toFixed(2)}/ton
-                    </p>
-                  )}
-                  <p className="text-xs text-gray-500 mt-1">
-                    {selectedProduct.size || selectedProduct.specifications?.size || ""}
-                  </p>
-                </div>
+            
+            {filteredProducts.length === 0 && (
+              <div className="col-span-full p-8 text-center text-gray-500 bg-gray-50 rounded-md">
+                No products match your selection. Try adjusting your filters.
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleProductDeselect} 
-                className="ml-2"
-              >
-                <X className="h-4 w-4 mr-1" /> Change
-              </Button>
-            </div>
+            )}
           </div>
-        </div>
-      ) : (
-        /* Products List - Only show when no product is selected */
-        <div className="mt-6">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Available Materials</h3>
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <p className="text-gray-500">Loading products...</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {filteredProducts.slice(0, 10).map(product => (
-                <button
-                  key={product.id}
-                  onClick={() => handleProductSelect(product)}
-                  className={cn(
-                    "text-left p-4 border rounded-md transition-all hover:shadow-md",
-                    selectedProduct?.id === product.id 
-                      ? "border-primary bg-primary/5" 
-                      : "border-gray-200 bg-white"
-                  )}
-                >
-                  <div className="flex items-start">
-                    {product.image && (
-                      <div className="w-16 h-16 bg-gray-100 rounded flex-shrink-0 mr-4">
-                        <img 
-                          src={product.image} 
-                          alt={product.name} 
-                          className="w-full h-full object-cover rounded"
-                        />
-                      </div>
-                    )}
-                    <div>
-                      <h4 className="font-medium text-gray-900">{product.name}</h4>
-                      {product.price > 0 && (
-                        <p className="text-primary font-semibold mt-1">
-                          ${product.price.toFixed(2)}/ton
-                        </p>
-                      )}
-                      <p className="text-xs text-gray-500 mt-1 line-clamp-1">
-                        {product.size || product.specifications?.size || ""}
-                      </p>
-                    </div>
-                  </div>
-                </button>
-              ))}
-              
-              {filteredProducts.length === 0 && (
-                <div className="col-span-full p-8 text-center text-gray-500 bg-gray-50 rounded-md">
-                  No products match your selection. Try adjusting your filters.
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
