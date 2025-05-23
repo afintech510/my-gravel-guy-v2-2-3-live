@@ -3,7 +3,6 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Product } from '@/services/productTypes';
 import { getPriceForProduct } from '@/services/productService';
-import { cn } from '@/lib/utils';
 
 interface ShopCalculationDisplayProps {
   cubicYards: number;
@@ -14,17 +13,13 @@ interface ShopCalculationDisplayProps {
     size: string;
   };
   selectedProduct: Product | null;
-  filteredProducts: Product[];
-  onProductSelected: (product: Product | null) => void;
 }
 
 const ShopCalculationDisplay: React.FC<ShopCalculationDisplayProps> = ({ 
   cubicYards, 
   tons, 
   materialInfo,
-  selectedProduct,
-  filteredProducts,
-  onProductSelected
+  selectedProduct
 }) => {
   // Calculate the estimated price range
   const getEstimatedPriceRange = () => {
@@ -65,47 +60,20 @@ const ShopCalculationDisplay: React.FC<ShopCalculationDisplayProps> = ({
           </div>
         </div>
         
-        <div className="pt-4 border-t border-gray-200 mt-2">
-          <p className="text-xs text-gray-500 mb-2">Available Products</p>
-          
-          {filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 gap-2">
-              {filteredProducts.map(product => (
-                <button
-                  key={product.id}
-                  onClick={() => onProductSelected(product)}
-                  className={cn(
-                    "w-full p-3 text-left rounded-lg border transition-colors flex justify-between items-center",
-                    selectedProduct?.id === product.id
-                      ? "border-primary bg-primary/5"
-                      : "hover:bg-gray-50 border-gray-200"
-                  )}
-                >
-                  <span className="font-medium">{product.name}</span>
-                  {product.price > 0 && (
-                    <span className="text-sm font-medium text-gray-600">
-                      ${product.price}/ton
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center p-4 border border-dashed rounded-lg text-gray-500">
-              No products match the selected criteria
-            </div>
-          )}
+        <div className="pt-2 border-t border-gray-200 mt-2">
+          <p className="text-xs text-gray-500">Material Selected</p>
+          <p className="font-medium">
+            {selectedProduct ? selectedProduct.name : `${materialInfo.subcategory.replace(/-/g, ' ')} ${materialInfo.size}`}
+          </p>
         </div>
         
-        {selectedProduct && (
-          <div className="pt-4 border-t border-gray-200 mt-2">
-            <p className="text-xs text-gray-500">Estimated Cost Range</p>
-            <p className="text-xl font-semibold">{getEstimatedPriceRange()}</p>
-            <p className="text-xs text-gray-500 mt-1">
-              Final price depends on delivery location and exact material specifications.
-            </p>
-          </div>
-        )}
+        <div className="pt-2 border-t border-gray-200 mt-2">
+          <p className="text-xs text-gray-500">Estimated Cost Range</p>
+          <p className="text-xl font-semibold">{getEstimatedPriceRange()}</p>
+          <p className="text-xs text-gray-500 mt-1">
+            Final price depends on delivery location and exact material specifications.
+          </p>
+        </div>
       </div>
     </Card>
   );
