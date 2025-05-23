@@ -6,7 +6,7 @@ import DeliveryDatePicker from './DeliveryDatePicker';
 import { Product } from '@/services/productTypes';
 import AmountSelector from './AmountSelector';
 import { Badge } from '@/components/ui/badge';
-import { Cube } from "lucide-react";
+import { Package } from "lucide-react"; // Changed from Cube to Package which is available
 
 interface ProductActionsProps {
   product: Product;
@@ -91,7 +91,7 @@ const ProductActions = ({
       <div className="flex items-center justify-center gap-3 text-center my-4">
         <h2 className="text-4xl font-bold">{selectedTons} tons</h2>
         <span className="text-xl text-gray-500 flex items-center">
-          ≈ <Cube className="mx-1 h-5 w-5" /> {cubicYards} yd³
+          ≈ <Package className="mx-1 h-5 w-5" /> {cubicYards} yd³
         </span>
       </div>
 
