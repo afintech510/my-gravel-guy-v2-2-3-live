@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
-import ShopAreaInputs from './ShopAreaInputs';
+import ShopAreaInputs, { AreaDimensions } from './ShopAreaInputs';
 import ShopCalculationDisplay from './ShopCalculationDisplay';
 import ShopMaterialSelector from './ShopMaterialSelector';
 import ZipCodeSection from './ZipCodeSection';
@@ -20,13 +20,6 @@ export type MaterialSubcategory =
   'pea-gravel' | 'river-rock' | 'crushed-stone' | 'decorative-gravel' | 'drainage-gravel';
 export type MaterialSize = string;
 
-export interface AreaDimensions {
-  length: number;
-  width: number;
-  depth: number;
-  extra: number;
-}
-
 interface ShopCalculatorProps {
   onProductSelected?: (product: Product | null) => void;
   selectedProduct?: Product | null;
@@ -41,10 +34,9 @@ const ShopCalculator: React.FC<ShopCalculatorProps> = ({
   const [selectedSubcategory, setSelectedSubcategory] = useState<MaterialSubcategory>('driveway');
   const [selectedSize, setSelectedSize] = useState<MaterialSize>('3/4"');
   
-  // Area dimensions state
+  // Area dimensions state - updated to use the new structure
   const [areaDimensions, setAreaDimensions] = useState<AreaDimensions>({
-    length: 10,
-    width: 10,
+    areas: [{ length: 10, width: 10 }],
     depth: 2,
     extra: 10,
   });
@@ -74,13 +66,16 @@ const ShopCalculator: React.FC<ShopCalculatorProps> = ({
 
   // Calculate cubic yards and tons based on dimensions
   const calculateMaterial = () => {
-    const { length, width, depth, extra } = areaDimensions;
+    const { areas, depth, extra } = areaDimensions;
     
     // Convert inches to feet for depth
     const depthInFeet = depth / 12;
     
+    // Calculate total square footage
+    const totalSquareFeet = areas.reduce((sum, area) => sum + (area.length * area.width), 0);
+    
     // Calculate cubic yards
-    let cubicYards = (length * width * depthInFeet) / 27;
+    let cubicYards = (totalSquareFeet * depthInFeet) / 27;
     
     // Add extra percentage
     cubicYards = cubicYards * (1 + (extra / 100));
@@ -114,19 +109,20 @@ const ShopCalculator: React.FC<ShopCalculatorProps> = ({
             productImages={productImages[selectedCategory] || []}
             onProductSelected={handleProductSelected}
           />
-          
-          <div className="mt-8">
-            <h2 className="text-2xl font-semibold mb-6">Area Calculator</h2>
-            <ShopAreaInputs
-              dimensions={areaDimensions}
-              onDimensionsChange={setAreaDimensions}
-            />
-          </div>
         </Card>
       </div>
       
-      {/* RIGHT COLUMN: Calculation, ZIP Code, Contact Form */}
+      {/* RIGHT COLUMN: Calculator, Calculation, ZIP Code, Contact Form */}
       <div className="space-y-6">
+        {/* Area Calculator - Moved to top of right column */}
+        <Card className="p-6">
+          <h2 className="text-xl font-semibold mb-4">Area Calculator</h2>
+          <ShopAreaInputs
+            dimensions={areaDimensions}
+            onDimensionsChange={setAreaDimensions}
+          />
+        </Card>
+      
         <ShopCalculationDisplay 
           cubicYards={materialCalculation.cubicYards} 
           tons={materialCalculation.tons}

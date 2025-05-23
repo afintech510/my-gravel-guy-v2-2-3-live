@@ -11,7 +11,7 @@ const ExtraSlider: React.FC<ExtraSliderProps> = ({ extraPercentage, setExtraPerc
   return (
     <div className="space-y-2">
       <div className="flex justify-between">
-        <label className="text-sm font-medium">Order Extra</label>
+        <label className="text-sm font-medium">Order Extra for Compaction</label>
         <span className="text-sm font-bold">{extraPercentage}%</span>
       </div>
       <Slider
