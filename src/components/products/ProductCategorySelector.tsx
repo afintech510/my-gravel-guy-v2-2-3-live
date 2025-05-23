@@ -47,7 +47,7 @@ export default function ProductCategorySelector({
     { id: 'mulch', label: 'Mulch', icon: <Flower className="h-5 w-5" /> },
   ];
 
-  // Handle category selection with correct mapping
+  // Handle category selection with correct mapping to new database categories
   const handleCategorySelect = (category: string) => {
     console.log(`ProductCategorySelector: Selected category ${category}`);
     setSelectedCategory(category);
@@ -57,25 +57,25 @@ export default function ProductCategorySelector({
     
     switch (category) {
       case 'soil-dirt':
-        mappedCategories = ['dirt', 'soil']; // Check both 'dirt' and 'soil'
+        mappedCategories = ['Dirt', 'Soil']; // Check both 'Dirt' and 'Soil' (case-sensitive)
         break;
       case 'crushed-concrete':
-        mappedCategories = ['crushed concrete']; // Exact match for 'crushed concrete'
+        mappedCategories = ['Crushed-Concrete']; // Exact match for 'Crushed-Concrete'
         break;
       case 'crushed-gravel':
-        mappedCategories = ['crushed gravel']; // Exact match for 'crushed gravel'
+        mappedCategories = ['Crushed-Gravel-Stone']; // Updated to match new database category
         break;
       case 'rock-stone':
-        mappedCategories = ['rock stone']; // Exact match for 'rock stone'
+        mappedCategories = ['Rock-Stone']; // Exact match for 'Rock-Stone'
         break;
       case 'mulch':
-        mappedCategories = ['mulch']; // Direct mapping
+        mappedCategories = ['Mulch']; // Direct mapping
         break;
       case 'gravel':
-        mappedCategories = ['gravel']; // Direct mapping
+        mappedCategories = ['Gravel']; // Direct mapping
         break;
       case 'sand':
-        mappedCategories = ['sand']; // Direct mapping
+        mappedCategories = ['Sand']; // Direct mapping
         break;
       case 'all':
       default:
