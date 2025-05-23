@@ -2,7 +2,7 @@
 import React from 'react';
 import { Product } from '@/services/productTypes';
 import { Button } from '@/components/ui/button';
-import { ShoppingBag, Info } from 'lucide-react';
+import { ShoppingBag, Info, EqualCircle } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useZipCode } from '@/contexts/ZipCodeContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -173,8 +173,15 @@ export default function AddToCartOptions({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">{option.tons} tons</p>
-                  <p className="text-sm text-primary font-medium mb-1">{product.name}</p>
-                  <p className="text-xs text-gray-500">{option.label} • {cubicYards} yd³</p>
+                  <p className="text-sm text-black font-medium mb-1">{product.name}</p>
+                  <div className="flex items-center text-xs text-gray-500">
+                    <span>{option.label}</span>
+                    <span className="mx-1">•</span>
+                    <div className="flex items-center">
+                      <EqualCircle className="h-3 w-3 mr-1 text-gray-400" />
+                      <span>{cubicYards} yd³</span>
+                    </div>
+                  </div>
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-xl">${price.toFixed(2)}</p>
