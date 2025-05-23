@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Search } from 'lucide-react';
 import ProductGrid from '../components/ProductGrid';
-import ProductFilterSelector from '../components/product-calculator/ProductFilterSelector';
 import TrustBanner from '../components/products/trust/TrustBanner';
 import QuoteForm from '../components/forms/QuoteForm';
 import { Product } from '@/services/productTypes';
@@ -28,7 +27,18 @@ const Shop = () => {
     setSelectedProduct(product);
   };
 
-  // Update filters when category changes from ProductFilterSelector
+  // Category filter buttons
+  const categories = [
+    { id: 'all', name: 'All Products' },
+    { id: 'Gravel', name: 'Gravel' },
+    { id: 'Rock-Stone', name: 'Rock & Stone' },
+    { id: 'Crushed-Gravel-Stone', name: 'Crushed Gravel' },
+    { id: 'Crushed-Concrete', name: 'Crushed Concrete' },
+    { id: 'Soil', name: 'Soil & Dirt' },
+    { id: 'Sand', name: 'Sand' },
+    { id: 'Mulch', name: 'Mulch' }
+  ];
+
   const handleCategoryFilter = (category: string) => {
     setFilters(prev => ({ ...prev, category, subcategory: '', size: '' }));
   };
@@ -55,10 +65,21 @@ const Shop = () => {
 
         {/* Category Selector */}
         <div className="mb-8">
-          <ProductFilterSelector
-            onProductSelected={handleProductSelected}
-            selectedProduct={selectedProduct}
-          />
+          <div className="flex flex-wrap justify-center gap-2">
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => handleCategoryFilter(category.id)}
+                className={`px-4 py-2 rounded-full border transition-colors ${
+                  filters.category === category.id
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-white border-gray-200 hover:bg-gray-50 text-gray-700'
+                }`}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Product Grid */}
