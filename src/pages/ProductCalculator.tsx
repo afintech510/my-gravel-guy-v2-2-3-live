@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ProductFilterSelector from '@/components/product-calculator/ProductFilterSelector';
 import ProductDetails from '@/components/product-calculator/ProductDetails';
@@ -11,7 +10,7 @@ import { Product } from '@/services/productTypes';
 import { useCalculator } from '@/hooks/useCalculator';
 import { Helmet } from 'react-helmet-async';
 import { useZipCode } from '@/contexts/ZipCodeContext';
-import { calculateFinalPrice } from '@/services/products/pricingService';
+import { calculateFinalPrice } from '@/services/products/pricingUtils';
 import { useToast } from '@/components/ui/use-toast';
 
 export default function ProductCalculator() {

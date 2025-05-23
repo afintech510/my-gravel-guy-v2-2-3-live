@@ -1,12 +1,11 @@
-
-import React, { useState } from 'react';
+import React from 'react';
 import { Product } from '@/services/productTypes';
 import { Button } from '@/components/ui/button';
 import { ShoppingBag, Info } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useZipCode } from '@/contexts/ZipCodeContext';
 import { useToast } from '@/components/ui/use-toast';
-import { calculateFinalPrice } from '@/services/products/pricingService';
+import { calculateFinalPrice } from '@/services/products/pricingUtils';
 import { 
   Tooltip,
   TooltipContent,
