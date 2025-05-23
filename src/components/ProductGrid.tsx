@@ -61,37 +61,35 @@ const ProductGrid = ({
   const categoryMatches = (product: Product, filterCategory: string): boolean => {
     if (filterCategory === 'all') return true;
     
-    // Define the category mappings that correspond to the button mappings
+    // Define the category mappings that correspond to the new database structure
     const categoryMappings: Record<string, string[]> = {
-      'dirt': ['dirt', 'soil'], // soil-dirt button maps to these
-      'soil': ['dirt', 'soil'], // Handle both directions
-      'crushed concrete': ['crushed concrete'], // crushed-concrete button
-      'crushed gravel': ['crushed gravel'], // crushed-gravel button  
-      'rock stone': ['rock stone'], // rock-stone button
-      'mulch': ['mulch'], // direct mapping
-      'gravel': ['gravel'], // direct mapping
-      'sand': ['sand'] // direct mapping
+      'Dirt': ['Dirt', 'Soil'], // soil-dirt button maps to these
+      'Soil': ['Dirt', 'Soil'], // Handle both directions
+      'Crushed-Concrete': ['Crushed-Concrete'], // crushed-concrete button
+      'Crushed-Gravel-Stone': ['Crushed-Gravel-Stone'], // crushed-gravel button  
+      'Rock-Stone': ['Rock-Stone'], // rock-stone button
+      'Mulch': ['Mulch'], // direct mapping
+      'Gravel': ['Gravel'], // direct mapping
+      'Sand': ['Sand'] // direct mapping
     };
     
     // Get the categories to check for this filter
     const categoriesToCheck = categoryMappings[filterCategory] || [filterCategory];
     
-    // Check if the product matches any of the mapped categories
+    // Check if the product matches any of the mapped categories (case-sensitive)
     for (const categoryToCheck of categoriesToCheck) {
-      // Check main category field (case insensitive)
-      if (product.category.toLowerCase() === categoryToCheck.toLowerCase()) {
+      // Check main category field (case-sensitive)
+      if (product.category === categoryToCheck) {
         return true;
       }
       
-      // Check categories array if available (case insensitive)
+      // Check categories array if available (case-sensitive)
       if (product.categories && Array.isArray(product.categories)) {
-        const hasMatch = product.categories.some(cat => 
-          cat.toLowerCase() === categoryToCheck.toLowerCase()
-        );
+        const hasMatch = product.categories.some(cat => cat === categoryToCheck);
         if (hasMatch) return true;
       }
       
-      // Check if category is contained in description (for edge cases)
+      // Check if category is contained in description (for edge cases, case-insensitive)
       if (product.description.toLowerCase().includes(categoryToCheck.toLowerCase())) {
         return true;
       }
