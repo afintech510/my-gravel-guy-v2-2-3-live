@@ -1,15 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Product } from '@/services/productTypes';
 import { Button } from '@/components/ui/button';
 import { ShoppingBag, Info } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useZipCode } from '@/contexts/ZipCodeContext';
 import { useToast } from '@/components/ui/use-toast';
-import { 
-  calculateFinalPrice, 
-  getPriceMultiplierForQuantity 
-} from '@/services/products/pricingService';
+import { calculateFinalPrice } from '@/services/products/pricingService';
 import { 
   Tooltip,
   TooltipContent,
@@ -20,53 +17,26 @@ import {
 interface AddToCartOptionsProps {
   product: Product;
   calculatedTons: number;
-}
-
-export default function AddToCartOptions({ 
-  product, 
-  calculatedTons 
-}: AddToCartOptionsProps) {
-  const { addToCart } = useCart();
-  const { zipCode, zipCodeData } = useZipCode();
-  const { toast } = useToast();
-  const [priceDetails, setPriceDetails] = useState<{
+  priceDetails: {
     basePrice: number;
     multiplier: number;
     zipAdjustment: number;
     finalPrice: number;
     pricePerTon: number;
-  } | null>(null);
+  } | null;
+}
+
+export default function AddToCartOptions({ 
+  product, 
+  calculatedTons,
+  priceDetails
+}: AddToCartOptionsProps) {
+  const { addToCart } = useCart();
+  const { zipCode, zipCodeData } = useZipCode();
+  const { toast } = useToast();
   
   // Round to nearest ton
   const roundedTons = Math.round(calculatedTons);
-  
-  // Load price details when product or tons change
-  useEffect(() => {
-    const loadPricing = async () => {
-      if (product && calculatedTons > 0) {
-        try {
-          const pricing = await calculateFinalPrice(
-            product,
-            calculatedTons,
-            zipCode
-          );
-          setPriceDetails(pricing);
-        } catch (error) {
-          console.error("Error calculating price:", error);
-          // Set fallback pricing if error
-          setPriceDetails({
-            basePrice: product.price,
-            multiplier: 1,
-            zipAdjustment: 1,
-            finalPrice: product.price * calculatedTons,
-            pricePerTon: product.price
-          });
-        }
-      }
-    };
-
-    loadPricing();
-  }, [product, calculatedTons, zipCode]);
   
   // Generate three options: exact, -1, +1 (ensuring none go below 1 ton)
   const options = [
@@ -79,7 +49,7 @@ export default function AddToCartOptions({
   const handleAddToCart = async (tons: number) => {
     try {
       // Recalculate price for the selected tons
-      const pricing = await calculateFinalPrice(product, tons, zipCode);
+      const pricing = await calculateFinalPrice(product, tons, zipCode || undefined);
       
       addToCart({ 
         ...product, 
@@ -176,8 +146,10 @@ export default function AddToCartOptions({
       
       <div className="space-y-3">
         {options.map((option) => {
-          // Calculate exact price for each option based on priceDetails
-          const price = priceDetails ? priceDetails.pricePerTon * option.tons : product.price * option.tons;
+          // Calculate price for each option based on priceDetails
+          const price = priceDetails 
+            ? priceDetails.pricePerTon * option.tons 
+            : product.price * option.tons;
           
           return (
             <div 

@@ -11,7 +11,7 @@ import { Product } from '@/services/productTypes';
 import { useCalculator } from '@/hooks/useCalculator';
 import { Helmet } from 'react-helmet-async';
 import { useZipCode } from '@/contexts/ZipCodeContext';
-import { getPriceAdjustmentForZipCode } from '@/services/products/zipCode';
+import { calculateFinalPrice } from '@/services/products/pricingService';
 
 export default function ProductCalculator() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -19,41 +19,54 @@ export default function ProductCalculator() {
   const [depth, setDepth] = useState<number>(2);
   const [extraPercentage, setExtraPercentage] = useState<number>(10);
   const { zipCode } = useZipCode();
-  const [adjustedPrice, setAdjustedPrice] = useState<number | null>(null);
+  const [priceDetails, setPriceDetails] = useState<{
+    basePrice: number;
+    multiplier: number;
+    zipAdjustment: number;
+    finalPrice: number;
+    pricePerTon: number;
+  } | null>(null);
   
   // Calculate material needs based on inputs
   const calculationResult = useCalculator(
     areas, 
     depth, 
     extraPercentage, 
-    adjustedPrice || selectedProduct?.price || 0,
+    priceDetails?.pricePerTon || (selectedProduct?.price || 0),
     selectedProduct?.tonYardRatio || 1.5
   );
 
-  // Update product price based on ZIP code when product or ZIP changes
+  // Update product price based on product, ZIP code, and calculated tons
   useEffect(() => {
-    const updatePriceAdjustment = async () => {
-      if (selectedProduct && zipCode) {
+    const updatePriceDetails = async () => {
+      if (selectedProduct && calculationResult.totalTons > 0) {
         try {
-          // Get the adjustment factor for the ZIP code
-          const adjustment = await getPriceAdjustmentForZipCode(zipCode);
+          // Get complete price calculation with tier adjustments and ZIP code adjustments
+          const pricing = await calculateFinalPrice(
+            selectedProduct,
+            calculationResult.totalTons,
+            zipCode || undefined
+          );
           
-          // Apply adjustment to base price
-          const newAdjustedPrice = selectedProduct.price * adjustment;
-          setAdjustedPrice(newAdjustedPrice);
+          setPriceDetails(pricing);
         } catch (error) {
-          console.error('Error calculating price adjustment:', error);
-          setAdjustedPrice(selectedProduct.price); // Fallback to base price
+          console.error('Error calculating price details:', error);
+          // Fallback to base price if calculation fails
+          setPriceDetails({
+            basePrice: selectedProduct.price,
+            multiplier: 1,
+            zipAdjustment: 1,
+            finalPrice: selectedProduct.price * calculationResult.totalTons,
+            pricePerTon: selectedProduct.price
+          });
         }
-      } else if (selectedProduct) {
-        setAdjustedPrice(selectedProduct.price); // No ZIP code, use base price
       } else {
-        setAdjustedPrice(null); // No product selected
+        setPriceDetails(null);
       }
     };
 
-    updatePriceAdjustment();
-  }, [selectedProduct, zipCode]);
+    updatePriceDetails();
+  }, [selectedProduct, zipCode, calculationResult.totalTons]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -110,11 +123,9 @@ export default function ProductCalculator() {
             {selectedProduct && calculationResult.totalTons > 0 && (
               <div className="mt-8 pt-6 border-t border-gray-200">
                 <AddToCartOptions 
-                  product={{
-                    ...selectedProduct,
-                    price: adjustedPrice || selectedProduct.price
-                  }}
+                  product={selectedProduct}
                   calculatedTons={calculationResult.totalTons}
+                  priceDetails={priceDetails}
                 />
               </div>
             )}
