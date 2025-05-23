@@ -136,16 +136,7 @@ const ShopCalculator: React.FC<ShopCalculatorProps> = ({
         
         <ZipCodeSection product={selectedProduct} />
         
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Contact Us</h2>
-          <ContactForm 
-            productInfo={{
-              name: selectedProduct?.name || `${selectedSubcategory} ${selectedCategory}`,
-              quantity: materialCalculation.tons,
-              category: selectedCategory
-            }}
-          />
-        </Card>
+        
       </div>
     </div>
   );
