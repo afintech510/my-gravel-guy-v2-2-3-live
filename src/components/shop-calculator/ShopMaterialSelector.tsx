@@ -8,10 +8,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Card } from '@/components/ui/card';
 import ProductGallery from './ProductGallery';
 import { getProducts } from '@/services/productService';
-import { Product, MaterialCategory } from '@/services/productTypes';
+import { Product, UIMaterialCategory, MaterialCategory, mapUICategoryToDBCategory } from '@/services/productTypes';
 
-// Define a separate type for the UI categories to avoid type conflicts
-type UIMaterialCategory = 'gravel' | 'base' | 'dirt' | 'sand' | 'mulch';
 type MaterialSubcategory = string;
 
 type ShopMaterialSelectorProps = {
@@ -73,29 +71,11 @@ const ShopMaterialSelector: React.FC<ShopMaterialSelectorProps> = ({
     fetchProducts();
   }, []);
 
-  // Map UI category to actual database category
-  const mapUICategoryToDatabaseCategory = (uiCategory: UIMaterialCategory): MaterialCategory[] => {
-    switch(uiCategory) {
-      case 'gravel':
-        return ['Gravel', 'Crushed-Gravel-Stone'];
-      case 'dirt':
-        return ['Dirt', 'Soil'];
-      case 'sand':
-        return ['Sand'];
-      case 'mulch':
-        return ['Mulch'];
-      case 'base':
-        return ['Crushed-Concrete', 'Rock-Stone'];
-      default:
-        return ['Gravel'];
-    }
-  };
-
   // Filter products based on selected category and subcategory
   useEffect(() => {
     if (!products || products.length === 0) return;
     
-    const databaseCategories = mapUICategoryToDatabaseCategory(selectedCategory);
+    const databaseCategories = mapUICategoryToDBCategory(selectedCategory);
     
     const filtered = products.filter(product => {
       // Match category
@@ -180,7 +160,7 @@ const ShopMaterialSelector: React.FC<ShopMaterialSelectorProps> = ({
   };
 
   // Get description based on selected category and subcategory
-  const getDescription = (category: MaterialCategory, subcategory: MaterialSubcategory): string => {
+  const getDescription = (category: UIMaterialCategory, subcategory: MaterialSubcategory): string => {
     if (category === 'gravel') {
       return `Our premium ${getSubcategoryDisplayName(subcategory)} is perfect for driveways, landscaping, and drainage applications.`;
     } else if (category === 'sand') {

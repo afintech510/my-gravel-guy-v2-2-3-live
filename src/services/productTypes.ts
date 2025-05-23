@@ -1,3 +1,4 @@
+
 export interface Product {
   id: string | number;
   name: string;
@@ -53,9 +54,42 @@ export interface PriceTier {
   created_at?: string;
 }
 
-// Updated type definition to match the capitalized category names
+// Database Material Categories (capitalized as in the database)
 export type MaterialCategory = Product['category'];
 export type MaterialUsage = NonNullable<Product['usage']>;
 export type MaterialSubtype = NonNullable<Product['subtype']>;
 export type MaterialSize = string;
 export type MaterialColor = NonNullable<Product['color']>;
+
+// UI Material Categories (lowercase as used in UI)
+export type UIMaterialCategory = 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base' | 'soil' | 'stone' | 'rock' | 'crushed-gravel' | 'crushed-concrete';
+
+// Mapping function to convert UI category to database category
+export const mapUICategoryToDBCategory = (uiCategory: UIMaterialCategory | string): MaterialCategory[] => {
+  switch(uiCategory) {
+    case 'gravel':
+      return ['Gravel'];
+    case 'sand':
+      return ['Sand'];
+    case 'dirt':
+      return ['Dirt'];
+    case 'soil':
+      return ['Soil'];
+    case 'mulch':
+      return ['Mulch'];
+    case 'base':
+      return ['Rock-Stone', 'Crushed-Concrete'];
+    case 'stone':
+    case 'rock':
+    case 'rock & stone':
+      return ['Rock-Stone'];
+    case 'crushed-gravel':
+    case 'crushed gravel':
+      return ['Crushed-Gravel-Stone'];
+    case 'crushed-concrete':
+    case 'crushed concrete':
+      return ['Crushed-Concrete'];
+    default:
+      return ['Gravel']; // Default case
+  }
+};
