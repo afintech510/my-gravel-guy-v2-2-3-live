@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { getProducts } from '@/services/productService';
 import { Product } from '@/services/productTypes';
@@ -70,8 +69,10 @@ export default function ProductFilterSelector({ onProductSelected, selectedProdu
             return isGravel;
           
           case 'rock':
-            // Products with "rock" OR "stone" category
-            return productCategory === 'rock' || productCategory === 'stone';
+            // Products with "rock" OR "stone" OR "rock & stone" category
+            const isRockOrStone = productCategory === 'rock' || productCategory === 'stone' || productCategory === 'rock & stone';
+            if (isRockOrStone) console.log(`Product ${product.name} included as rock or stone`);
+            return isRockOrStone;
           
           case 'crushed-gravel':
             return productCategory === 'crushed gravel' || productCategory.includes('crushed gravel');
