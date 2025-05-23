@@ -12,6 +12,7 @@ import { useCalculator } from '@/hooks/useCalculator';
 import { Helmet } from 'react-helmet-async';
 import { useZipCode } from '@/contexts/ZipCodeContext';
 import { calculateFinalPrice } from '@/services/products/pricingService';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function ProductCalculator() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -19,6 +20,7 @@ export default function ProductCalculator() {
   const [depth, setDepth] = useState<number>(2);
   const [extraPercentage, setExtraPercentage] = useState<number>(10);
   const { zipCode } = useZipCode();
+  const { toast } = useToast();
   const [priceDetails, setPriceDetails] = useState<{
     basePrice: number;
     multiplier: number;
@@ -41,6 +43,8 @@ export default function ProductCalculator() {
     const updatePriceDetails = async () => {
       if (selectedProduct && calculationResult.totalTons > 0) {
         try {
+          console.log(`ProductCalculator: Calculating price for product ${selectedProduct.name} (ID: ${selectedProduct.id}), tons: ${calculationResult.totalTons}`);
+          
           // Get complete price calculation with tier adjustments and ZIP code adjustments
           const pricing = await calculateFinalPrice(
             selectedProduct,
@@ -48,7 +52,18 @@ export default function ProductCalculator() {
             zipCode || undefined
           );
           
+          console.log('ProductCalculator: Updated price details:', pricing);
           setPriceDetails(pricing);
+          
+          if (pricing.multiplier !== 1) {
+            const changePercent = Math.abs((pricing.multiplier - 1) * 100).toFixed(0);
+            const direction = pricing.multiplier > 1 ? 'increase' : 'decrease';
+            toast({
+              title: `Volume pricing applied`,
+              description: `${calculationResult.totalTons.toFixed(1)} tons qualifies for a ${changePercent}% price ${direction}.`,
+              duration: 3000
+            });
+          }
         } catch (error) {
           console.error('Error calculating price details:', error);
           // Fallback to base price if calculation fails
@@ -66,7 +81,7 @@ export default function ProductCalculator() {
     };
 
     updatePriceDetails();
-  }, [selectedProduct, zipCode, calculationResult.totalTons]);
+  }, [selectedProduct, zipCode, calculationResult.totalTons, toast]);
 
   return (
     <div className="container mx-auto px-4 py-8">
