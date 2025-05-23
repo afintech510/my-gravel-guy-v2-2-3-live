@@ -171,15 +171,14 @@ export default function AddToCartOptions({
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-large">{option.tons} tons</p>
+                  <p className="font-medium">{option.tons} tons</p>
                     <p className="flex items-center">
                       <EqualApproximately className="h-3 w-3 mr-1 text-black-300" />
                       <span>{cubicYards} yd³</span>
                     </p>
                   <p className="text-sm text-black font-medium mb-1">{product.name}</p>
                   <div className="flex items-center text-xs text-gray-500">
-                    <span>{option.label}</span>
-                    <span className="mx-1">•</span>
+                    <span>{option.label}</span> 
 
                     
                   </div>
