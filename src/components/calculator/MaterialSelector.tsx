@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Product, MaterialCategory } from '@/services/productTypes';
@@ -15,11 +14,14 @@ interface MaterialSelectorProps {
 }
 
 const CategoryIcons = {
-  gravel: Package,
-  sand: BrickWall,
-  dirt: Leaf,
-  mulch: TreeDeciduous,
-  base: Hammer,
+  Gravel: Package,
+  Sand: BrickWall,
+  Dirt: Leaf,
+  Mulch: TreeDeciduous,
+  Soil: Leaf,
+  'Rock-Stone': Hammer,
+  'Crushed-Gravel-Stone': Package,
+  'Crushed-Concrete': Hammer,
 };
 
 // Define multi-select options
@@ -28,7 +30,7 @@ const TYPE_OPTIONS = ['crushed', 'natural', 'round', 'concrete'];
 const SIZE_OPTIONS = ['3/8"', '1/2"', '3/4"', '1"', '1 1/2"', '2"', '3"', '4"'];
 
 const MaterialSelector = ({ products, selectedProduct, onProductSelect }: MaterialSelectorProps) => {
-  const [selectedCategory, setSelectedCategory] = useState<MaterialCategory>('gravel');
+  const [selectedCategory, setSelectedCategory] = useState<MaterialCategory>('Gravel');
   
   // Multi-select states
   const [selectedUsages, setSelectedUsages] = useState<string[]>([]);
@@ -286,7 +288,7 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
               >
                 <div className="flex flex-col items-center gap-2">
                   <Icon className="h-6 w-6" />
-                  <span className="capitalize">{category}</span>
+                  <span className="capitalize">{category.replace('-', ' ')}</span>
                 </div>
               </ToggleGroupItem>
             );
@@ -295,7 +297,7 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
       </div>
 
       {/* Multi-select filter options based on category */}
-      {selectedCategory === 'gravel' && (
+      {selectedCategory === 'Gravel' && (
         <>
           {renderMultiSelect('Usage', USAGE_OPTIONS, availableUsages, selectedUsages, setSelectedUsages)}
           {renderMultiSelect('Type', TYPE_OPTIONS, availableTypes, selectedTypes, setSelectedTypes)}
@@ -303,7 +305,7 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
         </>
       )}
 
-      {selectedCategory === 'mulch' && (
+      {selectedCategory === 'Mulch' && (
         <div className="space-y-2">
           <label className="text-sm font-medium">Color</label>
           <ToggleGroup
@@ -329,7 +331,7 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
       )}
 
       {/* Render different subtype selectors based on category */}
-      {['sand', 'dirt', 'base'].includes(selectedCategory) && (
+      {['Sand', 'Dirt', 'Soil'].includes(selectedCategory) && (
         <div className="space-y-2 mt-4">
           <label className="text-sm font-medium">Type</label>
           <ToggleGroup

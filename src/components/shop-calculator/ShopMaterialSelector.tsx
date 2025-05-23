@@ -3,17 +3,20 @@ import React, { useState, useEffect } from 'react';
 import { 
   Truck, Map, Shovel, Trees, Building
 } from 'lucide-react';
-import { MaterialCategory, MaterialSubcategory } from './ShopCalculator';
 import { cn } from "@/lib/utils";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Card } from '@/components/ui/card';
 import ProductGallery from './ProductGallery';
 import { getProducts } from '@/services/productService';
-import { Product } from '@/services/productTypes';
+import { Product, MaterialCategory } from '@/services/productTypes';
+
+// Define a separate type for the UI categories to avoid type conflicts
+type UIMaterialCategory = 'gravel' | 'base' | 'dirt' | 'sand' | 'mulch';
+type MaterialSubcategory = string;
 
 type ShopMaterialSelectorProps = {
-  selectedCategory: MaterialCategory;
-  setSelectedCategory: (category: MaterialCategory) => void;
+  selectedCategory: UIMaterialCategory;
+  setSelectedCategory: (category: UIMaterialCategory) => void;
   selectedSubcategory: MaterialSubcategory;
   setSelectedSubcategory: (subcategory: MaterialSubcategory) => void;
   productImages: string[];
@@ -35,7 +38,7 @@ const ShopMaterialSelector: React.FC<ShopMaterialSelectorProps> = ({
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   
   // Category definitions with icons
-  const categories: Array<{id: MaterialCategory, name: string, icon: JSX.Element}> = [
+  const categories: Array<{id: UIMaterialCategory, name: string, icon: JSX.Element}> = [
     { id: 'gravel', name: 'Gravel', icon: <Truck className="h-5 w-5" /> },
     { id: 'base', name: 'Base', icon: <Building className="h-5 w-5" /> },
     { id: 'dirt', name: 'Dirt', icon: <Shovel className="h-5 w-5" /> },
@@ -44,7 +47,7 @@ const ShopMaterialSelector: React.FC<ShopMaterialSelectorProps> = ({
   ];
 
   // Define subcategories for each material category
-  const subcategories: Record<MaterialCategory, MaterialSubcategory[]> = {
+  const subcategories: Record<UIMaterialCategory, MaterialSubcategory[]> = {
     sand: ['washed-sand', 'mason-sand', 'playground-sand', 'pool-sand', 'beach-sand'],
     dirt: ['fill-dirt', 'top-soil', 'compost', 'loam', 'sandy-loam'],
     mulch: ['natural', 'black', 'chocolate-brown', 'red', 'request'],
@@ -70,14 +73,33 @@ const ShopMaterialSelector: React.FC<ShopMaterialSelectorProps> = ({
     fetchProducts();
   }, []);
 
+  // Map UI category to actual database category
+  const mapUICategoryToDatabaseCategory = (uiCategory: UIMaterialCategory): MaterialCategory[] => {
+    switch(uiCategory) {
+      case 'gravel':
+        return ['Gravel', 'Crushed-Gravel-Stone'];
+      case 'dirt':
+        return ['Dirt', 'Soil'];
+      case 'sand':
+        return ['Sand'];
+      case 'mulch':
+        return ['Mulch'];
+      case 'base':
+        return ['Crushed-Concrete', 'Rock-Stone'];
+      default:
+        return ['Gravel'];
+    }
+  };
+
   // Filter products based on selected category and subcategory
   useEffect(() => {
     if (!products || products.length === 0) return;
     
+    const databaseCategories = mapUICategoryToDatabaseCategory(selectedCategory);
+    
     const filtered = products.filter(product => {
       // Match category
-      const categoryMatch = product.category === selectedCategory ||
-        (product.categories && product.categories.includes(selectedCategory));
+      const categoryMatch = databaseCategories.includes(product.category);
       
       if (!categoryMatch) return false;
       

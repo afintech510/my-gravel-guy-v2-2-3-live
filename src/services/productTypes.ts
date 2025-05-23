@@ -1,4 +1,3 @@
-
 export interface Product {
   id: string | number;
   name: string;
@@ -54,7 +53,7 @@ export interface PriceTier {
   created_at?: string;
 }
 
-// Updated type definition for MaterialSize to be a string instead of specific literal types
+// Updated type definition to match the capitalized category names
 export type MaterialCategory = Product['category'];
 export type MaterialUsage = NonNullable<Product['usage']>;
 export type MaterialSubtype = NonNullable<Product['subtype']>;
