@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ZipCodeData } from './types';
 import { 
@@ -41,7 +40,7 @@ export async function getZipCodePricingMap(): Promise<Map<string, number>> {
     
     zipData.forEach(row => {
       const zipCode = row.zip?.trim();
-      const adjustment = parseFloat(String(row.price_adjustment || "0"));
+      const adjustment = parseFloat(String(row.price_adjustment || "1"));
       
       if (zipCode && !isNaN(adjustment)) {
         zipPricingMap.set(zipCode, adjustment);
@@ -83,14 +82,14 @@ export async function getPriceAdjustmentForZipCode(zipCode: string): Promise<num
       
     if (error) {
       console.error("Error fetching price adjustment:", error);
-      return 0;
+      return 1; // FIXED: Changed from 0 to 1 to ensure no price adjustment on error
     }
     
     console.log('Price adjustment data:', data);
     
-    // Important fix: Return the adjustment directly as a multiplier
-    // Instead of treating it as a percentage, we assume it's stored as a direct multiplier
-    return data?.price_adjustment || 1; // Default to no adjustment (multiplier of 1) if ZIP not found
+    // Return the adjustment directly as a multiplier
+    // If no data or null/undefined price_adjustment, return 1 (no adjustment)
+    return data?.price_adjustment ?? 1;
   } catch (error) {
     console.error("Error fetching price adjustment:", error);
     return 1; // Default to no adjustment (multiplier of 1)
