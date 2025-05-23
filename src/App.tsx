@@ -17,6 +17,7 @@ import Index from "./pages/Index";
 import Products from "./pages/Products";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
+import ProductCalculator from "./pages/ProductCalculator";
 import LocationPage from "./pages/LocationPage";
 import LocationsIndex from "./pages/LocationsIndex";
 import About from "./pages/About";
@@ -63,6 +64,7 @@ function App() {
                     <Route path="/products" element={<Products />} />
                     <Route path="/shop" element={<Shop />} />
                     <Route path="/products/:slug" element={<ProductDetail />} />
+                    <Route path="/product-calculator" element={<ProductCalculator />} />
                     <Route path="/locations" element={<LocationsIndex />} />
                     <Route path="/locations/:slug" element={<LocationPage />} />
                     <Route path="/about" element={<About />} />
