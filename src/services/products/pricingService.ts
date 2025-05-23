@@ -14,11 +14,11 @@ export async function getPriceTiersForProduct(productId: string | number): Promi
     const productIdString = productId.toString();
     console.log(`Using productIdString: ${productIdString} for query`);
     
-    // Fix: Use a proper Supabase query format that works with the TypeScript definitions
+    // Fix: Use the PostgreSQL array containment operator to find tiers where the product_id array contains our ID
     const { data, error } = await supabase
       .from('price_tiers')
       .select('*')
-      .filter('product_id', 'eq', productIdString);
+      .contains('product_id', [productIdString]);
     
     if (error) {
       console.error(`Error fetching price tiers:`, error);
