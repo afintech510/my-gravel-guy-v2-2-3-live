@@ -3,18 +3,17 @@ import React, { useState, useEffect } from 'react';
 import { 
   Truck, Map, Shovel, Trees, Building
 } from 'lucide-react';
+import { MaterialCategory, MaterialSubcategory } from './ShopCalculator';
 import { cn } from "@/lib/utils";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Card } from '@/components/ui/card';
 import ProductGallery from './ProductGallery';
 import { getProducts } from '@/services/productService';
-import { Product, UIMaterialCategory, MaterialCategory, mapUICategoryToDBCategory } from '@/services/productTypes';
-
-type MaterialSubcategory = string;
+import { Product } from '@/services/productTypes';
 
 type ShopMaterialSelectorProps = {
-  selectedCategory: UIMaterialCategory;
-  setSelectedCategory: (category: UIMaterialCategory) => void;
+  selectedCategory: MaterialCategory;
+  setSelectedCategory: (category: MaterialCategory) => void;
   selectedSubcategory: MaterialSubcategory;
   setSelectedSubcategory: (subcategory: MaterialSubcategory) => void;
   productImages: string[];
@@ -36,7 +35,7 @@ const ShopMaterialSelector: React.FC<ShopMaterialSelectorProps> = ({
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   
   // Category definitions with icons
-  const categories: Array<{id: UIMaterialCategory, name: string, icon: JSX.Element}> = [
+  const categories: Array<{id: MaterialCategory, name: string, icon: JSX.Element}> = [
     { id: 'gravel', name: 'Gravel', icon: <Truck className="h-5 w-5" /> },
     { id: 'base', name: 'Base', icon: <Building className="h-5 w-5" /> },
     { id: 'dirt', name: 'Dirt', icon: <Shovel className="h-5 w-5" /> },
@@ -45,7 +44,7 @@ const ShopMaterialSelector: React.FC<ShopMaterialSelectorProps> = ({
   ];
 
   // Define subcategories for each material category
-  const subcategories: Record<UIMaterialCategory, MaterialSubcategory[]> = {
+  const subcategories: Record<MaterialCategory, MaterialSubcategory[]> = {
     sand: ['washed-sand', 'mason-sand', 'playground-sand', 'pool-sand', 'beach-sand'],
     dirt: ['fill-dirt', 'top-soil', 'compost', 'loam', 'sandy-loam'],
     mulch: ['natural', 'black', 'chocolate-brown', 'red', 'request'],
@@ -75,11 +74,10 @@ const ShopMaterialSelector: React.FC<ShopMaterialSelectorProps> = ({
   useEffect(() => {
     if (!products || products.length === 0) return;
     
-    const databaseCategories = mapUICategoryToDBCategory(selectedCategory);
-    
     const filtered = products.filter(product => {
       // Match category
-      const categoryMatch = databaseCategories.includes(product.category);
+      const categoryMatch = product.category === selectedCategory ||
+        (product.categories && product.categories.includes(selectedCategory));
       
       if (!categoryMatch) return false;
       
@@ -160,7 +158,7 @@ const ShopMaterialSelector: React.FC<ShopMaterialSelectorProps> = ({
   };
 
   // Get description based on selected category and subcategory
-  const getDescription = (category: UIMaterialCategory, subcategory: MaterialSubcategory): string => {
+  const getDescription = (category: MaterialCategory, subcategory: MaterialSubcategory): string => {
     if (category === 'gravel') {
       return `Our premium ${getSubcategoryDisplayName(subcategory)} is perfect for driveways, landscaping, and drainage applications.`;
     } else if (category === 'sand') {

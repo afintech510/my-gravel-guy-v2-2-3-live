@@ -6,9 +6,11 @@ import ShopCalculationDisplay from './ShopCalculationDisplay';
 import ShopMaterialSelector from './ShopMaterialSelector';
 import ZipCodeSection from './ZipCodeSection';
 import ContactForm from './ContactForm';
-import { Product, UIMaterialCategory } from '@/services/productTypes';
+import { Product } from '@/services/productTypes';
 
-// Define the subcategory type explicitly
+// Update type definition to use string for sizes
+export type MaterialCategory = 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base';
+export type ApplicationType = 'driveway' | 'walkway' | 'landscape' | 'drainage' | 'foundation';
 export type MaterialSubcategory = 
   'washed-sand' | 'mason-sand' | 'playground-sand' | 'pool-sand' | 'beach-sand' | 
   'fill-dirt' | 'top-soil' | 'compost' | 'loam' | 'sandy-loam' |
@@ -16,8 +18,6 @@ export type MaterialSubcategory =
   '57-crushed-stone' | 'crusher-run' | 'road-base' | 'rca-crushed-concrete' | 'drainage-rock' |
   'driveway' | 'walkway' | 'landscape' | 'natural' | 'construction' |
   'pea-gravel' | 'river-rock' | 'crushed-stone' | 'decorative-gravel' | 'drainage-gravel';
-
-export type ApplicationType = 'driveway' | 'walkway' | 'landscape' | 'drainage' | 'foundation';
 
 interface ShopCalculatorProps {
   onProductSelected?: (product: Product | null) => void;
@@ -29,7 +29,7 @@ const ShopCalculator: React.FC<ShopCalculatorProps> = ({
   selectedProduct: initialSelectedProduct 
 }) => {
   // Material selection state
-  const [selectedCategory, setSelectedCategory] = useState<UIMaterialCategory>('gravel');
+  const [selectedCategory, setSelectedCategory] = useState<MaterialCategory>('gravel');
   const [selectedSubcategory, setSelectedSubcategory] = useState<MaterialSubcategory>('driveway');
   
   // Area dimensions state - updated to use the new structure
@@ -60,11 +60,6 @@ const ShopCalculator: React.FC<ShopCalculatorProps> = ({
     if (onProductSelected) {
       onProductSelected(product);
     }
-  };
-
-  // Create a type-safe wrapper for the setSelectedSubcategory function
-  const handleSetSubcategory = (subcategory: string) => {
-    setSelectedSubcategory(subcategory as MaterialSubcategory);
   };
 
   // Calculate cubic yards and tons based on dimensions
@@ -106,7 +101,7 @@ const ShopCalculator: React.FC<ShopCalculatorProps> = ({
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             selectedSubcategory={selectedSubcategory}
-            setSelectedSubcategory={handleSetSubcategory}
+            setSelectedSubcategory={setSelectedSubcategory}
             productImages={productImages[selectedCategory] || []}
             onProductSelected={handleProductSelected}
           />

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { getProducts } from '@/services/productService';
 import { Product } from '@/services/productTypes';
@@ -18,11 +17,11 @@ export default function ProductFilterSelector({ onProductSelected, selectedProdu
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   
-  // Updated categories with correct IDs to match new database structure
+  // Hardcoded categories with Lucide icons
   const categories = [
     { id: 'all', label: 'All Products', icon: <Package className="h-5 w-5" /> },
     { id: 'gravel', label: 'Gravel', icon: <Layers className="h-5 w-5" /> },
-    { id: 'rock-stone', label: 'Rock & Stone', icon: <Mountain className="h-5 w-5" /> },
+    { id: 'rock', label: 'Rock & Stone', icon: <Mountain className="h-5 w-5" /> },
     { id: 'crushed-gravel', label: 'Crushed Gravel', icon: <RockingChair className="h-5 w-5" /> },
     { id: 'crushed-concrete', label: 'Crushed Concrete', icon: <Building2 className="h-5 w-5" /> },
     { id: 'soil-dirt', label: 'Soil & Dirt', icon: <Shovel className="h-5 w-5" /> },
@@ -58,37 +57,37 @@ export default function ProductFilterSelector({ onProductSelected, selectedProdu
     // Apply category filter if not "all"
     if (selectedCategory !== 'all') {
       result = products.filter(product => {
-        // Use product.category directly with case-sensitive matching for new database structure
-        const productCategory = product.category || '';
+        // Use product.category directly without relying on hardcoded mappings
+        const productCategory = product.category?.toLowerCase() || '';
         console.log(`Checking product: ${product.name}, category: ${productCategory}`);
         
         switch (selectedCategory) {
           case 'gravel':
-            // Only products with exact "Gravel" category
-            const isGravel = productCategory === 'Gravel';
+            // Only products with exact "gravel" category
+            const isGravel = productCategory === 'gravel';
             if (isGravel) console.log(`Product ${product.name} included as gravel`);
             return isGravel;
           
-          case 'rock-stone':
-            // Products with "Rock-Stone" category
-            const isRockStone = productCategory === 'Rock-Stone';
-            if (isRockStone) console.log(`Product ${product.name} included as rock-stone`);
-            return isRockStone;
+          case 'rock':
+            // Products with "rock" OR "stone" OR "rock & stone" category
+            const isRockOrStone = productCategory === 'rock' || productCategory === 'stone' || productCategory === 'rock & stone';
+            if (isRockOrStone) console.log(`Product ${product.name} included as rock or stone`);
+            return isRockOrStone;
           
           case 'crushed-gravel':
-            return productCategory === 'Crushed-Gravel-Stone';
+            return productCategory === 'crushed gravel' || productCategory.includes('crushed gravel');
           
           case 'crushed-concrete':
-            return productCategory === 'Crushed-Concrete';
+            return productCategory === 'crushed concrete';
           
           case 'soil-dirt':
-            return productCategory === 'Soil' || productCategory === 'Dirt';
+            return productCategory === 'soil' || productCategory === 'dirt';
           
           case 'sand':
-            return productCategory === 'Sand';
+            return productCategory === 'sand';
           
           case 'mulch':
-            return productCategory === 'Mulch';
+            return productCategory === 'mulch';
           
           default:
             return false;
