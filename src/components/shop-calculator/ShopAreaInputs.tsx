@@ -1,134 +1,92 @@
 
 import React from 'react';
-import { Plus, Minus, PlusCircle } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
-interface AreaInput {
+interface Area {
   length: number;
   width: number;
 }
 
-type ShopAreaInputsProps = {
-  areas: AreaInput[];
-  setAreas: React.Dispatch<React.SetStateAction<AreaInput[]>>;
-};
+interface ShopAreaInputsProps {
+  areas: Area[];
+  setAreas: React.Dispatch<React.SetStateAction<Area[]>>;
+}
 
 const ShopAreaInputs: React.FC<ShopAreaInputsProps> = ({ areas, setAreas }) => {
-  const handleAddArea = () => {
+  const addArea = () => {
     setAreas([...areas, { length: 10, width: 10 }]);
   };
 
-  const handleRemoveArea = (index: number) => {
+  const removeArea = (index: number) => {
     if (areas.length > 1) {
-      const newAreas = [...areas];
-      newAreas.splice(index, 1);
-      setAreas(newAreas);
+      setAreas(areas.filter((_, i) => i !== index));
     }
   };
 
-  const handleInputChange = (index: number, field: 'length' | 'width', value: number) => {
+  const updateArea = (index: number, field: 'length' | 'width', value: number) => {
     const newAreas = [...areas];
     newAreas[index][field] = value;
     setAreas(newAreas);
   };
 
-  const adjustValue = (index: number, field: 'length' | 'width', amount: number) => {
-    const newAreas = [...areas];
-    const newValue = Math.max(1, newAreas[index][field] + amount);
-    newAreas[index][field] = newValue;
-    setAreas(newAreas);
-  };
-
   return (
-    <div className="space-y-4 font-montserrat">
-      <h3 className="font-medium text-gray-700 mb-2">Area to Cover (sq ft)</h3>
-      {areas.map((area, index) => (
-        <div key={index} className="flex items-center gap-4 bg-gray-50 p-3 rounded-lg">
-          <div className="flex flex-col sm:flex-row items-center gap-3 flex-grow">
-            <div className="w-full sm:w-1/2">
-              <div className="flex items-center justify-between">
-                <Button 
-                  type="button" 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => adjustValue(index, 'length', -1)}
-                  className="h-10 w-10 rounded-full"
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <Input
-                  type="number"
-                  min="1"
-                  value={area.length}
-                  onChange={(e) => handleInputChange(index, 'length', parseInt(e.target.value) || 1)}
-                  className="h-10 mx-2 text-center"
-                />
-                <Button 
-                  type="button" 
-                  size="sm"
-                  variant="outline" 
-                  onClick={() => adjustValue(index, 'length', 1)}
-                  className="h-10 w-10 rounded-full"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-sm font-medium">Project Dimensions</h3>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={addArea}
+          className="text-xs"
+        >
+          Add Area
+        </Button>
+      </div>
 
-            <div className="w-full sm:w-1/2">
-              <div className="flex items-center justify-between">
-                <Button 
-                  type="button" 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => adjustValue(index, 'width', -1)}
-                  className="h-10 w-10 rounded-full"
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <Input
-                  type="number"
-                  min="1"
-                  value={area.width}
-                  onChange={(e) => handleInputChange(index, 'width', parseInt(e.target.value) || 1)}
-                  className="h-10 mx-2 text-center"
-                />
-                <Button 
-                  type="button" 
-                  size="sm"
-                  variant="outline" 
-                  onClick={() => adjustValue(index, 'width', 1)}
-                  className="h-10 w-10 rounded-full"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
+      {areas.map((area, index) => (
+        <div key={index} className="mb-4 p-3 border rounded-md bg-gray-50">
+          <div className="flex justify-between mb-2">
+            <span className="text-sm text-gray-500">Area {index + 1}</span>
+            {areas.length > 1 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => removeArea(index)}
+                className="h-6 w-6"
+              >
+                <Trash2 className="h-4 w-4 text-red-500" />
+              </Button>
+            )}
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Length (ft)</label>
+              <Input
+                type="number"
+                min="1"
+                value={area.length}
+                onChange={(e) => updateArea(index, 'length', parseInt(e.target.value) || 0)}
+                className="h-9 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Width (ft)</label>
+              <Input
+                type="number"
+                min="1"
+                value={area.width}
+                onChange={(e) => updateArea(index, 'width', parseInt(e.target.value) || 0)}
+                className="h-9 text-sm"
+              />
             </div>
           </div>
-
-          {areas.length > 1 && (
-            <Button 
-              type="button" 
-              variant="destructive"
-              size="sm" 
-              onClick={() => handleRemoveArea(index)}
-              className="h-12 w-12 p-0 flex items-center justify-center rounded-full"
-            >
-              <Minus className="h-5 w-5" />
-            </Button>
-          )}
         </div>
       ))}
-
-      <Button
-        type="button"
-        onClick={handleAddArea}
-        variant="outline"
-        className="mt-2 flex items-center gap-2 font-montserrat"
-      >
-        <PlusCircle className="h-5 w-5" /> Add Another Area
-      </Button>
     </div>
   );
 };
