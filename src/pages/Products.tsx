@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
 import ProductGrid from '../components/ProductGrid';
-import ProductSearch from '../components/ProductSearch';
 import TrustBanner from '../components/products/trust/TrustBanner';
 import { useToast } from "@/components/ui/use-toast";
+import ProductCategorySelector from '../components/products/ProductCategorySelector';
 
 const Products = () => {
   const [filters, setFilters] = useState({
@@ -48,7 +48,7 @@ const Products = () => {
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold text-center mb-8">Premium Aggregates for All Projects</h1>
         <div className="mb-8">
-          <ProductSearch
+          <ProductCategorySelector
             onSearch={handleSearch}
             onSort={handleSort}
             onFilter={handleFilter}
