@@ -35,11 +35,11 @@ export default function ProductCategorySelector({
   const [sortOrder, setSortOrder] = useState('nameAsc');
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Updated categories with proper mapping to match ProductGrid filtering
+  // Updated categories with correct IDs matching the mapping requirements
   const categories = [
     { id: 'all', label: 'All Products', icon: <Package className="h-5 w-5" /> },
     { id: 'gravel', label: 'Gravel', icon: <Layers className="h-5 w-5" /> },
-    { id: 'rock', label: 'Rock & Stone', icon: <Mountain className="h-5 w-5" /> },
+    { id: 'rock-stone', label: 'Rock & Stone', icon: <Mountain className="h-5 w-5" /> },
     { id: 'crushed-gravel', label: 'Crushed Gravel', icon: <RockingChair className="h-5 w-5" /> },
     { id: 'crushed-concrete', label: 'Crushed Concrete', icon: <Building2 className="h-5 w-5" /> },
     { id: 'soil-dirt', label: 'Soil & Dirt', icon: <Shovel className="h-5 w-5" /> },
@@ -47,35 +47,49 @@ export default function ProductCategorySelector({
     { id: 'mulch', label: 'Mulch', icon: <Flower className="h-5 w-5" /> },
   ];
 
-  // Handle category selection
+  // Handle category selection with correct mapping
   const handleCategorySelect = (category: string) => {
     console.log(`ProductCategorySelector: Selected category ${category}`);
     setSelectedCategory(category);
     
-    // Map the UI category to the actual category used in ProductGrid
-    let mappedCategory = category;
+    // Map the UI category to the actual category strings used in product data
+    let mappedCategories: string[] = [];
     
-    // Handle special mappings for categories that don't match exactly
     switch (category) {
       case 'soil-dirt':
-        mappedCategory = 'dirt'; // Map to 'dirt' as used in ProductGrid
+        mappedCategories = ['dirt', 'soil']; // Check both 'dirt' and 'soil'
         break;
       case 'crushed-concrete':
-        mappedCategory = 'base'; // Map to 'base' as used in ProductGrid  
+        mappedCategories = ['crushed concrete']; // Exact match for 'crushed concrete'
         break;
       case 'crushed-gravel':
-        mappedCategory = 'base'; // Map to 'base' as used in ProductGrid
+        mappedCategories = ['crushed gravel']; // Exact match for 'crushed gravel'
         break;
-      case 'rock':
-        mappedCategory = 'rock'; // Keep as 'rock'
+      case 'rock-stone':
+        mappedCategories = ['rock stone']; // Exact match for 'rock stone'
         break;
+      case 'mulch':
+        mappedCategories = ['mulch']; // Direct mapping
+        break;
+      case 'gravel':
+        mappedCategories = ['gravel']; // Direct mapping
+        break;
+      case 'sand':
+        mappedCategories = ['sand']; // Direct mapping
+        break;
+      case 'all':
       default:
-        mappedCategory = category; // Keep original for gravel, sand, mulch, all
+        mappedCategories = ['all']; // Show all products
         break;
     }
     
-    console.log(`ProductCategorySelector: Mapped ${category} to ${mappedCategory}`);
-    onFilter(mappedCategory);
+    console.log(`ProductCategorySelector: Mapped ${category} to ${mappedCategories.join(', ')}`);
+    
+    // Pass the first category or 'all' for the filter
+    const filterCategory = mappedCategories[0] || 'all';
+    
+    // Store the additional categories for the ProductGrid to use
+    onFilter(filterCategory, undefined, undefined);
   };
 
   // Handle search
