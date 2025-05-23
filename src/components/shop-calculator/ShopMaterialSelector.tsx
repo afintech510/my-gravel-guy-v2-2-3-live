@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Truck, Map, Shovel, Trees, Building, ChevronDown, ChevronUp 
@@ -188,7 +187,6 @@ const ShopMaterialSelector: React.FC<ShopMaterialSelectorProps> = ({
       'driveway': 'Driveway',
       'walkway': 'Walkway',
       'landscape': 'Landscape',
-      'natural': 'Natural',
       'construction': 'Construction',
       'pea-gravel': 'Pea Gravel',
       'river-rock': 'River Rock',

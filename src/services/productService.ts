@@ -1,13 +1,9 @@
 import { Product } from './productTypes';
 
-// Add the missing getPriceForProduct function
+// Add the missing function for calculating price for a product
 export const getPriceForProduct = (product: Product): number => {
-  // Implement basic pricing logic (replace with actual logic)
-  if (!product || !product.price) {
-    return 0;
-  }
-  
-  return product.price;
+  // Return the base price from the product or a default
+  return product.price || 0;
 };
 
 // This is now just a barrel file that re-exports everything from the products directory
