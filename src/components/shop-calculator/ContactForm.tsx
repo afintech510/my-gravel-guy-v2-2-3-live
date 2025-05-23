@@ -42,7 +42,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ productInfo }) => {
     // Here you would typically send this data to your backend
     toast({
       title: 'Message sent!',
-      description: 'We'll get back to you as soon as possible.',
+      description: 'We will get back to you as soon as possible.',
     });
     
     form.reset();
