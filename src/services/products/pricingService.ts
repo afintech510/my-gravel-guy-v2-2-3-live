@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Product, PriceTier } from './types';
 import { getPriceAdjustmentForZipCode } from './zipCodeQueries';
@@ -14,6 +13,7 @@ export async function getPriceTiersForProduct(productId: string | number): Promi
     const productIdString = productId.toString();
     console.log(`Using productIdString: ${productIdString} for query`);
     
+    // Fix: Use eq() which expects a single value, not an array
     const { data, error } = await supabase
       .from('price_tiers')
       .select('*')
