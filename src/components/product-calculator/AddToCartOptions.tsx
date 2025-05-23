@@ -1,7 +1,7 @@
 import React from 'react';
 import { Product } from '@/services/productTypes';
 import { Button } from '@/components/ui/button';
-import { ShoppingBag, Info, Equal } from 'lucide-react';
+import { ShoppingBag, Info, EqualApproximately } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useZipCode } from '@/contexts/ZipCodeContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -177,7 +177,7 @@ export default function AddToCartOptions({
                     <span>{option.label}</span>
                     <span className="mx-1">•</span>
                     <div className="flex items-center">
-                      <Equal className="h-3 w-3 mr-1 text-gray-400" />
+                      <EqualApproximately className="h-3 w-3 mr-1 text-gray-400" />
                       <span>{cubicYards} yd³</span>
                     </div>
                   </div>
