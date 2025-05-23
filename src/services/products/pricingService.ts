@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Product, PriceTier } from './types';
 import { getPriceAdjustmentForZipCode } from './zipCodeQueries';
@@ -13,11 +14,11 @@ export async function getPriceTiersForProduct(productId: string | number): Promi
     const productIdString = productId.toString();
     console.log(`Using productIdString: ${productIdString} for query`);
     
-    // Fix: Use eq() which expects a single value, not an array
+    // Fix: Use a proper Supabase query format that works with the TypeScript definitions
     const { data, error } = await supabase
       .from('price_tiers')
       .select('*')
-      .eq('product_id', productIdString);
+      .filter('product_id', 'eq', productIdString);
     
     if (error) {
       console.error(`Error fetching price tiers:`, error);
