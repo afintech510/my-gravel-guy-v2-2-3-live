@@ -13,7 +13,6 @@ const Products = () => {
     subcategory: '',
     size: ''
   });
-  const [availableSizes, setAvailableSizes] = useState<string[]>([]);
   const { toast } = useToast();
 
   const handleSearch = (term: string) => {
@@ -24,23 +23,15 @@ const Products = () => {
     setFilters(prev => ({ ...prev, sort: option }));
   };
 
-  const handleFilter = (category: string, subcategory: string = '', size: string = '') => {
-    console.log(`Products: handleFilter called with category=${category}, subcategory=${subcategory}, size=${size}`);
-    
-    // If subcategory is "all", treat it as no specific subcategory
-    const effectiveSubcategory = subcategory === 'all' ? '' : subcategory;
+  const handleFilter = (category: string) => {
+    console.log(`Products: handleFilter called with category=${category}`);
     
     setFilters(prev => ({ 
       ...prev, 
-      category, 
-      subcategory: effectiveSubcategory,
-      size
+      category,
+      subcategory: '', // Clear subcategory when changing category
+      size: '' // Clear size when changing category
     }));
-  };
-
-  const handleAvailableSizesChange = (sizes: string[]) => {
-    console.log("Products: Received available sizes:", sizes);
-    setAvailableSizes(sizes);
   };
 
   return (
@@ -52,14 +43,13 @@ const Products = () => {
             onSearch={handleSearch}
             onSort={handleSort}
             onFilter={handleFilter}
-            availableSizes={availableSizes}
+            availableSizes={[]} // No longer needed since we removed size filtering
           />
         </div>
         
         <ProductGrid 
           filters={filters} 
           limit={100}
-          onAvailableSizesChange={handleAvailableSizesChange} 
         />
         
         {/* Trust Banner Section */}
