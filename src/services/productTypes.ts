@@ -1,4 +1,3 @@
-
 export interface Product {
   id: string | number;
   name: string;
@@ -6,7 +5,7 @@ export interface Product {
   price: number;
   image: string;
   images?: string[]; // New field for multiple images
-  category: 'Gravel' | 'Sand' | 'Dirt' | 'Mulch' | 'Soil' | 'Rock-Stone' | 'Crushed-Gravel-Stone' | 'Crushed-Concrete';
+  category: 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base' | 'soil' | 'stone' | 'rock' | 'crushed gravel' | 'crushed concrete' | 'rock & stone';
   categories?: string[]; // Added for multiple categories per product
   slug: string;
   tonYardRatio: number;
@@ -54,42 +53,9 @@ export interface PriceTier {
   created_at?: string;
 }
 
-// Database Material Categories (capitalized as in the database)
+// Updated type definition for MaterialSize to be a string instead of specific literal types
 export type MaterialCategory = Product['category'];
 export type MaterialUsage = NonNullable<Product['usage']>;
 export type MaterialSubtype = NonNullable<Product['subtype']>;
 export type MaterialSize = string;
 export type MaterialColor = NonNullable<Product['color']>;
-
-// UI Material Categories (lowercase as used in UI)
-export type UIMaterialCategory = 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base' | 'soil' | 'stone' | 'rock' | 'crushed-gravel' | 'crushed-concrete';
-
-// Mapping function to convert UI category to database category
-export const mapUICategoryToDBCategory = (uiCategory: UIMaterialCategory | string): MaterialCategory[] => {
-  switch(uiCategory) {
-    case 'gravel':
-      return ['Gravel'];
-    case 'sand':
-      return ['Sand'];
-    case 'dirt':
-      return ['Dirt'];
-    case 'soil':
-      return ['Soil'];
-    case 'mulch':
-      return ['Mulch'];
-    case 'base':
-      return ['Rock-Stone', 'Crushed-Concrete'];
-    case 'stone':
-    case 'rock':
-    case 'rock & stone':
-      return ['Rock-Stone'];
-    case 'crushed-gravel':
-    case 'crushed gravel':
-      return ['Crushed-Gravel-Stone'];
-    case 'crushed-concrete':
-    case 'crushed concrete':
-      return ['Crushed-Concrete'];
-    default:
-      return ['Gravel']; // Default case
-  }
-};

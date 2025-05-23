@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
 import ProductGrid from '../components/ProductGrid';
+import ProductSearch from '../components/ProductSearch';
 import TrustBanner from '../components/products/trust/TrustBanner';
 import { useToast } from "@/components/ui/use-toast";
-import ProductCategorySelector from '../components/products/ProductCategorySelector';
 
 const Products = () => {
   const [filters, setFilters] = useState({
@@ -13,6 +13,7 @@ const Products = () => {
     subcategory: '',
     size: ''
   });
+  const [availableSizes, setAvailableSizes] = useState<string[]>([]);
   const { toast } = useToast();
 
   const handleSearch = (term: string) => {
@@ -23,15 +24,23 @@ const Products = () => {
     setFilters(prev => ({ ...prev, sort: option }));
   };
 
-  const handleFilter = (category: string) => {
-    console.log(`Products: handleFilter called with category=${category}`);
+  const handleFilter = (category: string, subcategory: string = '', size: string = '') => {
+    console.log(`Products: handleFilter called with category=${category}, subcategory=${subcategory}, size=${size}`);
+    
+    // If subcategory is "all", treat it as no specific subcategory
+    const effectiveSubcategory = subcategory === 'all' ? '' : subcategory;
     
     setFilters(prev => ({ 
       ...prev, 
-      category,
-      subcategory: '', // Clear subcategory when changing category
-      size: '' // Clear size when changing category
+      category, 
+      subcategory: effectiveSubcategory,
+      size
     }));
+  };
+
+  const handleAvailableSizesChange = (sizes: string[]) => {
+    console.log("Products: Received available sizes:", sizes);
+    setAvailableSizes(sizes);
   };
 
   return (
@@ -39,17 +48,18 @@ const Products = () => {
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold text-center mb-8">Premium Aggregates for All Projects</h1>
         <div className="mb-8">
-          <ProductCategorySelector
+          <ProductSearch
             onSearch={handleSearch}
             onSort={handleSort}
             onFilter={handleFilter}
-            availableSizes={[]} // No longer needed since we removed size filtering
+            availableSizes={availableSizes}
           />
         </div>
         
         <ProductGrid 
           filters={filters} 
           limit={100}
+          onAvailableSizesChange={handleAvailableSizesChange} 
         />
         
         {/* Trust Banner Section */}

@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { getProducts } from "../services/productService";
-import { Product, UIMaterialCategory, MaterialCategory, mapUICategoryToDBCategory } from "../services/productTypes";
+import { Product } from "../services/productTypes";
 
 // Quiz step types
 export type QuizStep = 
@@ -230,30 +230,27 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Project type scoring
         switch (state.projectType) {
           case "driveway":
-            if (mapUICategoryToDBCategory('gravel').includes(product.category)) score += 10;
+            if (product.category === "gravel") score += 10;
             if (product.categories?.includes("driveway")) score += 10;
             break;
           case "landscaping":
-            if (mapUICategoryToDBCategory('dirt').includes(product.category) || 
-                mapUICategoryToDBCategory('mulch').includes(product.category) ||
-                mapUICategoryToDBCategory('gravel').includes(product.category)) score += 8;
+            if (["gravel", "dirt", "mulch"].includes(product.category)) score += 8;
             if (product.categories?.includes("landscaping")) score += 10;
             break;
           case "patio":
-            if (mapUICategoryToDBCategory('gravel').includes(product.category)) score += 8;
+            if (product.category === "gravel") score += 8;
             if (product.categories?.includes("patio")) score += 10;
             break;
           case "walkway":
-            if (mapUICategoryToDBCategory('gravel').includes(product.category)) score += 8;
+            if (product.category === "gravel") score += 8;
             if (product.categories?.includes("walkway")) score += 10;
             break;
           case "drainage":
-            if (mapUICategoryToDBCategory('gravel').includes(product.category)) score += 10;
+            if (product.category === "gravel") score += 10;
             if (product.categories?.includes("drainage")) score += 10;
             break;
           case "base":
-            if (mapUICategoryToDBCategory('base').includes(product.category) || 
-                mapUICategoryToDBCategory('gravel').includes(product.category)) score += 8;
+            if (product.category === "base" || product.category === "gravel") score += 8;
             if (product.categories?.includes("base")) score += 10;
             break;
           default:
@@ -262,7 +259,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Requirements scoring
         if (state.requirements.drainage) {
-          if (mapUICategoryToDBCategory('gravel').includes(product.category)) score += 5;
+          if (product.category === "gravel") score += 5;
           if (product.categories?.includes("drainage")) score += 10;
         }
         
@@ -272,8 +269,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         if (state.requirements.durability) {
-          if (mapUICategoryToDBCategory('gravel').includes(product.category) || 
-              mapUICategoryToDBCategory('base').includes(product.category)) score += 5;
+          if (product.category === "gravel" || product.category === "base") score += 5;
           if (product.categories?.includes("durable")) score += 8;
         }
         
@@ -294,8 +290,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         // Gravel size scoring
-        if (mapUICategoryToDBCategory('gravel').includes(product.category) || 
-            product.categories?.includes("gravel")) {
+        if (product.category === "gravel" || product.categories?.includes("gravel")) {
           const sizeStr = product.size?.toLowerCase() || "";
           
           switch (state.gravelSize) {

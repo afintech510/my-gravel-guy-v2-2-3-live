@@ -57,47 +57,6 @@ const ProductGrid = ({
     await loadProducts(true); // Force refresh
   };
 
-  // Function to check if product matches category with new mapping logic
-  const categoryMatches = (product: Product, filterCategory: string): boolean => {
-    if (filterCategory === 'all') return true;
-    
-    // Define the category mappings that correspond to the new database structure
-    const categoryMappings: Record<string, string[]> = {
-      'Dirt': ['Dirt', 'Soil'], // soil-dirt button maps to these
-      'Soil': ['Dirt', 'Soil'], // Handle both directions
-      'Crushed-Concrete': ['Crushed-Concrete'], // crushed-concrete button
-      'Crushed-Gravel-Stone': ['Crushed-Gravel-Stone'], // crushed-gravel button  
-      'Rock-Stone': ['Rock-Stone'], // rock-stone button
-      'Mulch': ['Mulch'], // direct mapping
-      'Gravel': ['Gravel'], // direct mapping
-      'Sand': ['Sand'] // direct mapping
-    };
-    
-    // Get the categories to check for this filter
-    const categoriesToCheck = categoryMappings[filterCategory] || [filterCategory];
-    
-    // Check if the product matches any of the mapped categories (case-sensitive)
-    for (const categoryToCheck of categoriesToCheck) {
-      // Check main category field (case-sensitive)
-      if (product.category === categoryToCheck) {
-        return true;
-      }
-      
-      // Check categories array if available (case-sensitive)
-      if (product.categories && Array.isArray(product.categories)) {
-        const hasMatch = product.categories.some(cat => cat === categoryToCheck);
-        if (hasMatch) return true;
-      }
-      
-      // Check if category is contained in description (for edge cases, case-insensitive)
-      if (product.description.toLowerCase().includes(categoryToCheck.toLowerCase())) {
-        return true;
-      }
-    }
-    
-    return false;
-  };
-
   // Function to normalize size strings for comparison
   const normalizeSize = (size: string): string => {
     if (!size) return '';
@@ -167,12 +126,20 @@ const ProductGrid = ({
       );
     }
 
-    // Filter by main category using the new mapping logic
+    // Filter by main category - always apply this filter first
     if (filters.category !== 'all') {
-      const beforeCount = result.length;
-      result = result.filter(product => categoryMatches(product, filters.category));
+      result = result.filter(product => {
+        // Check if the product has the category either in the main category or in the categories array
+        const matchesMainCategory = product.category.toLowerCase() === filters.category.toLowerCase();
+        
+        // Check in the categories array if available
+        const matchesCategoryArray = product.categories && Array.isArray(product.categories) && 
+          product.categories.some(cat => cat.toLowerCase() === filters.category.toLowerCase());
+        
+        return matchesMainCategory || matchesCategoryArray;
+      });
       
-      console.log(`After category filter (${filters.category}): ${result.length} products (removed ${beforeCount - result.length})`);
+      console.log(`After category filter (${filters.category}): ${result.length} products`);
 
       // Filter by subcategory if present
       if (filters.subcategory) {
@@ -215,8 +182,7 @@ const ProductGrid = ({
               break;
             
             case 'dirt':
-            case 'soil':
-              // Logic for dirt/soil subcategories (top-soil, compost, fill-dirt, loam, sandy-loam)
+              // Logic for dirt subcategories (top-soil, compost, fill-dirt, loam, sandy-loam)
               if (['top-soil', 'compost', 'fill-dirt', 'loam', 'sandy-loam'].includes(subcategory!)) {
                 // Check in subtype
                 if (product.subtype && product.subtype.toLowerCase() === subcategory) {
@@ -255,10 +221,8 @@ const ProductGrid = ({
               }
               break;
             
-            case 'crushed concrete':
-            case 'crushed gravel':
-            case 'rock stone':
-              // Logic for base/crushed material subcategories
+            case 'base':
+              // Logic for base subcategories (road-base, concrete-rca, crusher-base)
               if (['road-base', 'concrete-rca', 'crusher-base'].includes(subcategory!)) {
                 // Check in subtype
                 if (product.subtype && 
