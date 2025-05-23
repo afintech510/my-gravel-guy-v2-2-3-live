@@ -6,7 +6,6 @@ import DeliveryDatePicker from './DeliveryDatePicker';
 import { Product } from '@/services/productTypes';
 import AmountSelector from './AmountSelector';
 import { Badge } from '@/components/ui/badge';
-import { Package } from "lucide-react"; // Changed from Cube to Package which is available
 
 interface ProductActionsProps {
   product: Product;
@@ -87,11 +86,11 @@ const ProductActions = ({
         onSelectAmount={handleQuantityChange}
       />
       
-      {/* Tons and cubic yards display - NEW LAYOUT BASED ON MOCKUP */}
-      <div className="flex items-center justify-center gap-3 text-center my-4">
-        <h2 className="text-4xl font-bold">{selectedTons} tons</h2>
-        <span className="text-xl text-gray-500 flex items-center">
-          ≈ <Package className="mx-1 h-5 w-5" /> {cubicYards} yd³
+      {/* Tons and cubic yards display - UPDATED LAYOUT WITHOUT PACKAGE ICON */}
+      <div className="flex items-center justify-center text-center my-4">
+        <h2 className="text-4xl font-bold mr-2">{selectedTons} tons</h2>
+        <span className="text-xl text-gray-500">
+          ≈ {cubicYards} yd³
         </span>
       </div>
 
