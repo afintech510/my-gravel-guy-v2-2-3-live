@@ -13,8 +13,6 @@ const ProductHeader = ({ product, zipCode }: ProductHeaderProps) => {
     <div>
       <h1 className="text-4xl font-bold mb-4">{product.name}</h1>
       
-      {/* Removed price per ton display here */}
-      
       {zipCode && (
         <p className="text-sm mb-6">
           Delivery available to ZIP {zipCode}<br />

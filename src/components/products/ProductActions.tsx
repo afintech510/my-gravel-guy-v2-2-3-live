@@ -6,6 +6,7 @@ import DeliveryDatePicker from './DeliveryDatePicker';
 import { Product } from '@/services/productTypes';
 import AmountSelector from './AmountSelector';
 import { Badge } from '@/components/ui/badge';
+import { Cube } from "lucide-react";
 
 interface ProductActionsProps {
   product: Product;
@@ -33,6 +34,12 @@ const ProductActions = ({
   const [deliveryDate, setDeliveryDate] = React.useState<Date>();
   
   const totalPrice = adjustedPrice * selectedTons;
+  
+  // Calculate cubic yards equivalent based on the product's ton-yard ratio
+  const cubicYards = React.useMemo(() => {
+    const tonYardRatio = product?.tonYardRatio || 1.5;
+    return Math.round((selectedTons / tonYardRatio) * 100) / 100;
+  }, [selectedTons, product]);
   
   // Handle local quantity change - directly pass to parent
   const handleQuantityChange = (tons: number) => {
@@ -79,6 +86,14 @@ const ProductActions = ({
         selectedAmount={selectedTons}
         onSelectAmount={handleQuantityChange}
       />
+      
+      {/* Tons and cubic yards display - NEW LAYOUT BASED ON MOCKUP */}
+      <div className="flex items-center justify-center gap-3 text-center my-4">
+        <h2 className="text-4xl font-bold">{selectedTons} tons</h2>
+        <span className="text-xl text-gray-500 flex items-center">
+          ≈ <Cube className="mx-1 h-5 w-5" /> {cubicYards} yd³
+        </span>
+      </div>
 
       {/* Volume discount information banner */}
       {hasVolumeDiscount && (
