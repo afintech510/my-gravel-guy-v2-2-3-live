@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { getProducts, getUniqueCategories } from '@/services/productService';
 import { Product } from '@/services/productTypes';

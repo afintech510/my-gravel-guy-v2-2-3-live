@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { Product, PriceTier } from '@/services/productTypes';
+import { Product, PriceTier as ProductPriceTier } from '@/services/productTypes';
 import { getProductBySlug } from '@/services/productService';
 import { 
   getPriceTiersForProduct, 
@@ -8,6 +8,9 @@ import {
   calculateFinalPrice,
   findPriceMultiplierForQuantity 
 } from '@/services/products/pricingUtils';
+
+// Type alias to ensure compatibility
+type PriceTier = ProductPriceTier;
 
 export const useProduct = (slug: string | undefined, zipCode?: string, tons: number = 10) => {
   const [product, setProduct] = useState<Product | undefined>(undefined);
