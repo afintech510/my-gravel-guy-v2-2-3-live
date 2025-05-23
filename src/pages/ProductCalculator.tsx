@@ -94,7 +94,7 @@ export default function ProductCalculator() {
         <p className="text-slate-600 mt-2">Find the perfect amount of material for your project and add it to your cart.</p>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
         {/* Left column - Product selection */}
         <div className="lg:col-span-7">
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
@@ -110,10 +110,6 @@ export default function ProductCalculator() {
               <ProductDetails product={selectedProduct} />
             </div>
           )}
-          
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-            <TrustBanner />
-          </div>
         </div>
         
         {/* Right column - Calculator and actions */}
@@ -145,6 +141,11 @@ export default function ProductCalculator() {
             )}
           </div>
         </div>
+      </div>
+      
+      {/* Trust banner - now full width and below calculator */}
+      <div className="bg-white rounded-lg shadow-sm p-6 w-full">
+        <TrustBanner />
       </div>
     </div>
   );
