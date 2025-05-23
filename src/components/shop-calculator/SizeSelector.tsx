@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MaterialSize } from './ShopCalculator';
+import { MaterialSize } from '@/services/productTypes';
 import { cn } from "@/lib/utils";
 
 type SizeSelectorProps = {
