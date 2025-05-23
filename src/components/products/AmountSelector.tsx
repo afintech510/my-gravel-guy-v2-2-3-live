@@ -31,91 +31,84 @@ const AmountSelector = ({
   ];
   
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="space-y-4 w-2/3">
-          <label className="text-sm font-medium">Select Amount (tons)</label>
-          
-          <div className="grid grid-cols-5 gap-2">
-            {/* First row */}
-            {firstRowAmounts.map((amount) => (
-              <Button
-                key={amount}
-                variant="outline"
-                size="sm"
-                onClick={() => onSelectAmount(amount)}
-                className={cn(
-                  "h-10 min-w-[2.5rem] font-montserrat",
-                  selectedAmount === amount && "bg-primary text-primary-foreground"
-                )}
-              >
-                {amount}
-              </Button>
-            ))}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onSelectAmount(selectedAmount + rowIncrements[0].amount)}
-              className="h-10 min-w-[2.5rem] font-montserrat"
-            >
-              {rowIncrements[0].label}
-            </Button>
-            
-            {/* Second row */}
-            {secondRowAmounts.map((amount) => (
-              <Button
-                key={amount}
-                variant="outline"
-                size="sm"
-                onClick={() => onSelectAmount(amount)}
-                className={cn(
-                  "h-10 min-w-[2.5rem] font-montserrat",
-                  selectedAmount === amount && "bg-primary text-primary-foreground"
-                )}
-              >
-                {amount}
-              </Button>
-            ))}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onSelectAmount(selectedAmount + rowIncrements[1].amount)}
-              className="h-10 min-w-[2.5rem] font-montserrat"
-            >
-              {rowIncrements[1].label}
-            </Button>
-            
-            {/* Third row */}
-            {thirdRowAmounts.map((amount) => (
-              <Button
-                key={amount}
-                variant="outline"
-                size="sm"
-                onClick={() => onSelectAmount(amount)}
-                className={cn(
-                  "h-10 min-w-[2.5rem] font-montserrat",
-                  selectedAmount === amount && "bg-primary text-primary-foreground",
-                  // Make the selected 50 button green like in the screenshot
-                  selectedAmount === 50 && amount === 50 && "bg-green-500 text-white hover:bg-green-600 border-green-500"
-                )}
-              >
-                {amount}
-              </Button>
-            ))}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onSelectAmount(selectedAmount + rowIncrements[2].amount)}
-              className="h-10 min-w-[2.5rem] font-montserrat"
-            >
-              {rowIncrements[2].label}
-            </Button>
-          </div>
-        </div>
+    <div className="space-y-4">
+      <label className="text-sm font-medium">Select Amount (tons)</label>
+      
+      {/* Make buttons fluid width by removing the width constraints and using full width grid cells */}
+      <div className="grid grid-cols-5 gap-2">
+        {/* First row */}
+        {firstRowAmounts.map((amount) => (
+          <Button
+            key={amount}
+            variant="outline"
+            size="sm"
+            onClick={() => onSelectAmount(amount)}
+            className={cn(
+              "w-full h-10 font-montserrat",
+              selectedAmount === amount && "bg-primary text-primary-foreground"
+            )}
+          >
+            {amount}
+          </Button>
+        ))}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onSelectAmount(selectedAmount + rowIncrements[0].amount)}
+          className="w-full h-10 font-montserrat"
+        >
+          {rowIncrements[0].label}
+        </Button>
         
-        <div className="w-1/3 flex items-center justify-end h-full">
-          <h1 className="text-4xl font-bold">{selectedAmount} tons</h1>
-        </div>
+        {/* Second row */}
+        {secondRowAmounts.map((amount) => (
+          <Button
+            key={amount}
+            variant="outline"
+            size="sm"
+            onClick={() => onSelectAmount(amount)}
+            className={cn(
+              "w-full h-10 font-montserrat",
+              selectedAmount === amount && "bg-primary text-primary-foreground"
+            )}
+          >
+            {amount}
+          </Button>
+        ))}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onSelectAmount(selectedAmount + rowIncrements[1].amount)}
+          className="w-full h-10 font-montserrat"
+        >
+          {rowIncrements[1].label}
+        </Button>
+        
+        {/* Third row */}
+        {thirdRowAmounts.map((amount) => (
+          <Button
+            key={amount}
+            variant="outline"
+            size="sm"
+            onClick={() => onSelectAmount(amount)}
+            className={cn(
+              "w-full h-10 font-montserrat",
+              selectedAmount === amount && "bg-primary text-primary-foreground",
+              // Make the selected 50 button green like in the screenshot
+              selectedAmount === 50 && amount === 50 && "bg-green-500 text-white hover:bg-green-600 border-green-500"
+            )}
+          >
+            {amount}
+          </Button>
+        ))}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onSelectAmount(selectedAmount + rowIncrements[2].amount)}
+          className="w-full h-10 font-montserrat"
+        >
+          {rowIncrements[2].label}
+        </Button>
       </div>
     </div>
   );
