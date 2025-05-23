@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Truck, Map, Shovel, Trees, Building
@@ -43,13 +42,18 @@ const ShopMaterialSelector: React.FC<ShopMaterialSelectorProps> = ({
     { id: 'mulch', name: 'Mulch', icon: <Trees className="h-5 w-5" /> }
   ];
 
-  // Define subcategories for each material category
+  // Define subcategories for each material category - updated to include all MaterialCategory types
   const subcategories: Record<MaterialCategory, MaterialSubcategory[]> = {
     sand: ['washed-sand', 'mason-sand', 'playground-sand', 'pool-sand', 'beach-sand'],
     dirt: ['fill-dirt', 'top-soil', 'compost', 'loam', 'sandy-loam'],
     mulch: ['natural', 'black', 'chocolate-brown', 'red', 'request'],
     base: ['57-crushed-stone', 'crusher-run', 'road-base', 'rca-crushed-concrete', 'drainage-rock'],
-    gravel: ['driveway', 'walkway', 'landscape', 'natural', 'construction']
+    gravel: ['driveway', 'walkway', 'landscape', 'natural', 'construction'],
+    soil: ['fill-dirt', 'top-soil', 'compost', 'loam', 'sandy-loam'],
+    stone: ['natural', 'river-rock', 'crushed-stone'],
+    rock: ['natural', 'river-rock', 'crushed-stone'],
+    'crushed-gravel': ['driveway', 'walkway', 'landscape', 'construction'],
+    'crushed-concrete': ['road-base', 'crusher-run', 'drainage-rock']
   };
 
   // Load products
