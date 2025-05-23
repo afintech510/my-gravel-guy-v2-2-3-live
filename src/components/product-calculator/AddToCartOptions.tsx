@@ -48,8 +48,11 @@ export default function AddToCartOptions({
   // Handle adding product to cart
   const handleAddToCart = async (tons: number) => {
     try {
+      console.log(`AddToCartOptions: Adding ${tons} tons of ${product.name} (ID: ${product.id}) to cart`);
+      
       // Recalculate price for the selected tons
       const pricing = await calculateFinalPrice(product, tons, zipCode || undefined);
+      console.log('AddToCartOptions: Recalculated price for cart:', pricing);
       
       addToCart({ 
         ...product, 
@@ -85,6 +88,9 @@ export default function AddToCartOptions({
     priceDetails.multiplier !== 1 || 
     priceDetails.zipAdjustment !== 1
   );
+
+  console.log('AddToCartOptions: Current priceDetails:', priceDetails);
+  console.log('AddToCartOptions: showPricingDetails:', showPricingDetails);
 
   return (
     <div>
