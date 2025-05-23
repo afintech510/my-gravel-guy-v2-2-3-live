@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
-import { getProducts, getUniqueCategories } from '@/services/productService';
+import { getProducts } from '@/services/productService';
 import { Product } from '@/services/productTypes';
 import { cn } from '@/lib/utils';
-import { Truck, Shovel, Map, Building, Trees } from 'lucide-react';
+import { Package, Layers, Mountain, RockingChair, Building2, Shovel, Waves, Flower } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ProductFilterSelectorProps {
@@ -15,21 +16,19 @@ export default function ProductFilterSelector({ onProductSelected, selectedProdu
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [applications, setApplications] = useState<string[]>([]);
-  const [selectedApplication, setSelectedApplication] = useState<string>('');
-  const [sizes, setSizes] = useState<string[]>([]);
-  const [selectedSize, setSelectedSize] = useState<string>('');
-
-  // Category icons mapping
-  const categoryIcons: Record<string, React.ReactNode> = {
-    'gravel': <Truck className="h-5 w-5" />,
-    'sand': <Map className="h-5 w-5" />,
-    'dirt': <Shovel className="h-5 w-5" />,
-    'mulch': <Trees className="h-5 w-5" />,
-    'base': <Building className="h-5 w-5" />
-  };
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  
+  // Hardcoded categories with Lucide icons
+  const categories = [
+    { id: 'all', label: 'All Products', icon: <Package className="h-5 w-5" /> },
+    { id: 'gravel', label: 'Gravel', icon: <Layers className="h-5 w-5" /> },
+    { id: 'rock', label: 'Rock & Stone', icon: <Mountain className="h-5 w-5" /> },
+    { id: 'crushed-gravel', label: 'Crushed Gravel', icon: <RockingChair className="h-5 w-5" /> },
+    { id: 'crushed-concrete', label: 'Crushed Concrete', icon: <Building2 className="h-5 w-5" /> },
+    { id: 'soil-dirt', label: 'Soil & Dirt', icon: <Shovel className="h-5 w-5" /> },
+    { id: 'sand', label: 'Sand', icon: <Waves className="h-5 w-5" /> },
+    { id: 'mulch', label: 'Mulch', icon: <Flower className="h-5 w-5" /> },
+  ];
 
   // Load products
   useEffect(() => {
@@ -38,16 +37,6 @@ export default function ProductFilterSelector({ onProductSelected, selectedProdu
       try {
         const allProducts = await getProducts();
         setProducts(allProducts);
-        
-        // Get unique categories
-        const uniqueCategories = await getUniqueCategories();
-        setCategories(uniqueCategories);
-        
-        // Set initial category if available
-        if (uniqueCategories.length > 0) {
-          setSelectedCategory(uniqueCategories[0]);
-        }
-        
         setLoading(false);
       } catch (error) {
         console.error('Error loading products:', error);
@@ -58,93 +47,75 @@ export default function ProductFilterSelector({ onProductSelected, selectedProdu
     loadProducts();
   }, []);
 
-  // Filter by category and extract applications
+  // Filter products based on selected category
   useEffect(() => {
     if (!selectedCategory) return;
     
-    const categoryProducts = products.filter(product => 
-      product.category === selectedCategory || 
-      (product.categories && product.categories.includes(selectedCategory))
-    );
+    let result = [...products];
     
-    // Extract unique applications
-    const uniqueApplications = new Set<string>();
-    categoryProducts.forEach(product => {
-      // Try to find application in various product fields
-      if (product.usage) {
-        uniqueApplications.add(product.usage);
-      }
-      
-      // Check uses array
-      if (product.uses && Array.isArray(product.uses)) {
-        product.uses.forEach(use => uniqueApplications.add(use));
-      }
-      
-      // If no specific applications found, add a default one based on category
-      if (uniqueApplications.size === 0) {
-        uniqueApplications.add(`${selectedCategory} materials`);
-      }
-    });
+    // Apply category filter if not "all"
+    if (selectedCategory !== 'all') {
+      result = products.filter(product => {
+        const productCategory = product.category?.toLowerCase() || '';
+        const productCategories = product.categories || [];
+        
+        switch (selectedCategory) {
+          case 'gravel':
+            return productCategory === 'gravel' || productCategories.includes('gravel');
+          
+          case 'rock':
+            return productCategory === 'rock' || productCategory === 'stone' || 
+                   productCategories.includes('rock') || productCategories.includes('stone');
+          
+          case 'crushed-gravel':
+            return productCategory === 'crushed gravel' || productCategory === 'crushed gravel & stone' ||
+                   productCategories.includes('crushed gravel') || productCategories.includes('crushed gravel & stone');
+          
+          case 'crushed-concrete':
+            return productCategory === 'crushed concrete' || productCategories.includes('crushed concrete');
+          
+          case 'soil-dirt':
+            return productCategory === 'soil' || productCategory === 'dirt' ||
+                   productCategories.includes('soil') || productCategories.includes('dirt');
+          
+          case 'sand':
+            return productCategory === 'sand' || productCategories.includes('sand');
+          
+          case 'mulch':
+            return productCategory === 'mulch' || productCategories.includes('mulch');
+          
+          default:
+            return false;
+        }
+      });
+    }
+
+    // Sort products
+    if (selectedCategory === 'all') {
+      // For "All Products": prioritize driveway and walkway gravels
+      result.sort((a, b) => {
+        // Check if product is driveway or walkway gravel
+        const isDrivewayA = (a.uses?.includes('driveway') || a.description?.toLowerCase().includes('driveway')) ?? false;
+        const isWalkwayA = (a.uses?.includes('walkway') || a.description?.toLowerCase().includes('walkway')) ?? false;
+        const isDrivewayB = (b.uses?.includes('driveway') || b.description?.toLowerCase().includes('driveway')) ?? false;
+        const isWalkwayB = (b.uses?.includes('walkway') || b.description?.toLowerCase().includes('walkway')) ?? false;
+        
+        // Priority order: driveway, walkway, then alphabetically
+        if ((isDrivewayA || isWalkwayA) && !(isDrivewayB || isWalkwayB)) return -1;
+        if (!(isDrivewayA || isWalkwayA) && (isDrivewayB || isWalkwayB)) return 1;
+        if (isDrivewayA && !isDrivewayB) return -1;
+        if (!isDrivewayA && isDrivewayB) return 1;
+        
+        // Alphabetical sort for the rest
+        return a.name.localeCompare(b.name);
+      });
+    } else {
+      // For other categories: plain alphabetical sorting
+      result.sort((a, b) => a.name.localeCompare(b.name));
+    }
     
-    const applicationsList = Array.from(uniqueApplications);
-    setApplications(applicationsList);
-    
-    // Reset application selection
-    setSelectedApplication('');
-    
-    // Update filtered products
-    setFilteredProducts(categoryProducts);
+    setFilteredProducts(result);
   }, [selectedCategory, products]);
-
-  // Filter by application and extract sizes
-  useEffect(() => {
-    if (!selectedApplication) return;
-    
-    const appProducts = filteredProducts.filter(product => {
-      // Check various fields for application match
-      return (
-        product.usage === selectedApplication ||
-        (product.uses && product.uses.includes(selectedApplication))
-      );
-    });
-    
-    // If no specific matches, don't filter further
-    const productsToUse = appProducts.length > 0 ? appProducts : filteredProducts;
-    
-    // Extract unique sizes
-    const uniqueSizes = new Set<string>();
-    productsToUse.forEach(product => {
-      if (product.size) {
-        uniqueSizes.add(product.size);
-      } else if (product.specifications?.size) {
-        uniqueSizes.add(product.specifications.size);
-      }
-    });
-    
-    const sizesList = Array.from(uniqueSizes);
-    setSizes(sizesList);
-    
-    // Reset size selection
-    setSelectedSize('');
-    
-    // Update filtered products
-    setFilteredProducts(productsToUse);
-  }, [selectedApplication, filteredProducts]);
-
-  // Filter by size
-  useEffect(() => {
-    if (!selectedSize) return;
-    
-    const sizeProducts = filteredProducts.filter(product => {
-      return (
-        product.size === selectedSize || 
-        product.specifications?.size === selectedSize
-      );
-    });
-    
-    // Update filtered products
-    setFilteredProducts(sizeProducts.length > 0 ? sizeProducts : filteredProducts);
-  }, [selectedSize, filteredProducts]);
 
   // Select a product
   const handleProductSelect = (product: Product) => {
@@ -156,72 +127,26 @@ export default function ProductFilterSelector({ onProductSelected, selectedProdu
       {/* Category Selection */}
       <div className="space-y-3">
         <h3 className="text-sm font-medium text-gray-700">Material Category</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
           {categories.map(category => (
             <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
+              key={category.id}
+              onClick={() => setSelectedCategory(category.id)}
               className={cn(
                 "flex items-center justify-center p-3 border rounded-md transition-colors",
-                selectedCategory === category
+                selectedCategory === category.id
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
               )}
             >
-              {categoryIcons[category] || null}
+              {category.icon}
               <span className={cn("ml-2", isMobile ? "text-xs" : "text-sm")}>
-                {category.charAt(0).toUpperCase() + category.slice(1)}
+                {category.label}
               </span>
             </button>
           ))}
         </div>
       </div>
-      
-      {/* Application Selection - Only show if options exist */}
-      {applications.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium text-gray-700">Application Type</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {applications.map(application => (
-              <button
-                key={application}
-                onClick={() => setSelectedApplication(application)}
-                className={cn(
-                  "p-2 border rounded-md text-sm transition-colors",
-                  selectedApplication === application
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
-                )}
-              >
-                {application}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {/* Size Selection - Only show if options exist */}
-      {sizes.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium text-gray-700">Material Size</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {sizes.map(size => (
-              <button
-                key={size}
-                onClick={() => setSelectedSize(size)}
-                className={cn(
-                  "p-2 border rounded-md text-sm transition-colors",
-                  selectedSize === size
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
-                )}
-              >
-                {size}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
       
       {/* Products List */}
       <div className="mt-6">
