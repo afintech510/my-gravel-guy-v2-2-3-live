@@ -91,6 +91,7 @@ const MaterialCalculator = () => {
     }
   };
 
+  // Load products
   useEffect(() => {
     const loadProducts = async () => {
       try {
@@ -265,6 +266,7 @@ const MaterialCalculator = () => {
           totalTons={calculations.totalTons}
           onAddToCart={handleAddToCart}
           isAvailable={availableInZip}
+          productName={selectedProductObj?.name} // Pass the product name to the PriceDisplay component
         />
       </CardContent>
     </Card>

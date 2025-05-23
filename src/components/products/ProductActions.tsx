@@ -86,12 +86,15 @@ const ProductActions = ({
         onSelectAmount={handleQuantityChange}
       />
       
-      {/* Tons and cubic yards display - UPDATED LAYOUT WITHOUT PACKAGE ICON */}
-      <div className="flex items-center justify-center text-center my-4">
-        <h2 className="text-4xl font-bold mr-2">{selectedTons} tons</h2>
-        <span className="text-xl text-gray-500">
-          ≈ {cubicYards} yd³
-        </span>
+      {/* Product name and tons/cubic yards display */}
+      <div className="flex flex-col items-center justify-center text-center my-4">
+        <h2 className="text-xl font-semibold text-primary mb-2">{product.name}</h2>
+        <div className="flex items-center justify-center">
+          <span className="text-4xl font-bold mr-2">{selectedTons} tons</span>
+          <span className="text-xl text-gray-500">
+            ≈ {cubicYards} yd³
+          </span>
+        </div>
       </div>
 
       {/* Volume discount information banner */}
