@@ -18,7 +18,6 @@ export type MaterialSubcategory =
   '57-crushed-stone' | 'crusher-run' | 'road-base' | 'rca-crushed-concrete' | 'drainage-rock' |
   'driveway' | 'walkway' | 'landscape' | 'natural' | 'construction' |
   'pea-gravel' | 'river-rock' | 'crushed-stone' | 'decorative-gravel' | 'drainage-gravel';
-export type MaterialSize = string;
 
 interface ShopCalculatorProps {
   onProductSelected?: (product: Product | null) => void;
@@ -32,7 +31,6 @@ const ShopCalculator: React.FC<ShopCalculatorProps> = ({
   // Material selection state
   const [selectedCategory, setSelectedCategory] = useState<MaterialCategory>('gravel');
   const [selectedSubcategory, setSelectedSubcategory] = useState<MaterialSubcategory>('driveway');
-  const [selectedSize, setSelectedSize] = useState<MaterialSize>('3/4"');
   
   // Area dimensions state - updated to use the new structure
   const [areaDimensions, setAreaDimensions] = useState<AreaDimensions>({
@@ -104,8 +102,6 @@ const ShopCalculator: React.FC<ShopCalculatorProps> = ({
             setSelectedCategory={setSelectedCategory}
             selectedSubcategory={selectedSubcategory}
             setSelectedSubcategory={setSelectedSubcategory}
-            selectedSize={selectedSize}
-            setSelectedSize={setSelectedSize}
             productImages={productImages[selectedCategory] || []}
             onProductSelected={handleProductSelected}
           />
@@ -129,13 +125,11 @@ const ShopCalculator: React.FC<ShopCalculatorProps> = ({
           materialInfo={{
             category: selectedCategory,
             subcategory: selectedSubcategory,
-            size: selectedSize
           }}
           selectedProduct={selectedProduct}
         />
         
         <ZipCodeSection product={selectedProduct} />
-        
         
       </div>
     </div>

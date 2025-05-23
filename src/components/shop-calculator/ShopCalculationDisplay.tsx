@@ -10,7 +10,6 @@ interface ShopCalculationDisplayProps {
   materialInfo: {
     category: string;
     subcategory: string;
-    size: string;
   };
   selectedProduct: Product | null;
 }
@@ -63,7 +62,7 @@ const ShopCalculationDisplay: React.FC<ShopCalculationDisplayProps> = ({
         <div className="pt-2 border-t border-gray-200 mt-2">
           <p className="text-xs text-gray-500">Material Selected</p>
           <p className="font-medium">
-            {selectedProduct ? selectedProduct.name : `${materialInfo.subcategory.replace(/-/g, ' ')} ${materialInfo.size}`}
+            {selectedProduct ? selectedProduct.name : `${materialInfo.subcategory.replace(/-/g, ' ')}`}
           </p>
         </div>
         
