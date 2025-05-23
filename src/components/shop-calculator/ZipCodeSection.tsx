@@ -1,69 +1,38 @@
 
-import React from 'react';
-import { useZipCode } from '@/contexts/ZipCodeContext';
-import ZipCodeSearchInput from '@/components/zip-code/ZipCodeSearchInput';
+import React, { useState } from 'react';
+import { Card } from '@/components/ui/card';
 import { Product } from '@/services/productTypes';
-import { getPriceForProduct } from '@/services/productService';
+import ZipCodeSearchInput from '@/components/zip-code/ZipCodeSearchInput';
+import { useZipCode } from '@/contexts/ZipCodeContext';
 
 interface ZipCodeSectionProps {
   product: Product | null;
 }
 
 const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({ product }) => {
-  const { zipCode, zipCodeData } = useZipCode();
-
-  const getDeliveryStatus = () => {
-    if (!zipCode) return null;
-    
-    // Determine if we can deliver to this ZIP code
-    // Here we assume any zipCodeData means it's a valid delivery location
-    const canDeliver = !!zipCodeData;
-    
-    if (canDeliver) {
-      return { canDeliver: true, message: "We deliver to your area!" };
-    }
-    
-    return { canDeliver: false, message: "Sorry, we don't deliver to this area yet." };
-  };
-
-  const deliveryStatus = getDeliveryStatus();
-
-  // Get price based on product and zip code
-  const getPrice = () => {
-    if (!product || !zipCode) return null;
-    
-    try {
-      // Calculate price using product service
-      const price = getPriceForProduct(product);
-      return price;
-    } catch (error) {
-      console.error('Error getting price:', error);
-      return null;
-    }
-  };
-
-  const price = getPrice();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const { zipCode, locationName, setZipCode } = useZipCode();
 
   return (
-    <div className="border rounded-lg p-4 bg-gray-50">
-      <h3 className="font-medium mb-3">Check Delivery Availability</h3>
+    <Card className="p-6">
+      <h2 className="text-xl font-semibold mb-4">Check Delivery Availability</h2>
+      <p className="text-sm text-gray-600 mb-4">
+        Enter your ZIP code to check if we deliver to your area and get accurate pricing.
+      </p>
       
-      <div className="mb-4">
-        <ZipCodeSearchInput />
-      </div>
+      <ZipCodeSearchInput 
+        onZipCodeSelect={(zip) => setZipCode(zip)}
+        defaultValue={zipCode}
+      />
       
-      {zipCode && deliveryStatus && (
-        <div className={`p-3 rounded-md ${deliveryStatus.canDeliver ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
-          <p className="text-sm">{deliveryStatus.message}</p>
-          
-          {deliveryStatus.canDeliver && product && price && (
-            <p className="mt-2 text-sm font-medium">
-              Estimated delivery price: ${price.toFixed(2)}/ton
-            </p>
-          )}
+      {zipCode && locationName && (
+        <div className="mt-4 p-3 bg-green-50 border border-green-100 rounded-md">
+          <p className="text-sm text-green-700">
+            Delivery is available to {locationName} ({zipCode})
+          </p>
         </div>
       )}
-    </div>
+    </Card>
   );
 };
 
