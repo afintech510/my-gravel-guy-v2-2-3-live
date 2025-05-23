@@ -71,26 +71,9 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
         categories = ['gravel']; // Default category
       }
       
-      // Map to valid main category type
-      const mainCategoryMap: Record<string, 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base'> = {
-        'gravel': 'gravel',
-        'sand': 'sand',
-        'dirt': 'dirt',
-        'soil': 'dirt',
-        'mulch': 'mulch',
-        'base': 'base',
-        'stone': 'gravel',
-        'rock': 'gravel'
-      };
-      
-      // Find the first category that maps to a valid main category
-      let mainCategory: 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base' = 'gravel';
-      for (const cat of categories) {
-        if (mainCategoryMap[cat]) {
-          mainCategory = mainCategoryMap[cat];
-          break;
-        }
-      }
+      // Map directly to the category without forcing it into a predefined type
+      // Each category maps to itself - no more hardcoding to 'gravel'
+      const mainCategory = categories[0] as Product['category'];
       
       // Parse metadata if it's a JSON string
       let metadata: any = {};
