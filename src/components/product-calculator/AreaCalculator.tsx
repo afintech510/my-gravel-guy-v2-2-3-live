@@ -143,7 +143,7 @@ export default function AreaCalculator({
         </div>
       </div>
 
-      {/* Results display */}
+      {/* Results display - Updated label and font size */}
       <Card className="p-4 bg-gray-50 mt-6">
         <h3 className="text-sm font-medium text-gray-700 mb-3">Calculation Results</h3>
         <div className="grid grid-cols-3 gap-4">
@@ -156,8 +156,8 @@ export default function AreaCalculator({
             <p className="text-lg font-medium">{calculationResult.totalCubicYards.toFixed(2)} yd³</p>
           </div>
           <div>
-            <p className="text-xs text-gray-500">Tons Needed</p>
-            <p className="text-lg font-medium">{calculationResult.totalTons.toFixed(2)}</p>
+            <p className="text-xs text-gray-500">est. Tons</p>
+            <p className="text-xl font-semibold">{calculationResult.totalTons.toFixed(2)}</p>
           </div>
         </div>
       </Card>
