@@ -58,7 +58,7 @@ export default function ProductFilterSelector({ onProductSelected, selectedProdu
     // Apply category filter if not "all"
     if (selectedCategory !== 'all') {
       result = products.filter(product => {
-        // Use only the product.category property (no arrays)
+        // Use product.category directly without relying on hardcoded mappings
         const productCategory = product.category?.toLowerCase() || '';
         console.log(`Checking product: ${product.name}, category: ${productCategory}`);
         
@@ -74,7 +74,7 @@ export default function ProductFilterSelector({ onProductSelected, selectedProdu
             return productCategory === 'rock' || productCategory === 'stone';
           
           case 'crushed-gravel':
-            return productCategory === 'crushed gravel' || productCategory === 'crushed gravel & stone';
+            return productCategory === 'crushed gravel' || productCategory.includes('crushed gravel');
           
           case 'crushed-concrete':
             return productCategory === 'crushed concrete';
