@@ -41,11 +41,11 @@ export async function getPriceAdjustmentForZipCode(zipCode: string): Promise<num
   try {
     console.log(`[pricingUtils] Getting price adjustment for ZIP code: ${zipCode}`);
     
-    // Query the zip_code_pricing table
+    // Query the service_zip_codes table (not zip_code_pricing)
     const { data, error } = await supabase
-      .from('zip_code_pricing')
-      .select('adjustment')
-      .eq('zip_code', zipCode)
+      .from('service_zip_codes')
+      .select('price_adjustment')
+      .eq('zip', zipCode)
       .single();
     
     if (error) {
@@ -58,14 +58,14 @@ export async function getPriceAdjustmentForZipCode(zipCode: string): Promise<num
       return 1;
     }
     
-    if (!data || typeof data.adjustment !== 'number') {
+    if (!data || typeof data.price_adjustment !== 'number') {
       console.log(`[pricingUtils] Invalid adjustment data for ZIP: ${zipCode}, using default multiplier: 1`);
       return 1;
     }
     
-    // Convert percentage format to multiplier (e.g., 20% -> 1.2, -10% -> 0.9)
-    const adjustmentMultiplier = 1 + (data.adjustment / 100);
-    console.log(`[pricingUtils] ZIP ${zipCode} has adjustment of ${data.adjustment}%, multiplier: ${adjustmentMultiplier}`);
+    // Make sure to use price_adjustment, not adjustment
+    const adjustmentMultiplier = data.price_adjustment;
+    console.log(`[pricingUtils] ZIP ${zipCode} has adjustment multiplier: ${adjustmentMultiplier}`);
     
     return adjustmentMultiplier;
   } catch (error) {
