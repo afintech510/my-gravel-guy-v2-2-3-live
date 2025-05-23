@@ -36,6 +36,7 @@ export default function ProductFilterSelector({ onProductSelected, selectedProdu
       setLoading(true);
       try {
         const allProducts = await getProducts();
+        console.log('ProductFilterSelector: Loaded products:', allProducts.length);
         setProducts(allProducts);
         setLoading(false);
       } catch (error) {
@@ -52,39 +53,40 @@ export default function ProductFilterSelector({ onProductSelected, selectedProdu
     if (!selectedCategory) return;
     
     let result = [...products];
+    console.log(`Filtering for category: ${selectedCategory}, total products: ${products.length}`);
     
     // Apply category filter if not "all"
     if (selectedCategory !== 'all') {
       result = products.filter(product => {
+        // Use only the product.category property (no arrays)
         const productCategory = product.category?.toLowerCase() || '';
-        const productCategories = product.categories || [];
+        console.log(`Checking product: ${product.name}, category: ${productCategory}`);
         
         switch (selectedCategory) {
           case 'gravel':
             // Only products with exact "gravel" category
-            return productCategory === 'gravel';
+            const isGravel = productCategory === 'gravel';
+            if (isGravel) console.log(`Product ${product.name} included as gravel`);
+            return isGravel;
           
           case 'rock':
             // Products with "rock" OR "stone" category
-            return productCategory === 'rock' || productCategory === 'stone' || 
-                   productCategories.includes('rock') || productCategories.includes('stone');
+            return productCategory === 'rock' || productCategory === 'stone';
           
           case 'crushed-gravel':
-            return productCategory === 'crushed gravel' || productCategory === 'crushed gravel & stone' ||
-                   productCategories.includes('crushed gravel') || productCategories.includes('crushed gravel & stone');
+            return productCategory === 'crushed gravel' || productCategory === 'crushed gravel & stone';
           
           case 'crushed-concrete':
-            return productCategory === 'crushed concrete' || productCategories.includes('crushed concrete');
+            return productCategory === 'crushed concrete';
           
           case 'soil-dirt':
-            return productCategory === 'soil' || productCategory === 'dirt' ||
-                   productCategories.includes('soil') || productCategories.includes('dirt');
+            return productCategory === 'soil' || productCategory === 'dirt';
           
           case 'sand':
-            return productCategory === 'sand' || productCategories.includes('sand');
+            return productCategory === 'sand';
           
           case 'mulch':
-            return productCategory === 'mulch' || productCategories.includes('mulch');
+            return productCategory === 'mulch';
           
           default:
             return false;
@@ -116,6 +118,7 @@ export default function ProductFilterSelector({ onProductSelected, selectedProdu
       result.sort((a, b) => a.name.localeCompare(b.name));
     }
     
+    console.log(`Filtered products count for ${selectedCategory}: ${result.length}`);
     setFilteredProducts(result);
   }, [selectedCategory, products]);
 
