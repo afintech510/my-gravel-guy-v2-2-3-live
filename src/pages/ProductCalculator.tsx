@@ -1,27 +1,25 @@
-
-import React, { useState } from 'react';
-import { useZipCode } from '@/contexts/ZipCodeContext';
-import { useToast } from '@/hooks/use-toast';
-import { useCart } from '@/contexts/CartContext';
-import { Product } from '@/services/productTypes';
-import { calculateFinalPrice } from '@/services/products/pricingUtils';
+import React from 'react';
 import ProductFilterSelector from '@/components/product-calculator/ProductFilterSelector';
-import AreaCalculator from '@/components/product-calculator/AreaCalculator';
-import AddToCartOptions from '@/components/product-calculator/AddToCartOptions';
-import ZipCodeChecker from '@/components/product-calculator/ZipCodeChecker';
-import TrustBanner from '@/components/product-calculator/TrustBanner';
 import ProductDetails from '@/components/product-calculator/ProductDetails';
+import AreaCalculator from '@/components/product-calculator/AreaCalculator';
+import ZipCodeChecker from '@/components/product-calculator/ZipCodeChecker';
+import AddToCartOptions from '@/components/product-calculator/AddToCartOptions';
+import TrustBanner from '@/components/product-calculator/TrustBanner';
+import { useState, useEffect } from 'react';
+import { Product } from '@/services/productTypes';
 import { useCalculator } from '@/hooks/useCalculator';
+import { Helmet } from 'react-helmet-async';
+import { useZipCode } from '@/contexts/ZipCodeContext';
+import { calculateFinalPrice } from '@/services/products/pricingUtils';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function ProductCalculator() {
-  const { zipCode, zipCodeData } = useZipCode();
-  const { toast } = useToast();
-  
-  // State management
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [areas, setAreas] = useState([{ length: 10, width: 10 }]);
-  const [depth, setDepth] = useState(2);
-  const [extraPercentage, setExtraPercentage] = useState(10);
+  const [areas, setAreas] = useState<Array<{length: number, width: number}>>([{length: 10, width: 10}]);
+  const [depth, setDepth] = useState<number>(2);
+  const [extraPercentage, setExtraPercentage] = useState<number>(10);
+  const { zipCode } = useZipCode();
+  const { toast } = useToast();
   const [priceDetails, setPriceDetails] = useState<{
     basePrice: number;
     multiplier: number;
@@ -29,116 +27,125 @@ export default function ProductCalculator() {
     finalPrice: number;
     pricePerTon: number;
   } | null>(null);
-
-  // Calculate material needs using the hook
+  
+  // Calculate material needs based on inputs
   const calculationResult = useCalculator(
-    areas,
-    depth,
-    extraPercentage,
-    selectedProduct?.price || 0,
+    areas, 
+    depth, 
+    extraPercentage, 
+    priceDetails?.pricePerTon || (selectedProduct?.price || 0),
     selectedProduct?.tonYardRatio || 1.5
   );
 
-  // Calculate pricing when product or ZIP code changes
-  React.useEffect(() => {
-    if (selectedProduct && zipCode && calculationResult.totalTons > 0) {
-      calculateFinalPrice(selectedProduct, calculationResult.totalTons, zipCode)
-        .then(pricing => {
+  // Update product price based on product, ZIP code, and calculated tons
+  useEffect(() => {
+    const updatePriceDetails = async () => {
+      if (selectedProduct && calculationResult.totalTons > 0) {
+        try {
+          console.log(`ProductCalculator: Calculating price for product ${selectedProduct.name} (ID: ${selectedProduct.id}), tons: ${calculationResult.totalTons}`);
+          
+          // Get complete price calculation with tier adjustments and ZIP code adjustments
+          const pricing = await calculateFinalPrice(
+            selectedProduct,
+            calculationResult.totalTons,
+            zipCode || undefined
+          );
+          
+          console.log('ProductCalculator: Updated price details:', pricing);
           setPriceDetails(pricing);
-        })
-        .catch(error => {
-          console.error('Error calculating price:', error);
-          setPriceDetails(null);
-        });
-    }
-  }, [selectedProduct, zipCode, calculationResult.totalTons]);
+          
+          if (pricing.multiplier !== 1) {
+            const changePercent = Math.abs((pricing.multiplier - 1) * 100).toFixed(0);
+            const direction = pricing.multiplier > 1 ? 'increase' : 'decrease';
+            toast({
+              title: `Volume pricing applied`,
+              description: `${calculationResult.totalTons.toFixed(1)} tons qualifies for a ${changePercent}% price ${direction}.`,
+              duration: 3000
+            });
+          }
+        } catch (error) {
+          console.error('Error calculating price details:', error);
+          // Fallback to base price if calculation fails
+          setPriceDetails({
+            basePrice: selectedProduct.price,
+            multiplier: 1,
+            zipAdjustment: 1,
+            finalPrice: selectedProduct.price * calculationResult.totalTons,
+            pricePerTon: selectedProduct.price
+          });
+        }
+      } else {
+        setPriceDetails(null);
+      }
+    };
 
-  const handleProductSelected = (product: Product | null) => {
-    setSelectedProduct(product);
-    setPriceDetails(null); // Reset pricing when product changes
-  };
+    updatePriceDetails();
+  }, [selectedProduct, zipCode, calculationResult.totalTons, toast]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Material Calculator
-            </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Calculate exactly how much material you need for your project and get instant pricing.
-            </p>
+    <div className="container mx-auto px-4 py-8">
+      <Helmet>
+        <title>Material Calculator | Find the Right Amount for Your Project</title>
+        <meta name="description" content="Calculate exactly how much material you need for your project with our easy-to-use calculator." />
+      </Helmet>
+      
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-slate-900">Material Calculator</h1>
+        <p className="text-slate-600 mt-2">Find the perfect amount of material for your project and add it to your cart.</p>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+        {/* Left column - Product selection */}
+        <div className="lg:col-span-7">
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+            <h2 className="text-xl font-semibold mb-6">Select Your Material</h2>
+            <ProductFilterSelector 
+              onProductSelected={setSelectedProduct}
+              selectedProduct={selectedProduct}
+            />
           </div>
-
-          {/* Trust Banner */}
-          <TrustBanner />
-
-          <div className="grid lg:grid-cols-2 gap-8 mt-8">
-            {/* Left Column - Product Selection & Area Calculator */}
-            <div className="space-y-6">
-              {/* ZIP Code Checker */}
+          
+          {selectedProduct && (
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+              <ProductDetails product={selectedProduct} />
+            </div>
+          )}
+        </div>
+        
+        {/* Right column - Calculator and actions */}
+        <div className="lg:col-span-5">
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-8 sticky top-24">
+            <h2 className="text-xl font-semibold mb-4">Calculate Your Needs</h2>
+            <AreaCalculator
+              areas={areas}
+              setAreas={setAreas}
+              depth={depth}
+              setDepth={setDepth}
+              extraPercentage={extraPercentage}
+              setExtraPercentage={setExtraPercentage}
+              calculationResult={calculationResult}
+            />
+            
+            <div className="mt-8 pt-6 border-t border-gray-200">
               <ZipCodeChecker />
-
-              {/* Product Selection */}
-              <div className="bg-white rounded-lg shadow-sm border p-6">
-                <ProductFilterSelector
-                  onProductSelected={handleProductSelected}
-                  selectedProduct={selectedProduct}
+            </div>
+            
+            {selectedProduct && calculationResult.totalTons > 0 && (
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <AddToCartOptions 
+                  product={selectedProduct}
+                  calculatedTons={calculationResult.totalTons}
+                  priceDetails={priceDetails}
                 />
               </div>
-
-              {/* Area Calculator */}
-              {selectedProduct && (
-                <div className="bg-white rounded-lg shadow-sm border p-6">
-                  <h2 className="text-xl font-semibold mb-4">Calculate Your Needs</h2>
-                  <AreaCalculator
-                    areas={areas}
-                    setAreas={setAreas}
-                    depth={depth}
-                    setDepth={setDepth}
-                    extraPercentage={extraPercentage}
-                    setExtraPercentage={setExtraPercentage}
-                    calculationResult={calculationResult}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Right Column - Product Details & Add to Cart */}
-            <div className="space-y-6">
-              {selectedProduct && (
-                <>
-                  {/* Product Details */}
-                  <ProductDetails product={selectedProduct} />
-
-                  {/* Add to Cart Options */}
-                  {zipCodeData && calculationResult.totalTons > 0 && (
-                    <div className="bg-white rounded-lg shadow-sm border p-6">
-                      <AddToCartOptions
-                        product={selectedProduct}
-                        calculatedTons={calculationResult.totalTons}
-                        priceDetails={priceDetails}
-                      />
-                    </div>
-                  )}
-                </>
-              )}
-
-              {!selectedProduct && (
-                <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Select a Material
-                  </h3>
-                  <p className="text-gray-600">
-                    Choose a material from the left to see details and calculate your needs.
-                  </p>
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
+      </div>
+      
+      {/* Trust banner - now full width and below calculator */}
+      <div className="bg-white rounded-lg shadow-sm p-6 w-full">
+        <TrustBanner />
       </div>
     </div>
   );

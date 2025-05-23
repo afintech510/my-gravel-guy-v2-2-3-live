@@ -1,57 +1,85 @@
 
 import React from 'react';
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from '@/components/ui/button';
+import { Plus, Minus } from 'lucide-react';
 
 interface CalculationDisplayProps {
   totalArea: number;
   cubicYards: number;
   tons: number;
   estimatedCost: number;
-  onTonsChange: (tons: number) => void;
-  isManualTons: boolean;
+  onTonsChange?: (newTons: number) => void;
+  isManualTons?: boolean;
 }
 
-const CalculationDisplay = ({
-  totalArea,
-  cubicYards,
-  tons,
-  estimatedCost,
+const CalculationDisplay = ({ 
+  totalArea, 
+  cubicYards, 
+  tons, 
+  estimatedCost, 
   onTonsChange,
-  isManualTons
+  isManualTons = false
 }: CalculationDisplayProps) => {
+  // Round tons to nearest integer for display and calculations
+  const roundedTons = Math.round(tons);
+  
+  // Calculate actual cost based on rounded tons
+  const actualEstimatedCost = isManualTons ? estimatedCost : (estimatedCost / tons * roundedTons);
+  
+  const handleIncrement = () => {
+    if (onTonsChange) {
+      // Increment by 1 whole number
+      onTonsChange(roundedTons + 1);
+    }
+  };
+
+  const handleDecrement = () => {
+    if (onTonsChange && roundedTons > 1) {
+      // Decrement by 1 whole number with minimum of 1
+      onTonsChange(Math.max(1, roundedTons - 1));
+    }
+  };
+
   return (
-    <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-      <h3 className="text-lg font-semibold">Calculation Results</h3>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <Label className="text-sm font-medium">Total Area</Label>
-          <div className="text-2xl font-bold">{totalArea.toFixed(2)} sq ft</div>
-        </div>
-        
-        <div>
-          <Label className="text-sm font-medium">Cubic Yards</Label>
-          <div className="text-2xl font-bold">{cubicYards.toFixed(2)} cu yd</div>
-        </div>
-        
-        <div>
-          <Label className="text-sm font-medium">Tons Needed</Label>
-          <Input
-            type="number"
-            value={tons}
-            onChange={(e) => onTonsChange(Number(e.target.value))}
-            className="text-xl font-bold"
-            min="1"
-          />
-        </div>
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 py-4 border-t border-b">
+      <div>
+        <p className="text-sm text-muted-foreground">Total Area sq. ft.</p>
+        <p className="text-2xl font-bold">{totalArea.toFixed(2)}</p>
       </div>
-      
-      <div className="pt-4 border-t">
-        <div className="flex justify-between text-lg">
-          <span>Estimated Cost:</span>
-          <span className="font-bold">${estimatedCost.toFixed(2)}</span>
-        </div>
+      <div>
+        <p className="text-sm text-muted-foreground">Cubic Yards Needed</p>
+        <p className="text-2xl font-bold">{cubicYards.toFixed(2)}</p>
+      </div>
+      <div>
+        <p className="text-sm text-muted-foreground">Total Tons</p>
+        {onTonsChange ? (
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={handleDecrement} 
+              disabled={roundedTons <= 1}
+            >
+              <Minus className="h-4 w-4" />
+            </Button>
+            <div className="w-20 h-10 flex items-center justify-center border rounded-md bg-background text-2xl font-bold">
+              {roundedTons}
+            </div>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={handleIncrement}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <p className="text-2xl font-bold">{roundedTons}</p>
+        )}
+      </div>
+      <div>
+        <p className="text-sm text-muted-foreground">Estimated Cost</p>
+        <p className="text-2xl font-bold">${actualEstimatedCost.toFixed(2)}</p>
       </div>
     </div>
   );
