@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Product } from '@/services/productTypes';
 import { Button } from '@/components/ui/button';
@@ -88,8 +89,11 @@ export default function AddToCartOptions({
     priceDetails.zipAdjustment !== 1
   );
 
-  console.log('AddToCartOptions: Current priceDetails:', priceDetails);
-  console.log('AddToCartOptions: showPricingDetails:', showPricingDetails);
+  // Calculate cubic yards for each ton option based on the product's conversion ratio
+  const calculateCubicYards = (tons: number) => {
+    const tonYardRatio = product.tonYardRatio || 1.5;
+    return (tons / tonYardRatio).toFixed(2);
+  };
 
   return (
     <div>
@@ -156,6 +160,9 @@ export default function AddToCartOptions({
             ? priceDetails.pricePerTon * option.tons 
             : product.price * option.tons;
           
+          // Calculate cubic yards equivalent
+          const cubicYards = calculateCubicYards(option.tons);
+          
           return (
             <div 
               key={option.label} 
@@ -166,7 +173,8 @@ export default function AddToCartOptions({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">{option.tons} tons</p>
-                  <p className="text-sm text-gray-500">{option.label}</p>
+                  <p className="text-sm text-primary font-medium mb-1">{product.name}</p>
+                  <p className="text-xs text-gray-500">{option.label} • {cubicYards} yd³</p>
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-xl">${price.toFixed(2)}</p>
