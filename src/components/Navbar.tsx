@@ -19,7 +19,7 @@ const Navbar = () => {
   const links = [
     { href: "/", label: "Home", icon: <House className="h-4 w-4 mr-1" /> },
     { href: "/products", label: "Shop", icon: <Store className="h-4 w-4 mr-1" /> },
-    { href: "/calculator-shop", label: "Calculator", icon: <Calculator className="h-4 w-4 mr-1" /> },
+    { href: "/product-calculator", label: "Calculator", icon: <Calculator className="h-4 w-4 mr-1" /> },
 //    { href: "/quiz", label: "Plan Project", icon: <NotebookPen className="h-4 w-4 mr-1" /> },
     { href: "/about", label: "About", icon: <ThumbsUp className="h-4 w-4 mr-1" /> },
     { href: "/contact", label: "Quote", icon: <DollarSign className="h-4 w-4 mr-1" /> },
