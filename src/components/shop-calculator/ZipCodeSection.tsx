@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useZipCode } from '@/contexts/ZipCodeContext';
-import { ZipCodeSearchInput } from '@/components/zip-code/ZipCodeSearchInput';
+import ZipCodeSearchInput from '@/components/zip-code/ZipCodeSearchInput';
 import { Product } from '@/services/productTypes';
 import { getPriceForProduct } from '@/services/productService';
 
@@ -10,12 +10,16 @@ interface ZipCodeSectionProps {
 }
 
 const ZipCodeSection: React.FC<ZipCodeSectionProps> = ({ product }) => {
-  const { zipCode, isValidZipCode } = useZipCode();
+  const { zipCode, zipCodeData } = useZipCode();
 
   const getDeliveryStatus = () => {
     if (!zipCode) return null;
     
-    if (isValidZipCode) {
+    // Determine if we can deliver to this ZIP code
+    // Here we assume any zipCodeData means it's a valid delivery location
+    const canDeliver = !!zipCodeData;
+    
+    if (canDeliver) {
       return { canDeliver: true, message: "We deliver to your area!" };
     }
     

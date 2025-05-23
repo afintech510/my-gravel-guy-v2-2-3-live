@@ -37,7 +37,7 @@ const ShopMaterialSelector: React.FC<ShopMaterialSelectorProps> = ({
   const [showSubcategories, setShowSubcategories] = React.useState(true);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
-  const [availableSizes, setAvailableSizes] = useState<MaterialSize[]>([]);
+  const [availableSizes, setAvailableSizes] = useState<string[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   
   // Category definitions with icons
@@ -118,8 +118,7 @@ const ShopMaterialSelector: React.FC<ShopMaterialSelectorProps> = ({
     const sizes = filteredProducts
       .map(product => product.size)
       .filter((size): size is string => !!size)
-      .filter((value, index, self) => self.indexOf(value) === index) // Get unique sizes
-      .map(size => size as MaterialSize); // Cast to MaterialSize type
+      .filter((value, index, self) => self.indexOf(value) === index); // Get unique sizes
       
     console.log('ShopMaterialSelector: Available sizes for current selection:', sizes);
     setAvailableSizes(sizes);

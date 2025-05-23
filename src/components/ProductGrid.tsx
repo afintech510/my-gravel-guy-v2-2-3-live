@@ -170,7 +170,7 @@ const ProductGrid = ({
                 // Check in categories array
                 if (product.categories && Array.isArray(product.categories)) {
                   return product.categories.some(cat => 
-                    cat.toLowerCase().includes(subcategory!)
+                    cat.toLowerCase() === subcategory || cat.toLowerCase().includes(subcategory!)
                   );
                 }
                 
