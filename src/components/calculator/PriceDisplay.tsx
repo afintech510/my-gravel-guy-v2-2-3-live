@@ -12,6 +12,7 @@ interface PriceDisplayProps {
   priceAdjustment?: number;
   onAddToCart: () => void;
   isAvailable?: boolean;
+  productName?: string; // New prop for product name
 }
 
 export function PriceDisplay({ 
@@ -22,7 +23,8 @@ export function PriceDisplay({
   adjustedPrice,
   priceAdjustment = 0,
   onAddToCart,
-  isAvailable = true
+  isAvailable = true,
+  productName = "Material" // Default to "Material" if no product name provided
 }: PriceDisplayProps) {
   const formattedTons = Math.floor(totalTons);
   const hasZipAdjustment = priceAdjustment !== 0;
@@ -35,6 +37,13 @@ export function PriceDisplay({
             <h3 className="text-lg font-semibold text-black">Your Estimated Total</h3>
             <div className="text-xl font-bold text-black">${discountedCost.toFixed(2)}</div>
           </div>
+          
+          {/* Display product name */}
+          {productName && (
+            <div className="bg-gray-100 p-2 rounded text-center mb-2">
+              <p className="font-medium text-primary">{productName}</p>
+            </div>
+          )}
           
           {hasZipAdjustment && originalPrice && adjustedPrice && (
             <div className="text-sm">
@@ -95,7 +104,7 @@ export function PriceDisplay({
               disabled={!isAvailable}
             >
               <ShoppingCart className="mr-2 h-4 w-4" />
-              Add {formattedTons} tons to Cart
+              Add {formattedTons} tons of {productName} to Cart
             </Button>
           )}
         </div>
