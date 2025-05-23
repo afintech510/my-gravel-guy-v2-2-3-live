@@ -70,15 +70,15 @@ export default function ProductFilterSelector({ onProductSelected, selectedProdu
           
           case 'rock':
             // Products with "rock" OR "stone" OR "rock & stone" category
-            const isRockOrStone = productCategory === 'rock' || productCategory === 'stone' || productCategory === 'rock & stone';
+            const isRockOrStone = productCategory === 'rock' || productCategory === 'stone' || productCategory === 'rock-stone';
             if (isRockOrStone) console.log(`Product ${product.name} included as rock or stone`);
             return isRockOrStone;
           
           case 'crushed-gravel':
-            return productCategory === 'crushed gravel' || productCategory.includes('crushed gravel');
+            return productCategory === 'crushed-gravel' || productCategory.includes('crushed-gravel');
           
           case 'crushed-concrete':
-            return productCategory === 'crushed concrete';
+            return productCategory === 'crushed-concrete';
           
           case 'soil-dirt':
             return productCategory === 'soil' || productCategory === 'dirt';
