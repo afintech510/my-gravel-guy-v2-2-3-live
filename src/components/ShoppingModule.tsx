@@ -6,6 +6,7 @@ import { Product, PriceTier } from '@/services/productTypes';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useZipCode } from '@/contexts/ZipCodeContext';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Minus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { 
@@ -30,6 +31,7 @@ const ShoppingModule = () => {
   const { addToCart } = useCart();
   const { toast } = useToast();
   const { zipCode } = useZipCode();
+  const navigate = useNavigate();
 
   // Material categories with icons
   const categories = [
@@ -207,6 +209,9 @@ const ShoppingModule = () => {
       title: "Added to Cart",
       description: `${quantity} tons of ${product.name} added to cart.`,
     });
+
+    // Navigate to cart page for delivery info completion
+    navigate('/cart');
   };
 
   const getProductImage = (product: Product) => {
