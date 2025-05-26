@@ -2,10 +2,12 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from 'react-router-dom';
 import DeliveryDatePicker from './DeliveryDatePicker';
 import { Product } from '@/services/productTypes';
 import AmountSelector from './AmountSelector';
 import { Badge } from '@/components/ui/badge';
+import { useCart } from '@/contexts/CartContext';
 
 interface ProductActionsProps {
   product: Product;
@@ -16,7 +18,6 @@ interface ProductActionsProps {
     zipAdjustment: number;
     pricePerTon: number;
   };
-  onAddToCart: (product: Product & { tons: number, deliveryDate: Date }) => void;
   onQuantityChange?: (tons: number) => void;
   selectedTons: number;
 }
@@ -25,11 +26,12 @@ const ProductActions = ({
   product, 
   adjustedPrice, 
   priceDetails,
-  onAddToCart,
   onQuantityChange,
   selectedTons
 }: ProductActionsProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [deliveryDate, setDeliveryDate] = React.useState<Date>();
   
   const totalPrice = adjustedPrice * selectedTons;
@@ -48,21 +50,20 @@ const ProductActions = ({
   };
 
   const handleAddToCart = () => {
-    if (!deliveryDate) {
-      toast({
-        title: "Please select a delivery date",
-        description: "A delivery date is required to continue.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    onAddToCart({
+    addToCart({
       ...product,
       price: adjustedPrice,
       tons: selectedTons,
       deliveryDate
     });
+
+    toast({
+      title: "Added to cart",
+      description: `${selectedTons} tons of ${product.name} has been added to your cart.`,
+    });
+
+    // Navigate to quick checkout
+    navigate('/quick-checkout');
   };
 
   // Determine if volume discount is applied
@@ -174,7 +175,7 @@ const ProductActions = ({
           size="lg" 
           className="w-full"
         >
-          Add to Cart
+          Add to Cart & Checkout
         </Button>
       </div>
     </div>
