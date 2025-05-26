@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -150,26 +149,22 @@ const ShoppingModule = () => {
             {filteredProducts.length === 0 ? (
               <p className="text-gray-500 text-center py-8">No products found for this category</p>
             ) : (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {filteredProducts.map((product) => {
                   const quantity = quantities[product.id.toString()] || 5;
                   const totalPrice = (product.price * quantity).toFixed(2);
                   const cubicYards = calculateCubicYards(quantity, product.tonYardRatio);
                   
                   return (
-                    <div key={product.id} className="flex items-center gap-4 p-4 border rounded-lg bg-gray-50">
-                      {/* Product Image */}
-                      <div className="flex-shrink-0">
-                        <img
-                          src={getProductImage(product)}
-                          alt={product.name}
-                          className="w-16 h-16 object-cover rounded-md"
-                        />
-                      </div>
+                    <div key={product.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                      <img
+                        src={getProductImage(product)}
+                        alt={product.name}
+                        className="w-16 h-16 object-cover rounded-md"
+                      />
                       
-                      {/* Product Info */}
                       <div className="flex-1">
-                        <h4 className="font-semibold text-lg mb-1">{product.name}</h4>
+                        <h4 className="font-semibold">{product.name}</h4>
                         <Link 
                           to={`/products/${encodeURIComponent(product.slug)}`}
                           className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
@@ -178,37 +173,36 @@ const ShoppingModule = () => {
                         </Link>
                       </div>
 
-                      {/* Quantity Controls */}
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => updateQuantity(product.id.toString(), -1)}
-                          className="p-1 hover:bg-gray-200 rounded"
-                          disabled={quantity <= 1}
-                        >
-                          <Minus className="h-4 w-4" />
-                        </button>
-                        <div className="text-center min-w-[80px]">
-                          <div className="font-bold text-lg">{quantity} tons</div>
-                          <div className="text-xs text-gray-500">≈ {cubicYards} cubic yards</div>
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <div className="flex items-center border rounded-md mb-2">
+                            <button
+                              onClick={() => updateQuantity(product.id.toString(), -1)}
+                              className="p-2 hover:bg-gray-100"
+                              disabled={quantity <= 1}
+                            >
+                              <Minus className="h-4 w-4" />
+                            </button>
+                            <span className="px-4 py-2 font-medium">{quantity} tons</span>
+                            <button
+                              onClick={() => updateQuantity(product.id.toString(), 1)}
+                              className="p-2 hover:bg-gray-100"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </button>
+                          </div>
+                          <div className="text-xs text-gray-500 text-center mb-2">
+                            ≈ {cubicYards} cubic yards
+                          </div>
+                          <div className="text-lg font-bold mb-2">${totalPrice}</div>
+                          <Button 
+                            onClick={() => handleAddToCart(product)}
+                            className="bg-green-500 hover:bg-green-600 text-white"
+                            size="sm"
+                          >
+                            Add to Cart
+                          </Button>
                         </div>
-                        <button
-                          onClick={() => updateQuantity(product.id.toString(), 1)}
-                          className="p-1 hover:bg-gray-200 rounded"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </button>
-                      </div>
-
-                      {/* Price and Add to Cart */}
-                      <div className="text-right flex flex-col items-end gap-2">
-                        <div className="text-xl font-bold">${totalPrice}</div>
-                        <Button 
-                          onClick={() => handleAddToCart(product)}
-                          className="bg-green-500 hover:bg-green-600 text-white"
-                          size="sm"
-                        >
-                          Add to Cart
-                        </Button>
                       </div>
                     </div>
                   );
