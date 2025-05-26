@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -166,7 +165,6 @@ const ShoppingModule = () => {
                       
                       <div className="flex-1">
                         <h4 className="font-semibold">{product.name}</h4>
-                        <p className="text-sm text-gray-600 mb-2">{product.description}</p>
                         <Link 
                           to={`/products/${encodeURIComponent(product.slug)}`}
                           className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
