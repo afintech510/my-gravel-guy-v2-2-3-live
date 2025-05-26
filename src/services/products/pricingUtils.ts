@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Product, PriceTier } from './types';
 import { applyZipCodeAdjustment } from './priceUtils';
@@ -101,7 +102,7 @@ export async function getPriceAdjustmentForZipCode(zipCode: string): Promise<num
  * Find the appropriate price tier multiplier for a given quantity
  * @param tiers Array of price tiers
  * @param tons Quantity in tons
- * @returns The appropriate multiplier from the matching tier, or highest multiplier if below minimum
+ * @returns The appropriate multiplier from the matching tier, or 1 if no tier found
  */
 export function findPriceMultiplierForQuantity(tiers: PriceTier[], tons: number): number {
   if (!tiers.length) {
@@ -129,19 +130,22 @@ export function findPriceMultiplierForQuantity(tiers: PriceTier[], tons: number)
     return meetsMinimum;
   });
   
-  // If no tier found and quantity is below the minimum tier, use the highest multiplier (smallest tier)
-  if (!tier && tons < sortedTiers[0].min_tons) {
-    const smallestTier = sortedTiers[0];
-    console.log(`[pricingUtils] Quantity ${tons} is below minimum tier ${smallestTier.min_tons}, using highest multiplier: ${smallestTier.multiplier}`);
-    return smallestTier.multiplier;
+  // If we found a tier, use its multiplier
+  if (tier) {
+    console.log(`[pricingUtils] Found matching tier:`, tier);
+    console.log(`[pricingUtils] Using multiplier: ${tier.multiplier}`);
+    return tier.multiplier;
   }
   
-  // Return the multiplier from the matching tier, or 1 if no tier found
-  const finalMultiplier = tier ? tier.multiplier : 1;
-  console.log(`[pricingUtils] Selected tier:`, tier);
-  console.log(`[pricingUtils] Final multiplier: ${finalMultiplier}`);
+  // If no tier found and quantity is below the minimum tier, use base price (multiplier = 1)
+  if (tons < sortedTiers[0].min_tons) {
+    console.log(`[pricingUtils] Quantity ${tons} is below minimum tier ${sortedTiers[0].min_tons}, using base price multiplier: 1`);
+    return 1; // Use base price for quantities below minimum tier
+  }
   
-  return finalMultiplier;
+  // Default to no adjustment if no tier matches
+  console.log(`[pricingUtils] No tier found, using default multiplier: 1`);
+  return 1;
 }
 
 /**
@@ -176,20 +180,22 @@ export async function calculateFinalPrice(
       zipAdjustment = await getPriceAdjustmentForZipCode(zipCode);
     }
     
-    // 4. Apply the multiplier to the base price
-    const baseWithMultiplier = product.price * multiplier;
+    // 4. Calculate price per ton with tier adjustment
+    // If multiplier > 1, it's a surcharge for small quantities
+    // If multiplier < 1, it's a discount for large quantities
+    const priceWithTierAdjustment = product.price * multiplier;
     
     // 5. Apply ZIP code adjustment
-    const pricePerTon = Math.round(baseWithMultiplier * zipAdjustment * 100) / 100;
+    const pricePerTon = Math.round(priceWithTierAdjustment * zipAdjustment * 100) / 100;
     
     // 6. Calculate the total price
     const finalPrice = Math.round(pricePerTon * tons * 100) / 100;
     
     console.log(`[pricingUtils] Price calculation:
       Base price: $${product.price}
-      Volume multiplier: ${multiplier} (${(multiplier > 1 ? '+' : '') + ((multiplier - 1) * 100).toFixed(0)}%)
-      After volume adjustment: $${baseWithMultiplier}
-      ZIP adjustment: ${zipAdjustment} (${(zipAdjustment > 1 ? '+' : '') + ((zipAdjustment - 1) * 100).toFixed(0)}%)
+      Tier multiplier: ${multiplier} ${multiplier !== 1 ? `(${(multiplier > 1 ? '+' : '') + ((multiplier - 1) * 100).toFixed(0)}%)` : ''}
+      After tier adjustment: $${priceWithTierAdjustment}
+      ZIP adjustment: ${zipAdjustment} ${zipAdjustment !== 1 ? `(${(zipAdjustment > 1 ? '+' : '') + ((zipAdjustment - 1) * 100).toFixed(0)}%)` : ''}
       Final price per ton: $${pricePerTon}
       Total for ${tons} tons: $${finalPrice}`);
     
