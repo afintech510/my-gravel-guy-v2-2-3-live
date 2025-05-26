@@ -23,7 +23,6 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
-import QuickCheckout from "./pages/QuickCheckout";
 import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Quiz from "./pages/Quiz";
@@ -77,7 +76,6 @@ function App() {
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/cart" element={<Cart />} />
                     <Route path="/checkout" element={<Checkout />} />
-                    <Route path="/quick-checkout" element={<QuickCheckout />} />
                     <Route path="/quiz" element={<Quiz />} />
                     <Route path="/calculator" element={<Calculator />} />
                     <Route path="/calculator-shop" element={<CalculatorShop />} />
