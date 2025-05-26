@@ -146,7 +146,6 @@ const ProductDetail = () => {
               product={product}
               adjustedPrice={adjustedPrice ?? product.price}
               priceDetails={priceDetails}
-              onAddToCart={handleAddToCart}
               onQuantityChange={handleProductQuantityChange}
               selectedTons={currentTons} // Pass current tons directly 
             />
