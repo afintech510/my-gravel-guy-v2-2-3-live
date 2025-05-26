@@ -1,301 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Upload, X } from "lucide-react";
-import { findZipCodeMatch } from "../../utils/zipCode";
-import { useToast } from "@/hooks/use-toast";
-import { CartItem } from "../../contexts/CartContext";
 
-const deliverySchema = z.object({
-  street: z.string().min(1, "Street address is required"),
-  city: z.string().min(1, "City is required"),
-  state: z.string().min(1, "State is required"),
-  zip: z.string().min(5, "Valid ZIP code is required"),
-  contactPhone: z.string().min(10, "Valid phone number is required"),
-  deliveryTimePreference: z.enum(["morning", "afternoon"]).optional(),
-  deliveryInstructions: z.string().optional()
-});
+import React from 'react';
+import EnhancedDeliveryForm, { EnhancedDeliveryFormData } from './EnhancedDeliveryForm';
+import { CartItem } from '../../contexts/CartContext';
 
-export type DeliveryFormData = z.infer<typeof deliverySchema>;
+export type DeliveryFormData = {
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+  contactPhone: string;
+  deliveryTimePreference?: "morning" | "afternoon";
+  deliveryInstructions?: string;
+};
 
 interface DeliveryFormProps {
   initialData?: Partial<DeliveryFormData>;
   zipCode?: string;
   onSubmit: (data: DeliveryFormData) => void;
   lockZipCode?: boolean;
-  item?: CartItem; // Add the item prop to the interface
+  item?: CartItem;
 }
 
-const DeliveryForm = ({ initialData, zipCode, onSubmit, lockZipCode = false, item }: DeliveryFormProps) => {
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const { toast } = useToast();
-  const [isLoadingZipData, setIsLoadingZipData] = useState(false);
-  
-  const form = useForm<DeliveryFormData>({
-    resolver: zodResolver(deliverySchema),
-    defaultValues: {
-      street: initialData?.street || item?.deliveryAddress?.street || '',
-      city: initialData?.city || item?.deliveryAddress?.city || '',
-      state: initialData?.state || item?.deliveryAddress?.state || '',
-      zip: initialData?.zip || item?.deliveryAddress?.zip || zipCode || '',
-      contactPhone: initialData?.contactPhone || item?.contactPhone || '',
-      deliveryTimePreference: initialData?.deliveryTimePreference || item?.deliveryTimePreference,
-      deliveryInstructions: initialData?.deliveryInstructions || item?.deliveryInstructions || ''
-    }
-  });
-
-  // Watch for zip code changes to auto-populate city and state
-  const watchedZip = form.watch('zip');
-
-  // Auto-populate city and state when zip changes
-  useEffect(() => {
-    const fetchLocationData = async (zipCode: string) => {
-      if (zipCode.length === 5) {
-        setIsLoadingZipData(true);
-        try {
-          const zipData = await findZipCodeMatch(zipCode);
-          if (zipData) {
-            // Update city and state fields
-            form.setValue('city', zipData.city);
-            form.setValue('state', zipData.state_id);
-            toast({
-              title: "Location found",
-              description: `${zipData.city}, ${zipData.state_id} detected for ZIP code ${zipCode}`,
-            });
-          }
-        } catch (error) {
-          console.error("Error finding ZIP data:", error);
-        } finally {
-          setIsLoadingZipData(false);
-        }
-      }
+const DeliveryForm = ({ onSubmit, item }: DeliveryFormProps) => {
+  const handleEnhancedSubmit = (data: EnhancedDeliveryFormData) => {
+    // Convert enhanced form data to legacy format for compatibility
+    const legacyData: DeliveryFormData = {
+      street: data.street,
+      city: data.city,
+      state: data.state,
+      zip: data.zip,
+      contactPhone: data.phone,
+      deliveryTimePreference: data.deliveryTimePreference,
+      deliveryInstructions: data.deliveryInstructions
     };
-
-    // Only run if zip code is valid length and not already populated
-    if (watchedZip && watchedZip.length === 5 && 
-        (!form.getValues('city') || !form.getValues('state'))) {
-      fetchLocationData(watchedZip);
-    }
-  }, [watchedZip, form, toast]);
-
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setPhotoFile(file);
-      
-      // Create preview URL
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+    onSubmit(legacyData);
   };
 
-  const handleRemovePhoto = () => {
-    setPhotoFile(null);
-    setPhotoPreview(null);
-  };
-
-  const handleSubmitForm = (data: DeliveryFormData) => {
-    onSubmit(data);
-    // Auto-scroll to top of page after submission
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmitForm)} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="street"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Street Address</FormLabel>
-                <FormControl>
-                  <Input placeholder="123 Main St" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="zip"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>ZIP Code</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="ZIP" 
-                    {...field} 
-                    className={isLoadingZipData ? "bg-gray-50" : ""}
-                  />
-                </FormControl>
-                {isLoadingZipData && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Looking up location...
-                  </p>
-                )}
-                {lockZipCode ? (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Changing the ZIP code may affect delivery pricing
-                  </p>
-                ) : null}
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="city"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>City</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="City" 
-                    {...field} 
-                    className={isLoadingZipData ? "bg-gray-50" : ""}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="state"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>State</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="State" 
-                    {...field}
-                    className={isLoadingZipData ? "bg-gray-50" : ""}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <FormField
-          control={form.control}
-          name="contactPhone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Contact Phone</FormLabel>
-              <FormControl>
-                <Input type="tel" placeholder="(555) 123-4567" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="deliveryTimePreference"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Preferred Delivery Time (Optional)</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a preferred time" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="morning">Morning (8am - 12pm)</SelectItem>
-                  <SelectItem value="afternoon">Afternoon (12pm - 5pm)</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="deliveryInstructions"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Delivery Instructions (Optional)</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Special instructions for delivery driver" 
-                  className="resize-none" 
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <div className="space-y-2">
-          <FormLabel>Delivery Location Photo (Optional)</FormLabel>
-          <div className="border border-dashed border-gray-300 rounded-md p-4">
-            {photoPreview ? (
-              <div className="relative">
-                <img 
-                  src={photoPreview} 
-                  alt="Delivery location" 
-                  className="h-40 w-full object-cover rounded-md" 
-                />
-                <Button
-                  type="button"
-                  variant="ghost" 
-                  size="icon"
-                  className="absolute top-2 right-2 bg-white rounded-full"
-                  onClick={handleRemovePhoto}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ) : (
-              <label className="flex flex-col items-center justify-center h-40 cursor-pointer">
-                <Upload className="h-8 w-8 text-gray-400" />
-                <span className="mt-2 text-sm text-gray-500">Upload a photo of the delivery location</span>
-                <input
-                  type="file" 
-                  className="hidden" 
-                  accept="image/*" 
-                  onChange={handlePhotoChange} 
-                />
-              </label>
-            )}
-          </div>
-          <p className="text-xs text-gray-500">
-            This helps our drivers find the exact location for delivery
-          </p>
-        </div>
-        
-        <Button type="submit" className="w-full">
-          Save Delivery Information
-        </Button>
-      </form>
-    </Form>
-  );
+  return <EnhancedDeliveryForm item={item} onSubmit={handleEnhancedSubmit} />;
 };
 
 export default DeliveryForm;

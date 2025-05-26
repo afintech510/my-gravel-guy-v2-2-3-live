@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Trash2, CalendarIcon, InfoIcon } from 'lucide-react';
@@ -10,10 +10,24 @@ interface CartItemCardProps {
   item: CartItem;
   onRemove: (productId: string | number) => void;
   onUpdateDelivery: (productId: string | number, details: Partial<CartItem>) => void;
+  autoExpandDelivery?: boolean;
 }
 
-const CartItemCard = ({ item, onRemove, onUpdateDelivery }: CartItemCardProps) => {
-  const [isDeliveryFormOpen, setIsDeliveryFormOpen] = useState(false);
+const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = false }: CartItemCardProps) => {
+  const [isDeliveryFormOpen, setIsDeliveryFormOpen] = useState(autoExpandDelivery);
+  
+  // Auto-expand if autoExpandDelivery prop is true or if delivery info is incomplete
+  useEffect(() => {
+    const isIncomplete = !item.deliveryDate || 
+                        !item.deliveryAddress?.street || 
+                        !item.contactInfo?.name || 
+                        !item.contactInfo?.phone || 
+                        !item.contactInfo?.email;
+    
+    if (autoExpandDelivery || isIncomplete) {
+      setIsDeliveryFormOpen(true);
+    }
+  }, [autoExpandDelivery, item]);
   
   // Format date to display in a readable format
   const formatDate = (date?: Date) => {
@@ -63,6 +77,13 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery }: CartItemCardProps) =
 
   const materialDetails = showMaterialInfo();
 
+  // Check if delivery info is complete
+  const isDeliveryComplete = item.deliveryDate && 
+                           item.deliveryAddress?.street && 
+                           item.contactInfo?.name && 
+                           item.contactInfo?.phone && 
+                           item.contactInfo?.email;
+
   return (
     <Card className="overflow-hidden border rounded-lg">
       <div className="p-4 sm:p-6">
@@ -103,27 +124,23 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery }: CartItemCardProps) =
               </div>
             </div>
             
-            {/* Display delivery date if selected */}
-            {item.deliveryDate && (
-              <div className="flex items-center text-sm">
-                <CalendarIcon className="h-4 w-4 mr-1 text-primary" />
-                <span>Delivery: {formatDate(item.deliveryDate)}</span>
-              </div>
-            )}
-            
-            {/* Display contact info if available */}
-            {item.contactInfo && (
-              <div className="text-sm text-muted-foreground">
-                <span>Contact: {item.contactInfo.name} • {item.contactInfo.phone}</span>
-              </div>
-            )}
-            
-            {/* Display ZIP code if available */}
-            {(item.contactInfo?.zipCode || item.deliveryAddress?.zip) && (
-              <div className="text-sm text-muted-foreground">
-                <span>ZIP: {item.contactInfo?.zipCode || item.deliveryAddress?.zip}</span>
-              </div>
-            )}
+            {/* Display delivery status */}
+            <div className="flex items-center gap-2 text-sm">
+              {isDeliveryComplete ? (
+                <div className="flex items-center text-green-600">
+                  <CalendarIcon className="h-4 w-4 mr-1" />
+                  <span>Delivery: {formatDate(item.deliveryDate)}</span>
+                  <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                    Complete
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center text-amber-600">
+                  <InfoIcon className="h-4 w-4 mr-1" />
+                  <span>Delivery info required</span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Price Summary */}
@@ -146,46 +163,46 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery }: CartItemCardProps) =
               </div>
             </div>
 
-            {/* Update delivery button */}
+            {/* Toggle delivery form button */}
             <Button
               variant="outline"
               size="sm"
               onClick={() => setIsDeliveryFormOpen(!isDeliveryFormOpen)}
               className="mt-2"
             >
-              {item.deliveryDate ? 'Update Delivery' : 'Add Delivery Details'}
+              {isDeliveryFormOpen ? 'Hide Delivery Form' : 'Update Delivery Info'}
             </Button>
           </div>
         </div>
         
-        {/* Delivery Form - Now we pass the item prop */}
+        {/* Enhanced Delivery Form */}
         {isDeliveryFormOpen && (
           <div className="mt-4 pt-4 border-t">
             <DeliveryForm
               item={item}
-              initialData={item.deliveryAddress ? {
-                street: item.deliveryAddress.street,
-                city: item.deliveryAddress.city,
-                state: item.deliveryAddress.state,
-                zip: item.deliveryAddress.zip,
-                contactPhone: item.contactPhone,
-                deliveryTimePreference: item.deliveryTimePreference,
-                deliveryInstructions: item.deliveryInstructions
-              } : undefined}
-              zipCode={item.deliveryAddress?.zip || item.contactInfo?.zipCode}
               onSubmit={(details) => {
                 onUpdateDelivery(item.id, {
+                  deliveryDate: details.deliveryDate,
                   deliveryAddress: {
                     street: details.street,
                     city: details.city,
                     state: details.state,
                     zip: details.zip
                   },
-                  contactPhone: details.contactPhone,
+                  contactInfo: {
+                    name: details.name,
+                    email: details.email,
+                    phone: details.phone,
+                    zipCode: details.zip
+                  },
                   deliveryTimePreference: details.deliveryTimePreference,
-                  deliveryInstructions: details.deliveryInstructions
+                  deliveryInstructions: details.deliveryInstructions,
+                  locationPhotoUrl: details.locationPhotoUrl
                 });
-                setIsDeliveryFormOpen(false);
+                // Only close form if all required fields are filled
+                if (details.deliveryDate && details.street && details.name && details.phone && details.email) {
+                  setIsDeliveryFormOpen(false);
+                }
               }}
             />
           </div>
