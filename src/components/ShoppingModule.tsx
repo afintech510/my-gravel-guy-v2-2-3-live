@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -228,30 +227,30 @@ const ShoppingModule = () => {
   }
 
   return (
-    <div className="py-16 px-4 bg-white">
+    <div className="py-8 md:py-16 px-4 bg-white">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold mb-4">Shop Materials</h2>
+        <div className="text-center mb-6 md:mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">Shop Materials</h2>
           <p className="text-gray-600">Select your material and add to cart for delivery</p>
         </div>
 
         {/* Material Category Selector */}
-        <Card className="mb-8">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Material Category</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+        <Card className="mb-6 md:mb-8">
+          <CardContent className="p-4 md:p-6">
+            <h3 className="text-base md:text-lg font-semibold mb-4">Material Category</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-2 md:gap-3">
               {categories.map((category) => (
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
+                  className={`p-2 md:p-3 rounded-lg border text-xs md:text-sm font-medium transition-colors ${
                     selectedCategory === category.id
                       ? 'bg-green-500 text-white border-green-500'
                       : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
                   }`}
                 >
-                  <div className="text-lg mb-1">{category.icon}</div>
-                  {category.name}
+                  <div className="text-base md:text-lg mb-1">{category.icon}</div>
+                  <div className="leading-tight">{category.name}</div>
                 </button>
               ))}
             </div>
@@ -260,69 +259,128 @@ const ShoppingModule = () => {
 
         {/* Available Materials */}
         <Card>
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Available Materials</h3>
+          <CardContent className="p-4 md:p-6">
+            <h3 className="text-base md:text-lg font-semibold mb-4">Available Materials</h3>
             
             {filteredProducts.length === 0 ? (
               <p className="text-gray-500 text-center py-8">No products found for this category</p>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-4 md:gap-6">
                 {filteredProducts.map((product) => {
                   const quantity = quantities[product.id.toString()] || 5;
                   const totalPrice = calculateFinalPrice(product, quantity);
                   const cubicYards = Math.round((quantity / (product.tonYardRatio || 1.5)) * 10) / 10;
                   
                   return (
-                    <div key={product.id} className="flex items-center gap-4 p-4 border rounded-lg">
-                      <img
-                        src={getProductImage(product)}
-                        alt={product.name}
-                        className="w-16 h-16 object-cover rounded-md"
-                      />
-                      
-                      <div className="flex-1">
-                        <h4 className="font-semibold">{product.name}</h4>
-                        {product.size && (
-                          <p className="text-sm text-gray-500">{product.size}</p>
-                        )}
-                        <Link
-                          to={`/products/${product.slug}`}
-                          className="text-sm text-blue-600 hover:text-blue-800"
-                        >
-                          More Details...
-                        </Link>
+                    <div key={product.id} className="border rounded-lg p-4">
+                      {/* Mobile Layout */}
+                      <div className="md:hidden space-y-4">
+                        <div className="flex items-start gap-3">
+                          <img
+                            src={getProductImage(product)}
+                            alt={product.name}
+                            className="w-16 h-16 object-cover rounded-md flex-shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-sm leading-tight">{product.name}</h4>
+                            {product.size && (
+                              <p className="text-xs text-gray-500 mt-1">{product.size}</p>
+                            )}
+                            <Link
+                              to={`/products/${product.slug}`}
+                              className="text-xs text-blue-600 hover:text-blue-800 mt-1 inline-block"
+                            >
+                              More Details...
+                            </Link>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center border rounded-md">
+                            <button
+                              onClick={() => updateQuantity(product.id.toString(), -1)}
+                              className="p-2 hover:bg-gray-100"
+                              disabled={quantity <= 1}
+                            >
+                              <Minus className="h-3 w-3" />
+                            </button>
+                            <div className="px-3 py-2 text-center">
+                              <div className="text-sm font-medium">{quantity} tons</div>
+                              <div className="text-xs text-gray-500">≡ {cubicYards} yd³</div>
+                            </div>
+                            <button
+                              onClick={() => updateQuantity(product.id.toString(), 1)}
+                              className="p-2 hover:bg-gray-100"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </button>
+                          </div>
+
+                          <div className="text-right">
+                            <div className="text-lg font-bold">${totalPrice.toFixed(2)}</div>
+                            <Button 
+                              onClick={() => handleAddToCart(product)}
+                              className="bg-green-500 hover:bg-green-600 text-white mt-1"
+                              size="sm"
+                            >
+                              Add to Cart
+                            </Button>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center border rounded-md">
-                          <button
-                            onClick={() => updateQuantity(product.id.toString(), -1)}
-                            className="p-2 hover:bg-gray-100"
-                            disabled={quantity <= 1}
+                      {/* Desktop Layout */}
+                      <div className="hidden md:flex items-center gap-4">
+                        <img
+                          src={getProductImage(product)}
+                          alt={product.name}
+                          className="w-16 h-16 object-cover rounded-md flex-shrink-0"
+                        />
+                        
+                        <div className="flex-1">
+                          <h4 className="font-semibold">{product.name}</h4>
+                          {product.size && (
+                            <p className="text-sm text-gray-500">{product.size}</p>
+                          )}
+                          <Link
+                            to={`/products/${product.slug}`}
+                            className="text-sm text-blue-600 hover:text-blue-800"
                           >
-                            <Minus className="h-4 w-4" />
-                          </button>
-                          <div className="px-4 py-2 text-center">
-                            <div className="font-medium">{quantity} tons</div>
-                            <div className="text-xs text-gray-500">≡ {cubicYards} yd³</div>
-                          </div>
-                          <button
-                            onClick={() => updateQuantity(product.id.toString(), 1)}
-                            className="p-2 hover:bg-gray-100"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </button>
+                            More Details...
+                          </Link>
                         </div>
 
-                        <div className="text-right">
-                          <div className="text-lg font-bold">${totalPrice.toFixed(2)}</div>
-                          <Button 
-                            onClick={() => handleAddToCart(product)}
-                            className="bg-green-500 hover:bg-green-600 text-white mt-1"
-                            size="sm"
-                          >
-                            Add to Cart
-                          </Button>
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center border rounded-md">
+                            <button
+                              onClick={() => updateQuantity(product.id.toString(), -1)}
+                              className="p-2 hover:bg-gray-100"
+                              disabled={quantity <= 1}
+                            >
+                              <Minus className="h-4 w-4" />
+                            </button>
+                            <div className="px-4 py-2 text-center">
+                              <div className="font-medium">{quantity} tons</div>
+                              <div className="text-xs text-gray-500">≡ {cubicYards} yd³</div>
+                            </div>
+                            <button
+                              onClick={() => updateQuantity(product.id.toString(), 1)}
+                              className="p-2 hover:bg-gray-100"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </button>
+                          </div>
+
+                          <div className="text-right">
+                            <div className="text-lg font-bold">${totalPrice.toFixed(2)}</div>
+                            <Button 
+                              onClick={() => handleAddToCart(product)}
+                              className="bg-green-500 hover:bg-green-600 text-white mt-1"
+                              size="sm"
+                            >
+                              Add to Cart
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
