@@ -4,13 +4,21 @@ import EnhancedDeliveryForm, { EnhancedDeliveryFormData } from './EnhancedDelive
 import { CartItem } from '../../contexts/CartContext';
 
 export type DeliveryFormData = {
+  // Delivery date - required
+  deliveryDate: Date;
+  // Contact info - all required
+  name: string;
+  phone: string;
+  email: string;
+  // Delivery address - all required
   street: string;
   city: string;
   state: string;
   zip: string;
-  contactPhone: string;
+  // Optional fields
   deliveryTimePreference?: "morning" | "afternoon";
   deliveryInstructions?: string;
+  locationPhotoUrl?: string;
 };
 
 interface DeliveryFormProps {
@@ -25,13 +33,17 @@ const DeliveryForm = ({ onSubmit, item }: DeliveryFormProps) => {
   const handleEnhancedSubmit = (data: EnhancedDeliveryFormData) => {
     // Convert enhanced form data to legacy format for compatibility
     const legacyData: DeliveryFormData = {
+      deliveryDate: data.deliveryDate,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
       street: data.street,
       city: data.city,
       state: data.state,
       zip: data.zip,
-      contactPhone: data.phone,
       deliveryTimePreference: data.deliveryTimePreference,
-      deliveryInstructions: data.deliveryInstructions
+      deliveryInstructions: data.deliveryInstructions,
+      locationPhotoUrl: data.locationPhotoUrl
     };
     onSubmit(legacyData);
   };
