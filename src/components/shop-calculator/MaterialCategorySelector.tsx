@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Truck, Map, Shovel, Trees, Building, ChevronDown } from 'lucide-react';
-import { MaterialCategory, ApplicationType, MaterialSubcategory } from './ShopCalculator';
 import { MaterialSize } from '@/services/productTypes';
 import { 
   Tabs, 
@@ -14,11 +13,24 @@ import SizeSelector from './SizeSelector';
 import { cn } from "@/lib/utils";
 import { useIsMobile } from '@/hooks/use-mobile';
 
+// Define the types used specifically in the shop calculator
+export type ShopMaterialCategory = 'gravel' | 'base' | 'dirt' | 'sand' | 'mulch';
+
+export type ShopMaterialSubcategory = 
+  | 'washed-sand' | 'mason-sand' | 'playground-sand' | 'pool-sand' | 'beach-sand'
+  | 'fill-dirt' | 'top-soil' | 'compost' | 'loam' | 'sandy-loam'
+  | 'natural' | 'black' | 'chocolate-brown' | 'red' | 'request'
+  | '57-crushed-stone' | 'crusher-run' | 'road-base' | 'rca-crushed-concrete' | 'drainage-rock'
+  | 'driveway' | 'walkway' | 'landscape' | 'construction'
+  | 'pea-gravel' | 'river-rock' | 'crushed-stone' | 'decorative-gravel' | 'drainage-gravel';
+
+export type ApplicationType = 'residential' | 'commercial' | 'landscaping';
+
 type MaterialCategorySelectorProps = {
-  selectedCategory: MaterialCategory;
-  setSelectedCategory: (category: MaterialCategory) => void;
-  selectedSubcategory: MaterialSubcategory;
-  setSelectedSubcategory: (subcategory: MaterialSubcategory) => void;
+  selectedCategory: ShopMaterialCategory;
+  setSelectedCategory: (category: ShopMaterialCategory) => void;
+  selectedSubcategory: ShopMaterialSubcategory;
+  setSelectedSubcategory: (subcategory: ShopMaterialSubcategory) => void;
   selectedSize: MaterialSize;
   setSelectedSize: (size: MaterialSize) => void;
   productImages: string[];
@@ -35,15 +47,15 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const categories = [
-    { id: 'gravel' as MaterialCategory, name: 'Gravel', icon: <Truck className="h-7 w-7" /> },
-    { id: 'base' as MaterialCategory, name: 'Base', icon: <Building className="h-7 w-7" /> },
-    { id: 'dirt' as MaterialCategory, name: 'Dirt', icon: <Shovel className="h-7 w-7" /> },
-    { id: 'sand' as MaterialCategory, name: 'Sand', icon: <Map className="h-7 w-7" /> },
-    { id: 'mulch' as MaterialCategory, name: 'Mulch', icon: <Trees className="h-7 w-7" /> }
+    { id: 'gravel' as ShopMaterialCategory, name: 'Gravel', icon: <Truck className="h-7 w-7" /> },
+    { id: 'base' as ShopMaterialCategory, name: 'Base', icon: <Building className="h-7 w-7" /> },
+    { id: 'dirt' as ShopMaterialCategory, name: 'Dirt', icon: <Shovel className="h-7 w-7" /> },
+    { id: 'sand' as ShopMaterialCategory, name: 'Sand', icon: <Map className="h-7 w-7" /> },
+    { id: 'mulch' as ShopMaterialCategory, name: 'Mulch', icon: <Trees className="h-7 w-7" /> }
   ];
 
   // Define subcategories for each material category
-  const subcategories: Record<MaterialCategory, MaterialSubcategory[]> = {
+  const subcategories: Record<ShopMaterialCategory, ShopMaterialSubcategory[]> = {
     sand: ['washed-sand', 'mason-sand', 'playground-sand', 'pool-sand', 'beach-sand'],
     dirt: ['fill-dirt', 'top-soil', 'compost', 'loam', 'sandy-loam'],
     mulch: ['natural', 'black', 'chocolate-brown', 'red', 'request'],
@@ -64,7 +76,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
   };
 
   // Categories that should show size selection
-  const categoriesWithSizes: MaterialCategory[] = ['gravel', 'base'];
+  const categoriesWithSizes: ShopMaterialCategory[] = ['gravel', 'base'];
   const showSizeSelector = categoriesWithSizes.includes(selectedCategory);
 
   // Update third-level options when category or subcategory changes
@@ -79,8 +91,8 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
   }, [selectedCategory, selectedSubcategory]);
 
   // Get formatted display name for subcategory
-  const getSubcategoryDisplayName = (subcategory: MaterialSubcategory): string => {
-    const nameMap: Record<MaterialSubcategory, string> = {
+  const getSubcategoryDisplayName = (subcategory: ShopMaterialSubcategory): string => {
+    const nameMap: Record<ShopMaterialSubcategory, string> = {
       'washed-sand': 'Washed Sand',
       'mason-sand': 'Mason Sand',
       'playground-sand': 'Playground Sand',
@@ -134,7 +146,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
 
   // Handle tab change
   const handleTabChange = (value: string) => {
-    const category = value as MaterialCategory;
+    const category = value as ShopMaterialCategory;
     setSelectedCategory(category);
     if (subcategories[category] && subcategories[category].length > 0) {
       setSelectedSubcategory(subcategories[category][0]);
@@ -142,7 +154,7 @@ const MaterialCategorySelector: React.FC<MaterialCategorySelectorProps> = ({
   };
   
   // Get description based on selected category and subcategory
-  const getDescription = (category: MaterialCategory, subcategory: MaterialSubcategory): string => {
+  const getDescription = (category: ShopMaterialCategory, subcategory: ShopMaterialSubcategory): string => {
     if (category === 'gravel') {
       return `Our premium ${getSubcategoryDisplayName(subcategory)} is perfect for driveways, landscaping, and drainage applications.`;
     } else if (category === 'sand') {
