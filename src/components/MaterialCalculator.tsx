@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,6 +17,7 @@ import { CalculatorForm } from './calculator/CalculatorForm';
 import MaterialSelector from './calculator/MaterialSelector';
 import { PriceDisplay } from './calculator/PriceDisplay';
 import { useZipCode } from '../contexts/ZipCodeContext';
+import { calculateFinalPrice } from '../services/products/pricingUtils';
 
 type AreaInput = {
   length: number;
@@ -32,6 +34,11 @@ const formSchema = z.object({
   }),
 });
 
+// Helper function to enforce minimum quantity for pricing
+const getEffectivePricingQuantity = (calculatedTons: number): number => {
+  return Math.max(3, calculatedTons);
+};
+
 const MaterialCalculator = () => {
   const [areas, setAreas] = useState([{ length: 10, width: 10 }]);
   const [depth, setDepth] = useState(4);
@@ -45,6 +52,7 @@ const MaterialCalculator = () => {
   const [manualTons, setManualTons] = useState<number | undefined>(undefined);
   const [priceAdjustment, setPriceAdjustment] = useState<number>(0);
   const [availableInZip, setAvailableInZip] = useState<boolean>(true);
+  const [actualPricePerTon, setActualPricePerTon] = useState<number>(0);
   const { zipCode } = useZipCode();
   
   const form = useForm<z.infer<typeof formSchema>>({
@@ -67,7 +75,7 @@ const MaterialCalculator = () => {
     }
   }, [zipCode, form]);
 
-  // Fetch price adjustment when ZIP code changes
+  // Fetch price adjustment and calculate actual pricing when ZIP code or product changes
   const fetchPriceAdjustment = async (zip: string) => {
     try {
       const validation = await validateZipCode(zip);
@@ -77,8 +85,12 @@ const MaterialCalculator = () => {
         const adjustment = validation.priceAdjustment || 0;
         setPriceAdjustment(adjustment);
         console.log(`Price adjustment for ${zip}: ${adjustment}%`);
+        
+        // Calculate actual pricing using tier system
+        await updateActualPricing(zip);
       } else {
         setPriceAdjustment(0);
+        setActualPricePerTon(0);
         toast({
           title: "Delivery Not Available",
           description: `We don't currently deliver to ${zip}. Please try another ZIP code.`,
@@ -88,6 +100,30 @@ const MaterialCalculator = () => {
     } catch (error) {
       console.error('Failed to fetch price adjustment:', error);
       setPriceAdjustment(0);
+      setActualPricePerTon(0);
+    }
+  };
+
+  // Update actual pricing using the tier system
+  const updateActualPricing = async (zip?: string) => {
+    const selectedProductObj = products.find(p => p.id.toString() === selectedProduct);
+    if (selectedProductObj && calculations.totalTons > 0) {
+      try {
+        const effectiveTons = getEffectivePricingQuantity(calculations.totalTons);
+        console.log(`MaterialCalculator: Calculating actual price for ${effectiveTons} tons`);
+        
+        const priceDetails = await calculateFinalPrice(
+          selectedProductObj,
+          effectiveTons,
+          zip || zipCode || undefined
+        );
+        
+        setActualPricePerTon(priceDetails.pricePerTon);
+        console.log(`MaterialCalculator: Actual price per ton: $${priceDetails.pricePerTon}`);
+      } catch (error) {
+        console.error('Failed to calculate actual pricing:', error);
+        setActualPricePerTon(selectedProductObj.price);
+      }
     }
   };
 
@@ -107,6 +143,13 @@ const MaterialCalculator = () => {
     loadProducts();
   }, []);
 
+  // Update actual pricing when product or calculated tons change
+  useEffect(() => {
+    if (zipCode && selectedProduct) {
+      updateActualPricing();
+    }
+  }, [selectedProduct, zipCode, products]);
+
   // Reset manual tons when areas or depth change to recalculate based on dimensions
   useEffect(() => {
     setManualTons(undefined);
@@ -114,9 +157,9 @@ const MaterialCalculator = () => {
 
   const selectedProductObj = products.find(p => p.id.toString() === selectedProduct);
   
-  // Apply price adjustment based on ZIP code
-  const selectedProductPrice = selectedProductObj ? 
-    applyZipCodeAdjustment(selectedProductObj.price, priceAdjustment) : 0;
+  // Use actual price per ton if available, otherwise fall back to adjusted price
+  const selectedProductPrice = actualPricePerTon > 0 ? actualPricePerTon : 
+    (selectedProductObj ? applyZipCodeAdjustment(selectedProductObj.price, priceAdjustment) : 0);
     
   const tonYardRatio = selectedProductObj?.tonYardRatio ? parseFloat(String(selectedProductObj.tonYardRatio)) : 1.5;
   
@@ -135,7 +178,7 @@ const MaterialCalculator = () => {
       // Apply price adjustment to the product price
       const adjustedProduct = {
         ...product,
-        price: selectedProductPrice // Use the ZIP code adjusted price
+        price: selectedProductPrice // Use the actual calculated price per ton
       };
       
       addToCart({

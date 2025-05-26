@@ -11,6 +11,8 @@ import ContactForm from './ContactForm';
 import ZipCodeSection from './ZipCodeSection';
 import { MaterialSize } from '@/services/productTypes';
 import { useCalculator } from '@/hooks/useCalculator';
+import { calculateFinalPrice } from '@/services/products/pricingUtils';
+import { useZipCode } from '@/contexts/ZipCodeContext';
 
 // Remove the old type definitions since they're now in MaterialCategorySelector
 export type { ShopMaterialCategory as MaterialCategory, ShopMaterialSubcategory as MaterialSubcategory } from './MaterialCategorySelector';
@@ -20,6 +22,11 @@ interface ShopCalculatorProps {
   onProductSelected?: (product: any) => void;
   selectedProduct?: any;
 }
+
+// Helper function to enforce minimum quantity for pricing
+const getEffectivePricingQuantity = (calculatedTons: number): number => {
+  return Math.max(3, calculatedTons);
+};
 
 const ShopCalculator: React.FC<ShopCalculatorProps> = ({ onProductSelected, selectedProduct }) => {
   const [selectedCategory, setSelectedCategory] = useState<ShopMaterialCategory>('gravel');
@@ -31,6 +38,8 @@ const ShopCalculator: React.FC<ShopCalculatorProps> = ({ onProductSelected, sele
     extra: 10
   });
   const [showContactForm, setShowContactForm] = useState(false);
+  const [actualPricePerTon, setActualPricePerTon] = useState<number>(62);
+  const { zipCode } = useZipCode();
 
   // Mock product images for demo
   const productImages = [
@@ -40,7 +49,33 @@ const ShopCalculator: React.FC<ShopCalculatorProps> = ({ onProductSelected, sele
   ];
 
   // Calculate material needs
-  const calculations = useCalculator(dimensions.areas, dimensions.depth, dimensions.extra, 62, 1.5);
+  const calculations = useCalculator(dimensions.areas, dimensions.depth, dimensions.extra, actualPricePerTon, 1.5);
+
+  // Update pricing when product or quantity changes
+  useEffect(() => {
+    const updatePricing = async () => {
+      if (selectedProduct && calculations.totalTons > 0) {
+        try {
+          const effectiveTons = getEffectivePricingQuantity(calculations.totalTons);
+          console.log(`ShopCalculator: Calculating price for ${effectiveTons} tons`);
+          
+          const priceDetails = await calculateFinalPrice(
+            selectedProduct,
+            effectiveTons,
+            zipCode || undefined
+          );
+          
+          setActualPricePerTon(priceDetails.pricePerTon);
+          console.log(`ShopCalculator: Updated price per ton to $${priceDetails.pricePerTon}`);
+        } catch (error) {
+          console.error('ShopCalculator: Error calculating pricing:', error);
+          setActualPricePerTon(selectedProduct?.price || 62);
+        }
+      }
+    };
+
+    updatePricing();
+  }, [selectedProduct, calculations.totalTons, zipCode]);
 
   const handleGetQuote = () => {
     setShowContactForm(true);
