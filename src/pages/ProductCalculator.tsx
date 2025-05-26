@@ -53,7 +53,7 @@ const ProductCalculator = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Product Selection */}
+          {/* Left Column - Material Selection, Product Card, and Calculator */}
           <div className="lg:col-span-2 space-y-6">
             <Card>
               <CardHeader>
@@ -68,34 +68,32 @@ const ProductCalculator = () => {
             </Card>
 
             {selectedProduct && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>2. Calculate Amount Needed</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <AreaCalculator
-                    areas={areas}
-                    setAreas={setAreas}
-                    depth={depth}
-                    setDepth={setDepth}
-                    extraPercentage={extraPercentage}
-                    setExtraPercentage={setExtraPercentage}
-                    calculationResult={calculations}
-                  />
-                </CardContent>
-              </Card>
+              <div ref={productDetailsRef}>
+                <ProductDetails product={selectedProduct} />
+              </div>
             )}
+
+            <Card>
+              <CardHeader>
+                <CardTitle>2. Calculate Amount Needed</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <AreaCalculator
+                  areas={areas}
+                  setAreas={setAreas}
+                  depth={depth}
+                  setDepth={setDepth}
+                  extraPercentage={extraPercentage}
+                  setExtraPercentage={setExtraPercentage}
+                  calculationResult={calculations}
+                />
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Right Column - Product Details & Quote */}
+          {/* Right Column - Quote Options */}
           <div className="lg:col-span-1">
             <div className="sticky top-6 space-y-6">
-              {selectedProduct && (
-                <div ref={productDetailsRef}>
-                  <ProductDetails product={selectedProduct} />
-                </div>
-              )}
-
               {selectedProduct && calculations.totalTons > 0 && (
                 <>
                   <ZipCodeChecker />
