@@ -1,8 +1,7 @@
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Product } from '@/services/productTypes';
 import { Button } from '@/components/ui/button';
-import { ShoppingBag, Info, EqualApproximately, Plus, Minus } from 'lucide-react';
+import { ShoppingBag, Info, EqualApproximately } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useZipCode } from '@/contexts/ZipCodeContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -35,28 +34,14 @@ export default function AddToCartOptions({
   const { zipCode, zipCodeData } = useZipCode();
   const { toast } = useToast();
   
-  // State to track the current selected amount
-  const [selectedAmount, setSelectedAmount] = useState(Math.max(3, Math.round(calculatedTons)));
+  // Round to nearest ton
+  const roundedTons = Math.round(calculatedTons);
   
-  // Update selected amount when calculated tons changes
-  useEffect(() => {
-    setSelectedAmount(Math.max(3, Math.round(calculatedTons)));
-  }, [calculatedTons]);
-
-  // Handle increment/decrement
-  const handleIncrement = () => {
-    setSelectedAmount(prev => prev + 1);
-  };
-
-  const handleDecrement = () => {
-    setSelectedAmount(prev => Math.max(3, prev - 1));
-  };
-
-  // Generate three options based on selected amount
+  // Generate three options: exact, -1, +1 (ensuring none go below 1 ton)
   const options = [
-    { tons: Math.max(3, selectedAmount - 1), label: 'Conservative' },
-    { tons: selectedAmount, label: 'Recommended' },
-    { tons: selectedAmount + 1, label: 'Extra Buffer' }
+    { tons: Math.max(1, roundedTons - 1), label: 'Conservative' },
+    { tons: roundedTons, label: 'Recommended' },
+    { tons: roundedTons + 1, label: 'Extra Buffer' }
   ];
 
   // Handle adding product to cart
@@ -166,36 +151,6 @@ export default function AddToCartOptions({
           </div>
         </div>
       )}
-
-      {/* Top increment/decrement controls */}
-      <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Amount:</span>
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleDecrement}
-              disabled={selectedAmount <= 3}
-              className="h-8 w-8"
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-            <div className="text-center min-w-[60px]">
-              <div className="font-semibold">{selectedAmount} tons</div>
-              <div className="text-xs text-gray-500">≈ {calculateCubicYards(selectedAmount)} yd³</div>
-            </div>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleIncrement}
-              className="h-8 w-8"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
       
       <div className="space-y-3">
         {options.map((option) => {
@@ -224,6 +179,8 @@ export default function AddToCartOptions({
                   <p className="text-sm text-black font-medium mb-1">{product.name}</p>
                   <div className="flex items-center text-xs text-gray-500">
                     <span>{option.label}</span> 
+
+                    
                   </div>
                 </div>
                 <div className="text-right">
@@ -240,36 +197,6 @@ export default function AddToCartOptions({
             </div>
           );
         })}
-      </div>
-
-      {/* Bottom increment/decrement controls */}
-      <div className="mt-4 p-3 bg-gray-50 rounded-md border border-gray-200">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Adjust Amount:</span>
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleDecrement}
-              disabled={selectedAmount <= 3}
-              className="h-8 w-8"
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-            <div className="text-center min-w-[60px]">
-              <div className="font-semibold">{selectedAmount} tons</div>
-              <div className="text-xs text-gray-500">≈ {calculateCubicYards(selectedAmount)} yd³</div>
-            </div>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleIncrement}
-              className="h-8 w-8"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
       </div>
     </div>
   );
