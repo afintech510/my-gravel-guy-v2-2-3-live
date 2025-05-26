@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,15 @@ const Cart = () => {
   // Check if any discounts have been applied
   const hasDiscounts = total !== discountTotal;
   const totalDiscount = total - discountTotal;
+
+  // Check if all items have complete delivery info
+  const allItemsComplete = items.every(item => 
+    item.deliveryDate && 
+    item.deliveryAddress?.street && 
+    item.contactInfo?.name && 
+    item.contactInfo?.phone && 
+    item.contactInfo?.email
+  );
 
   useEffect(() => {
     // Scroll to top when component mounts
@@ -49,7 +59,17 @@ const Cart = () => {
               key={`${item.id}-${index}`}
               item={item}
               onRemove={removeFromCart}
-              onUpdateDelivery={updateDeliveryDetails}
+              onUpdateDelivery={(productId, details) => {
+                updateDeliveryDetails(productId, {
+                  deliveryDate: details.deliveryDate,
+                  deliveryAddress: details.deliveryAddress,
+                  contactInfo: details.contactInfo,
+                  deliveryTimePreference: details.deliveryTimePreference,
+                  deliveryInstructions: details.deliveryInstructions,
+                  locationPhotoUrl: details.locationPhotoUrl
+                });
+              }}
+              autoExpandDelivery={true} // Auto-expand for better UX
             />
           ))}
         </div>
@@ -83,12 +103,22 @@ const Cart = () => {
               <span>Total</span>
               <span>${discountTotal.toFixed(2)}</span>
             </div>
+
+            {/* Delivery completion status */}
+            {!allItemsComplete && (
+              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                <p className="text-sm text-amber-800">
+                  Please complete delivery information for all items before checkout.
+                </p>
+              </div>
+            )}
             
             <Button 
               onClick={() => navigate('/checkout')} 
               className="w-full"
+              disabled={!allItemsComplete}
             >
-              Proceed to Checkout
+              {allItemsComplete ? 'Proceed to Checkout' : 'Complete Delivery Info'}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
