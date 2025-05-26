@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Product, PriceTier } from './types';
 import { applyZipCodeAdjustment } from './priceUtils';
@@ -102,7 +101,7 @@ export async function getPriceAdjustmentForZipCode(zipCode: string): Promise<num
  * Find the appropriate price tier multiplier for a given quantity
  * @param tiers Array of price tiers
  * @param tons Quantity in tons
- * @returns The appropriate multiplier from the matching tier, or 1 if no tier found
+ * @returns The appropriate multiplier from the matching tier
  */
 export function findPriceMultiplierForQuantity(tiers: PriceTier[], tons: number): number {
   if (!tiers.length) {
@@ -137,10 +136,11 @@ export function findPriceMultiplierForQuantity(tiers: PriceTier[], tons: number)
     return tier.multiplier;
   }
   
-  // If no tier found and quantity is below the minimum tier, use base price (multiplier = 1)
+  // If no tier found and quantity is below the minimum tier, use the highest multiplier (surcharge for small orders)
   if (tons < sortedTiers[0].min_tons) {
-    console.log(`[pricingUtils] Quantity ${tons} is below minimum tier ${sortedTiers[0].min_tons}, using base price multiplier: 1`);
-    return 1; // Use base price for quantities below minimum tier
+    const smallestTier = sortedTiers[0];
+    console.log(`[pricingUtils] Quantity ${tons} is below minimum tier ${smallestTier.min_tons}, applying surcharge multiplier: ${smallestTier.multiplier}`);
+    return smallestTier.multiplier;
   }
   
   // Default to no adjustment if no tier matches
