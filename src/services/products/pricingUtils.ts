@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Product, PriceTier } from './types';
 import { applyZipCodeAdjustment } from './priceUtils';
@@ -104,43 +105,56 @@ export async function getPriceAdjustmentForZipCode(zipCode: string): Promise<num
  * @returns The appropriate multiplier from the matching tier
  */
 export function findPriceMultiplierForQuantity(tiers: PriceTier[], tons: number): number {
+  console.log(`[pricingUtils] ======= DEBUGGING TIER MATCHING =======`);
+  console.log(`[pricingUtils] Looking for tier for ${tons} tons`);
+  console.log(`[pricingUtils] Available tiers:`, JSON.stringify(tiers, null, 2));
+  
   if (!tiers.length) {
     console.log(`[pricingUtils] No price tiers provided, using default multiplier: 1`);
     return 1;
   }
   
-  console.log(`[pricingUtils] Finding price multiplier for ${tons} tons from ${tiers.length} tiers`);
-  
   // Sort tiers by min_tons to ensure we check in ascending order
   const sortedTiers = [...tiers].sort((a, b) => a.min_tons - b.min_tons);
+  console.log(`[pricingUtils] Sorted tiers by min_tons:`, JSON.stringify(sortedTiers, null, 2));
   
-  // Find the appropriate tier
-  const tier = sortedTiers.find(t => {
-    // If tier has max_tons, check if tons is in range
-    if (t.max_tons !== null && t.max_tons !== undefined) {
-      const isInRange = tons >= t.min_tons && tons <= t.max_tons;
-      console.log(`[pricingUtils] Checking tier min: ${t.min_tons}, max: ${t.max_tons}, multiplier: ${t.multiplier}, tons: ${tons}, in range: ${isInRange}`);
-      return isInRange;
-    }
+  // Find the appropriate tier - we need to find the tier where tons fits within the range
+  let matchingTier = null;
+  
+  for (const tier of sortedTiers) {
+    console.log(`[pricingUtils] Checking tier: min=${tier.min_tons}, max=${tier.max_tons}, multiplier=${tier.multiplier}`);
     
-    // If no max_tons, this is for "tons >= min_tons"
-    const meetsMinimum = tons >= t.min_tons;
-    console.log(`[pricingUtils] Checking tier min: ${t.min_tons}, no max, multiplier: ${t.multiplier}, tons: ${tons}, meets minimum: ${meetsMinimum}`);
-    return meetsMinimum;
-  });
-  
-  // If we found a tier, use its multiplier
-  if (tier) {
-    console.log(`[pricingUtils] Found matching tier:`, tier);
-    console.log(`[pricingUtils] Using multiplier: ${tier.multiplier}`);
-    return tier.multiplier;
+    // If tier has max_tons, check if tons is in range [min_tons, max_tons]
+    if (tier.max_tons !== null && tier.max_tons !== undefined) {
+      const isInRange = tons >= tier.min_tons && tons <= tier.max_tons;
+      console.log(`[pricingUtils] Range tier: ${tons} >= ${tier.min_tons} && ${tons} <= ${tier.max_tons} = ${isInRange}`);
+      if (isInRange) {
+        matchingTier = tier;
+        break;
+      }
+    } else {
+      // If no max_tons, this tier applies to "tons >= min_tons"
+      // But we should only use this if no other tier with a max applies
+      const meetsMinimum = tons >= tier.min_tons;
+      console.log(`[pricingUtils] Open-ended tier: ${tons} >= ${tier.min_tons} = ${meetsMinimum}`);
+      if (meetsMinimum && !matchingTier) {
+        matchingTier = tier;
+        // Don't break here - continue to see if there's a more specific tier
+      }
+    }
   }
   
-  // If no tier found and quantity is below the minimum tier, use the highest multiplier (surcharge for small orders)
+  // If we found a matching tier, use its multiplier
+  if (matchingTier) {
+    console.log(`[pricingUtils] FOUND MATCHING TIER:`, matchingTier);
+    console.log(`[pricingUtils] Using multiplier: ${matchingTier.multiplier}`);
+    return matchingTier.multiplier;
+  }
+  
+  // If no tier found and quantity is below the minimum tier, use 1 (no surcharge)
   if (tons < sortedTiers[0].min_tons) {
-    const smallestTier = sortedTiers[0];
-    console.log(`[pricingUtils] Quantity ${tons} is below minimum tier ${smallestTier.min_tons}, applying surcharge multiplier: ${smallestTier.multiplier}`);
-    return smallestTier.multiplier;
+    console.log(`[pricingUtils] Quantity ${tons} is below minimum tier ${sortedTiers[0].min_tons}, using base price multiplier: 1`);
+    return 1;
   }
   
   // Default to no adjustment if no tier matches
@@ -166,38 +180,43 @@ export async function calculateFinalPrice(
   pricePerTon: number
 }> {
   try {
-    console.log(`[pricingUtils] Calculating final price for ${product.name}, ${tons} tons, ZIP: ${zipCode || 'none'}`);
+    console.log(`[pricingUtils] ======= CALCULATING FINAL PRICE =======`);
+    console.log(`[pricingUtils] Product: ${product.name} (ID: ${product.id})`);
+    console.log(`[pricingUtils] Base price: $${product.price}`);
+    console.log(`[pricingUtils] Quantity: ${tons} tons`);
+    console.log(`[pricingUtils] ZIP code: ${zipCode || 'none'}`);
     
     // 1. Get price tiers for this product
     const priceTiers = await getPriceTiersForProduct(product.id);
+    console.log(`[pricingUtils] Retrieved ${priceTiers.length} price tiers`);
     
     // 2. Find the appropriate multiplier for the quantity
     const multiplier = findPriceMultiplierForQuantity(priceTiers, tons);
+    console.log(`[pricingUtils] Tier multiplier: ${multiplier}`);
     
     // 3. Get ZIP code adjustment if applicable
     let zipAdjustment = 1; // Default to no adjustment
     if (zipCode) {
       zipAdjustment = await getPriceAdjustmentForZipCode(zipCode);
     }
+    console.log(`[pricingUtils] ZIP adjustment: ${zipAdjustment}`);
     
     // 4. Calculate price per ton with tier adjustment
-    // If multiplier > 1, it's a surcharge for small quantities
-    // If multiplier < 1, it's a discount for large quantities
     const priceWithTierAdjustment = product.price * multiplier;
+    console.log(`[pricingUtils] Price after tier adjustment: $${product.price} * ${multiplier} = $${priceWithTierAdjustment}`);
     
     // 5. Apply ZIP code adjustment
     const pricePerTon = Math.round(priceWithTierAdjustment * zipAdjustment * 100) / 100;
+    console.log(`[pricingUtils] Price per ton after ZIP adjustment: $${priceWithTierAdjustment} * ${zipAdjustment} = $${pricePerTon}`);
     
     // 6. Calculate the total price
     const finalPrice = Math.round(pricePerTon * tons * 100) / 100;
+    console.log(`[pricingUtils] Final total price: $${pricePerTon} * ${tons} = $${finalPrice}`);
     
-    console.log(`[pricingUtils] Price calculation:
-      Base price: $${product.price}
-      Tier multiplier: ${multiplier} ${multiplier !== 1 ? `(${(multiplier > 1 ? '+' : '') + ((multiplier - 1) * 100).toFixed(0)}%)` : ''}
-      After tier adjustment: $${priceWithTierAdjustment}
-      ZIP adjustment: ${zipAdjustment} ${zipAdjustment !== 1 ? `(${(zipAdjustment > 1 ? '+' : '') + ((zipAdjustment - 1) * 100).toFixed(0)}%)` : ''}
-      Final price per ton: $${pricePerTon}
-      Total for ${tons} tons: $${finalPrice}`);
+    console.log(`[pricingUtils] ======= PRICE CALCULATION SUMMARY =======`);
+    console.log(`[pricingUtils] Expected for 10 tons Driveway Gravel to 11967: $900`);
+    console.log(`[pricingUtils] Actual result: $${finalPrice}`);
+    console.log(`[pricingUtils] =======================================`);
     
     return {
       basePrice: product.price,
