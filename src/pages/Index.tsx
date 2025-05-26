@@ -2,7 +2,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import ZipCodeSearch from '../components/zip-code/ZipCodeSearch';
-import ShoppingModule from '../components/ShoppingModule';
+import LocationProductHero from '../components/LocationProductHero';
+import ProductGrid from '../components/ProductGrid';
 import MaterialCalculator from '../components/MaterialCalculator';
 import HowItWorks from '../components/HowItWorks';
 import TestQueryButton from '../components/TestQueryButton';
@@ -49,8 +50,12 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Shopping Module - New addition replacing LocationProductHero */}
-      <ShoppingModule />
+      {/* Location Product Hero - Shows always below ZIP search */}
+      <section className="py-6 px-4">
+        <div className="max-w-6xl mx-auto">
+          <LocationProductHero />
+        </div>
+      </section>
       
       {/* How It Works Section */}
       <HowItWorks />
