@@ -25,6 +25,11 @@ interface ProductPricing {
   zipAdjustment: number;
 }
 
+// Helper function to enforce minimum quantity for pricing
+const getEffectivePricingQuantity = (calculatedTons: number): number => {
+  return Math.max(3, calculatedTons);
+};
+
 export default function ProductCalculator() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [areas, setAreas] = useState<Array<{length: number, width: number}>>([{length: 10, width: 10}]);
@@ -146,7 +151,11 @@ export default function ProductCalculator() {
     const updatePriceDetails = async () => {
       if (selectedProduct && calculationResult.totalTons > 0) {
         try {
-          console.log(`ProductCalculator: Calculating price for product ${selectedProduct.name} (ID: ${selectedProduct.id}), tons: ${calculationResult.totalTons}`);
+          // Enforce minimum 3-ton quantity for pricing calculations
+          const effectiveTons = getEffectivePricingQuantity(calculationResult.totalTons);
+          
+          console.log(`ProductCalculator: Calculating price for product ${selectedProduct.name} (ID: ${selectedProduct.id})`);
+          console.log(`ProductCalculator: Calculated tons: ${calculationResult.totalTons}, Effective pricing tons: ${effectiveTons}`);
           
           // Use preloaded pricing data if available, otherwise calculate fresh
           const productId = selectedProduct.id.toString();
@@ -155,7 +164,7 @@ export default function ProductCalculator() {
             const pricing = productPricing[productId];
             const pricing_calc = await calculateFinalPrice(
               selectedProduct,
-              calculationResult.totalTons,
+              effectiveTons, // Use effective tons for pricing
               zipCode || undefined
             );
             setPriceDetails(pricing_calc);
@@ -164,7 +173,7 @@ export default function ProductCalculator() {
             // Fallback to fresh calculation
             const pricing = await calculateFinalPrice(
               selectedProduct,
-              calculationResult.totalTons,
+              effectiveTons, // Use effective tons for pricing
               zipCode || undefined
             );
             console.log('ProductCalculator: Fresh price calculation:', pricing);
@@ -177,7 +186,7 @@ export default function ProductCalculator() {
             const direction = priceDetails.multiplier > 1 ? 'increase' : 'decrease';
             toast({
               title: `Volume pricing applied`,
-              description: `${calculationResult.totalTons.toFixed(1)} tons qualifies for a ${changePercent}% price ${direction}.`,
+              description: `${effectiveTons.toFixed(1)} tons qualifies for a ${changePercent}% price ${direction}.`,
               duration: 3000
             });
           }
