@@ -10,16 +10,20 @@ import AddToCartOptions from '@/components/product-calculator/AddToCartOptions';
 import ZipCodeChecker from '@/components/product-calculator/ZipCodeChecker';
 import TrustBanner from '@/components/product-calculator/TrustBanner';
 import { Product } from '@/services/productTypes';
+import { useCalculator } from '@/hooks/useCalculator';
 
 const ProductCalculator = () => {
   const { productId } = useParams();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [calculatedAmount, setCalculatedAmount] = useState<number>(0);
-  const [zipCode, setZipCode] = useState<string>('');
-  const [isValidZip, setIsValidZip] = useState<boolean>(false);
+  const [areas, setAreas] = useState([{ length: 10, width: 10 }]);
+  const [depth, setDepth] = useState(4);
+  const [extraPercentage, setExtraPercentage] = useState(10);
   
   // Ref for the product details section
   const productDetailsRef = useRef<HTMLDivElement>(null);
+
+  // Calculate material needs using the calculator hook
+  const calculations = useCalculator(areas, depth, extraPercentage, 62, 1.5);
 
   // Auto-scroll to product details when a product is selected
   useEffect(() => {
@@ -34,17 +38,6 @@ const ProductCalculator = () => {
   const handleProductSelected = (product: Product | null) => {
     setSelectedProduct(product);
     console.log('ProductCalculator: Product selected:', product?.name || 'None');
-  };
-
-  const handleAmountCalculated = (amount: number) => {
-    setCalculatedAmount(amount);
-    console.log('ProductCalculator: Amount calculated:', amount);
-  };
-
-  const handleZipCodeChange = (zip: string, isValid: boolean) => {
-    setZipCode(zip);
-    setIsValidZip(isValid);
-    console.log('ProductCalculator: Zip code changed:', zip, 'Valid:', isValid);
   };
 
   return (
@@ -81,8 +74,13 @@ const ProductCalculator = () => {
                 </CardHeader>
                 <CardContent>
                   <AreaCalculator
-                    product={selectedProduct}
-                    onAmountCalculated={handleAmountCalculated}
+                    areas={areas}
+                    setAreas={setAreas}
+                    depth={depth}
+                    setDepth={setDepth}
+                    extraPercentage={extraPercentage}
+                    setExtraPercentage={setExtraPercentage}
+                    calculationResult={calculations}
                   />
                 </CardContent>
               </Card>
@@ -98,18 +96,14 @@ const ProductCalculator = () => {
                 </div>
               )}
 
-              {selectedProduct && calculatedAmount > 0 && (
+              {selectedProduct && calculations.totalTons > 0 && (
                 <>
-                  <ZipCodeChecker
-                    product={selectedProduct}
-                    onZipCodeChange={handleZipCodeChange}
-                  />
+                  <ZipCodeChecker />
                   
                   <AddToCartOptions
                     product={selectedProduct}
-                    calculatedAmount={calculatedAmount}
-                    zipCode={zipCode}
-                    isValidZip={isValidZip}
+                    calculatedTons={calculations.totalTons}
+                    priceDetails={null}
                   />
                 </>
               )}
