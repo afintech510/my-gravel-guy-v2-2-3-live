@@ -4,6 +4,7 @@ import { Product } from '@/services/productTypes';
 import { useCart } from '@/contexts/CartContext';
 import { useZipCode } from '@/contexts/ZipCodeContext';
 import { useToast } from '@/components/ui/use-toast';
+import { useNavigate } from 'react-router-dom';
 import { calculateFinalPrice } from '@/services/products/pricingUtils';
 import PriceDetailsDisplay from './PriceDetailsDisplay';
 import QuantityAdjuster from './QuantityAdjuster';
@@ -29,6 +30,7 @@ export default function AddToCartOptions({
   const { addToCart } = useCart();
   const { zipCode, zipCodeData } = useZipCode();
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   // State for adjustable quantity with minimum of 3 tons
   const [adjustedTons, setAdjustedTons] = useState(() => Math.max(3, Math.round(calculatedTons)));
@@ -69,6 +71,9 @@ export default function AddToCartOptions({
         title: "Added to cart",
         description: `${tons} tons of ${product.name} has been added to your cart.`,
       });
+
+      // Navigate to quick checkout
+      navigate('/quick-checkout');
     } catch (error) {
       console.error("Error adding to cart:", error);
       toast({
