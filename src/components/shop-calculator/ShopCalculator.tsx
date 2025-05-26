@@ -1,137 +1,119 @@
-
 import React, { useState, useEffect } from 'react';
-import { Card } from "@/components/ui/card";
-import ShopAreaInputs, { AreaDimensions } from './ShopAreaInputs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import MaterialCategorySelector, { ShopMaterialCategory, ShopMaterialSubcategory } from './MaterialCategorySelector';
+import ShopAreaInputs from './ShopAreaInputs';
+import DepthSlider from './DepthSlider';
+import ExtraSlider from './ExtraSlider';
 import ShopCalculationDisplay from './ShopCalculationDisplay';
-import ShopMaterialSelector from './ShopMaterialSelector';
-import ZipCodeSection from './ZipCodeSection';
 import ContactForm from './ContactForm';
-import { Product } from '@/services/productTypes';
+import ZipCodeSection from './ZipCodeSection';
+import { MaterialSize } from '@/services/productTypes';
+import { useCalculator } from '@/hooks/useCalculator';
 
-// Update type definition to use string for sizes
-export type MaterialCategory = 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base' | 'soil' | 'stone' | 'rock' | 'crushed-gravel' | 'crushed-concrete';
-export type ApplicationType = 'driveway' | 'walkway' | 'landscape' | 'drainage' | 'foundation';
-export type MaterialSubcategory = 
-  'washed-sand' | 'mason-sand' | 'playground-sand' | 'pool-sand' | 'beach-sand' | 
-  'fill-dirt' | 'top-soil' | 'compost' | 'loam' | 'sandy-loam' |
-  'natural' | 'black' | 'chocolate-brown' | 'red' | 'request' |
-  '57-crushed-stone' | 'crusher-run' | 'road-base' | 'rca-crushed-concrete' | 'drainage-rock' |
-  'driveway' | 'walkway' | 'landscape' | 'natural' | 'construction' |
-  'pea-gravel' | 'river-rock' | 'crushed-stone' | 'decorative-gravel' | 'drainage-gravel';
+// Remove the old type definitions since they're now in MaterialCategorySelector
+export type { ShopMaterialCategory as MaterialCategory, ShopMaterialSubcategory as MaterialSubcategory } from './MaterialCategorySelector';
+export type ApplicationType = 'residential' | 'commercial' | 'landscaping';
 
-interface ShopCalculatorProps {
-  onProductSelected?: (product: Product | null) => void;
-  selectedProduct?: Product | null;
-}
+const ShopCalculator = () => {
+  const [selectedCategory, setSelectedCategory] = useState<ShopMaterialCategory>('gravel');
+  const [selectedSubcategory, setSelectedSubcategory] = useState<ShopMaterialSubcategory>('driveway');
+  const [selectedSize, setSelectedSize] = useState<MaterialSize>('3/4"');
+  const [areas, setAreas] = useState([{ length: 10, width: 10 }]);
+  const [depth, setDepth] = useState(4);
+  const [extraPercentage, setExtraPercentage] = useState(10);
+  const [showContactForm, setShowContactForm] = useState(false);
 
-const ShopCalculator: React.FC<ShopCalculatorProps> = ({ 
-  onProductSelected,
-  selectedProduct: initialSelectedProduct 
-}) => {
-  // Material selection state
-  const [selectedCategory, setSelectedCategory] = useState<MaterialCategory>('gravel');
-  const [selectedSubcategory, setSelectedSubcategory] = useState<MaterialSubcategory>('driveway');
-  
-  // Area dimensions state - updated to use the new structure
-  const [areaDimensions, setAreaDimensions] = useState<AreaDimensions>({
-    areas: [{ length: 10, width: 10 }],
-    depth: 2,
-    extra: 10,
-  });
+  // Mock product images for demo
+  const productImages = [
+    '/assets/crushed-stone.png',
+    '/assets/river-rocks.png',
+    '/lovable-uploads/646fdaef-3f82-4658-ad98-21de35fad1a1.png'
+  ];
 
-  // Sample product images based on category
-  const productImages = {
-    gravel: ['/assets/crushed-stone.png', '/assets/river-rocks.png'],
-    sand: ['/assets/sand.jpg', '/assets/playground-sand.jpg'],
-    dirt: ['/assets/topsoil.jpg', '/assets/fill-dirt.jpg'],
-    mulch: ['/assets/mulch.jpg', '/assets/black-mulch.jpg'],
-    base: ['/assets/road-base.jpg', '/assets/crushed-concrete.jpg'],
+  // Calculate material needs
+  const calculations = useCalculator(areas, depth, extraPercentage, 62, 1.5);
+
+  const handleGetQuote = () => {
+    setShowContactForm(true);
   };
-
-  // Product state
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialSelectedProduct || null);
-
-  // Function to handle product selection
-  const handleProductSelected = (product: Product | null) => {
-    console.log("ShopCalculator: Product selected:", product?.name || 'None');
-    setSelectedProduct(product);
-    
-    // Call parent callback if provided
-    if (onProductSelected) {
-      onProductSelected(product);
-    }
-  };
-
-  // Calculate cubic yards and tons based on dimensions
-  const calculateMaterial = () => {
-    const { areas, depth, extra } = areaDimensions;
-    
-    // Convert inches to feet for depth
-    const depthInFeet = depth / 12;
-    
-    // Calculate total square footage
-    const totalSquareFeet = areas.reduce((sum, area) => sum + (area.length * area.width), 0);
-    
-    // Calculate cubic yards
-    let cubicYards = (totalSquareFeet * depthInFeet) / 27;
-    
-    // Add extra percentage
-    cubicYards = cubicYards * (1 + (extra / 100));
-    
-    // Calculate tons (varies by material)
-    // Use tonYardRatio from selected product if available, else use default ratio
-    const tonYardRatio = selectedProduct?.tonYardRatio || 1.5;
-    const tons = cubicYards * tonYardRatio;
-    
-    return {
-      cubicYards: Math.round(cubicYards * 100) / 100,
-      tons: Math.round(tons * 100) / 100
-    };
-  };
-
-  const materialCalculation = calculateMaterial();
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* LEFT COLUMN: Material Selection */}
-      <div className="md:col-span-2">
-        <Card className="p-6">
-          <h2 className="text-2xl font-semibold mb-6">Material Selection</h2>
-          <ShopMaterialSelector 
-            selectedCategory={selectedCategory}
-            setSelectedCategory={setSelectedCategory}
-            selectedSubcategory={selectedSubcategory}
-            setSelectedSubcategory={setSelectedSubcategory}
-            productImages={productImages[selectedCategory] || []}
-            onProductSelected={handleProductSelected}
-          />
-        </Card>
+    <div className="max-w-6xl mx-auto p-6 space-y-8">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold mb-4">Calculate Your Material Needs</h1>
+        <p className="text-gray-600">Select your material, enter your project dimensions, and get an instant quote.</p>
       </div>
-      
-      {/* RIGHT COLUMN: Calculator, Calculation, ZIP Code, Contact Form */}
-      <div className="space-y-6">
-        {/* Area Calculator - Moved to top of right column */}
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Area Calculator</h2>
-          <ShopAreaInputs
-            dimensions={areaDimensions}
-            onDimensionsChange={setAreaDimensions}
-          />
-        </Card>
-      
-        <ShopCalculationDisplay 
-          cubicYards={materialCalculation.cubicYards} 
-          tons={materialCalculation.tons}
-          materialInfo={{
-            category: selectedCategory,
-            subcategory: selectedSubcategory,
-          }}
-          selectedProduct={selectedProduct}
+
+      {!showContactForm ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left column - Material Selection */}
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>1. Select Your Material</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <MaterialCategorySelector
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                  selectedSubcategory={selectedSubcategory}
+                  setSelectedSubcategory={setSelectedSubcategory}
+                  selectedSize={selectedSize}
+                  setSelectedSize={setSelectedSize}
+                  productImages={productImages}
+                />
+              </CardContent>
+            </Card>
+
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>2. Enter Project Dimensions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <ShopAreaInputs areas={areas} onAreaChange={setAreas} />
+                <DepthSlider depth={depth} setDepth={setDepth} />
+                <ExtraSlider extraPercentage={extraPercentage} setExtraPercentage={setExtraPercentage} />
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right column - Calculation & Quote */}
+          <div className="lg:col-span-1">
+            <Card className="sticky top-6">
+              <CardHeader>
+                <CardTitle>Your Quote</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <ShopCalculationDisplay
+                  totalArea={calculations.totalSquareFeet}
+                  cubicYards={calculations.totalCubicYards}
+                  tons={calculations.totalTons}
+                  estimatedCost={calculations.estimatedCost}
+                />
+                
+                <ZipCodeSection />
+                
+                <Button 
+                  onClick={handleGetQuote} 
+                  className="w-full bg-primary hover:bg-primary/90 text-white"
+                  size="lg"
+                >
+                  Get Quote & Schedule Delivery
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      ) : (
+        <ContactForm
+          selectedCategory={selectedCategory}
+          selectedSubcategory={selectedSubcategory}
+          selectedSize={selectedSize}
+          calculations={calculations}
+          onBack={() => setShowContactForm(false)}
         />
-        
-        <ZipCodeSection product={selectedProduct} />
-        
-      </div>
+      )}
     </div>
   );
 };
