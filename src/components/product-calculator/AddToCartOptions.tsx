@@ -1,7 +1,8 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Product } from '@/services/productTypes';
 import { Button } from '@/components/ui/button';
-import { ShoppingBag, Info, EqualApproximately } from 'lucide-react';
+import { ShoppingBag, Info, EqualApproximately, Plus, Minus } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useZipCode } from '@/contexts/ZipCodeContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -34,15 +35,24 @@ export default function AddToCartOptions({
   const { zipCode, zipCodeData } = useZipCode();
   const { toast } = useToast();
   
-  // Round to nearest ton
-  const roundedTons = Math.round(calculatedTons);
+  // State for adjustable quantity with minimum of 3 tons
+  const [adjustedTons, setAdjustedTons] = useState(() => Math.max(3, Math.round(calculatedTons)));
   
-  // Generate three options: exact, -1, +1 (ensuring none go below 1 ton)
+  // Generate three options based on adjusted tons
   const options = [
-    { tons: Math.max(1, roundedTons - 1), label: 'Conservative' },
-    { tons: roundedTons, label: 'Recommended' },
-    { tons: roundedTons + 1, label: 'Extra Buffer' }
+    { tons: Math.max(3, adjustedTons - 1), label: 'Conservative' },
+    { tons: adjustedTons, label: 'Recommended' },
+    { tons: adjustedTons + 1, label: 'Extra Buffer' }
   ];
+
+  // Handle increment/decrement
+  const handleIncrement = () => {
+    setAdjustedTons(prev => prev + 1);
+  };
+
+  const handleDecrement = () => {
+    setAdjustedTons(prev => Math.max(3, prev - 1));
+  };
 
   // Handle adding product to cart
   const handleAddToCart = async (tons: number) => {
@@ -151,6 +161,30 @@ export default function AddToCartOptions({
           </div>
         </div>
       )}
+
+      {/* Top increment/decrement buttons */}
+      <div className="mb-4 flex justify-center">
+        <div className="flex items-center bg-green-100 rounded-lg p-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleDecrement}
+            disabled={adjustedTons <= 3}
+            className="h-8 w-8 p-0 hover:bg-green-200"
+          >
+            <Minus className="h-4 w-4" />
+          </Button>
+          <span className="mx-3 text-sm font-medium">Adjust Amount</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleIncrement}
+            className="h-8 w-8 p-0 hover:bg-green-200"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
       
       <div className="space-y-3">
         {options.map((option) => {
@@ -179,8 +213,6 @@ export default function AddToCartOptions({
                   <p className="text-sm text-black font-medium mb-1">{product.name}</p>
                   <div className="flex items-center text-xs text-gray-500">
                     <span>{option.label}</span> 
-
-                    
                   </div>
                 </div>
                 <div className="text-right">
@@ -197,6 +229,30 @@ export default function AddToCartOptions({
             </div>
           );
         })}
+      </div>
+
+      {/* Bottom increment/decrement buttons */}
+      <div className="mt-4 flex justify-center">
+        <div className="flex items-center bg-green-100 rounded-lg p-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleDecrement}
+            disabled={adjustedTons <= 3}
+            className="h-8 w-8 p-0 hover:bg-green-200"
+          >
+            <Minus className="h-4 w-4" />
+          </Button>
+          <span className="mx-3 text-sm font-medium">Adjust Amount</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleIncrement}
+            className="h-8 w-8 p-0 hover:bg-green-200"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );
