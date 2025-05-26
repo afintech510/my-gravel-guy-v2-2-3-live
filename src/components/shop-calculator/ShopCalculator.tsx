@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,13 +16,20 @@ import { useCalculator } from '@/hooks/useCalculator';
 export type { ShopMaterialCategory as MaterialCategory, ShopMaterialSubcategory as MaterialSubcategory } from './MaterialCategorySelector';
 export type ApplicationType = 'residential' | 'commercial' | 'landscaping';
 
-const ShopCalculator = () => {
+interface ShopCalculatorProps {
+  onProductSelected?: (product: any) => void;
+  selectedProduct?: any;
+}
+
+const ShopCalculator: React.FC<ShopCalculatorProps> = ({ onProductSelected, selectedProduct }) => {
   const [selectedCategory, setSelectedCategory] = useState<ShopMaterialCategory>('gravel');
   const [selectedSubcategory, setSelectedSubcategory] = useState<ShopMaterialSubcategory>('driveway');
   const [selectedSize, setSelectedSize] = useState<MaterialSize>('3/4"');
-  const [areas, setAreas] = useState([{ length: 10, width: 10 }]);
-  const [depth, setDepth] = useState(4);
-  const [extraPercentage, setExtraPercentage] = useState(10);
+  const [dimensions, setDimensions] = useState({
+    areas: [{ length: 10, width: 10 }],
+    depth: 4,
+    extra: 10
+  });
   const [showContactForm, setShowContactForm] = useState(false);
 
   // Mock product images for demo
@@ -32,7 +40,7 @@ const ShopCalculator = () => {
   ];
 
   // Calculate material needs
-  const calculations = useCalculator(areas, depth, extraPercentage, 62, 1.5);
+  const calculations = useCalculator(dimensions.areas, dimensions.depth, dimensions.extra, 62, 1.5);
 
   const handleGetQuote = () => {
     setShowContactForm(true);
@@ -71,9 +79,10 @@ const ShopCalculator = () => {
                 <CardTitle>2. Enter Project Dimensions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <ShopAreaInputs areas={areas} onAreaChange={setAreas} />
-                <DepthSlider depth={depth} setDepth={setDepth} />
-                <ExtraSlider extraPercentage={extraPercentage} setExtraPercentage={setExtraPercentage} />
+                <ShopAreaInputs 
+                  dimensions={dimensions} 
+                  onDimensionsChange={setDimensions} 
+                />
               </CardContent>
             </Card>
           </div>
@@ -86,13 +95,16 @@ const ShopCalculator = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 <ShopCalculationDisplay
-                  totalArea={calculations.totalSquareFeet}
                   cubicYards={calculations.totalCubicYards}
                   tons={calculations.totalTons}
-                  estimatedCost={calculations.estimatedCost}
+                  materialInfo={{
+                    category: selectedCategory,
+                    subcategory: selectedSubcategory
+                  }}
+                  selectedProduct={selectedProduct}
                 />
                 
-                <ZipCodeSection />
+                <ZipCodeSection product={selectedProduct} />
                 
                 <Button 
                   onClick={handleGetQuote} 
@@ -107,11 +119,11 @@ const ShopCalculator = () => {
         </div>
       ) : (
         <ContactForm
-          selectedCategory={selectedCategory}
-          selectedSubcategory={selectedSubcategory}
-          selectedSize={selectedSize}
-          calculations={calculations}
-          onBack={() => setShowContactForm(false)}
+          productInfo={{
+            name: `${selectedCategory} - ${selectedSubcategory}`,
+            quantity: calculations.totalTons,
+            category: selectedCategory
+          }}
         />
       )}
     </div>

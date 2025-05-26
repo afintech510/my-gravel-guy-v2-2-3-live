@@ -21,10 +21,7 @@ const CalculatorShop = () => {
         
         {/* Updated container for the calculator */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <ShopCalculator 
-            onProductSelected={handleProductSelected} 
-            selectedProduct={selectedProduct}
-          />
+          <ShopCalculator />
         </div>
         
         {/* Quote Form Component */}
