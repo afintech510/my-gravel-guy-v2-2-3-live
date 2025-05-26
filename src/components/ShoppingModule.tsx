@@ -6,7 +6,8 @@ import { getProducts } from '@/services/productService';
 import { Product } from '@/services/productTypes';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/components/ui/use-toast';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const ShoppingModule = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('gravel');
@@ -93,6 +94,10 @@ const ShoppingModule = () => {
     return product.images?.[0] || product.image || '/lovable-uploads/85eef0fe-9a59-406e-ba6b-54e1aaf6f56b.png';
   };
 
+  const calculateCubicYards = (tons: number, tonYardRatio: number = 1.5) => {
+    return (tons / tonYardRatio).toFixed(1);
+  };
+
   if (loading) {
     return (
       <div className="py-16 px-4">
@@ -149,6 +154,7 @@ const ShoppingModule = () => {
                 {filteredProducts.map((product) => {
                   const quantity = quantities[product.id.toString()] || 5;
                   const totalPrice = (product.price * quantity).toFixed(2);
+                  const cubicYards = calculateCubicYards(quantity, product.tonYardRatio);
                   
                   return (
                     <div key={product.id} className="flex items-center gap-4 p-4 border rounded-lg">
@@ -160,35 +166,40 @@ const ShoppingModule = () => {
                       
                       <div className="flex-1">
                         <h4 className="font-semibold">{product.name}</h4>
-                        <p className="text-green-600 font-medium">${product.price.toFixed(2)}/ton</p>
-                        {product.size && (
-                          <p className="text-sm text-gray-500">{product.size}</p>
-                        )}
+                        <p className="text-sm text-gray-600 mb-2">{product.description}</p>
+                        <Link 
+                          to={`/products/${encodeURIComponent(product.slug)}`}
+                          className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+                        >
+                          More Details <ArrowRight className="h-3 w-3 ml-1" />
+                        </Link>
                       </div>
 
                       <div className="flex items-center gap-3">
-                        <div className="flex items-center border rounded-md">
-                          <button
-                            onClick={() => updateQuantity(product.id.toString(), -1)}
-                            className="p-2 hover:bg-gray-100"
-                            disabled={quantity <= 1}
-                          >
-                            <Minus className="h-4 w-4" />
-                          </button>
-                          <span className="px-4 py-2 font-medium">{quantity} tons</span>
-                          <button
-                            onClick={() => updateQuantity(product.id.toString(), 1)}
-                            className="p-2 hover:bg-gray-100"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </button>
-                        </div>
-
                         <div className="text-right">
-                          <div className="text-lg font-bold">${totalPrice}</div>
+                          <div className="flex items-center border rounded-md mb-2">
+                            <button
+                              onClick={() => updateQuantity(product.id.toString(), -1)}
+                              className="p-2 hover:bg-gray-100"
+                              disabled={quantity <= 1}
+                            >
+                              <Minus className="h-4 w-4" />
+                            </button>
+                            <span className="px-4 py-2 font-medium">{quantity} tons</span>
+                            <button
+                              onClick={() => updateQuantity(product.id.toString(), 1)}
+                              className="p-2 hover:bg-gray-100"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </button>
+                          </div>
+                          <div className="text-xs text-gray-500 text-center mb-2">
+                            ≈ {cubicYards} cubic yards
+                          </div>
+                          <div className="text-lg font-bold mb-2">${totalPrice}</div>
                           <Button 
                             onClick={() => handleAddToCart(product)}
-                            className="bg-green-500 hover:bg-green-600 text-white mt-1"
+                            className="bg-green-500 hover:bg-green-600 text-white"
                             size="sm"
                           >
                             Add to Cart
