@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,8 +6,7 @@ import { getProducts } from '@/services/productService';
 import { Product } from '@/services/productTypes';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/components/ui/use-toast';
-import { Plus, Minus, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Plus, Minus } from 'lucide-react';
 
 const ShoppingModule = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('gravel');
@@ -93,7 +93,8 @@ const ShoppingModule = () => {
     return product.images?.[0] || product.image || '/lovable-uploads/85eef0fe-9a59-406e-ba6b-54e1aaf6f56b.png';
   };
 
-  const calculateCubicYards = (tons: number, tonYardRatio: number = 1.5) => {
+  const calculateCubicYards = (tons: number, product: Product) => {
+    const tonYardRatio = product.tonYardRatio || 1.5;
     return (tons / tonYardRatio).toFixed(1);
   };
 
@@ -153,7 +154,7 @@ const ShoppingModule = () => {
                 {filteredProducts.map((product) => {
                   const quantity = quantities[product.id.toString()] || 5;
                   const totalPrice = (product.price * quantity).toFixed(2);
-                  const cubicYards = calculateCubicYards(quantity, product.tonYardRatio);
+                  const cubicYards = calculateCubicYards(quantity, product);
                   
                   return (
                     <div key={product.id} className="flex items-center gap-4 p-4 border rounded-lg">
@@ -165,17 +166,15 @@ const ShoppingModule = () => {
                       
                       <div className="flex-1">
                         <h4 className="font-semibold">{product.name}</h4>
-                        <Link 
-                          to={`/products/${encodeURIComponent(product.slug)}`}
-                          className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
-                        >
-                          More Details <ArrowRight className="h-3 w-3 ml-1" />
-                        </Link>
+                        <p className="text-sm text-gray-600 mt-1">{product.description}</p>
+                        {product.size && (
+                          <p className="text-xs text-gray-500 mt-1">{product.size}</p>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-3">
-                        <div className="text-right">
-                          <div className="flex items-center border rounded-md mb-2">
+                        <div className="text-center">
+                          <div className="flex items-center border rounded-md mb-1">
                             <button
                               onClick={() => updateQuantity(product.id.toString(), -1)}
                               className="p-2 hover:bg-gray-100"
@@ -191,13 +190,14 @@ const ShoppingModule = () => {
                               <Plus className="h-4 w-4" />
                             </button>
                           </div>
-                          <div className="text-xs text-gray-500 text-center mb-2">
-                            ≈ {cubicYards} cubic yards
-                          </div>
-                          <div className="text-lg font-bold mb-2">${totalPrice}</div>
+                          <div className="text-xs text-gray-500">≈ {cubicYards} cubic yards</div>
+                        </div>
+
+                        <div className="text-right">
+                          <div className="text-lg font-bold">${totalPrice}</div>
                           <Button 
                             onClick={() => handleAddToCart(product)}
-                            className="bg-green-500 hover:bg-green-600 text-white"
+                            className="bg-green-500 hover:bg-green-600 text-white mt-1"
                             size="sm"
                           >
                             Add to Cart
