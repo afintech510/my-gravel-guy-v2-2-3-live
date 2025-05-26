@@ -7,6 +7,7 @@ import { Product } from '@/services/productTypes';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Plus, Minus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const ShoppingModule = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('gravel');
@@ -93,6 +94,11 @@ const ShoppingModule = () => {
     return product.images?.[0] || product.image || '/lovable-uploads/85eef0fe-9a59-406e-ba6b-54e1aaf6f56b.png';
   };
 
+  // Calculate cubic yards from tons
+  const calculateCubicYards = (tons: number, tonYardRatio: number) => {
+    return (tons / tonYardRatio).toFixed(1);
+  };
+
   if (loading) {
     return (
       <div className="py-16 px-4">
@@ -149,6 +155,7 @@ const ShoppingModule = () => {
                 {filteredProducts.map((product) => {
                   const quantity = quantities[product.id.toString()] || 5;
                   const totalPrice = (product.price * quantity).toFixed(2);
+                  const cubicYards = calculateCubicYards(quantity, product.tonYardRatio);
                   
                   return (
                     <div key={product.id} className="flex items-center gap-4 p-4 border rounded-lg">
@@ -160,10 +167,15 @@ const ShoppingModule = () => {
                       
                       <div className="flex-1">
                         <h4 className="font-semibold">{product.name}</h4>
-                        <p className="text-green-600 font-medium">${product.price.toFixed(2)}/ton</p>
                         {product.size && (
                           <p className="text-sm text-gray-500">{product.size}</p>
                         )}
+                        <Link 
+                          to={`/products/${encodeURIComponent(product.slug)}`}
+                          className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                          More Details...
+                        </Link>
                       </div>
 
                       <div className="flex items-center gap-3">
@@ -175,7 +187,10 @@ const ShoppingModule = () => {
                           >
                             <Minus className="h-4 w-4" />
                           </button>
-                          <span className="px-4 py-2 font-medium">{quantity} tons</span>
+                          <div className="px-4 py-2 text-center">
+                            <div className="font-medium">{quantity} tons</div>
+                            <div className="text-xs text-gray-500">≡ {cubicYards} yd³</div>
+                          </div>
                           <button
                             onClick={() => updateQuantity(product.id.toString(), 1)}
                             className="p-2 hover:bg-gray-100"
