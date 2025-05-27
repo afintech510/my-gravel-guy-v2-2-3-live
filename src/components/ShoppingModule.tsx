@@ -35,7 +35,7 @@ const ShoppingModule = () => {
   } = useZipCode();
   const navigate = useNavigate();
 
-  // Updated material categories with better organization and product mapping
+  // Updated material categories with the 11 specific categories requested
   const categories = [
     {
       id: 'popular',
@@ -87,11 +87,32 @@ const ShoppingModule = () => {
       keywords: ['recycled concrete', 'rca', 'concrete base', 'crushed concrete']
     },
     {
-      id: 'specialty',
-      name: 'Specialty',
-      icon: '💎',
-      description: 'Unique & premium materials',
-      keywords: ['decomposed granite', 'flagstone', 'slate', 'premium']
+      id: 'driveway',
+      name: 'Driveway',
+      icon: '🚗',
+      description: 'Materials for driveways',
+      keywords: ['driveway gravel', 'crusher run', '411 gravel', 'limestone', 'asphalt']
+    },
+    {
+      id: 'walkway',
+      name: 'Walkway',
+      icon: '🚶',
+      description: 'Materials for walkways',
+      keywords: ['walkway stone', 'flagstone', 'paver sand', 'stepping stones']
+    },
+    {
+      id: 'patio',
+      name: 'Patio',
+      icon: '🏡',
+      description: 'Materials for patios',
+      keywords: ['patio stone', 'flagstone', 'paver base', 'pea gravel', 'sand']
+    },
+    {
+      id: 'landscape',
+      name: 'Landscape',
+      icon: '🌳',
+      description: 'Decorative landscape materials',
+      keywords: ['decorative rock', 'river rock', 'mulch', 'topsoil', 'decomposed granite']
     }
   ];
 
@@ -303,7 +324,7 @@ const ShoppingModule = () => {
           <CardContent className="p-4 md:p-6">
             <h3 className="text-base md:text-lg font-semibold mb-4">FREE SHIPPING NATIONWIDE</h3>
             
-            {/* Mobile: 2 columns */}
+            {/* Mobile: 2 columns for 11 categories */}
             <div className="grid grid-cols-2 gap-2 md:hidden">
               {categories.map(category => (
                 <button
@@ -321,8 +342,8 @@ const ShoppingModule = () => {
               ))}
             </div>
 
-            {/* Desktop: 4 columns */}
-            <div className="hidden md:grid grid-cols-4 gap-3">
+            {/* Desktop: 3 columns to accommodate 11 categories better */}
+            <div className="hidden md:grid grid-cols-3 gap-3">
               {categories.map(category => (
                 <button
                   key={category.id}
