@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { getProducts } from '@/services/productService';
 import { Product, PriceTier } from '@/services/productTypes';
@@ -9,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { getPriceTiersForProduct, getPriceAdjustmentForZipCode, findPriceMultiplierForQuantity } from '@/services/products/pricingUtils';
 import CategorySelector from './shopping/CategorySelector';
 import ProductList from './shopping/ProductList';
-import { categories, Category } from './shopping/categoryData';
+import { categories } from './shopping/categoryData';
 
 interface ProductPricing {
   productId: string;
