@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { getProducts } from '@/services/productService';
@@ -24,10 +24,6 @@ const ShoppingModule = () => {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
   const [productPricing, setProductPricing] = useState<Record<string, ProductPricing>>({});
-  
-  // Ref for smooth scrolling to products
-  const productsRef = useRef<HTMLDivElement>(null);
-  
   const {
     addToCart
   } = useCart();
@@ -119,33 +115,6 @@ const ShoppingModule = () => {
       keywords: ['decorative rock', 'river rock', 'mulch', 'topsoil', 'decomposed granite']
     }
   ];
-
-  // Enhanced function to handle category selection with improved smooth scrolling
-  const handleCategorySelect = (categoryId: string) => {
-    console.log('Category selected:', categoryId);
-    setSelectedCategory(categoryId);
-    
-    // Use a longer delay to ensure DOM updates and use requestAnimationFrame for better timing
-    setTimeout(() => {
-      if (productsRef.current) {
-        console.log('Attempting to scroll to products section');
-        
-        // Calculate offset from top of page to account for any fixed headers
-        const elementPosition = productsRef.current.offsetTop;
-        const offsetPosition = elementPosition - 80; // 80px offset for potential header
-        
-        // Use smooth scroll with window.scrollTo for better control
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: 'smooth'
-        });
-        
-        console.log('Scroll initiated to position:', offsetPosition);
-      } else {
-        console.warn('Products ref not found');
-      }
-    }, 300); // Increased delay to 300ms for better rendering
-  };
 
   // Load products and initialize pricing data
   useEffect(() => {
@@ -360,7 +329,7 @@ const ShoppingModule = () => {
               {categories.map(category => (
                 <button
                   key={category.id}
-                  onClick={() => handleCategorySelect(category.id)}
+                  onClick={() => setSelectedCategory(category.id)}
                   className={`p-3 rounded-lg border text-xs font-medium transition-colors ${
                     selectedCategory === category.id
                       ? 'bg-green-500 text-white border-green-500'
@@ -378,7 +347,7 @@ const ShoppingModule = () => {
               {categories.map(category => (
                 <button
                   key={category.id}
-                  onClick={() => handleCategorySelect(category.id)}
+                  onClick={() => setSelectedCategory(category.id)}
                   className={`p-4 rounded-lg border text-sm font-medium transition-colors ${
                     selectedCategory === category.id
                       ? 'bg-green-500 text-white border-green-500'
@@ -394,8 +363,8 @@ const ShoppingModule = () => {
           </CardContent>
         </Card>
 
-        {/* Available Materials - with ref for smooth scrolling */}
-        <Card ref={productsRef}>
+        {/* Available Materials */}
+        <Card>
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base md:text-lg font-semibold">
@@ -410,7 +379,7 @@ const ShoppingModule = () => {
               <div className="text-center py-12">
                 <p className="text-gray-500 mb-4">No products found for this category</p>
                 <Button 
-                  onClick={() => handleCategorySelect('popular')} 
+                  onClick={() => setSelectedCategory('popular')} 
                   variant="outline"
                   size="sm"
                 >
