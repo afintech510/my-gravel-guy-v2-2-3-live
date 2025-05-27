@@ -53,14 +53,14 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
       let categoryMatch = false;
       
       if (selectedCategory === 'gravel') {
-        // For gravel, also include crushed-gravel products
-        categoryMatch = product.category === 'gravel' || product.category === 'crushed-gravel';
+        // For gravel, also include crushed gravel products (note: space not hyphen)
+        categoryMatch = product.category === 'gravel' || product.category === 'crushed gravel';
       } else if (selectedCategory === 'dirt') {
         // For dirt, include both dirt and soil categories
         categoryMatch = product.category === 'dirt' || product.category === 'soil';
       } else if (selectedCategory === 'rock') {
-        // For rock, show products with rock-stone category
-        categoryMatch = product.category === 'rock-stone';
+        // For rock, show products with rock & stone category (note: & not hyphen)
+        categoryMatch = product.category === 'rock & stone';
       } else {
         // For other categories, use exact match
         categoryMatch = product.category === selectedCategory;
@@ -137,11 +137,11 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
       let categoryMatch = false;
       
       if (selectedCategory === 'gravel') {
-        categoryMatch = product.category === 'gravel' || product.category === 'crushed-gravel';
+        categoryMatch = product.category === 'gravel' || product.category === 'crushed gravel';
       } else if (selectedCategory === 'dirt') {
         categoryMatch = product.category === 'dirt' || product.category === 'soil';
       } else if (selectedCategory === 'rock') {
-        categoryMatch = product.category === 'rock-stone';
+        categoryMatch = product.category === 'rock & stone';
       } else {
         categoryMatch = product.category === selectedCategory;
       }
