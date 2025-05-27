@@ -14,8 +14,6 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
   selectedCategory,
   onCategorySelect
 }) => {
-  console.log('CategorySelector rendered with', categories.length, 'categories');
-  
   return (
     <Card className="mb-6 md:mb-8">
       <CardContent className="p-4 md:p-6">
