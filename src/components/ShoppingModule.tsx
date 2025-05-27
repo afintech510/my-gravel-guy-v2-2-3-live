@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { getProducts } from '@/services/productService';
@@ -24,6 +24,10 @@ const ShoppingModule = () => {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
   const [productPricing, setProductPricing] = useState<Record<string, ProductPricing>>({});
+  
+  // Ref for smooth scrolling to products
+  const productsRef = useRef<HTMLDivElement>(null);
+  
   const {
     addToCart
   } = useCart();
@@ -115,6 +119,22 @@ const ShoppingModule = () => {
       keywords: ['decorative rock', 'river rock', 'mulch', 'topsoil', 'decomposed granite']
     }
   ];
+
+  // Function to handle category selection with smooth scrolling
+  const handleCategorySelect = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    
+    // Add a small delay to ensure the component re-renders with new products
+    // before scrolling
+    setTimeout(() => {
+      if (productsRef.current) {
+        productsRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }, 100);
+  };
 
   // Load products and initialize pricing data
   useEffect(() => {
@@ -329,7 +349,7 @@ const ShoppingModule = () => {
               {categories.map(category => (
                 <button
                   key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
+                  onClick={() => handleCategorySelect(category.id)}
                   className={`p-3 rounded-lg border text-xs font-medium transition-colors ${
                     selectedCategory === category.id
                       ? 'bg-green-500 text-white border-green-500'
@@ -347,7 +367,7 @@ const ShoppingModule = () => {
               {categories.map(category => (
                 <button
                   key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
+                  onClick={() => handleCategorySelect(category.id)}
                   className={`p-4 rounded-lg border text-sm font-medium transition-colors ${
                     selectedCategory === category.id
                       ? 'bg-green-500 text-white border-green-500'
@@ -363,8 +383,8 @@ const ShoppingModule = () => {
           </CardContent>
         </Card>
 
-        {/* Available Materials */}
-        <Card>
+        {/* Available Materials - with ref for smooth scrolling */}
+        <Card ref={productsRef}>
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base md:text-lg font-semibold">
@@ -379,7 +399,7 @@ const ShoppingModule = () => {
               <div className="text-center py-12">
                 <p className="text-gray-500 mb-4">No products found for this category</p>
                 <Button 
-                  onClick={() => setSelectedCategory('popular')} 
+                  onClick={() => handleCategorySelect('popular')} 
                   variant="outline"
                   size="sm"
                 >
