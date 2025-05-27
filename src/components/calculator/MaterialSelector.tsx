@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Product, MaterialCategory } from '@/services/productTypes';
 import { cn } from '@/lib/utils';
-import { Package, BrickWall, Leaf, TreeDeciduous, Hammer } from 'lucide-react';
+import { Package, BrickWall, Leaf, TreeDeciduous, Mountain } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -19,7 +19,7 @@ const CategoryIcons = {
   sand: BrickWall,
   dirt: Leaf,
   mulch: TreeDeciduous,
-  base: Hammer,
+  rock: Mountain,
 };
 
 // Define multi-select options
@@ -49,8 +49,24 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
   // Update filtered products whenever selection criteria change
   useEffect(() => {
     const filtered = products.filter(product => {
-      // Base category filter
-      if (product.category !== selectedCategory) return false;
+      // Updated category filtering logic
+      let categoryMatch = false;
+      
+      if (selectedCategory === 'gravel') {
+        // For gravel, also include crushed-gravel products
+        categoryMatch = product.category === 'gravel' || product.category === 'crushed-gravel';
+      } else if (selectedCategory === 'dirt') {
+        // For dirt, include both dirt and soil categories
+        categoryMatch = product.category === 'dirt' || product.category === 'soil';
+      } else if (selectedCategory === 'rock') {
+        // For rock, show products with rock-stone category
+        categoryMatch = product.category === 'rock-stone';
+      } else {
+        // For other categories, use exact match
+        categoryMatch = product.category === selectedCategory;
+      }
+      
+      if (!categoryMatch) return false;
       
       // Check application/usage filter (if any selected)
       if (selectedUsages.length > 0) {
@@ -117,7 +133,20 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
   const getAvailableOptions = (filterType: 'usage' | 'type' | 'size' | 'color') => {
     // Filter products based on current selections except the one we're checking
     const baseFiltered = products.filter(product => {
-      if (product.category !== selectedCategory) return false;
+      // Updated category filtering for availability check
+      let categoryMatch = false;
+      
+      if (selectedCategory === 'gravel') {
+        categoryMatch = product.category === 'gravel' || product.category === 'crushed-gravel';
+      } else if (selectedCategory === 'dirt') {
+        categoryMatch = product.category === 'dirt' || product.category === 'soil';
+      } else if (selectedCategory === 'rock') {
+        categoryMatch = product.category === 'rock-stone';
+      } else {
+        categoryMatch = product.category === selectedCategory;
+      }
+      
+      if (!categoryMatch) return false;
       
       // Skip checking the filter type we're getting options for
       if (filterType !== 'usage' && selectedUsages.length > 0) {
@@ -278,6 +307,7 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
         >
           {Object.keys(CategoryIcons).map((category) => {
             const Icon = CategoryIcons[category as keyof typeof CategoryIcons];
+            const displayName = category === 'rock' ? 'Rock' : category.charAt(0).toUpperCase() + category.slice(1);
             return (
               <ToggleGroupItem
                 key={category}
@@ -286,7 +316,7 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
               >
                 <div className="flex flex-col items-center gap-2">
                   <Icon className="h-6 w-6" />
-                  <span className="capitalize">{category}</span>
+                  <span className="capitalize">{displayName}</span>
                 </div>
               </ToggleGroupItem>
             );
@@ -329,7 +359,7 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
       )}
 
       {/* Render different subtype selectors based on category */}
-      {['sand', 'dirt', 'base'].includes(selectedCategory) && (
+      {['sand', 'dirt', 'rock'].includes(selectedCategory) && (
         <div className="space-y-2 mt-4">
           <label className="text-sm font-medium">Type</label>
           <ToggleGroup
