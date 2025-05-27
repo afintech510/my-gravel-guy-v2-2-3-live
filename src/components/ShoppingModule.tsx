@@ -35,14 +35,14 @@ const ShoppingModule = () => {
   } = useZipCode();
   const navigate = useNavigate();
 
-  // Updated material categories with the 11 specific categories requested
+  // Updated material categories based on the new template
   const categories = [
     {
       id: 'popular',
       name: 'Popular',
       icon: '⭐',
       description: 'Most ordered materials',
-      keywords: ['limestone', 'decomposed granite', 'pea gravel', '57 stone']
+      keywords: ['river', 'decomposed granite', 'pea gravel', '57 stone', 'fill dirt']
     },
     {
       id: 'gravel',
@@ -56,63 +56,63 @@ const ShoppingModule = () => {
       name: 'Crushed Stone',
       icon: '⚒️',
       description: 'Crushed limestone, granite & stone',
-      keywords: ['57 stone', '411 gravel', 'crusher run', 'limestone', 'granite']
+      keywords: ['57']
     },
     {
       id: 'sand',
       name: 'Sand',
       icon: '🏖️',
       description: 'Construction & decorative sand',
-      keywords: ['mason sand', 'concrete sand', 'play sand', 'beach sand', 'washed sand']
+      keywords: ['mason sand', 'concrete sand', 'play sand', 'beach sand', 'washed sand', 'sand']
     },
     {
       id: 'soil-dirt',
       name: 'Soil & Dirt',
       icon: '🌱',
       description: 'Topsoil, fill dirt & compost',
-      keywords: ['topsoil', 'fill dirt', 'compost', 'loam', 'clay']
+      keywords: ['topsoil', 'fill dirt', 'compost', 'loam']
     },
     {
       id: 'mulch',
       name: 'Mulch',
       icon: '🌿',
       description: 'Organic mulch & wood chips',
-      keywords: ['mulch', 'wood chips', 'bark', 'hardwood mulch', 'pine mulch']
+      keywords: ['mulch', 'wood chips', 'bark', 'hardwood mulch']
     },
     {
       id: 'concrete',
       name: 'Concrete & RCA',
       icon: '🏗️',
       description: 'Recycled concrete aggregate',
-      keywords: ['recycled concrete', 'rca', 'concrete base', 'crushed concrete']
+      keywords: ['recycled', 'rca', 'concrete']
     },
     {
       id: 'driveway',
       name: 'Driveway',
       icon: '🚗',
       description: 'Materials for driveways',
-      keywords: ['driveway gravel', 'crusher run', '411 gravel', 'limestone', 'asphalt']
+      keywords: ['driveway']
     },
     {
       id: 'walkway',
       name: 'Walkway',
       icon: '🚶',
       description: 'Materials for walkways',
-      keywords: ['walkway stone', 'flagstone', 'paver sand', 'stepping stones']
+      keywords: ['walkway']
     },
     {
       id: 'patio',
       name: 'Patio',
       icon: '🏡',
       description: 'Materials for patios',
-      keywords: ['patio stone', 'flagstone', 'paver base', 'pea gravel', 'sand']
+      keywords: ['rca', 'pea gravel', 'mason', '3/8']
     },
     {
       id: 'landscape',
       name: 'Landscape',
       icon: '🌳',
       description: 'Decorative landscape materials',
-      keywords: ['decorative rock', 'river rock', 'mulch', 'topsoil', 'decomposed granite']
+      keywords: ['decorative rock', 'river rock', 'pea gravel', 'decomposed granite', 'mulch']
     }
   ];
 
@@ -216,7 +216,7 @@ const ShoppingModule = () => {
 
     if (selectedCategory === 'popular') {
       // Show most popular products across categories
-      const popularKeywords = ['limestone', 'decomposed granite', 'pea gravel', '57 stone', 'mason sand', 'topsoil'];
+      const popularKeywords = ['river', 'decomposed granite', 'pea gravel', '57 stone', 'fill dirt'];
       filtered = products.filter(product => 
         popularKeywords.some(keyword => 
           product.name.toLowerCase().includes(keyword.toLowerCase()) ||
