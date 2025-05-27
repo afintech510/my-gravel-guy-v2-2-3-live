@@ -18,8 +18,6 @@ interface ProductPricing {
 }
 
 const ShoppingModule = () => {
-  console.log('ShoppingModule rendered');
-  
   const [selectedCategory, setSelectedCategory] = useState<string>('popular');
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -60,8 +58,6 @@ const ShoppingModule = () => {
   // Preload pricing tiers and ZIP adjustments for all products
   const preloadPricingData = async (allProducts: Product[]) => {
     try {
-      console.log('Preloading pricing data for', allProducts.length, 'products');
-
       // Get ZIP code adjustment once
       const zipAdjustment = zipCode ? await getPriceAdjustmentForZipCode(zipCode) : 1;
 
@@ -91,7 +87,6 @@ const ShoppingModule = () => {
         pricingLookup[data.productId] = data;
       });
       setProductPricing(pricingLookup);
-      console.log('Pricing data preloaded for', Object.keys(pricingLookup).length, 'products');
     } catch (error) {
       console.error('Error preloading pricing data:', error);
     }
@@ -214,8 +209,6 @@ const ShoppingModule = () => {
       </div>
     );
   }
-
-  console.log('Rendering ShoppingModule with categories:', categories.length);
 
   return (
     <div className="py-8 md:py-16 px-4 bg-white">
