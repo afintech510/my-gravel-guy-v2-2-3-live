@@ -27,8 +27,28 @@ const USAGE_OPTIONS = ['driveway', 'walkway', 'drainage', 'general'];
 const TYPE_OPTIONS = ['crushed', 'natural', 'round', 'concrete'];
 const SIZE_OPTIONS = ['3/8"', '1/2"', '3/4"', '1"', '1 1/2"', '2"', '3"', '4"'];
 
+// Category mapping to handle database vs UI category differences
+const getCategoryMatches = (selectedCategory: string, productCategory: MaterialCategory): boolean => {
+  switch (selectedCategory) {
+    case 'gravel':
+      return productCategory === 'gravel' || productCategory === 'crushed gravel';
+    case 'dirt':
+      return productCategory === 'dirt' || productCategory === 'soil';
+    case 'rock':
+      return productCategory === 'rock' || productCategory === 'stone' || productCategory === 'rock & stone';
+    case 'sand':
+      return productCategory === 'sand';
+    case 'mulch':
+      return productCategory === 'mulch';
+    case 'base':
+      return productCategory === 'base' || productCategory === 'crushed concrete';
+    default:
+      return productCategory === selectedCategory;
+  }
+};
+
 const MaterialSelector = ({ products, selectedProduct, onProductSelect }: MaterialSelectorProps) => {
-  const [selectedCategory, setSelectedCategory] = useState<MaterialCategory>('gravel');
+  const [selectedCategory, setSelectedCategory] = useState<string>('gravel');
   
   // Multi-select states
   const [selectedUsages, setSelectedUsages] = useState<string[]>([]);
@@ -49,22 +69,8 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
   // Update filtered products whenever selection criteria change
   useEffect(() => {
     const filtered = products.filter(product => {
-      // Updated category filtering logic
-      let categoryMatch = false;
-      
-      if (selectedCategory === 'gravel') {
-        // For gravel, also include crushed gravel products (note: space not hyphen)
-        categoryMatch = product.category === 'gravel' || product.category === 'crushed gravel';
-      } else if (selectedCategory === 'dirt') {
-        // For dirt, include both dirt and soil categories
-        categoryMatch = product.category === 'dirt' || product.category === 'soil';
-      } else if (selectedCategory === 'rock') {
-        // For rock, show products with rock & stone category (note: & not hyphen)
-        categoryMatch = product.category === 'rock & stone';
-      } else {
-        // For other categories, use exact match
-        categoryMatch = product.category === selectedCategory;
-      }
+      // Use the new category matching logic
+      const categoryMatch = getCategoryMatches(selectedCategory, product.category);
       
       if (!categoryMatch) return false;
       
@@ -133,18 +139,8 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
   const getAvailableOptions = (filterType: 'usage' | 'type' | 'size' | 'color') => {
     // Filter products based on current selections except the one we're checking
     const baseFiltered = products.filter(product => {
-      // Updated category filtering for availability check
-      let categoryMatch = false;
-      
-      if (selectedCategory === 'gravel') {
-        categoryMatch = product.category === 'gravel' || product.category === 'crushed gravel';
-      } else if (selectedCategory === 'dirt') {
-        categoryMatch = product.category === 'dirt' || product.category === 'soil';
-      } else if (selectedCategory === 'rock') {
-        categoryMatch = product.category === 'rock & stone';
-      } else {
-        categoryMatch = product.category === selectedCategory;
-      }
+      // Use the new category matching logic for availability check
+      const categoryMatch = getCategoryMatches(selectedCategory, product.category);
       
       if (!categoryMatch) return false;
       
@@ -238,7 +234,7 @@ const MaterialSelector = ({ products, selectedProduct, onProductSelect }: Materi
   const availableColors = getAvailableOptions('color');
 
   const handleCategorySelect = (value: string) => {
-    setSelectedCategory(value as MaterialCategory);
+    setSelectedCategory(value);
   };
 
   // Toggle selection in a multi-select array
