@@ -3,15 +3,8 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Product } from '@/services/productTypes';
+import { Category } from './categoryData';
 import ProductCard from './ProductCard';
-
-interface Category {
-  id: string;
-  name: string;
-  icon: string;
-  description: string;
-  keywords: string[];
-}
 
 interface ProductListProps {
   categories: Category[];
