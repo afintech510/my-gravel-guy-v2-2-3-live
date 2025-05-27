@@ -120,20 +120,31 @@ const ShoppingModule = () => {
     }
   ];
 
-  // Function to handle category selection with smooth scrolling
+  // Enhanced function to handle category selection with improved smooth scrolling
   const handleCategorySelect = (categoryId: string) => {
+    console.log('Category selected:', categoryId);
     setSelectedCategory(categoryId);
     
-    // Add a small delay to ensure the component re-renders with new products
-    // before scrolling
+    // Use a longer delay to ensure DOM updates and use requestAnimationFrame for better timing
     setTimeout(() => {
       if (productsRef.current) {
-        productsRef.current.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
+        console.log('Attempting to scroll to products section');
+        
+        // Calculate offset from top of page to account for any fixed headers
+        const elementPosition = productsRef.current.offsetTop;
+        const offsetPosition = elementPosition - 80; // 80px offset for potential header
+        
+        // Use smooth scroll with window.scrollTo for better control
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
         });
+        
+        console.log('Scroll initiated to position:', offsetPosition);
+      } else {
+        console.warn('Products ref not found');
       }
-    }, 100);
+    }, 300); // Increased delay to 300ms for better rendering
   };
 
   // Load products and initialize pricing data
