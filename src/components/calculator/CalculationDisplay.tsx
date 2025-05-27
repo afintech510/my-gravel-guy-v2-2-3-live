@@ -24,7 +24,7 @@ const CalculationDisplay = ({
   const roundedTons = Math.round(tons);
   
   // Calculate actual cost based on rounded tons
-  const actualEstimatedCost = isManualTons ? estimatedCost : (estimatedCost / tons * roundedTons);
+  const actualEstimatedCost = isManualTons ? estimatedCost : (estimatedCost / tons/2 * roundedTons);
   
   const handleIncrement = () => {
     if (onTonsChange) {
