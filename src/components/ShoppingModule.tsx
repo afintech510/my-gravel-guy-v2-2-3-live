@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { getProducts } from '@/services/productService';
 import { Product, PriceTier } from '@/services/productTypes';
@@ -17,6 +18,8 @@ interface ProductPricing {
 }
 
 const ShoppingModule = () => {
+  console.log('ShoppingModule rendered');
+  
   const [selectedCategory, setSelectedCategory] = useState<string>('popular');
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -211,6 +214,8 @@ const ShoppingModule = () => {
       </div>
     );
   }
+
+  console.log('Rendering ShoppingModule with categories:', categories.length);
 
   return (
     <div className="py-8 md:py-16 px-4 bg-white">
