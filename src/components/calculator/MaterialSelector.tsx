@@ -35,7 +35,7 @@ const getCategoryMatches = (selectedCategory: string, productCategory: MaterialC
     case 'dirt':
       return productCategory === 'dirt' || productCategory === 'soil';
     case 'rock':
-      return productCategory === 'rock' || productCategory === 'stone' || productCategory === 'rock & stone';
+      return productCategory === 'rock' || productCategory === 'stone' || productCategory === 'rock-stone';
     case 'sand':
       return productCategory === 'sand';
     case 'mulch':
