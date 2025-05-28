@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import { getProducts } from '../services/productService';
@@ -16,8 +15,8 @@ interface ProductGridProps {
     subcategory?: string;
     size?: string;
   };
-  limit?: number;
-  onAvailableSizesChange?: (sizes: string[]) => void;
+  limit?: number; // Prop to limit number of products
+  onAvailableSizesChange?: (sizes: string[]) => void; // New prop to report available sizes
 }
 
 const ProductGrid = ({ 
@@ -142,7 +141,7 @@ const ProductGrid = ({
       
       console.log(`After category filter (${filters.category}): ${result.length} products`);
 
-      // Filter by subcategory if present - keyword-based filtering for ALL categories
+      // Filter by subcategory if present - simplified keyword-based filtering
       if (filters.subcategory) {
         console.log(`Applying subcategory filter: ${filters.subcategory}`);
         const beforeCount = result.length;
@@ -159,13 +158,10 @@ const ProductGrid = ({
           const usesMatch = product.uses?.some(use => use.toLowerCase().includes(subcategory)) || false;
           const categoriesMatch = product.categories?.some(cat => cat.toLowerCase().includes(subcategory)) || false;
           
-          // For color-based subcategories (mulch), also check the color field
-          const colorMatch = product.color?.toLowerCase().includes(subcategory) || false;
-          
-          const matches = nameMatch || descriptionMatch || subtypeMatch || usageMatch || usesMatch || categoriesMatch || colorMatch;
+          const matches = nameMatch || descriptionMatch || subtypeMatch || usageMatch || usesMatch || categoriesMatch;
           
           if (matches) {
-            console.log(`Product "${product.name}" matches subcategory "${subcategory}" - name: ${nameMatch}, desc: ${descriptionMatch}, subtype: ${subtypeMatch}, usage: ${usageMatch}, uses: ${usesMatch}, categories: ${categoriesMatch}, color: ${colorMatch}`);
+            console.log(`Product "${product.name}" matches subcategory "${subcategory}" - name: ${nameMatch}, desc: ${descriptionMatch}, subtype: ${subtypeMatch}, usage: ${usageMatch}, uses: ${usesMatch}, categories: ${categoriesMatch}`);
           }
           
           return matches;
