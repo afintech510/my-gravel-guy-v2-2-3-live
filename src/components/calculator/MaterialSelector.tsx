@@ -31,17 +31,17 @@ const SIZE_OPTIONS = ['3/8"', '1/2"', '3/4"', '1"', '1 1/2"', '2"', '3"', '4"'];
 const getCategoryMatches = (selectedCategory: string, productCategory: MaterialCategory): boolean => {
   switch (selectedCategory) {
     case 'gravel':
-      return productCategory === 'gravel' || productCategory === 'crushed gravel';
+      return productCategory === 'gravel' || productCategory === 'crushed-gravel';
     case 'dirt':
       return productCategory === 'dirt' || productCategory === 'soil';
     case 'rock':
-      return productCategory === 'rock' || productCategory === 'stone' || productCategory === 'rock-stone';
+      return productCategory === 'rock' || productCategory === 'stone' || productCategory === 'rock & stone';
     case 'sand':
       return productCategory === 'sand';
     case 'mulch':
       return productCategory === 'mulch';
     case 'base':
-      return productCategory === 'base' || productCategory === 'crushed concrete';
+      return productCategory === 'base' || productCategory === 'crushed-concrete';
     default:
       return productCategory === selectedCategory;
   }
