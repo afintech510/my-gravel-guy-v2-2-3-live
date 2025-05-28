@@ -161,7 +161,44 @@ const ProductGrid = ({
       );
     }
     
+    if (categoryFilter === 'dirt') {
+      const dirtCategories = ['dirt', 'soil', 'loam', 'topsoil', 'fill-dirt', 'compost'];
+      return dirtCategories.some(dirtCat => 
+        product.category.toLowerCase().includes(dirtCat) ||
+        product.name.toLowerCase().includes(dirtCat) ||
+        (product.categories && product.categories.some(cat => cat.toLowerCase().includes(dirtCat)))
+      );
+    }
+    
     return false;
+  };
+
+  // Function to normalize text for comparison (handles spaces, hyphens, case)
+  const normalizeText = (text: string): string => {
+    return text.toLowerCase()
+      .replace(/\s+/g, '') // Remove all spaces
+      .replace(/-/g, ''); // Remove all hyphens
+  };
+
+  // Enhanced subcategory matching function
+  const subcategoryMatches = (product: Product, subcategory: string): boolean => {
+    const normalizedSubcategory = normalizeText(subcategory);
+    
+    // Check various product fields for the subcategory keyword
+    const fieldsToCheck = [
+      product.name,
+      product.description,
+      product.subtype || '',
+      product.usage || '',
+      product.color || '',
+      ...(product.uses || []),
+      ...(product.categories || [])
+    ];
+    
+    return fieldsToCheck.some(field => {
+      const normalizedField = normalizeText(field);
+      return normalizedField.includes(normalizedSubcategory);
+    });
   };
 
   useEffect(() => {
@@ -194,34 +231,12 @@ const ProductGrid = ({
         })));
       }
 
-      // Filter by subcategory if present - keyword-based filtering for ALL categories
+      // Filter by subcategory if present - use enhanced subcategory matching
       if (filters.subcategory) {
         console.log(`Applying subcategory filter: ${filters.subcategory}`);
         const beforeSubCount = result.length;
-        const subcategory = filters.subcategory.toLowerCase();
         
-        result = result.filter(product => {
-          // Search for the subcategory keyword in product name and description
-          const nameMatch = product.name.toLowerCase().includes(subcategory);
-          const descriptionMatch = product.description.toLowerCase().includes(subcategory);
-          
-          // Also check in various product fields for more comprehensive matching
-          const subtypeMatch = product.subtype?.toLowerCase().includes(subcategory) || false;
-          const usageMatch = product.usage?.toLowerCase().includes(subcategory) || false;
-          const usesMatch = product.uses?.some(use => use.toLowerCase().includes(subcategory)) || false;
-          const categoriesMatch = product.categories?.some(cat => cat.toLowerCase().includes(subcategory)) || false;
-          
-          // For color-based subcategories (mulch), also check the color field
-          const colorMatch = product.color?.toLowerCase().includes(subcategory) || false;
-          
-          const matches = nameMatch || descriptionMatch || subtypeMatch || usageMatch || usesMatch || categoriesMatch || colorMatch;
-          
-          if (matches) {
-            console.log(`Product "${product.name}" matches subcategory "${subcategory}" - name: ${nameMatch}, desc: ${descriptionMatch}, subtype: ${subtypeMatch}, usage: ${usageMatch}, uses: ${usesMatch}, categories: ${categoriesMatch}, color: ${colorMatch}`);
-          }
-          
-          return matches;
-        });
+        result = result.filter(product => subcategoryMatches(product, filters.subcategory!));
         
         console.log(`After subcategory filter: ${result.length} products (removed ${beforeSubCount - result.length})`);
       }
