@@ -6,7 +6,7 @@ export interface Product {
   price: number;
   image: string;
   images?: string[]; // New field for multiple images
-  category: 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base' | 'soil' | 'stone' | 'rock' | 'crushed gravel' | 'crushed concrete' | 'rock & stone';
+  category: 'gravel' | 'sand' | 'dirt' | 'mulch' | 'base' | 'soil' | 'stone' | 'rock' | 'crushed-gravel' | 'crushed-concrete' | 'rock & stone';
   categories?: string[]; // Added for multiple categories per product
   slug: string;
   tonYardRatio: number;
