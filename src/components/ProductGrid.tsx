@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 import { getProducts } from '../services/productService';
@@ -115,9 +114,60 @@ const ProductGrid = ({
     return false;
   };
 
+  // Enhanced function to check if a product belongs to a category
+  const productMatchesCategory = (product: Product, categoryFilter: string): boolean => {
+    if (categoryFilter === 'all') return true;
+    
+    const categoryLower = categoryFilter.toLowerCase();
+    
+    // Check main category field
+    if (product.category.toLowerCase() === categoryLower) return true;
+    
+    // Check if main category contains the filter (for compound categories like "crushed-gravel")
+    if (product.category.toLowerCase().includes(categoryLower)) return true;
+    
+    // Check categories array if it exists
+    if (product.categories && Array.isArray(product.categories)) {
+      const matchesArray = product.categories.some(cat => {
+        const catLower = cat.toLowerCase();
+        return catLower === categoryLower || catLower.includes(categoryLower);
+      });
+      if (matchesArray) return true;
+    }
+    
+    // For specific category mappings
+    if (categoryFilter === 'gravel') {
+      // Include products with categories that contain gravel
+      const gravelCategories = ['gravel', 'crushed-gravel', 'crushed gravel', 'pea-gravel', 'pea gravel'];
+      return gravelCategories.some(gravelCat => 
+        product.category.toLowerCase().includes(gravelCat) ||
+        (product.categories && product.categories.some(cat => cat.toLowerCase().includes(gravelCat)))
+      );
+    }
+    
+    if (categoryFilter === 'base') {
+      const baseCategories = ['base', 'road-base', 'crusher-base', 'concrete-rca'];
+      return baseCategories.some(baseCat => 
+        product.category.toLowerCase().includes(baseCat) ||
+        (product.categories && product.categories.some(cat => cat.toLowerCase().includes(baseCat)))
+      );
+    }
+    
+    if (categoryFilter === 'sand') {
+      const sandCategories = ['sand', 'mason-sand', 'concrete-sand', 'play-sand', 'playground-sand'];
+      return sandCategories.some(sandCat => 
+        product.category.toLowerCase().includes(sandCat) ||
+        (product.categories && product.categories.some(cat => cat.toLowerCase().includes(sandCat)))
+      );
+    }
+    
+    return false;
+  };
+
   useEffect(() => {
     let result = [...products];
     console.log("Filtering products with:", filters);
+    console.log("Total products before filtering:", result.length);
 
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase();
@@ -125,27 +175,29 @@ const ProductGrid = ({
         product.name.toLowerCase().includes(searchTerm) ||
         product.description.toLowerCase().includes(searchTerm)
       );
+      console.log(`After search filter: ${result.length} products`);
     }
 
-    // Filter by main category - always apply this filter first
+    // Filter by main category - use enhanced category matching
     if (filters.category !== 'all') {
-      result = result.filter(product => {
-        // Check if the product has the category either in the main category or in the categories array
-        const matchesMainCategory = product.category.toLowerCase() === filters.category.toLowerCase();
-        
-        // Check in the categories array if available
-        const matchesCategoryArray = product.categories && Array.isArray(product.categories) && 
-          product.categories.some(cat => cat.toLowerCase() === filters.category.toLowerCase());
-        
-        return matchesMainCategory || matchesCategoryArray;
-      });
+      const beforeCount = result.length;
+      result = result.filter(product => productMatchesCategory(product, filters.category));
       
-      console.log(`After category filter (${filters.category}): ${result.length} products`);
+      console.log(`After category filter (${filters.category}): ${result.length} products (removed ${beforeCount - result.length})`);
+      
+      // Log some examples of what was filtered
+      if (result.length > 0) {
+        console.log("Sample products after category filter:", result.slice(0, 3).map(p => ({
+          name: p.name,
+          category: p.category,
+          categories: p.categories
+        })));
+      }
 
       // Filter by subcategory if present - keyword-based filtering for ALL categories
       if (filters.subcategory) {
         console.log(`Applying subcategory filter: ${filters.subcategory}`);
-        const beforeCount = result.length;
+        const beforeSubCount = result.length;
         const subcategory = filters.subcategory.toLowerCase();
         
         result = result.filter(product => {
@@ -171,7 +223,7 @@ const ProductGrid = ({
           return matches;
         });
         
-        console.log(`After subcategory filter: ${result.length} products (removed ${beforeCount - result.length})`);
+        console.log(`After subcategory filter: ${result.length} products (removed ${beforeSubCount - result.length})`);
       }
 
       // Extract available sizes after category and subcategory filtering but before size filtering
