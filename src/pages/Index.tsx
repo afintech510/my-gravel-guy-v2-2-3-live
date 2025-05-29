@@ -33,7 +33,7 @@ const Index = () => {
                 Shop Now
               </Button>
             </Link>
-            <Link to="/calculator-shop">
+            <Link to="/product-calculator">
               <Button variant="outline" size="lg" className="bg-white hover:bg-primary hover:text-primary-foreground">
                 <Calculator className="mr-2 h-4 w-4" />
                 Gravel Guy Calculator
