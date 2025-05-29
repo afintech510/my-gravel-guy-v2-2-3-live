@@ -65,8 +65,8 @@ export default function ShopProductGrid({ products, loading, searchTerm }: ShopP
           <ShopProductCard
             key={product.id}
             product={product}
-            isSelected={selectedProductId === product.id}
-            onSelect={() => handleProductSelect(product.id)}
+            isSelected={selectedProductId === String(product.id)}
+            onSelect={() => handleProductSelect(String(product.id))}
           />
         ))}
       </div>
