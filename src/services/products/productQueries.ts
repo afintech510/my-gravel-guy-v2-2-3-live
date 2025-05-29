@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Product, PriceTier, ZipCodeData } from './types';
 import { SAMPLE_PRODUCTS } from './sampleData';
@@ -127,7 +128,11 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
               metadata.uses : 
               typeof metadata?.uses === 'string' ? 
                 String(metadata.uses).split(',').map((use: string) => use.trim()) :
-                []
+                [],
+        // Add exponential pricing parameters from database
+        pricing_a: row.pricing_a ? parseFloat(String(row.pricing_a)) : undefined,
+        pricing_b: row.pricing_b ? parseFloat(String(row.pricing_b)) : undefined,
+        pricing_c: row.pricing_c ? parseFloat(String(row.pricing_c)) : undefined
       };
     });
     
