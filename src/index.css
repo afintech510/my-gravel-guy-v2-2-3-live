@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Roboto+Mono:ital,wght@0,400;1,400&display=swap');
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Roboto+Mono:ital,wght@0,400;1,400&family=Noto+Serif+Dives+Akuru:wght@400&display=swap');
 
 @tailwind base;
 @tailwind components;

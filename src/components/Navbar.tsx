@@ -55,7 +55,7 @@ const Navbar = () => {
 
           <div className="hidden md:flex items-center space-x-4">
             {zipCode && zipCodeData && !isSearchLocked && (
-              <Button variant="ghost" size="sm" className="text-xs mr-2">
+              <Button variant="ghost" size="sm" className="text-xs mr-2 font-noto-serif-dives-akuru">
                 <MapPin className="h-3 w-3 mr-1" />
                 {zipCodeData.city}, {zipCodeData.state_id}
               </Button>
@@ -65,7 +65,7 @@ const Navbar = () => {
               <Link
                 key={link.href}
                 to={link.href}
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-[1.1rem] font-medium inline-flex items-center"
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-[1.1rem] font-medium inline-flex items-center font-noto-serif-dives-akuru"
               >
                 {link.icon}
                 {link.label}
@@ -147,7 +147,7 @@ const Navbar = () => {
                     <Link
                       key={link.href}
                       to={link.href}
-                      className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-[1.1rem] font-medium inline-flex items-center"
+                      className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-[1.1rem] font-medium inline-flex items-center font-noto-serif-dives-akuru"
                       onClick={handleMenuClick}
                     >
                       {link.icon}
