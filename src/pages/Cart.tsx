@@ -4,6 +4,7 @@ import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, ArrowRight } from 'lucide-react';
 import CartItemCard from '../components/cart/CartItemCard';
+import { CartPricingUpdater } from '../components/cart/CartPricingUpdater';
 import { useNavigate } from 'react-router-dom';
 
 const Cart = () => {
@@ -50,6 +51,9 @@ const Cart = () => {
 
   return (
     <div className="py-8 px-4 max-w-6xl mx-auto">
+      {/* Add the pricing updater component */}
+      <CartPricingUpdater />
+      
       <h1 className="text-3xl font-bold mb-8">Your Cart</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
