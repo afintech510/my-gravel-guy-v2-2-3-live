@@ -2,6 +2,8 @@
 // Main barrel file to re-export everything from the individual modules
 export * from './types';
 export * from './productQueries';
+export * from './productTransform';
+export * from './productFetching';
 
 // Export zipCode functions selectively to avoid naming conflicts
 import * as zipCodeModule from './zipCode';
@@ -39,3 +41,4 @@ export * from './pricingUtils';
 export * from './sampleData';
 export * from './imageUtils';
 export * from './priceUtils';
+export * from './exponentialPricing';
