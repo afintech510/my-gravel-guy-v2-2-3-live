@@ -17,7 +17,7 @@ export default function QuantityAdjuster({
   className = "" 
 }: QuantityAdjusterProps) {
   return (
-    <div className={`flex justify-center ${className}`}>
+    <div className={`flex justify-end ${className}`}>
       <div className="flex items-center bg-green-100 rounded-lg p-1">
         <Button
           variant="ghost"
@@ -28,7 +28,7 @@ export default function QuantityAdjuster({
         >
           <Minus className="h-4 w-4" />
         </Button>
-        <span className="mx-3 text-sm font-medium">Amount</span>
+        <span className="mx-3 text-sm font-medium">Ton</span>
         <Button
           variant="ghost"
           size="sm"
