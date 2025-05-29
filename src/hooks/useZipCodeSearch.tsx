@@ -53,12 +53,14 @@ export const useZipCodeSearch = (onZipCodeSelected?: () => void) => {
         setZipCode(zipCodeData.zip, zipCodeData);
         setSearchCompleted(true);
         setInputValue(zipCodeData.zip); // Update the input with the found ZIP code
-        
+
+        /*
         // Show success message with location info
         toast({
           title: "Location Found!",
           description: `We deliver to ${zipCodeData.city}, ${zipCodeData.state_id}. Browse our products below.`,
         });
+        */
         
         // Call the callback if provided to close the dialog
         if (onZipCodeSelected) {
@@ -81,11 +83,13 @@ export const useZipCodeSearch = (onZipCodeSelected?: () => void) => {
         setZipCode(demoZipData.zip, demoZipData);
         setSearchCompleted(true);
         setInputValue(demoZipData.zip);
-        
+
+        /*
         toast({
           title: "Demo Mode",
           description: `Using demo location: ${demoZipData.city}, ${demoZipData.state_id}. This is because no ZIP codes are in the database yet.`,
         });
+        */        
         
         // Call the callback if provided to close the dialog
         if (onZipCodeSelected) {
@@ -136,11 +140,13 @@ export const useZipCodeSearch = (onZipCodeSelected?: () => void) => {
     setShowSuggestions(false);
     setSearchCompleted(true);
     setError(null);
-    
+
+    /*
     toast({
       title: "Location Selected",
       description: `${suggestion.city}, ${suggestion.state_id} selected.`,
     });
+    */
     
     // Call the callback if provided to close the dialog
     if (onZipCodeSelected) {
