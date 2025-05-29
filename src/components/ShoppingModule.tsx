@@ -79,7 +79,7 @@ const ShoppingModule = () => {
         const allProducts = await getProducts();
         setProducts(allProducts);
 
-        // Initialize quantities
+        // Initialize quantities with minimum of 3 tons
         const initialQuantities: Record<string, number> = {};
         allProducts.forEach(product => {
           initialQuantities[product.id.toString()] = 5; // Default 5 tons
@@ -194,7 +194,7 @@ const ShoppingModule = () => {
   const updateQuantity = (productId: string, change: number) => {
     setQuantities(prev => ({
       ...prev,
-      [productId]: Math.max(1, (prev[productId] || 5) + change)
+      [productId]: Math.max(3, (prev[productId] || 5) + change)
     }));
   };
 
@@ -274,7 +274,7 @@ const ShoppingModule = () => {
                         
                         <div className="flex items-center justify-between">
                           <div className="flex items-center border rounded-md">
-                            <button onClick={() => updateQuantity(product.id.toString(), -1)} className="p-2 hover:bg-gray-100" disabled={quantity <= 1}>
+                            <button onClick={() => updateQuantity(product.id.toString(), -1)} className="p-2 hover:bg-gray-100" disabled={quantity <= 3}>
                               <Minus className="h-3 w-3" />
                             </button>
                             <div className="px-3 py-2 text-center">
@@ -312,7 +312,7 @@ const ShoppingModule = () => {
 
                         <div className="flex items-center gap-3">
                           <div className="flex items-center border rounded-md">
-                            <button onClick={() => updateQuantity(product.id.toString(), -1)} className="p-2 hover:bg-gray-100" disabled={quantity <= 1}>
+                            <button onClick={() => updateQuantity(product.id.toString(), -1)} className="p-2 hover:bg-gray-100" disabled={quantity <= 3}>
                               <Minus className="h-4 w-4" />
                             </button>
                             <div className="px-4 py-2 text-center">

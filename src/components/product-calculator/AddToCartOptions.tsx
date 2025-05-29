@@ -42,7 +42,7 @@ export default function AddToCartOptions({
     { tons: adjustedTons + 1, label: 'Extra Buffer' }
   ];
 
-  // Handle increment/decrement
+  // Handle increment/decrement with 3 ton minimum
   const handleIncrement = () => {
     setAdjustedTons(prev => prev + 1);
   };

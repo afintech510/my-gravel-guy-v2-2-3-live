@@ -108,7 +108,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     depth?: number,
     deliveryAddress?: DeliveryAddress
   }) => {
-    const tons = product.tons || 3; // Default to 3 tons if not specified
+    const tons = Math.max(3, product.tons || 3); // Enforce minimum of 3 tons
     // Use the provided yards or calculate yards based on tonYardRatio if available
     const yards = product.yards || (product.tonYardRatio ? tons / product.tonYardRatio : undefined);
     
@@ -168,15 +168,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, [toast, restoreLastRemovedItem, setItems, setLastRemovedItem]);
 
-  // New function to update quantity for a specific cart item
+  // New function to update quantity for a specific cart item with 3 ton minimum
   const updateQuantity = useCallback((productId: string | number, newTons: number) => {
+    const adjustedTons = Math.max(3, newTons); // Enforce minimum of 3 tons
     setItems(currentItems =>
       currentItems.map(item =>
         item.id === productId
           ? { 
               ...item, 
-              tons: newTons,
-              yards: item.tonYardRatio ? newTons / item.tonYardRatio : undefined
+              tons: adjustedTons,
+              yards: item.tonYardRatio ? adjustedTons / item.tonYardRatio : undefined
             }
           : item
       )
