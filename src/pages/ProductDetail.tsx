@@ -61,10 +61,10 @@ const ProductDetail = () => {
     setCurrentTons(tons);
     
     // Show toast notification
-    toast({
+    /*toast({
       title: "Amount updated",
       description: `${tons} tons has been set as your selected amount.`,
-    });
+    });*/
   };
 
   const handleAddToCart = (productToAdd: Product & { tons: number, deliveryDate: Date }) => {
