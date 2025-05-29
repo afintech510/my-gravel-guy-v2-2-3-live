@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Trash2, CalendarIcon, InfoIcon, Plus, Minus } from 'lucide-react';
+import { Trash2, CalendarIcon, InfoIcon, Plus, Minus, MapPinIcon, PhoneIcon, MailIcon, ClockIcon, FileTextIcon } from 'lucide-react';
 import { CartItem } from '../../contexts/CartContext';
 import { useCart } from '../../contexts/CartContext';
 import DeliveryForm from './DeliveryForm';
@@ -15,21 +15,22 @@ interface CartItemCardProps {
 }
 
 const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = false }: CartItemCardProps) => {
-  const [isDeliveryFormOpen, setIsDeliveryFormOpen] = useState(autoExpandDelivery);
+  const [isDeliveryFormOpen, setIsDeliveryFormOpen] = useState(false);
   const { updateQuantity } = useCart();
   
+  // Check if delivery info is complete
+  const isDeliveryComplete = item.deliveryDate && 
+                           item.deliveryAddress?.street && 
+                           item.contactInfo?.name && 
+                           item.contactInfo?.phone && 
+                           item.contactInfo?.email;
+
   // Auto-expand if autoExpandDelivery prop is true or if delivery info is incomplete
   useEffect(() => {
-    const isIncomplete = !item.deliveryDate || 
-                        !item.deliveryAddress?.street || 
-                        !item.contactInfo?.name || 
-                        !item.contactInfo?.phone || 
-                        !item.contactInfo?.email;
-    
-    if (autoExpandDelivery || isIncomplete) {
+    if (autoExpandDelivery || !isDeliveryComplete) {
       setIsDeliveryFormOpen(true);
     }
-  }, [autoExpandDelivery, item]);
+  }, [autoExpandDelivery, isDeliveryComplete]);
   
   // Format date to display in a readable format
   const formatDate = (date?: Date) => {
@@ -79,13 +80,6 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
 
   const materialDetails = showMaterialInfo();
 
-  // Check if delivery info is complete
-  const isDeliveryComplete = item.deliveryDate && 
-                           item.deliveryAddress?.street && 
-                           item.contactInfo?.name && 
-                           item.contactInfo?.phone && 
-                           item.contactInfo?.email;
-
   // Handle quantity changes
   const handleQuantityChange = (newTons: number) => {
     if (newTons >= 1) {
@@ -124,7 +118,7 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
               </div>
             </div>
             
-            {/* Display delivery status */}
+            {/* Display delivery status and date */}
             <div className="flex items-center gap-2 text-sm">
               {isDeliveryComplete ? (
                 <div className="flex items-center text-green-600">
@@ -141,6 +135,59 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
                 </div>
               )}
             </div>
+
+            {/* Show saved delivery information when complete */}
+            {isDeliveryComplete && (
+              <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2 text-sm">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {/* Contact Information */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-gray-900">Contact</h4>
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <span className="font-medium">{item.contactInfo?.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <PhoneIcon className="h-3 w-3" />
+                      <span>{item.contactInfo?.phone}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <MailIcon className="h-3 w-3" />
+                      <span>{item.contactInfo?.email}</span>
+                    </div>
+                  </div>
+
+                  {/* Delivery Address */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-gray-900">Delivery Address</h4>
+                    <div className="flex items-start gap-2 text-gray-600">
+                      <MapPinIcon className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div>{item.deliveryAddress?.street}</div>
+                        <div>{item.deliveryAddress?.city}, {item.deliveryAddress?.state} {item.deliveryAddress?.zip}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Optional delivery preferences */}
+                {(item.deliveryTimePreference || item.deliveryInstructions) && (
+                  <div className="pt-2 border-t border-gray-200 space-y-2">
+                    {item.deliveryTimePreference && (
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <ClockIcon className="h-3 w-3" />
+                        <span>Preferred time: {item.deliveryTimePreference === 'morning' ? 'Morning (8am-12pm)' : 'Afternoon (12pm-5pm)'}</span>
+                      </div>
+                    )}
+                    {item.deliveryInstructions && (
+                      <div className="flex items-start gap-2 text-gray-600">
+                        <FileTextIcon className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                        <span>{item.deliveryInstructions}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Price and Quantity Controls */}
@@ -188,20 +235,22 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
               </div>
             </div>
 
-            {/* Toggle delivery form button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsDeliveryFormOpen(!isDeliveryFormOpen)}
-              className="mt-2"
-            >
-              {isDeliveryFormOpen ? 'Hide Delivery Form' : 'Update Delivery Info'}
-            </Button>
+            {/* Edit delivery info button - only show if delivery is complete */}
+            {isDeliveryComplete && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsDeliveryFormOpen(!isDeliveryFormOpen)}
+                className="mt-2"
+              >
+                {isDeliveryFormOpen ? 'Hide Form' : 'Edit Delivery Info'}
+              </Button>
+            )}
           </div>
         </div>
         
-        {/* Enhanced Delivery Form */}
-        {isDeliveryFormOpen && (
+        {/* Enhanced Delivery Form - only show if incomplete or being edited */}
+        {(!isDeliveryComplete || isDeliveryFormOpen) && (
           <div className="mt-4 pt-4 border-t">
             <DeliveryForm
               item={item}
@@ -224,10 +273,8 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
                   deliveryInstructions: details.deliveryInstructions,
                   locationPhotoUrl: details.locationPhotoUrl
                 });
-                // Only close form if all required fields are filled
-                if (details.deliveryDate && details.street && details.name && details.phone && details.email) {
-                  setIsDeliveryFormOpen(false);
-                }
+                // Close form after saving
+                setIsDeliveryFormOpen(false);
               }}
             />
           </div>
