@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -114,8 +113,8 @@ const ProductActions = ({
             <Minus className="h-6 w-6" />
           </Button>
           
-          <div className="flex items-center justify-center">
-            <span className="text-4xl font-bold mr-2">{selectedTons} tons</span>
+          <div className="flex flex-col items-center justify-center">
+            <span className="text-4xl font-bold">{selectedTons} tons</span>
             <span className="text-xl text-gray-500">
               ≈ {cubicYards} yd³
             </span>
