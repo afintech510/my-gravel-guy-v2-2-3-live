@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useCallback, useEffect } from 'react';
 import { Product } from '../services/productTypes';
 import { useToast } from '@/hooks/use-toast';
@@ -64,6 +63,7 @@ interface CartContextType {
     details: Partial<Omit<CartItem, keyof Product | 'tons'>>
   ) => void;
   updateQuantity: (productId: string | number, newTons: number) => void;
+  updateItemPrice: (productId: string | number, newPrice: number) => void; // New function
   clearCart: () => void;
   total: number;
   discountTotal: number;
@@ -184,7 +184,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   }, [setItems]);
 
-  // New function to update delivery details for a specific cart item
+  // Modified updateDeliveryDetails to handle price updates
   const updateDeliveryDetails = useCallback((
     productId: string | number,
     details: Partial<Omit<CartItem, keyof Product | 'tons'>>
@@ -198,6 +198,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   }, [setItems]);
 
+  // New function to update item price specifically
+  const updateItemPrice = useCallback((productId: string | number, newPrice: number) => {
+    setItems(currentItems =>
+      currentItems.map(item =>
+        item.id === productId
+          ? { ...item, price: newPrice }
+          : item
+      )
+    );
+  }, [setItems]);
+
+  // Modified to store the removed item and display toast with undo action
   const clearCart = useCallback(() => {
     setItems([]);
     setLastRemovedItem(null);
@@ -232,6 +244,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       removeFromCart, 
       updateDeliveryDetails,
       updateQuantity,
+      updateItemPrice, // Add the new function to context
       clearCart, 
       total,
       discountTotal,

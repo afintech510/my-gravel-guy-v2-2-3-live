@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ZipCodeData } from '../services/productTypes';
 import { saveLocationSearch } from '../utils/zipCodeUtils';
@@ -58,17 +57,21 @@ export function ZipCodeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Function to set ZIP code
+  // Enhanced setZipCode function with better session management
   const setZipCode = (newZipCode: string | null, data?: ZipCodeData | null) => {
+    console.log('[ZipCodeContext] Setting ZIP code:', newZipCode, 'with data:', data);
+    
     setZipCodeState(newZipCode);
     
     if (data) {
       setZipCodeData(data);
       // Save data to localStorage
       localStorage.setItem('userZipCodeData', JSON.stringify(data));
+      console.log('[ZipCodeContext] Saved ZIP code data to localStorage');
     } else if (newZipCode === null) {
       setZipCodeData(null);
       localStorage.removeItem('userZipCodeData');
+      console.log('[ZipCodeContext] Cleared ZIP code data from localStorage');
     }
     
     // Save to localStorage for persistence
@@ -76,9 +79,11 @@ export function ZipCodeProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('userZipCode', newZipCode);
       // When setting a zipCode, also lock the search
       setIsSearchLocked(true);
+      console.log('[ZipCodeContext] ZIP code session updated:', newZipCode);
     } else {
       localStorage.removeItem('userZipCode');
       setIsSearchLocked(false);
+      console.log('[ZipCodeContext] ZIP code session cleared');
     }
     
     // Save search to location_search table
