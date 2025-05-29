@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Product } from '@/services/productTypes';
 import { Button } from '@/components/ui/button';
@@ -52,12 +51,9 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
       deliveryDate,
       price: displayPrice
     });
-    /*
-    toast({
-      title: "Added to cart",
-      description: `${selectedTons} tons of ${product.name} added to your cart.`,
-    });
-    */
+    
+    // Navigate to cart immediately after adding product
+    navigate('/cart');
   };
 
   const handleViewDetails = () => {
