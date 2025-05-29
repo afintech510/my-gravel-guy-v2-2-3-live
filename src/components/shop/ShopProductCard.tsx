@@ -52,11 +52,12 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
       deliveryDate,
       price: displayPrice
     });
-
+    /*
     toast({
       title: "Added to cart",
       description: `${selectedTons} tons of ${product.name} added to your cart.`,
     });
+    */
   };
 
   const handleViewDetails = () => {
@@ -99,7 +100,7 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
               <div className="flex-1">
                 <h3 className="font-semibold text-lg text-gray-900 mb-1">{product.name}</h3>
                 <p className="text-sm text-primary font-medium mb-2">
-                  Starting at ${(displayStartingPrice * 3).toFixed(2)} for 3 tons delivered
+                  Starting at ${(displayStartingPrice * 3).toFixed(0)} for 3 tons delivered
                 </p>
               </div>
               {/* Expand/Collapse Indicator */}
