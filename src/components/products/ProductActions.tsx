@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -42,20 +43,21 @@ const ProductActions = ({
     return Math.round((selectedTons / tonYardRatio) * 100) / 100;
   }, [selectedTons, product]);
   
-  // Handle local quantity change - directly pass to parent
+  // Handle local quantity change - directly pass to parent with 3 ton minimum
   const handleQuantityChange = (tons: number) => {
+    const adjustedTons = Math.max(3, tons);
     if (onQuantityChange) {
-      onQuantityChange(tons);
+      onQuantityChange(adjustedTons);
     }
   };
 
-  // Handle increment/decrement
+  // Handle increment/decrement with 3 ton minimum
   const handleIncrement = () => {
     handleQuantityChange(selectedTons + 1);
   };
 
   const handleDecrement = () => {
-    if (selectedTons > 1) {
+    if (selectedTons > 3) {
       handleQuantityChange(selectedTons - 1);
     }
   };
@@ -107,7 +109,7 @@ const ProductActions = ({
             variant="outline"
             size="icon"
             onClick={handleDecrement}
-            disabled={selectedTons <= 1}
+            disabled={selectedTons <= 3}
             className="h-12 w-12"
           >
             <Minus className="h-6 w-6" />
