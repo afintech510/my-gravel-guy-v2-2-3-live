@@ -141,18 +141,17 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
                 >
                   +
                 </Button>
-                
-                {/* Price Display */}
-        <div className="mb-4">
-          <div className="justify-end items-baseline gap-2">
-            <span className="text-2xl font-bold text-primary">
-              ${(displayPrice * selectedTons).toFixed(2)}
-            </span>
-            <span className="text-sm text-gray-500">Total</span>
-          </div> 
-        </div>
-                
               </div> 
+            </div>
+
+            {/* Total Price Display */}
+            <div className="flex justify-end">
+              <div className="text-right">
+                <span className="text-2xl font-bold text-primary">
+                  ${(displayPrice * selectedTons).toFixed(2)}
+                </span>
+                <span className="ml-2 text-sm text-gray-500">Total</span>
+              </div>
             </div>
 
             {/* Product Specifications */}
