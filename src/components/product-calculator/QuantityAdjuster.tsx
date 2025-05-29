@@ -28,7 +28,7 @@ export default function QuantityAdjuster({
         >
           <Minus className="h-4 w-4" />
         </Button>
-        <span className="mx-3 text-sm font-medium">Adjust Amount</span>
+        <span className="mx-3 text-sm font-medium">Amount</span>
         <Button
           variant="ghost"
           size="sm"
