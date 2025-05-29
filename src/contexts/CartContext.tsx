@@ -1,8 +1,10 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+
+import React, { createContext, useContext, useCallback, useEffect } from 'react';
 import { Product } from '../services/productTypes';
 import { useToast } from '@/hooks/use-toast';
 import { ToastAction } from '@/components/ui/toast';
 import { Undo } from 'lucide-react';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export interface DeliveryAddress {
   street: string;
@@ -70,10 +72,26 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+// Helper function to deserialize dates from localStorage
+const deserializeCartItems = (items: CartItem[]): CartItem[] => {
+  return items.map(item => ({
+    ...item,
+    deliveryDate: item.deliveryDate ? new Date(item.deliveryDate) : undefined
+  }));
+};
+
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [lastRemovedItem, setLastRemovedItem] = useState<CartItem | null>(null);
+  const [items, setItems] = useLocalStorage<CartItem[]>('cart-items', []);
+  const [lastRemovedItem, setLastRemovedItem] = useLocalStorage<CartItem | null>('last-removed-item', null);
   const { toast } = useToast();
+
+  // Deserialize dates on component mount
+  useEffect(() => {
+    if (items.length > 0) {
+      const deserializedItems = deserializeCartItems(items);
+      setItems(deserializedItems);
+    }
+  }, []); // Only run once on mount
 
   // Modified to add each product as a new cart item (never combine)
   const addToCart = useCallback((product: Product & { 
@@ -111,7 +129,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         deliveryAddress: product.deliveryAddress
       }
     ]);
-  }, []);
+  }, [setItems]);
 
   // New function to restore the last removed item
   const restoreLastRemovedItem = useCallback(() => {
@@ -119,7 +137,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setItems(currentItems => [...currentItems, lastRemovedItem]);
       setLastRemovedItem(null);
     }
-  }, [lastRemovedItem]);
+  }, [lastRemovedItem, setItems, setLastRemovedItem]);
 
   // Modified to store the removed item and display toast with undo action
   const removeFromCart = useCallback((productId: string | number) => {
@@ -148,7 +166,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return currentItems.filter(item => item.id !== productId);
     });
-  }, [toast, restoreLastRemovedItem]);
+  }, [toast, restoreLastRemovedItem, setItems, setLastRemovedItem]);
 
   // New function to update quantity for a specific cart item
   const updateQuantity = useCallback((productId: string | number, newTons: number) => {
@@ -163,7 +181,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           : item
       )
     );
-  }, []);
+  }, [setItems]);
 
   // New function to update delivery details for a specific cart item
   const updateDeliveryDetails = useCallback((
@@ -177,11 +195,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           : item
       )
     );
-  }, []);
+  }, [setItems]);
 
   const clearCart = useCallback(() => {
     setItems([]);
-  }, []);
+    setLastRemovedItem(null);
+  }, [setItems, setLastRemovedItem]);
 
   // Helper function to check if delivery info is complete for an item
   const isDeliveryInfoComplete = useCallback((item: CartItem) => {
