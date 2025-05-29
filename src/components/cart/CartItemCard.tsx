@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Trash2, CalendarIcon, InfoIcon } from 'lucide-react';
+import { Trash2, CalendarIcon, InfoIcon, Plus, Minus } from 'lucide-react';
 import { CartItem } from '../../contexts/CartContext';
+import { useCart } from '../../contexts/CartContext';
 import DeliveryForm from './DeliveryForm';
 
 interface CartItemCardProps {
@@ -15,6 +16,7 @@ interface CartItemCardProps {
 
 const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = false }: CartItemCardProps) => {
   const [isDeliveryFormOpen, setIsDeliveryFormOpen] = useState(autoExpandDelivery);
+  const { updateQuantity } = useCart();
   
   // Auto-expand if autoExpandDelivery prop is true or if delivery info is incomplete
   useEffect(() => {
@@ -84,23 +86,21 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
                            item.contactInfo?.phone && 
                            item.contactInfo?.email;
 
+  // Handle quantity changes
+  const handleQuantityChange = (newTons: number) => {
+    if (newTons >= 1) {
+      updateQuantity(item.id, newTons);
+    }
+  };
+
   return (
     <Card className="overflow-hidden border rounded-lg">
       <div className="p-4 sm:p-6">
         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4">
           {/* Product Info */}
           <div className="space-y-2">
-            <div className="flex justify-between">
+            <div>
               <h3 className="font-semibold text-lg">{item.name}</h3>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-red-500 h-8 w-8 p-0" 
-                onClick={() => onRemove(item.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-                <span className="sr-only">Remove</span>
-              </Button>
             </div>
             
             {materialDetails && (
@@ -143,23 +143,48 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
             </div>
           </div>
 
-          {/* Price Summary */}
+          {/* Price and Quantity Controls */}
           <div className="flex flex-col justify-between items-end gap-2">
-            {/* Price display */}
-            <div className="text-right">
-              {item.couponApplied && item.couponAmount && (
-                <>
-                  <div className="text-sm text-muted-foreground line-through">
-                    ${itemTotal.toFixed(2)}
-                  </div>
-                  <div className="flex items-center gap-1 text-green-600 text-sm">
-                    <InfoIcon className="h-3 w-3" />
-                    <span>${item.couponAmount.toFixed(2)} discount applied</span>
-                  </div>
-                </>
-              )}
-              <div className="text-lg font-bold">
-                ${discountedTotal.toFixed(2)}
+            {/* Quantity adjusters and price */}
+            <div className="flex items-center gap-3">
+              {/* Quantity adjustment buttons */}
+              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleQuantityChange(item.tons - 1)}
+                  disabled={item.tons <= 1}
+                  className="h-8 w-8 p-0 hover:bg-gray-200"
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <span className="mx-3 text-sm font-medium">{item.tons}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleQuantityChange(item.tons + 1)}
+                  className="h-8 w-8 p-0 hover:bg-gray-200"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Price display */}
+              <div className="text-right">
+                {item.couponApplied && item.couponAmount && (
+                  <>
+                    <div className="text-sm text-muted-foreground line-through">
+                      ${itemTotal.toFixed(2)}
+                    </div>
+                    <div className="flex items-center gap-1 text-green-600 text-sm">
+                      <InfoIcon className="h-3 w-3" />
+                      <span>${item.couponAmount.toFixed(2)} discount applied</span>
+                    </div>
+                  </>
+                )}
+                <div className="text-lg font-bold">
+                  ${discountedTotal.toFixed(2)}
+                </div>
               </div>
             </div>
 
@@ -207,6 +232,19 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
             />
           </div>
         )}
+
+        {/* Remove button - moved to bottom center */}
+        <div className="flex justify-center mt-4 pt-4 border-t">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-red-500 hover:text-red-700 hover:bg-red-50" 
+            onClick={() => onRemove(item.id)}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Remove Item
+          </Button>
+        </div>
       </div>
     </Card>
   );
