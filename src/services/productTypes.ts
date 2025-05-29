@@ -1,4 +1,3 @@
-
 export interface Product {
   id: string | number;
   name: string;
@@ -27,6 +26,10 @@ export interface Product {
     question: string;
     answer: string;
   }>;
+  // New exponential pricing parameters
+  pricing_a?: number;
+  pricing_b?: number;
+  pricing_c?: number;
 }
 
 export interface ZipCodeData {

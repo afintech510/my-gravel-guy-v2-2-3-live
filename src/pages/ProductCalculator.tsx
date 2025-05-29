@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ProductFilterSelector from '@/components/product-calculator/ProductFilterSelector';
 import ProductDetails from '@/components/product-calculator/ProductDetails';
@@ -7,23 +6,16 @@ import ZipCodeChecker from '@/components/product-calculator/ZipCodeChecker';
 import AddToCartOptions from '@/components/product-calculator/AddToCartOptions';
 import TrustBanner from '@/components/product-calculator/TrustBanner';
 import { useState, useEffect } from 'react';
-import { Product, PriceTier } from '@/services/productTypes';
+import { Product } from '@/services/productTypes';
 import { useCalculator } from '@/hooks/useCalculator';
 import { Helmet } from 'react-helmet-async';
 import { useZipCode } from '@/contexts/ZipCodeContext';
 import { 
   calculateFinalPrice,
-  getPriceTiersForProduct,
   getPriceAdjustmentForZipCode 
 } from '@/services/products/pricingUtils';
 import { useToast } from '@/components/ui/use-toast';
 import { getProducts } from '@/services/productService';
-
-interface ProductPricing {
-  productId: string;
-  priceTiers: PriceTier[];
-  zipAdjustment: number;
-}
 
 // Helper function to enforce minimum quantity for pricing
 const getEffectivePricingQuantity = (calculatedTons: number): number => {
@@ -35,7 +27,6 @@ export default function ProductCalculator() {
   const [areas, setAreas] = useState<Array<{length: number, width: number}>>([{length: 10, width: 10}]);
   const [depth, setDepth] = useState<number>(2);
   const [extraPercentage, setExtraPercentage] = useState<number>(10);
-  const [productPricing, setProductPricing] = useState<Record<string, ProductPricing>>({});
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const { zipCode } = useZipCode();
   const { toast } = useToast();
@@ -56,95 +47,21 @@ export default function ProductCalculator() {
     selectedProduct?.tonYardRatio || 1.5
   );
 
-  // Load all products and preload pricing data on mount
+  // Load all products on mount
   useEffect(() => {
-    const loadProductsAndPricing = async () => {
+    const loadProducts = async () => {
       try {
-        console.log('ProductCalculator: Loading products and pricing data...');
+        console.log('ProductCalculator: Loading products...');
         const products = await getProducts();
         setAllProducts(products);
-        
-        // Preload pricing data for all products
-        await preloadPricingData(products);
-        
-        console.log('ProductCalculator: Products and pricing data loaded successfully');
+        console.log('ProductCalculator: Products loaded successfully');
       } catch (error) {
         console.error('ProductCalculator: Error loading products:', error);
       }
     };
 
-    loadProductsAndPricing();
+    loadProducts();
   }, []);
-
-  // Preload pricing tiers and ZIP adjustments for all products
-  const preloadPricingData = async (products: Product[]) => {
-    try {
-      console.log('ProductCalculator: Preloading pricing data for', products.length, 'products');
-      
-      // Get ZIP code adjustment once
-      const zipAdjustment = zipCode ? await getPriceAdjustmentForZipCode(zipCode) : 1;
-      
-      // Load price tiers for all products in parallel
-      const pricingPromises = products.map(async (product) => {
-        try {
-          const priceTiers = await getPriceTiersForProduct(product.id);
-          return {
-            productId: product.id.toString(),
-            priceTiers,
-            zipAdjustment
-          };
-        } catch (error) {
-          console.error(`ProductCalculator: Error loading pricing for product ${product.id}:`, error);
-          return {
-            productId: product.id.toString(),
-            priceTiers: [],
-            zipAdjustment
-          };
-        }
-      });
-
-      const allPricingData = await Promise.all(pricingPromises);
-      
-      // Convert to lookup object
-      const pricingLookup: Record<string, ProductPricing> = {};
-      allPricingData.forEach(data => {
-        pricingLookup[data.productId] = data;
-      });
-      
-      setProductPricing(pricingLookup);
-      console.log('ProductCalculator: Pricing data preloaded for', Object.keys(pricingLookup).length, 'products');
-    } catch (error) {
-      console.error('ProductCalculator: Error preloading pricing data:', error);
-    }
-  };
-
-  // Update ZIP adjustment when ZIP code changes
-  useEffect(() => {
-    if (zipCode && Object.keys(productPricing).length > 0) {
-      const updateZipAdjustment = async () => {
-        try {
-          console.log('ProductCalculator: Updating ZIP adjustment for', zipCode);
-          const newZipAdjustment = await getPriceAdjustmentForZipCode(zipCode);
-          
-          // Update all product pricing with new ZIP adjustment
-          const updatedPricing = { ...productPricing };
-          Object.keys(updatedPricing).forEach(productId => {
-            updatedPricing[productId] = {
-              ...updatedPricing[productId],
-              zipAdjustment: newZipAdjustment
-            };
-          });
-          
-          setProductPricing(updatedPricing);
-          console.log('ProductCalculator: ZIP adjustment updated to', newZipAdjustment);
-        } catch (error) {
-          console.error('ProductCalculator: Error updating ZIP adjustment:', error);
-        }
-      };
-      
-      updateZipAdjustment();
-    }
-  }, [zipCode]);
 
   // Update product price based on product, ZIP code, and calculated tons
   useEffect(() => {
@@ -154,36 +71,23 @@ export default function ProductCalculator() {
           // Enforce minimum 3-ton quantity for pricing calculations
           const effectiveTons = getEffectivePricingQuantity(calculationResult.totalTons);
           
-          console.log(`ProductCalculator: Calculating price for product ${selectedProduct.name} (ID: ${selectedProduct.id})`);
+          console.log(`ProductCalculator: Calculating exponential price for product ${selectedProduct.name} (ID: ${selectedProduct.id})`);
           console.log(`ProductCalculator: Calculated tons: ${calculationResult.totalTons}, Effective pricing tons: ${effectiveTons}`);
           
-          // Use preloaded pricing data if available, otherwise calculate fresh
-          const productId = selectedProduct.id.toString();
-          if (productPricing[productId]) {
-            // Use preloaded data for instant calculation
-            const pricing = productPricing[productId];
-            const pricing_calc = await calculateFinalPrice(
-              selectedProduct,
-              effectiveTons, // Use effective tons for pricing
-              zipCode || undefined
-            );
-            setPriceDetails(pricing_calc);
-            console.log('ProductCalculator: Used preloaded pricing data:', pricing_calc);
-          } else {
-            // Fallback to fresh calculation
-            const pricing = await calculateFinalPrice(
-              selectedProduct,
-              effectiveTons, // Use effective tons for pricing
-              zipCode || undefined
-            );
-            console.log('ProductCalculator: Fresh price calculation:', pricing);
-            setPriceDetails(pricing);
-          }
+          // Calculate price using exponential pricing
+          const pricing = await calculateFinalPrice(
+            selectedProduct,
+            effectiveTons, // Use effective tons for pricing
+            zipCode || undefined
+          );
+          
+          setPriceDetails(pricing);
+          console.log('ProductCalculator: Exponential price calculation:', pricing);
           
           // Show volume pricing notification
-          if (priceDetails && priceDetails.multiplier !== 1) {
-            const changePercent = Math.abs((priceDetails.multiplier - 1) * 100).toFixed(0);
-            const direction = priceDetails.multiplier > 1 ? 'increase' : 'decrease';
+          if (pricing.multiplier !== 1) {
+            const changePercent = Math.abs((pricing.multiplier - 1) * 100).toFixed(0);
+            const direction = pricing.multiplier > 1 ? 'increase' : 'decrease';
             toast({
               title: `Volume pricing applied`,
               description: `${effectiveTons.toFixed(1)} tons qualifies for a ${changePercent}% price ${direction}.`,
@@ -207,7 +111,7 @@ export default function ProductCalculator() {
     };
 
     updatePriceDetails();
-  }, [selectedProduct, zipCode, calculationResult.totalTons, productPricing, toast]);
+  }, [selectedProduct, zipCode, calculationResult.totalTons, toast]);
 
   return (
     <div className="container mx-auto px-4 py-8">

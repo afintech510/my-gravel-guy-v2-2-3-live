@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Product } from '@/services/productTypes';
-import { getPriceForProduct } from '@/services/productService';
+import { calculateProductExponentialPrice } from '@/services/products/exponentialPricing';
 
 interface ShopCalculationDisplayProps {
   cubicYards: number;
@@ -20,17 +20,21 @@ const ShopCalculationDisplay: React.FC<ShopCalculationDisplayProps> = ({
   materialInfo,
   selectedProduct
 }) => {
-  // Calculate the estimated price range
+  // Calculate the estimated price range using exponential pricing
   const getEstimatedPriceRange = () => {
     if (!selectedProduct) return "Contact for pricing";
     
     try {
-      const price = getPriceForProduct(selectedProduct);
-      const minPrice = Math.round(price * tons * 0.9);
-      const maxPrice = Math.round(price * tons * 1.1);
+      // Calculate exponential price for the exact tons
+      const exactPrice = calculateProductExponentialPrice(selectedProduct, tons);
+      
+      // Create a range with ±5% for estimate variation
+      const minPrice = Math.round(exactPrice.totalPrice * 0.95);
+      const maxPrice = Math.round(exactPrice.totalPrice * 1.05);
+      
       return `$${minPrice} - $${maxPrice}`;
     } catch (error) {
-      console.error("Error calculating price range:", error);
+      console.error("Error calculating exponential price range:", error);
       return "Contact for pricing";
     }
   };

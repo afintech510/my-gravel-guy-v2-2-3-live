@@ -3,18 +3,16 @@ import { useState, useEffect, useCallback } from 'react';
 import { Product, PriceTier as ProductPriceTier } from '@/services/productTypes';
 import { getProductBySlug } from '@/services/productService';
 import { 
-  getPriceTiersForProduct, 
   getPriceAdjustmentForZipCode, 
-  calculateFinalPrice,
-  findPriceMultiplierForQuantity 
+  calculateFinalPrice
 } from '@/services/products/pricingUtils';
+import { calculateProductExponentialPrice } from '@/services/products/exponentialPricing';
 
 // Type alias to ensure compatibility
 type PriceTier = ProductPriceTier;
 
 export const useProduct = (slug: string | undefined, zipCode?: string, tons: number = 10) => {
   const [product, setProduct] = useState<Product | undefined>(undefined);
-  const [priceTiers, setPriceTiers] = useState<PriceTier[]>([]);
   const [adjustedPrice, setAdjustedPrice] = useState<number | undefined>(undefined);
   const [priceDetails, setPriceDetails] = useState<{
     basePrice: number;
@@ -41,7 +39,7 @@ export const useProduct = (slug: string | undefined, zipCode?: string, tons: num
     }
   }, [zipCode]);
 
-  // Load product data and pricing tiers
+  // Load product data
   useEffect(() => {
     async function loadProduct() {
       if (!slug) return;
@@ -54,12 +52,6 @@ export const useProduct = (slug: string | undefined, zipCode?: string, tons: num
         const decodedSlug = decodeURIComponent(slug);
         const fetchedProduct = await getProductBySlug(decodedSlug);
         setProduct(fetchedProduct);
-        
-        if (fetchedProduct) {
-          // Fetch all price tiers for this product
-          const tiers = await getPriceTiersForProduct(fetchedProduct.id);
-          setPriceTiers(tiers);
-        }
       } catch (error) {
         console.error('Error loading product:', error);
         setError(error instanceof Error ? error : new Error('Failed to load product'));
@@ -78,17 +70,16 @@ export const useProduct = (slug: string | undefined, zipCode?: string, tons: num
     
     const calculatePrice = async () => {
       try {
-        // Use cached price tiers if available
-        const multiplier = findPriceMultiplierForQuantity(priceTiers, tons);
+        // Use exponential pricing calculation
+        const exponentialResult = calculateProductExponentialPrice(product, tons);
         
-        // Calculate using the ZIP adjustment we've already pre-loaded
-        const baseWithMultiplier = product.price * multiplier;
-        const pricePerTon = Math.round(baseWithMultiplier * zipAdjustment * 100) / 100;
+        // Apply the ZIP adjustment we've already pre-loaded
+        const pricePerTon = Math.round(exponentialResult.pricePerTon * zipAdjustment * 100) / 100;
         
         setAdjustedPrice(pricePerTon);
         setPriceDetails({
           basePrice: product.price,
-          multiplier: multiplier,
+          multiplier: exponentialResult.multiplier,
           zipAdjustment: zipAdjustment,
           pricePerTon: pricePerTon
         });
@@ -106,7 +97,7 @@ export const useProduct = (slug: string | undefined, zipCode?: string, tons: num
     };
     
     calculatePrice();
-  }, [product, tons, zipAdjustment, priceTiers]);
+  }, [product, tons, zipAdjustment]);
 
   return { product, adjustedPrice, priceDetails, loading, error };
 };
