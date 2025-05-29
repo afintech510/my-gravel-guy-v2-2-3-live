@@ -22,6 +22,7 @@ export default {
 				'montserrat': ['Montserrat', 'sans-serif'],
 				'roboto-mono': ['Roboto Mono', 'monospace'],
 				'noto-serif-dives-akuru': ['Noto Serif Dives Akuru', 'serif'],
+				'playfair': ['Playfair Display', 'serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
