@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Product } from '@/services/productTypes';
 import ShopProductCard from './ShopProductCard';
 
@@ -10,6 +10,8 @@ interface ShopProductGridProps {
 }
 
 export default function ShopProductGrid({ products, loading, searchTerm }: ShopProductGridProps) {
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+
   // Filter products by search term if provided
   const filteredProducts = searchTerm 
     ? products.filter(product =>
@@ -18,6 +20,10 @@ export default function ShopProductGrid({ products, loading, searchTerm }: ShopP
         product.category.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : products;
+
+  const handleProductSelect = (productId: string) => {
+    setSelectedProductId(selectedProductId === productId ? null : productId);
+  };
 
   if (loading) {
     return (
@@ -59,6 +65,8 @@ export default function ShopProductGrid({ products, loading, searchTerm }: ShopP
           <ShopProductCard
             key={product.id}
             product={product}
+            isSelected={selectedProductId === product.id}
+            onSelect={() => handleProductSelect(product.id)}
           />
         ))}
       </div>

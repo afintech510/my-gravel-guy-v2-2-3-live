@@ -14,10 +14,11 @@ import { useNavigate } from 'react-router-dom';
 
 interface ShopProductCardProps {
   product: Product;
+  isSelected?: boolean;
+  onSelect?: () => void;
 }
 
-export default function ShopProductCard({ product }: ShopProductCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+export default function ShopProductCard({ product, isSelected = false, onSelect }: ShopProductCardProps) {
   const [selectedTons, setSelectedTons] = useState(10);
   const { addToCart } = useCart();
   const { zipCode } = useZipCode();
@@ -54,13 +55,25 @@ export default function ShopProductCard({ product }: ShopProductCardProps) {
     navigate(`/products/${product.slug}`);
   };
 
+  const handleCardClick = () => {
+    if (onSelect) {
+      onSelect();
+    }
+  };
+
   const truncateDescription = (text: string, maxLength: number = 100) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength).trim() + '...';
   };
 
   return (
-    <Card className="h-fit hover:shadow-lg transition-shadow duration-200">
+    <Card 
+      className={cn(
+        "h-fit transition-all duration-200 cursor-pointer",
+        isSelected ? "shadow-lg ring-2 ring-primary" : "hover:shadow-md"
+      )}
+      onClick={handleCardClick}
+    >
       <CardContent className="p-4">
         {/* Product Image and Basic Info */}
         <div className="flex gap-4 mb-4">
@@ -99,27 +112,24 @@ export default function ShopProductCard({ product }: ShopProductCardProps) {
           )}
         </div>
 
-        {/* Expand/Collapse Button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full mb-4 text-primary hover:text-primary-foreground hover:bg-primary"
-        >
-          {isExpanded ? (
+        {/* Expand/Collapse Indicator */}
+        <div className="flex items-center justify-center text-primary">
+          {isSelected ? (
             <>
-              Less details <ChevronUp className="ml-2 h-4 w-4" />
+              <span className="text-sm mr-2">Less details</span>
+              <ChevronUp className="h-4 w-4" />
             </>
           ) : (
             <>
-              More details <ChevronDown className="ml-2 h-4 w-4" />
+              <span className="text-sm mr-2">More details</span>
+              <ChevronDown className="h-4 w-4" />
             </>
           )}
-        </Button>
+        </div>
 
         {/* Expanded Content */}
-        {isExpanded && (
-          <div className="space-y-4 border-t pt-4">
+        {isSelected && (
+          <div className="space-y-4 border-t pt-4 mt-4" onClick={(e) => e.stopPropagation()}>
             {/* Quantity Selector */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
