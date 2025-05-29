@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Product, PriceTier, ZipCodeData } from './types';
 import { SAMPLE_PRODUCTS } from './sampleData';
@@ -47,6 +46,9 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
     
     // Transform raw data into Product objects
     const products: Product[] = productsData.map((row, index) => {
+      // Use type assertion to access potentially new fields that may not be in the current Supabase types
+      const extendedRow = row as any;
+      
       // Extract categories - if category is a string, parse it
       let categories: string[] = [];
       const categoryStr = row.category || 'gravel';
@@ -129,10 +131,10 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
               typeof metadata?.uses === 'string' ? 
                 String(metadata.uses).split(',').map((use: string) => use.trim()) :
                 [],
-        // Add exponential pricing parameters from database
-        pricing_a: row.pricing_a ? parseFloat(String(row.pricing_a)) : undefined,
-        pricing_b: row.pricing_b ? parseFloat(String(row.pricing_b)) : undefined,
-        pricing_c: row.pricing_c ? parseFloat(String(row.pricing_c)) : undefined
+        // Add exponential pricing parameters from database using type assertion
+        pricing_a: extendedRow.pricing_a ? parseFloat(String(extendedRow.pricing_a)) : undefined,
+        pricing_b: extendedRow.pricing_b ? parseFloat(String(extendedRow.pricing_b)) : undefined,
+        pricing_c: extendedRow.pricing_c ? parseFloat(String(extendedRow.pricing_c)) : undefined
       };
     });
     
