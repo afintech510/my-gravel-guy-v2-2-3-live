@@ -93,9 +93,9 @@ export default function ProductCalculator() {
               title: `Volume pricing applied`,
               description: `${effectiveTons.toFixed(1)} tons qualifies for a ${changePercent}% price ${direction}.`,
               duration: 3000
-            });
-            */
+            });  
           }
+          */
         } catch (error) {
           console.error('ProductCalculator: Error calculating price details:', error);
           // Fallback to base price if calculation fails
