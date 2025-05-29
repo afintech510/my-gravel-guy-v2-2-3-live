@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Product } from '@/services/productTypes';
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,14 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
 
   const displayPrice = adjustedPrice ?? product.price;
   const displayStartingPrice = startingPrice ?? product.price;
+
+  // Calculate cubic yards from tons
+  const calculateCubicYards = (tons: number) => {
+    const tonYardRatio = product.tonYardRatio || 1.5;
+    return tons / tonYardRatio;
+  };
+
+  const cubicYards = calculateCubicYards(selectedTons);
 
   const handleAddToCart = () => {
     const deliveryDate = new Date();
@@ -142,6 +151,9 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
                   >
                     +
                   </Button>
+                  <span className="text-sm text-gray-600 ml-2">
+                    ({cubicYards.toFixed(1)} cu. yds.)
+                  </span>
                 </div> 
               </div>
 
