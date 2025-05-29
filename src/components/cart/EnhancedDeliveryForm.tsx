@@ -85,10 +85,10 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
             // Update the ZIP code context to trigger price updates
             setZipCode(zipCode, zipData);
             
-            toast({
+            /*toast({
               title: "Location found",
               description: `${zipData.city}, ${zipData.state_id} detected for ZIP code ${zipCode}`,
-            });
+            });*/
           } else {
             // Even if we don't find ZIP data, update the context for pricing
             setZipCode(zipCode);
