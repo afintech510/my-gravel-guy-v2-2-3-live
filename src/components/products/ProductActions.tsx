@@ -177,7 +177,7 @@ const ProductActions = ({
           size="lg" 
           className="w-full"
         >
-          Add to Cart & Complete Delivery Info
+          Add to Cart
         </Button>
       </div>
     </div>
