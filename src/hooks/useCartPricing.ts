@@ -8,7 +8,7 @@ import { useProduct } from '@/hooks/useProduct';
  * Custom hook to update cart pricing when ZIP code changes
  */
 export const useCartPricing = () => {
-  const { items, updateDeliveryDetails } = useCart();
+  const { items, updateItemPrice } = useCart();
   const { zipCode } = useZipCode();
 
   useEffect(() => {
@@ -25,11 +25,9 @@ export const useCartPricing = () => {
       if (adjustedPrice && adjustedPrice !== item.price) {
         console.log(`[useCartPricing] Updating price for ${item.name} from $${item.price} to $${adjustedPrice}`);
         
-        // Update the item's price in the cart
-        updateDeliveryDetails(item.id, {
-          price: adjustedPrice
-        });
+        // Update the item's price in the cart using the correct function
+        updateItemPrice(item.id, adjustedPrice);
       }
     });
-  }, [zipCode, items, updateDeliveryDetails]);
+  }, [zipCode, items, updateItemPrice]);
 };
