@@ -32,7 +32,7 @@ const enhancedDeliverySchema = z.object({
   state: z.string().min(1, "State is required"),
   zip: z.string().min(5, "Valid ZIP code is required"),
   // Optional fields
-  deliveryTimePreference: z.enum(["morning", "afternoon"]).optional(),
+  deliveryTimePreference: z.enum(["anytime", "morning", "afternoon"]).optional(),
   deliveryInstructions: z.string().optional(),
   locationPhotoUrl: z.string().optional()
 });
@@ -67,7 +67,7 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
       state: item?.deliveryAddress?.state || '',
       zip: item?.deliveryAddress?.zip || '',
       deliveryTimePreference: item?.deliveryTimePreference,
-      deliveryInstructions: item?.deliveryInstructions || ''
+      deliveryInstructions: item?.deliveryInstructions || "anytime"
     }
   });
 
@@ -356,7 +356,7 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
                         <SelectValue placeholder="Select a preferred time" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent defaultValue="anytime">
+                    <SelectContent>
                       <SelectItem value="anytime">Anytime (7pm - 5pm)</SelectItem>
                       <SelectItem value="morning">Morning (7am - 12pm)</SelectItem>
                       <SelectItem value="afternoon">Afternoon (12pm - 5pm)</SelectItem>
