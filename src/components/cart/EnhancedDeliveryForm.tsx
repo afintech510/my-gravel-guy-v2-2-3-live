@@ -66,8 +66,8 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
       city: item?.deliveryAddress?.city || '',
       state: item?.deliveryAddress?.state || '',
       zip: item?.deliveryAddress?.zip || '',
-      deliveryTimePreference: item?.deliveryTimePreference,
-      deliveryInstructions: item?.deliveryInstructions || "anytime"
+      deliveryTimePreference: item?.deliveryTimePreference || "anytime",
+      deliveryInstructions: item?.deliveryInstructions || ''
     }
   });
 
