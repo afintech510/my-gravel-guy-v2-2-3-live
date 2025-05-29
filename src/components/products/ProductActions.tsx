@@ -136,7 +136,43 @@ const ProductActions = ({
         onDateSelect={setDeliveryDate}
       />
 
-     
+      <div className="space-y-4">
+        {/* Display pricing breakdown if we have price details */}
+        {priceDetails && (
+          <div className="bg-gray-50 p-4 rounded-md space-y-2">
+            <h3 className="font-semibold text-sm uppercase tracking-wider">Pricing Details</h3>
+            
+            <div className="text-sm space-y-1">
+              <div className="flex justify-between">
+                <span>Base Price:</span>
+                <span>${priceDetails.basePrice.toFixed(2)}/ton</span>
+              </div>
+              
+              {hasVolumeDiscount && (
+                <div className="flex justify-between">
+                  <span>Volume Discount ({selectedTons} tons):</span>
+                  <span className={priceDetails.multiplier < 1 ? "text-green-600" : "text-amber-600"}>
+                    {formatPercentage(priceDetails.multiplier)}
+                  </span>
+                </div>
+              )}
+              
+              {hasZipAdjustment && (
+                <div className="flex justify-between">
+                  <span>Location Adjustment:</span>
+                  <span className={priceDetails.zipAdjustment < 1 ? "text-green-600" : "text-amber-600"}>
+                    {formatPercentage(priceDetails.zipAdjustment)}
+                  </span>
+                </div>
+              )}
+              
+              <div className="flex justify-between font-medium pt-1 border-t">
+                <span>Final Price:</span>
+                <span className="text-primary">${priceDetails.pricePerTon.toFixed(2)}/ton</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="border-t border-b py-4 space-y-2">
           <div className="flex justify-between items-center text-lg font-bold">
