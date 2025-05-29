@@ -128,7 +128,7 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
                     variant="outline"
                     size="sm"
                     onClick={() => setSelectedTons(Math.max(1, selectedTons - 1))}
-                    disabled={selectedTons <= 1}
+                    disabled={selectedTons <= 3}
                   >
                     -
                   </Button>
