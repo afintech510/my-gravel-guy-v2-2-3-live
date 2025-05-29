@@ -67,10 +67,10 @@ export default function AddToCartOptions({
         yards: tons / (product.tonYardRatio || 1.5)
       });
       
-      toast({
+      /*toast({
         title: "Added to cart",
         description: `${tons} tons of ${product.name} has been added to your cart.`,
-      });
+      });*/
 
       // Navigate to cart page for delivery info completion
       navigate('/cart');
