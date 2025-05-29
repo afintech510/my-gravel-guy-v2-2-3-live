@@ -58,14 +58,17 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
             <h3 className="text-base font-medium mb-1">Description</h3>
             <p className="text-sm text-gray-700">{product.description}</p>
           </div>
+
           
           <div className="grid grid-cols-2 gap-4">
+            {/* Remove price
             <div>
               <h3 className="text-xs font-medium text-gray-500">Price</h3>
               <p className="text-lg font-semibold text-primary">
                 ${product.price.toFixed(2)}<span className="text-sm text-gray-500">/ton</span>
               </p>
             </div>
+            */}
             
             {product.specifications?.size && (
               <div>
