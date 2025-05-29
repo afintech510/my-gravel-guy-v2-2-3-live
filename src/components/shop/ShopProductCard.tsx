@@ -32,7 +32,15 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
     selectedTons
   );
 
+  // Get the starting price for 3 tons to display under product name
+  const { adjustedPrice: startingPrice } = useProduct(
+    product.slug,
+    zipCode,
+    3
+  );
+
   const displayPrice = adjustedPrice ?? product.price;
+  const displayStartingPrice = startingPrice ?? product.price;
 
   const handleAddToCart = () => {
     const deliveryDate = new Date();
@@ -88,7 +96,12 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
           )}
           <div className="flex-1">
             <div className="flex items-start justify-between">
-              <h3 className="font-semibold text-lg text-gray-900 mb-1">{product.name}</h3>
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg text-gray-900 mb-1">{product.name}</h3>
+                <p className="text-sm text-primary font-medium mb-2">
+                  Starting at ${(displayStartingPrice * 3).toFixed(2)} for 3 tons delivered
+                </p>
+              </div>
               {/* Expand/Collapse Indicator */}
               <div className="flex items-center text-primary ml-2">
                 {isSelected ? (
