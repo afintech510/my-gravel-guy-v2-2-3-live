@@ -1,3 +1,4 @@
+
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu, ShoppingCart, NotebookPen, Calculator, Store, ThumbsUp, Phone, House, MapPin, DollarSign, X } from "lucide-react";
@@ -5,6 +6,7 @@ import { Link } from "react-router-dom";
 import { useCart } from '../contexts/CartContext';
 import { useZipCode } from '../contexts/ZipCodeContext';
 import ZipCodeSearch from './zip-code/ZipCodeSearch';
+import ThemeToggle from './ThemeToggle';
 import { useState } from 'react';
 import { useIsMobile } from '../hooks/use-mobile';
 
@@ -38,18 +40,22 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white border-b z-40">
+    <nav className="bg-white dark:bg-gray-900 border-b z-40">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14">
           <div className="flex-1">
-            {/* Logo floating above banner and navbar */}
-            <Link to="/" className="absolute left-4 md:left-[calc((100%-72rem)/2+1rem)] -top-1 z-50">
-              <img 
-                src="/lovable-uploads/04048679-bd9f-42de-b2d0-70fddf60125e.png" 
-                alt="My Gravel Guy Logo" 
-                className="h-24 w-auto"
-              />  
-            </Link>
+            {/* Theme Toggle positioned to the left of the logo */}
+            <div className="absolute left-4 md:left-[calc((100%-72rem)/2+1rem)] -top-1 z-50 flex items-center gap-2">
+              <ThemeToggle />
+              {/* Logo floating above banner and navbar */}
+              <Link to="/">
+                <img 
+                  src="/lovable-uploads/04048679-bd9f-42de-b2d0-70fddf60125e.png" 
+                  alt="My Gravel Guy Logo" 
+                  className="h-24 w-auto"
+                />  
+              </Link>
+            </div>
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
@@ -64,7 +70,7 @@ const Navbar = () => {
               <Link
                 key={link.href}
                 to={link.href}
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-[1.1rem] font-medium inline-flex items-center font-playfair"
+                className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 px-3 py-2 rounded-md text-[1.1rem] font-medium inline-flex items-center font-playfair"
               >
                 {link.icon}
                 {link.label}
@@ -83,6 +89,9 @@ const Navbar = () => {
           </div>
 
           <div className="flex items-center md:hidden gap-2">
+            {/* Mobile theme toggle */}
+            <ThemeToggle />
+            
             {/* Mobile links with icons */}
             {mobileLinks.map((link) => (
               <Link
@@ -122,7 +131,7 @@ const Navbar = () => {
                         <MapPin className="h-4 w-4 mr-2 text-primary" />
                         <div>
                           <div className="font-medium">{zipCodeData.city}, {zipCodeData.state_id}</div>
-                          <div className="text-xs text-gray-500">ZIP: {zipCode}</div>
+                          <div className="text-xs text-gray-500">{zipCode}</div>
                         </div>
                       </div>
                       <Button 
@@ -146,7 +155,7 @@ const Navbar = () => {
                     <Link
                       key={link.href}
                       to={link.href}
-                      className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-[1.1rem] font-medium inline-flex items-center font-playfair"
+                      className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 px-3 py-2 rounded-md text-[1.1rem] font-medium inline-flex items-center font-playfair"
                       onClick={handleMenuClick}
                     >
                       {link.icon}
