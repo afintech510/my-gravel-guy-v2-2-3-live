@@ -92,18 +92,7 @@ export default function AddToCartOptions({
 
   return (
     <div>
-      <h3 className="text-base font-semibold text-gray-800 mb-3">Add to Cart</h3>
-      
-      {zipCodeData && (
-        <div className="mb-3 text-sm text-gray-600">
-          <span className="font-medium">FREE delivery</span> to {zipCodeData.city}, {zipCodeData.state_id}
-        </div>
-      )}
-      
-      {showPricingDetails && priceDetails && (
-        <PriceDetailsDisplay priceDetails={priceDetails} />
-      )}
-
+     
       <QuantityAdjuster
         adjustedTons={adjustedTons}
         onIncrement={handleIncrement}
