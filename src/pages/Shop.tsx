@@ -2,35 +2,24 @@
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Search } from 'lucide-react';
-import ProductGrid from '../components/ProductGrid';
-import ProductFilterSelector from '../components/product-calculator/ProductFilterSelector';
+import ShopProductFilterSelector from '../components/shop/ShopProductFilterSelector';
+import ShopProductGrid from '../components/shop/ShopProductGrid';
 import TrustBanner from '../components/products/trust/TrustBanner';
 import QuoteForm from '../components/forms/QuoteForm';
 import { Product } from '@/services/productTypes';
 
 const Shop = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [filters, setFilters] = useState({
-    search: '',
-    sort: 'nameAsc',
-    category: 'all',
-    subcategory: '',
-    size: ''
-  });
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
-    setFilters(prev => ({ ...prev, search: term }));
   };
 
-  const handleProductSelected = (product: Product | null) => {
-    setSelectedProduct(product);
-  };
-
-  // Update filters when category changes from ProductFilterSelector
-  const handleCategoryFilter = (category: string) => {
-    setFilters(prev => ({ ...prev, category, subcategory: '', size: '' }));
+  const handleFilterChange = (filters: { category: string; filteredProducts: Product[] }) => {
+    setFilteredProducts(filters.filteredProducts);
+    setIsLoading(false);
   };
 
   return (
@@ -55,17 +44,17 @@ const Shop = () => {
 
         {/* Category Selector */}
         <div className="mb-8">
-          <ProductFilterSelector
-            onProductSelected={handleProductSelected}
-            selectedProduct={selectedProduct}
+          <ShopProductFilterSelector
+            onFilterChange={handleFilterChange}
           />
         </div>
 
         {/* Product Grid */}
         <div className="mb-16">
-          <ProductGrid 
-            filters={filters} 
-            limit={50}
+          <ShopProductGrid 
+            products={filteredProducts}
+            loading={isLoading}
+            searchTerm={searchTerm}
           />
         </div>
 
