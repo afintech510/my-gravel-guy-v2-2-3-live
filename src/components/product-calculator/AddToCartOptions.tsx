@@ -1,14 +1,11 @@
 
 import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { ShoppingCart, Plus, Minus } from 'lucide-react';
 import { Product } from '@/services/productTypes';
 import { useCart } from '@/contexts/CartContext';
-import { useZipCode } from '@/contexts/ZipCodeContext';
-import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { calculateFinalPrice } from '@/services/products/pricingUtils';
-import PriceDetailsDisplay from './PriceDetailsDisplay';
-import QuantityAdjuster from './QuantityAdjuster';
-import CartOptionCard from './CartOptionCard';
+import { useZipCode } from '@/contexts/ZipCodeContext';
 
 interface AddToCartOptionsProps {
   product: Product;
@@ -24,118 +21,108 @@ interface AddToCartOptionsProps {
 
 export default function AddToCartOptions({ 
   product, 
-  calculatedTons,
-  priceDetails
+  calculatedTons, 
+  priceDetails 
 }: AddToCartOptionsProps) {
   const { addToCart } = useCart();
-  const { zipCode, zipCodeData } = useZipCode();
-  const { toast } = useToast();
   const navigate = useNavigate();
+  const { zipCode } = useZipCode();
   
-  // State for adjustable quantity with minimum of 3 tons
-  const [adjustedTons, setAdjustedTons] = useState(() => Math.max(3, Math.round(calculatedTons)));
-  
-  // Generate three options based on adjusted tons
-  const options = [
-    { tons: Math.max(3, adjustedTons - 1), label: 'Conservative' },
-    { tons: adjustedTons, label: 'Recommended' },
-    { tons: adjustedTons + 1, label: 'Extra Buffer' }
-  ];
+  // State for user-selected quantity (starts with calculated amount)
+  const [selectedTons, setSelectedTons] = useState<number>(Math.max(3, Math.ceil(calculatedTons)));
 
-  // Handle increment/decrement
-  const handleIncrement = () => {
-    setAdjustedTons(prev => prev + 1);
+  const handleQuantityChange = (change: number) => {
+    setSelectedTons(prev => Math.max(1, prev + change));
   };
 
-  const handleDecrement = () => {
-    setAdjustedTons(prev => Math.max(3, prev - 1));
+  const handleAddToCart = (option: 'conservative' | 'recommended') => {
+    const tons = option === 'conservative' ? selectedTons : Math.ceil(selectedTons * 1.1);
+    const finalPrice = priceDetails ? priceDetails.pricePerTon : product.price;
+    
+    addToCart({
+      ...product,
+      tons,
+      price: finalPrice
+    });
+
+    navigate('/cart');
   };
 
-  // Handle adding product to cart
-  const handleAddToCart = async (tons: number) => {
-    try {
-      console.log(`AddToCartOptions: Adding ${tons} tons of ${product.name} (ID: ${product.id}) to cart`);
-      
-      // Recalculate price for the selected tons
-      const pricing = await calculateFinalPrice(product, tons, zipCode || undefined);
-      console.log('AddToCartOptions: Recalculated price for cart:', pricing);
-      
-      addToCart({ 
-        ...product, 
-        price: pricing.pricePerTon, // Use adjusted price per ton
-        tons,
-        yards: tons / (product.tonYardRatio || 1.5)
-      });
-      
-      toast({
-        title: "Added to cart",
-        description: `${tons} tons of ${product.name} has been added to your cart.`,
-      });
-
-      // Navigate to cart page for delivery info completion
-      navigate('/cart');
-    } catch (error) {
-      console.error("Error adding to cart:", error);
-      toast({
-        title: "Error adding to cart",
-        description: "There was a problem adding this item to your cart. Please try again.",
-        variant: "destructive"
-      });
-    }
+  const calculatePrice = (tons: number) => {
+    if (!priceDetails) return tons * product.price;
+    return tons * priceDetails.pricePerTon;
   };
 
-  // Determine if we show pricing details
-  const showPricingDetails = priceDetails && (
-    priceDetails.multiplier !== 1 || 
-    priceDetails.zipAdjustment !== 1
-  );
+  const cubicYards = selectedTons / (product.tonYardRatio || 1.5);
 
   return (
-    <div>
-      <h3 className="text-base font-semibold text-gray-800 mb-3">Add to Cart</h3>
-      
-      {zipCodeData && (
-        <div className="mb-3 text-sm text-gray-600">
-          <span className="font-medium">FREE delivery</span> to {zipCodeData.city}, {zipCodeData.state_id}
-        </div>
-      )}
-      
-      {showPricingDetails && priceDetails && (
-        <PriceDetailsDisplay priceDetails={priceDetails} />
-      )}
-
-      <QuantityAdjuster
-        adjustedTons={adjustedTons}
-        onIncrement={handleIncrement}
-        onDecrement={handleDecrement}
-        className="mb-4"
-      />
-      
-      <div className="space-y-3">
-        {options.map((option) => {
-          // Calculate price for each option based on priceDetails
-          const price = priceDetails 
-            ? priceDetails.pricePerTon * option.tons 
-            : product.price * option.tons;
-          
-          return (
-            <CartOptionCard
-              key={option.label}
-              option={option}
-              product={product}
-              price={price}
-              onAddToCart={handleAddToCart}
-            />
-          );
-        })}
+    <div className="space-y-4">
+      {/* Quantity Adjuster */}
+      <div className="flex items-center justify-center bg-green-100 rounded-lg p-3">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => handleQuantityChange(-1)}
+          disabled={selectedTons <= 1}
+          className="h-8 w-8"
+        >
+          <Minus className="h-4 w-4" />
+        </Button>
+        <span className="mx-4 text-lg font-medium">Adjust Amount</span>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => handleQuantityChange(1)}
+          className="h-8 w-8"
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
       </div>
 
-      <QuantityAdjuster
-        adjustedTons={adjustedTons}
-        onIncrement={handleIncrement}
-        onDecrement={handleDecrement}
-        className="mt-4"
-      />
+      {/* Conservative Option */}
+      <div className="border border-gray-200 rounded-lg p-4 bg-white">
+        <div className="flex justify-between items-start mb-3">
+          <div>
+            <h3 className="font-semibold text-lg">{selectedTons} tons</h3>
+            <p className="text-sm text-gray-600">≈ {cubicYards.toFixed(1)} yd³</p>
+            <p className="text-sm font-medium text-primary">{product.name}</p>
+            <p className="text-xs text-gray-500">Conservative</p>
+          </div>
+          <div className="text-right">
+            <p className="text-xl font-bold">${calculatePrice(selectedTons).toFixed(2)}</p>
+          </div>
+        </div>
+        <Button 
+          onClick={() => handleAddToCart('conservative')}
+          variant="outline"
+          className="w-full"
+        >
+          <ShoppingCart className="mr-2 h-4 w-4" />
+          Add to Cart
+        </Button>
+      </div>
+
+      {/* Recommended Option */}
+      <div className="border-2 border-green-400 rounded-lg p-4 bg-green-50">
+        <div className="flex justify-between items-start mb-3">
+          <div>
+            <h3 className="font-semibold text-lg">{Math.ceil(selectedTons * 1.1)} tons</h3>
+            <p className="text-sm text-gray-600">≈ {(cubicYards * 1.1).toFixed(1)} yd³</p>
+            <p className="text-sm font-medium text-primary">{product.name}</p>
+            <p className="text-xs text-green-600 font-medium">Recommended</p>
+          </div>
+          <div className="text-right">
+            <p className="text-xl font-bold">${calculatePrice(Math.ceil(selectedTons * 1.1)).toFixed(2)}</p>
+          </div>
+        </div>
+        <Button 
+          onClick={() => handleAddToCart('recommended')}
+          className="w-full bg-green-500 hover:bg-green-600"
+        >
+          <ShoppingCart className="mr-2 h-4 w-4" />
+          Add to Cart
+        </Button>
+      </div>
     </div>
   );
 }
