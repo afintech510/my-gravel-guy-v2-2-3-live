@@ -123,11 +123,11 @@ const Reviews = () => {
                 </div>
               </CardContent>
             </Card>
-            <!--
+            {/* Comment out the submit review form
             <div className="mt-6">
               <ReviewForm onSubmitSuccess={handleReviewSubmitted} />
             </div>
-              -->
+              */}
           </div>
           
           {/* Reviews List */}
