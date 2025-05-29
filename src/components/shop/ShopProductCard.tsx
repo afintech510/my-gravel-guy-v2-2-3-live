@@ -117,40 +117,45 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
         {/* Expanded Content */}
         {isSelected && (
           <div className="space-y-4 border-t pt-4 mt-4" onClick={(e) => e.stopPropagation()}>
-            {/* Quantity Selector */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Quantity (tons)
-              </label>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedTons(Math.max(1, selectedTons - 1))}
-                  disabled={selectedTons <= 1}
-                >
-                  -
-                </Button>
-                <span className="px-4 py-2 border rounded text-center min-w-[60px]">
-                  {selectedTons}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedTons(selectedTons + 1)}
-                >
-                  +
-                </Button>
-              </div> 
-            </div>
+            {/* Quantity Selector with Total Price */}
+            <div className="flex items-start justify-between">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Quantity (tons)
+                </label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedTons(Math.max(1, selectedTons - 1))}
+                    disabled={selectedTons <= 1}
+                  >
+                    -
+                  </Button>
+                  <span className="px-4 py-2 border rounded text-center min-w-[60px]">
+                    {selectedTons}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedTons(selectedTons + 1)}
+                  >
+                    +
+                  </Button>
+                </div> 
+              </div>
 
-            {/* Total Price Display */}
-            <div className="flex justify-end">
+              {/* Total Price and Free Delivery */}
               <div className="text-right">
-                <span className="text-2xl font-bold text-primary">
-                  ${(displayPrice * selectedTons).toFixed(2)}
-                </span>
-                <span className="ml-2 text-sm text-gray-500">Total</span>
+                <div className="mb-1">
+                  <span className="text-2xl font-bold text-primary">
+                    ${(displayPrice * selectedTons).toFixed(2)}
+                  </span>
+                  <span className="ml-2 text-sm text-gray-500">Total</span>
+                </div>
+                <div className="text-sm text-green-600 font-medium">
+                  FREE Delivery
+                </div>
               </div>
             </div>
 
