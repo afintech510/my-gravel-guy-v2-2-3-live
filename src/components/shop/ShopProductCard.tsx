@@ -88,9 +88,6 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
           )}
           <div className="flex-1">
             <h3 className="font-semibold text-lg text-gray-900 mb-1">{product.name}</h3>
-            <Badge variant="secondary" className="mb-2">
-              {product.category}
-            </Badge>
             <p className="text-sm text-gray-600">
               {truncateDescription(product.description)}
             </p>
