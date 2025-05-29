@@ -32,7 +32,15 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
     selectedTons
   );
 
+  // Calculate price for 3 tons minimum display
+  const { adjustedPrice: threeTonPrice } = useProduct(
+    product.slug, 
+    zipCode, 
+    3
+  );
+
   const displayPrice = adjustedPrice ?? product.price;
+  const threeTonTotalPrice = (threeTonPrice ?? product.price) * 3;
 
   const handleAddToCart = () => {
     const deliveryDate = new Date();
@@ -88,7 +96,12 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
           )}
           <div className="flex-1">
             <div className="flex items-start justify-between">
-              <h3 className="font-semibold text-lg text-gray-900 mb-1">{product.name}</h3>
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg text-gray-900 mb-1">{product.name}</h3>
+                <p className="text-sm text-green-600 font-medium mb-2">
+                  Starting at ${threeTonTotalPrice.toFixed(2)} for 3 tons delivered
+                </p>
+              </div>
               {/* Expand/Collapse Indicator */}
               <div className="flex items-center text-primary ml-2">
                 {isSelected ? (
