@@ -19,7 +19,7 @@ interface ShopProductCardProps {
 }
 
 export default function ShopProductCard({ product, isSelected = false, onSelect }: ShopProductCardProps) {
-  const [selectedTons, setSelectedTons] = useState(10);
+  const [selectedTons, setSelectedTons] = useState(5);
   const { addToCart } = useCart();
   const { zipCode } = useZipCode();
   const { toast } = useToast();
