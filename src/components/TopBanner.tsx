@@ -37,8 +37,8 @@ const TopBanner = ({ className }: TopBannerProps) => {
       className
     )}>
       <div className="max-w-6xl mx-auto flex items-center justify-center">
-        <h3 className="text-sm font-semibold">
-          FREE DELIVERY{' '} 
+        <h3 className="text-sm font-roboto-mono font-normal">
+          <span className="italic">FREE</span>{' '}DELIVERY{' '} 
            
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
