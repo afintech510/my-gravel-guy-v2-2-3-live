@@ -8,6 +8,7 @@ import { Product } from '@/services/productTypes';
 import AmountSelector from './AmountSelector';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/contexts/CartContext';
+import { Minus, Plus } from 'lucide-react';
 
 interface ProductActionsProps {
   product: Product;
@@ -46,6 +47,17 @@ const ProductActions = ({
   const handleQuantityChange = (tons: number) => {
     if (onQuantityChange) {
       onQuantityChange(tons);
+    }
+  };
+
+  // Handle increment/decrement
+  const handleIncrement = () => {
+    handleQuantityChange(selectedTons + 1);
+  };
+
+  const handleDecrement = () => {
+    if (selectedTons > 1) {
+      handleQuantityChange(selectedTons - 1);
     }
   };
 
@@ -89,17 +101,36 @@ const ProductActions = ({
         onSelectAmount={handleQuantityChange}
       />
       
-      {/* Product name and tons/cubic yards display */}
+      {/* Product name and tons/cubic yards display with increment/decrement buttons */}
       <div className="flex flex-col items-center justify-center text-center my-4">
-        <div className="flex items-center justify-center">
-          <span className="text-4xl font-bold mr-2">{selectedTons} tons</span>
-          <span className="text-xl text-gray-500">
-            ≈ {cubicYards} yd³
-          </span>
+        <div className="flex items-center justify-center gap-4">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleDecrement}
+            disabled={selectedTons <= 1}
+            className="h-12 w-12"
+          >
+            <Minus className="h-6 w-6" />
+          </Button>
+          
+          <div className="flex items-center justify-center">
+            <span className="text-4xl font-bold mr-2">{selectedTons} tons</span>
+            <span className="text-xl text-gray-500">
+              ≈ {cubicYards} yd³
+            </span>
+          </div>
+          
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleIncrement}
+            className="h-12 w-12"
+          >
+            <Plus className="h-6 w-6" />
+          </Button>
         </div>
       </div>
-
-      
 
       <DeliveryDatePicker 
         selectedDate={deliveryDate}
