@@ -125,6 +125,7 @@ const ProductDetail = () => {
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <ProductImages product={product} />
+           <ProductTabs product={product} />
           
           <div className="space-y-8">
             <ProductHeader 
