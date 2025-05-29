@@ -97,15 +97,13 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
         
 
         {/* Expand/Collapse Indicator */}
-        <div className="flex items-center justify-center text-primary">
+        <div className="flex items-center justify-left text-primary">
           {isSelected ? (
-            <>
-              <span className="text-sm mr-2">Less details</span>
+            <> 
               <ChevronUp className="h-4 w-4" />
             </>
           ) : (
-            <>
-              <span className="text-sm mr-2">More details</span>
+            <> 
               <ChevronDown className="h-4 w-4" />
             </>
           )}
