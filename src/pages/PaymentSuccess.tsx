@@ -1,25 +1,38 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, Truck } from "lucide-react";
 import { useCart } from '../contexts/CartContext';
 import { useToast } from "@/components/ui/use-toast";
+import { useSearchParams } from 'react-router-dom';
 
 const PaymentSuccess = () => {
   const { clearCart } = useCart();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const [hasProcessedPayment, setHasProcessedPayment] = useState(false);
   
   useEffect(() => {
-    // Clear the cart when the payment success page is loaded
-    clearCart();
+    // Only clear cart if we have payment success indicators and haven't processed yet
+    const sessionId = searchParams.get('session_id');
+    const paymentSuccess = searchParams.get('success');
     
-    // Show a success toast
-    toast({
-      title: "Payment Successful",
-      description: "Thank you for your order! Your delivery has been scheduled.",
-    });
-  }, [clearCart, toast]);
+    if ((sessionId || paymentSuccess === 'true') && !hasProcessedPayment) {
+      // Clear the cart only when we have confirmation of successful payment
+      clearCart();
+      setHasProcessedPayment(true);
+      
+      // Show a success toast
+      toast({
+        title: "Payment Successful",
+        description: "Thank you for your order! Your delivery has been scheduled.",
+      });
+
+      // Store in localStorage that we've processed this payment to prevent double clearing
+      localStorage.setItem('lastProcessedPayment', sessionId || Date.now().toString());
+    }
+  }, [clearCart, toast, searchParams, hasProcessedPayment]);
 
   return (
     <div className="min-h-screen bg-white py-16 px-4">
