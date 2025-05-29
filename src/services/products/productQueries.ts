@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Product, PriceTier, ZipCodeData } from './types';
 import { SAMPLE_PRODUCTS } from './sampleData';
@@ -9,6 +10,21 @@ import {
   CACHE_TTL 
 } from './cache';
 import { processProductImages } from './imageUtils';
+
+// Type extension for products with slug field
+type ProductRow = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  category: string | null;
+  size: string | null;
+  color: string | null;
+  metadata: any;
+  ton_yard_ratio: string | null;
+  slug?: string; // Optional slug field
+  [key: string]: any; // Allow additional fields
+};
 
 /**
  * Fetch products from Supabase
@@ -46,16 +62,15 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
     
     // Transform raw data into Product objects
     const products: Product[] = productsData.map((row, index) => {
-      // Use type assertion to access potentially new fields that may not be in the current Supabase types
-      const extendedRow = row as any;
+      // Cast to our extended type to access slug and other potential new fields
+      const productRow = row as ProductRow;
       
       // Extract categories - if category is a string, parse it
       let categories: string[] = [];
-      const categoryStr = row.category || 'gravel';
+      const categoryStr = productRow.category || 'gravel';
       
       // Handle different category separators (comma, newline, or single value)
       if (typeof categoryStr === 'string') {
-        // Fix: Ensure we're explicitly handling the string type
         if (categoryStr.includes('\n')) {
           categories = categoryStr.split('\n').map(cat => cat.trim().toLowerCase()).filter(Boolean);
         } else if (categoryStr.includes(',')) {
@@ -64,7 +79,6 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
           categories = [categoryStr.trim().toLowerCase()];
         }
       } else if (Array.isArray(categoryStr)) {
-        // Fix: Properly cast as string array to avoid the 'never' type issue
         const categoryArray = categoryStr as any[];
         categories = categoryArray.map(cat => String(cat).trim().toLowerCase());
       }
@@ -75,55 +89,47 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
       }
       
       // Map directly to the category without forcing it into a predefined type
-      // Each category maps to itself - no more hardcoding to 'gravel'
       const mainCategory = categories[0] as Product['category'];
       
       // Parse metadata if it's a JSON string
       let metadata: any = {};
-      if (row.metadata) {
+      if (productRow.metadata) {
         try {
-          // Try to parse if it's a JSON string
-          if (typeof row.metadata === 'string') {
-            metadata = JSON.parse(row.metadata);
+          if (typeof productRow.metadata === 'string') {
+            metadata = JSON.parse(productRow.metadata);
           } else {
-            // If it's already an object, use it directly
-            metadata = row.metadata;
+            metadata = productRow.metadata;
           }
         } catch (e) {
-          console.error('Failed to parse metadata for product:', row.name, e);
+          console.error('Failed to parse metadata for product:', productRow.name, e);
         }
       }
 
       // Generate a slug if one doesn't exist
-      // Handle case where row doesn't have slug property
-      // Check if row has a slug property first
-      const hasSlugProperty = Object.prototype.hasOwnProperty.call(row, 'slug');
-      // If not, create a slug from the name or use an index-based fallback
-      const slug = hasSlugProperty ? 
-                   (row as any).slug || "" : // Use type assertion to avoid TypeScript error
-                   (row.name ? 
-                    row.name.toLowerCase().replace(/\s+/g, '-') : 
+      const slug = productRow.slug || 
+                   (productRow.name ? 
+                    productRow.name.toLowerCase().replace(/\s+/g, '-') : 
                     `product-${index + 1}`);
       
       // Process images using the new focused function
-      const productImages = processProductImages(row);
+      const productImages = processProductImages(productRow);
 
       // Create the product object with appropriate fallbacks for all fields
       return {
-        id: row.id || `temp-${index + 1}`,
-        name: row.name || `Product ${index + 1}`,
-        description: row.description || "",
-        price: parseFloat(String(row.price)) || 0,
+        id: productRow.id || `temp-${index + 1}`,
+        name: productRow.name || `Product ${index + 1}`,
+        description: productRow.description || "",
+        price: parseFloat(String(productRow.price)) || 0,
         image: productImages[0], // For backward compatibility, use first image
         images: productImages,
         category: mainCategory,
         categories: categories,
         slug: slug,
-        tonYardRatio: parseFloat(String(row.ton_yard_ratio)) || 1.5,
+        tonYardRatio: parseFloat(String(productRow.ton_yard_ratio)) || 1.5,
         specifications: {
           density: metadata?.density || "",
-          size: row.size || metadata?.size || "",
-          color: row.color || metadata?.color || "",
+          size: productRow.size || metadata?.size || "",
+          color: productRow.color || metadata?.color || "",
           coverage: metadata?.coverage || ""
         },
         uses: Array.isArray(metadata?.uses) ? 
@@ -131,10 +137,10 @@ export async function getProducts(forceRefresh = false): Promise<Product[]> {
               typeof metadata?.uses === 'string' ? 
                 String(metadata.uses).split(',').map((use: string) => use.trim()) :
                 [],
-        // Add exponential pricing parameters from database using type assertion
-        pricing_a: extendedRow.pricing_a ? parseFloat(String(extendedRow.pricing_a)) : undefined,
-        pricing_b: extendedRow.pricing_b ? parseFloat(String(extendedRow.pricing_b)) : undefined,
-        pricing_c: extendedRow.pricing_c ? parseFloat(String(extendedRow.pricing_c)) : undefined
+        // Add exponential pricing parameters from database
+        pricing_a: productRow.pricing_a ? parseFloat(String(productRow.pricing_a)) : undefined,
+        pricing_b: productRow.pricing_b ? parseFloat(String(productRow.pricing_b)) : undefined,
+        pricing_c: productRow.pricing_c ? parseFloat(String(productRow.pricing_c)) : undefined
       };
     });
     
