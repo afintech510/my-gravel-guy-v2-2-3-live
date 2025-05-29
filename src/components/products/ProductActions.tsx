@@ -59,10 +59,10 @@ const ProductActions = ({
       yards: cubicYards
     });
 
-    toast({
+    /*toast({
       title: "Added to cart",
       description: `${selectedTons} tons of ${product.name} has been added to your cart.`,
-    });
+    });*/
 
     // Navigate to cart page for delivery info completion
     navigate('/cart');
