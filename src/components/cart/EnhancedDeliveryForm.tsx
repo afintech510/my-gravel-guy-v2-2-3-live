@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -16,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CartItem } from "../../contexts/CartContext";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { useZipCode } from "@/contexts/ZipCodeContext";
 
 const enhancedDeliverySchema = z.object({
   // Delivery date - required
@@ -50,6 +50,7 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
   const { toast } = useToast();
   const [isLoadingZipData, setIsLoadingZipData] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const { setZipCode } = useZipCode();
   
   const form = useForm<EnhancedDeliveryFormData>({
     resolver: zodResolver(enhancedDeliverySchema),
@@ -70,7 +71,7 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
   // Watch for zip code changes to auto-populate city and state
   const watchedZip = form.watch('zip');
 
-  // Auto-populate city and state when zip changes
+  // Auto-populate city and state when zip changes AND update pricing context
   useEffect(() => {
     const fetchLocationData = async (zipCode: string) => {
       if (zipCode.length === 5) {
@@ -80,24 +81,32 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
           if (zipData) {
             form.setValue('city', zipData.city);
             form.setValue('state', zipData.state_id);
+            
+            // Update the ZIP code context to trigger price updates
+            setZipCode(zipCode, zipData);
+            
             toast({
               title: "Location found",
               description: `${zipData.city}, ${zipData.state_id} detected for ZIP code ${zipCode}`,
             });
+          } else {
+            // Even if we don't find ZIP data, update the context for pricing
+            setZipCode(zipCode);
           }
         } catch (error) {
           console.error("Error finding ZIP data:", error);
+          // Still update ZIP code context for pricing even if lookup fails
+          setZipCode(zipCode);
         } finally {
           setIsLoadingZipData(false);
         }
       }
     };
 
-    if (watchedZip && watchedZip.length === 5 && 
-        (!form.getValues('city') || !form.getValues('state'))) {
+    if (watchedZip && watchedZip.length === 5) {
       fetchLocationData(watchedZip);
     }
-  }, [watchedZip, form, toast]);
+  }, [watchedZip, form, toast, setZipCode]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -267,7 +276,7 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
                     </FormControl>
                     {isLoadingZipData && (
                       <p className="text-xs text-muted-foreground mt-1">
-                        Looking up location...
+                        Looking up location and updating prices...
                       </p>
                     )}
                     <FormMessage />
