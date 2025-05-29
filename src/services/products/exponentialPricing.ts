@@ -3,33 +3,34 @@ import { Product } from './types';
 
 /**
  * Calculate price using exponential pricing model
- * Formula: price = basePrice * (a + b * e^(-c * quantity))
+ * Formula: price = a * e^(b * quantity) + c
  * 
- * @param basePrice The base price per ton
+ * @param basePrice The base price per ton (used as fallback if no custom parameters)
  * @param quantity The quantity in tons
- * @param a The asymptotic minimum multiplier (default: 0.8)
- * @param b The initial premium multiplier (default: 0.4)
- * @param c The decay rate (default: 0.1)
+ * @param a The multiplier coefficient (default: 400)
+ * @param b The exponential decay rate (default: -0.32)
+ * @param c The base offset (default: 95)
  * @returns The calculated price per ton
  */
 export function calculateExponentialPrice(
   basePrice: number,
   quantity: number,
-  a: number = 0.8,
-  b: number = 0.4,
-  c: number = 0.1
+  a: number = 400,
+  b: number = -0.32,
+  c: number = 95
 ): number {
-  // Ensure quantity is at least 1 to avoid division issues
+  // Ensure quantity is at least 1 to avoid calculation issues
   const safeQuantity = Math.max(1, quantity);
   
-  // Calculate the exponential multiplier
-  const multiplier = a + b * Math.exp(-c * safeQuantity);
+  // Calculate using exponential formula: a * e^(b * quantity) + c
+  const pricePerTon = a * Math.exp(b * safeQuantity) + c;
   
-  // Calculate the final price per ton
-  const pricePerTon = basePrice * multiplier;
+  // Ensure the price doesn't go below a reasonable minimum (use basePrice as fallback)
+  const minimumPrice = Math.max(basePrice * 0.5, 50); // At least 50% of base price or $50
+  const finalPrice = Math.max(pricePerTon, minimumPrice);
   
   // Round to 2 decimal places
-  return Math.round(pricePerTon * 100) / 100;
+  return Math.round(finalPrice * 100) / 100;
 }
 
 /**
@@ -42,9 +43,9 @@ export function getExponentialPricingParams(product: Product): {
   c: number;
 } {
   return {
-    a: product.pricing_a ?? 0.8,  // Asymptotic minimum (80% of base price for large orders)
-    b: product.pricing_b ?? 0.4,  // Initial premium (40% premium for small orders)
-    c: product.pricing_c ?? 0.1   // Decay rate (how quickly price decreases with quantity)
+    a: product.pricing_a ?? 400,  // Multiplier coefficient
+    b: product.pricing_b ?? -0.32, // Exponential decay rate
+    c: product.pricing_c ?? 95    // Base offset
   };
 }
 
@@ -63,11 +64,13 @@ export function calculateProductExponentialPrice(
   const { a, b, c } = getExponentialPricingParams(product);
   const safeQuantity = Math.max(1, quantity);
   
-  // Calculate multiplier
-  const multiplier = a + b * Math.exp(-c * safeQuantity);
-  
-  // Calculate prices
+  // Calculate the exponential price
   const pricePerTon = calculateExponentialPrice(product.price, quantity, a, b, c);
+  
+  // Calculate multiplier compared to base price for display purposes
+  const multiplier = pricePerTon / product.price;
+  
+  // Calculate total price
   const totalPrice = Math.round(pricePerTon * quantity * 100) / 100;
   
   return {

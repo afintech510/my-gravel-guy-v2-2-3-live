@@ -26,10 +26,10 @@ export interface Product {
     question: string;
     answer: string;
   }>;
-  // New exponential pricing parameters
-  pricing_a?: number;
-  pricing_b?: number;
-  pricing_c?: number;
+  // Exponential pricing parameters for formula: a * e^(b * quantity) + c
+  pricing_a?: number; // Multiplier coefficient (default: 400)
+  pricing_b?: number; // Exponential decay rate (default: -0.32)
+  pricing_c?: number; // Base offset (default: 95)
 }
 
 export interface ZipCodeData {
