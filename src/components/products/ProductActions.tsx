@@ -91,7 +91,6 @@ const ProductActions = ({
       
       {/* Product name and tons/cubic yards display */}
       <div className="flex flex-col items-center justify-center text-center my-4">
-        <h2 className="text-xl font-semibold text-primary mb-2">{product.name}</h2>
         <div className="flex items-center justify-center">
           <span className="text-4xl font-bold mr-2">{selectedTons} tons</span>
           <span className="text-xl text-gray-500">
