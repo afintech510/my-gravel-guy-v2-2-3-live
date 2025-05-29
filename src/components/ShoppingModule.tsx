@@ -1,20 +1,23 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { getProducts } from '@/services/productService';
-import { Product, PriceTier } from '@/services/productTypes';
+import { Product } from '@/services/productTypes';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useZipCode } from '@/contexts/ZipCodeContext';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Minus } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getPriceTiersForProduct, getPriceAdjustmentForZipCode, findPriceMultiplierForQuantity } from '@/services/products/pricingUtils';
+import { getPriceAdjustmentForZipCode } from '@/services/products/pricingUtils';
+import { calculateProductExponentialPrice } from '@/services/products/exponentialPricing';
+
 interface ProductPricing {
   productId: string;
-  priceTiers: PriceTier[];
   zipAdjustment: number;
 }
+
 const ShoppingModule = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('gravel');
   const [products, setProducts] = useState<Product[]>([]);
@@ -94,7 +97,7 @@ const ShoppingModule = () => {
     fetchProducts();
   }, []);
 
-  // Preload pricing tiers and ZIP adjustments for all products
+  // Preload ZIP adjustments for all products
   const preloadPricingData = async (allProducts: Product[]) => {
     try {
       console.log('Preloading pricing data for', allProducts.length, 'products');
@@ -102,31 +105,15 @@ const ShoppingModule = () => {
       // Get ZIP code adjustment once
       const zipAdjustment = zipCode ? await getPriceAdjustmentForZipCode(zipCode) : 1;
 
-      // Load price tiers for all products in parallel
-      const pricingPromises = allProducts.map(async product => {
-        try {
-          const priceTiers = await getPriceTiersForProduct(product.id);
-          return {
-            productId: product.id.toString(),
-            priceTiers,
-            zipAdjustment
-          };
-        } catch (error) {
-          console.error(`Error loading pricing for product ${product.id}:`, error);
-          return {
-            productId: product.id.toString(),
-            priceTiers: [],
-            zipAdjustment
-          };
-        }
-      });
-      const allPricingData = await Promise.all(pricingPromises);
-
-      // Convert to lookup object
+      // Create pricing lookup for all products
       const pricingLookup: Record<string, ProductPricing> = {};
-      allPricingData.forEach(data => {
-        pricingLookup[data.productId] = data;
+      allProducts.forEach(product => {
+        pricingLookup[product.id.toString()] = {
+          productId: product.id.toString(),
+          zipAdjustment
+        };
       });
+      
       setProductPricing(pricingLookup);
       console.log('Pricing data preloaded for', Object.keys(pricingLookup).length, 'products');
     } catch (error) {
@@ -173,21 +160,19 @@ const ShoppingModule = () => {
     }
   }, [selectedCategory, products]);
 
-  // Calculate final price with tiered pricing and ZIP adjustment
+  // Calculate final price using exponential pricing model
   const calculateFinalPrice = (product: Product, tons: number): number => {
     const productId = product.id.toString();
     const pricing = productPricing[productId];
-    if (!pricing) {
-      // Fallback to base price if pricing data not loaded
-      return product.price * tons;
-    }
-
-    // Get the appropriate multiplier for the quantity
-    const multiplier = findPriceMultiplierForQuantity(pricing.priceTiers, tons);
-
-    // Calculate: base price * multiplier * zip adjustment * tons
-    const pricePerTon = product.price * multiplier * pricing.zipAdjustment;
+    
+    // Calculate exponential price
+    const exponentialResult = calculateProductExponentialPrice(product, tons);
+    
+    // Apply ZIP code adjustment if available
+    const zipAdjustment = pricing?.zipAdjustment || 1;
+    const pricePerTon = exponentialResult.pricePerTon * zipAdjustment;
     const totalPrice = pricePerTon * tons;
+    
     return Math.round(totalPrice * 100) / 100;
   };
 
@@ -195,19 +180,24 @@ const ShoppingModule = () => {
   const calculatePricePerTon = (product: Product, tons: number): number => {
     const productId = product.id.toString();
     const pricing = productPricing[productId];
-    if (!pricing) {
-      return product.price;
-    }
-    const multiplier = findPriceMultiplierForQuantity(pricing.priceTiers, tons);
-    const pricePerTon = product.price * multiplier * pricing.zipAdjustment;
+    
+    // Calculate exponential price
+    const exponentialResult = calculateProductExponentialPrice(product, tons);
+    
+    // Apply ZIP code adjustment if available
+    const zipAdjustment = pricing?.zipAdjustment || 1;
+    const pricePerTon = exponentialResult.pricePerTon * zipAdjustment;
+    
     return Math.round(pricePerTon * 100) / 100;
   };
+
   const updateQuantity = (productId: string, change: number) => {
     setQuantities(prev => ({
       ...prev,
       [productId]: Math.max(1, (prev[productId] || 5) + change)
     }));
   };
+
   const handleAddToCart = (product: Product) => {
     const quantity = quantities[product.id.toString()] || 5;
     addToCart({
@@ -222,9 +212,11 @@ const ShoppingModule = () => {
     // Navigate to cart page for delivery info completion
     navigate('/cart');
   };
+
   const getProductImage = (product: Product) => {
     return product.images?.[0] || product.image || '/lovable-uploads/85eef0fe-9a59-406e-ba6b-54e1aaf6f56b.png';
   };
+
   if (loading) {
     return <div className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
@@ -235,6 +227,7 @@ const ShoppingModule = () => {
         </div>
       </div>;
   }
+
   return <div className="py-8 md:py-16 px-4 bg-white">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-6 md:mb-8">
@@ -245,7 +238,7 @@ const ShoppingModule = () => {
         {/* Material Category Selector */}
         <Card className="mb-6 md:mb-8">
           <CardContent className="p-4 md:p-6">
-            <h3 className="text-base md:text-lg font-semibold mb-4">FREE SHIPPING NATIONWIDE </h3>
+            <h3 className="text-base md:text-lg font-semibold mb-4">FREE SHIPPING NATIONWIDE </h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-2 md:gap-3">
               {categories.map(category => <button key={category.id} onClick={() => setSelectedCategory(category.id)} className={`p-2 md:p-3 rounded-lg border text-xs md:text-sm font-medium transition-colors ${selectedCategory === category.id ? 'bg-green-500 text-white border-green-500' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}>
                   <div className="text-base md:text-lg mb-1">{category.icon}</div>
@@ -344,4 +337,5 @@ const ShoppingModule = () => {
       </div>
     </div>;
 };
+
 export default ShoppingModule;
