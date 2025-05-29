@@ -87,26 +87,21 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
             </div>
           )}
           <div className="flex-1">
-            <h3 className="font-semibold text-lg text-gray-900 mb-1">{product.name}</h3>
+            <div className="flex items-start justify-between">
+              <h3 className="font-semibold text-lg text-gray-900 mb-1">{product.name}</h3>
+              {/* Expand/Collapse Indicator */}
+              <div className="flex items-center text-primary ml-2">
+                {isSelected ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </div>
+            </div>
             <p className="text-sm text-gray-600">
               {truncateDescription(product.description)}
             </p>
           </div>
-        </div>
-
-        
-
-        {/* Expand/Collapse Indicator */}
-        <div className="flex items-center justify-left text-primary">
-          {isSelected ? (
-            <> 
-              <ChevronUp className="h-4 w-4" />
-            </>
-          ) : (
-            <> 
-              <ChevronDown className="h-4 w-4" />
-            </>
-          )}
         </div>
 
         {/* Expanded Content */}
