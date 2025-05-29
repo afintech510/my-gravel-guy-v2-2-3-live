@@ -356,8 +356,9 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
                         <SelectValue placeholder="Select a preferred time" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="morning">Morning (8am - 12pm)</SelectItem>
+                    <SelectContent defaultValue="anytime">
+                      <SelectItem value="anytime">Anytime (7pm - 5pm)</SelectItem>
+                      <SelectItem value="morning">Morning (7am - 12pm)</SelectItem>
                       <SelectItem value="afternoon">Afternoon (12pm - 5pm)</SelectItem>
                     </SelectContent>
                   </Select>
