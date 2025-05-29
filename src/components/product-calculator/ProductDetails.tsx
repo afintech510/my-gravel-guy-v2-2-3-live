@@ -103,11 +103,12 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                     <span>{product.specifications.coverage}</span>
                   </div>
                 )}
-                
+                {/* remove conversion ratio
                 <div className="flex items-center gap-1">
                   <span className="text-gray-500">Conversion:</span>
                   <span>{product.tonYardRatio} tons per cubic yard</span>
                 </div>
+                */}
               </div>
             </div>
           )}
