@@ -83,7 +83,8 @@ export default function ProductCalculator() {
           
           setPriceDetails(pricing);
           console.log('ProductCalculator: Exponential price calculation:', pricing);
-          
+
+          /*
           // Show volume pricing notification
           if (pricing.multiplier !== 1) {
             const changePercent = Math.abs((pricing.multiplier - 1) * 100).toFixed(0);
@@ -93,6 +94,7 @@ export default function ProductCalculator() {
               description: `${effectiveTons.toFixed(1)} tons qualifies for a ${changePercent}% price ${direction}.`,
               duration: 3000
             });
+            */
           }
         } catch (error) {
           console.error('ProductCalculator: Error calculating price details:', error);
