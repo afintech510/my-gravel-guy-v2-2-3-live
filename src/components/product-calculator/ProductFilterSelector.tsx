@@ -186,12 +186,9 @@ export default function ProductFilterSelector({ onProductSelected, selectedProdu
                   )}
                   <div>
                     <h4 className="font-medium text-gray-900">{product.name}</h4>
-                    {product.price > 0 && (
-                      <p className="text-primary font-semibold mt-1">
-                        ${product.price.toFixed(2)}/ton
-                      </p>
+                  
                     )}
-                    <p className="text-xs text-gray-500 mt-1 line-clamp-1">
+                    <p className="text-xs text-gray-500 mt-1 line-clamp-1">Size: 
                       {product.size || product.specifications?.size || ""}
                     </p>
                   </div>
