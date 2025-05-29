@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
@@ -124,8 +125,17 @@ const ProductDetail = () => {
     <div className="min-h-screen bg-white py-16 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          <ProductImages product={product} />
+          {/* Left Column - Images and Tabs on Desktop */}
+          <div className="space-y-8">
+            <ProductImages product={product} />
+            
+            {/* Product Tabs - Only show on desktop in this column */}
+            <div className="hidden lg:block">
+              <ProductTabs product={product} />
+            </div>
+          </div>
           
+          {/* Right Column - Product Info and Actions */}
           <div className="space-y-8">
             <ProductHeader 
               product={product}
@@ -159,9 +169,12 @@ const ProductDetail = () => {
           </div>
         </div>
 
-        <ProductTabs product={product} />
+        {/* Product Tabs - Show on mobile/tablet below the grid */}
+        <div className="lg:hidden mt-16">
+          <ProductTabs product={product} />
+        </div>
         
-        {/* Quote Form Component Above Trust Banner - Updated to use selectedProduct prop */}
+        {/* Quote Form Component Above Trust Banner */}
         <div className="mt-16">
           <QuoteFormProduct selectedProduct={product} />
         </div>
