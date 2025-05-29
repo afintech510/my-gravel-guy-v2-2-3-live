@@ -187,7 +187,7 @@ export default function ProductFilterSelector({ onProductSelected, selectedProdu
                   <div>
                     <h4 className="font-medium text-gray-900">{product.name}</h4>
                     <p className="text-xs text-gray-500 mt-1 line-clamp-1">
-                      {"Size: "+product.size || product.specifications?.size || ""}
+                      {product.size || product.specifications?.size || ""}
                     </p>
                   </div>
                 </div>
