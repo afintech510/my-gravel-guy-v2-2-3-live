@@ -61,7 +61,7 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
     }
   };
 
-  const truncateDescription = (text: string, maxLength: number = 100) => {
+  const truncateDescription = (text: string, maxLength: number = 130) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength).trim() + '...';
   };
