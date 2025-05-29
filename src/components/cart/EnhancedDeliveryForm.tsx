@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,6 +52,9 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const { setZipCode } = useZipCode();
   
+  // Use ref to track the last processed ZIP code to prevent infinite loops
+  const lastProcessedZipRef = useRef<string>('');
+  
   const form = useForm<EnhancedDeliveryFormData>({
     resolver: zodResolver(enhancedDeliverySchema),
     defaultValues: {
@@ -74,8 +77,15 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
   // Auto-populate city and state when zip changes AND update pricing context
   useEffect(() => {
     const fetchLocationData = async (zipCode: string) => {
+      // Prevent processing the same ZIP code multiple times
+      if (zipCode === lastProcessedZipRef.current) {
+        return;
+      }
+      
       if (zipCode.length === 5) {
         setIsLoadingZipData(true);
+        lastProcessedZipRef.current = zipCode; // Mark this ZIP as processed
+        
         try {
           const zipData = await findZipCodeMatch(zipCode);
           if (zipData) {
@@ -100,10 +110,13 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
         } finally {
           setIsLoadingZipData(false);
         }
+      } else {
+        // Reset the processed ZIP when input is not 5 digits
+        lastProcessedZipRef.current = '';
       }
     };
 
-    if (watchedZip && watchedZip.length === 5) {
+    if (watchedZip && watchedZip.length === 5 && watchedZip !== lastProcessedZipRef.current) {
       fetchLocationData(watchedZip);
     }
   }, [watchedZip, form, toast, setZipCode]);
