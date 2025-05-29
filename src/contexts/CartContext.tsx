@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Product } from '../services/productTypes';
 import { useToast } from '@/hooks/use-toast';
@@ -62,6 +61,7 @@ interface CartContextType {
     productId: string | number, 
     details: Partial<Omit<CartItem, keyof Product | 'tons'>>
   ) => void;
+  updateQuantity: (productId: string | number, newTons: number) => void;
   clearCart: () => void;
   total: number;
   discountTotal: number;
@@ -150,6 +150,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, [toast, restoreLastRemovedItem]);
 
+  // New function to update quantity for a specific cart item
+  const updateQuantity = useCallback((productId: string | number, newTons: number) => {
+    setItems(currentItems =>
+      currentItems.map(item =>
+        item.id === productId
+          ? { 
+              ...item, 
+              tons: newTons,
+              yards: item.tonYardRatio ? newTons / item.tonYardRatio : undefined
+            }
+          : item
+      )
+    );
+  }, []);
+
   // New function to update delivery details for a specific cart item
   const updateDeliveryDetails = useCallback((
     productId: string | number,
@@ -196,6 +211,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       addToCart, 
       removeFromCart, 
       updateDeliveryDetails,
+      updateQuantity,
       clearCart, 
       total,
       discountTotal,
@@ -209,7 +225,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useCart = () => {
   const context = useContext(CartContext);
   if (context === undefined) {
-    throw new Error('useCart must be used within a CartProvider');
+    throw new error('useCart must be used within a CartProvider');
   }
   return context;
 };
