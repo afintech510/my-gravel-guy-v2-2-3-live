@@ -97,20 +97,7 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
           </div>
         </div>
 
-        {/* Price Display */}
-        <div className="mb-4">
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-primary">
-              ${displayPrice.toFixed(2)}
-            </span>
-            <span className="text-sm text-gray-500">per ton</span>
-          </div>
-          {priceDetails && priceDetails.zipAdjustment !== 1 && (
-            <p className="text-xs text-gray-500">
-              Price adjusted for your area
-            </p>
-          )}
-        </div>
+        
 
         {/* Expand/Collapse Indicator */}
         <div className="flex items-center justify-center text-primary">
@@ -154,6 +141,22 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
                 >
                   +
                 </Button>
+                
+                {/* Price Display */}
+        <div className="mb-4">
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-primary">
+              ${displayPrice.toFixed(2)}
+            </span>
+            <span className="text-sm text-gray-500">per ton</span>
+          </div>
+          {priceDetails && priceDetails.zipAdjustment !== 1 && (
+            <p className="text-xs text-gray-500">
+              Price adjusted for your area
+            </p>
+          )}
+        </div>
+                
               </div>
               <p className="text-xs text-gray-500 mt-1">
                 Total: ${(displayPrice * selectedTons).toFixed(2)}
