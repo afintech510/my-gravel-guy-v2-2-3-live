@@ -195,7 +195,7 @@ const MaterialCalculator = () => {
         couponAmount: 50
       });
       
-      toast({
+     // toast({
         title: "Added to Cart",
         description: `${Math.floor(calculations.totalTons)} tons of ${product.name} added to your cart with a $50 discount applied.`,
       });
