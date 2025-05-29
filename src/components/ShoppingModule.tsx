@@ -302,6 +302,9 @@ const ShoppingModule = () => {
                         <div className="flex-1">
                           <h4 className="font-semibold">{product.name}</h4>
                           {product.size && <p className="text-sm text-gray-500">{product.size}</p>}
+                          {product.description && (
+                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">{product.description}</p>
+                          )}
                           <Link to={`/products/${product.slug}`} className="text-sm text-blue-600 hover:text-blue-800">
                             More Details...
                           </Link>
