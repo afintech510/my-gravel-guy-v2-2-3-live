@@ -24,10 +24,12 @@ export default function ZipCodeChecker() {
   } = useZipCodeSearch(() => {
     // Callback when ZIP code is selected
     setIsEditing(false);
+    /*
     toast({
       title: "ZIP code updated",
       description: "Your delivery location has been updated.",
     });
+    */
   });
 
   // Check if delivery is available (for now, we'll assume it is if we have zip code data)
