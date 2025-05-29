@@ -153,7 +153,7 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
                   </span>
                   <span className="ml-2 text-sm text-gray-500">Total</span>
                 </div>
-                <div className="text-sm text-green-600 font-medium">
+                <div className="text-sm text-black-600 font-medium">
                   FREE Delivery
                 </div>
               </div>
