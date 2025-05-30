@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -287,7 +286,7 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
                   deliveryInstructions: details.deliveryInstructions,
                   locationPhotoUrl: details.locationPhotoUrl
                 });
-                // Close form after saving
+                // Close form after saving - this is the key change
                 setIsDeliveryFormOpen(false);
               }}
             />
