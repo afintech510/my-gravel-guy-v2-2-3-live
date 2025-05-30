@@ -87,6 +87,20 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
     }
   };
 
+  // Helper function to format delivery time preference
+  const formatDeliveryTimePreference = (preference?: "anytime" | "morning" | "afternoon") => {
+    switch (preference) {
+      case 'anytime':
+        return 'Anytime (7am-5pm)';
+      case 'morning':
+        return 'Morning (7am-12pm)';
+      case 'afternoon':
+        return 'Afternoon (12pm-5pm)';
+      default:
+        return 'Not specified';
+    }
+  };
+
   return (
     <Card className="overflow-hidden border rounded-lg">
       <div className="p-4 sm:p-6">
@@ -175,7 +189,7 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
                     {item.deliveryTimePreference && (
                       <div className="flex items-center gap-2 text-gray-600">
                         <ClockIcon className="h-3 w-3" />
-                        <span>Preferred time: {item.deliveryTimePreference === 'morning' ? 'Morning (8am-12pm)' : 'Afternoon (12pm-5pm)'}</span>
+                        <span>Preferred time: {formatDeliveryTimePreference(item.deliveryTimePreference)}</span>
                       </div>
                     )}
                     {item.deliveryInstructions && (
