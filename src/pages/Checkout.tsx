@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, MapPinIcon, PhoneIcon, MailIcon, ClockIcon, FileTextIcon, UserIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,6 +19,20 @@ const Checkout = () => {
     navigate('/cart');
     return null;
   }
+
+  // Helper function to format delivery time preference
+  const formatDeliveryTimePreference = (preference?: "anytime" | "morning" | "afternoon") => {
+    switch (preference) {
+      case 'anytime':
+        return 'Anytime (7am-5pm)';
+      case 'morning':
+        return 'Morning (7am-12pm)';
+      case 'afternoon':
+        return 'Afternoon (12pm-5pm)';
+      default:
+        return 'Not specified';
+    }
+  };
 
   // Transform cart items to a format suitable for Stripe
   const formatCartItemsForStripe = () => {
@@ -103,36 +117,100 @@ const Checkout = () => {
             <CardContent className="p-6">
               <h2 className="text-xl font-semibold mb-4">Order Summary ({items.length} items)</h2>
               
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {items.map((item, index) => (
-                  <div key={`${item.id}-${index}`} className="flex justify-between border-b pb-4">
-                    <div>
-                      <div className="font-medium">{item.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {item.tons} tons {item.yards && `(${item.yards.toFixed(1)} cu. yds.)`}
+                  <div key={`${item.id}-${index}`} className="border-b pb-6 last:border-b-0">
+                    <div className="flex justify-between mb-4">
+                      <div>
+                        <div className="font-medium">{item.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {item.tons} tons {item.yards && `(${item.yards.toFixed(1)} cu. yds.)`}
+                        </div>
                       </div>
-                      
-                      {/* Show delivery info if available */}
-                      {item.deliveryAddress && (
-                        <div className="text-sm mt-2">
-                          <div className="text-muted-foreground">Delivery to:</div>
-                          <div>{item.deliveryAddress.street}</div>
-                          <div>{item.deliveryAddress.city}, {item.deliveryAddress.state} {item.deliveryAddress.zip}</div>
-                          {item.deliveryDate && (
-                            <div>
-                              Scheduled: {new Date(item.deliveryDate).toLocaleDateString('en-US', {
-                                weekday: 'long',
-                                month: 'short',
-                                day: 'numeric',
-                              })}
+                      <div className="text-right">
+                        <div>${(item.price * item.tons).toFixed(2)}</div>
+                      </div>
+                    </div>
+                    
+                    {/* Delivery Details Section */}
+                    {(item.deliveryAddress || item.contactInfo || item.deliveryDate) && (
+                      <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+                        <h4 className="font-medium text-gray-900 mb-3">Delivery Details</h4>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Contact Information */}
+                          {item.contactInfo && (
+                            <div className="space-y-2">
+                              <h5 className="font-medium text-gray-700 text-sm">Contact Information</h5>
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <UserIcon className="h-3 w-3" />
+                                  <span>{item.contactInfo.name}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <PhoneIcon className="h-3 w-3" />
+                                  <span>{item.contactInfo.phone}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <MailIcon className="h-3 w-3" />
+                                  <span>{item.contactInfo.email}</span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Delivery Address */}
+                          {item.deliveryAddress && (
+                            <div className="space-y-2">
+                              <h5 className="font-medium text-gray-700 text-sm">Delivery Address</h5>
+                              <div className="flex items-start gap-2 text-sm text-gray-600">
+                                <MapPinIcon className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <div>{item.deliveryAddress.street}</div>
+                                  <div>{item.deliveryAddress.city}, {item.deliveryAddress.state} {item.deliveryAddress.zip}</div>
+                                </div>
+                              </div>
                             </div>
                           )}
                         </div>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <div>${(item.price * item.tons).toFixed(2)}</div>
-                    </div>
+
+                        {/* Delivery Date and Preferences */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-200">
+                          {item.deliveryDate && (
+                            <div className="space-y-2">
+                              <h5 className="font-medium text-gray-700 text-sm">Delivery Schedule</h5>
+                              <div className="text-sm text-gray-600">
+                                <div className="font-medium">
+                                  {new Date(item.deliveryDate).toLocaleDateString('en-US', {
+                                    weekday: 'long',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  })}
+                                </div>
+                                {item.deliveryTimePreference && (
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <ClockIcon className="h-3 w-3" />
+                                    <span>{formatDeliveryTimePreference(item.deliveryTimePreference)}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Special Instructions */}
+                          {item.deliveryInstructions && (
+                            <div className="space-y-2">
+                              <h5 className="font-medium text-gray-700 text-sm">Special Instructions</h5>
+                              <div className="flex items-start gap-2 text-sm text-gray-600">
+                                <FileTextIcon className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                                <span>{item.deliveryInstructions}</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
