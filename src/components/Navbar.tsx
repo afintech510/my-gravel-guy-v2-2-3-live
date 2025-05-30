@@ -27,7 +27,7 @@ const Navbar = () => {
   ];
 
   const mobileLinks = [
-    { href: "/products", label: "Shop", icon: <Store className="h-6 w-6" /> },
+    { href: "/shop", label: "Shop", icon: <Store className="h-6 w-6" /> },
     { href: "/product-calculator", label: "Calculator", icon: <Calculator className="h-6 w-6" /> },
   ];
 
@@ -89,8 +89,8 @@ const Navbar = () => {
           </div>
 
           <div className="flex items-center md:hidden gap-2">
-            {/* Mobile theme toggle */}
-            <ThemeToggle />
+            {/* Mobile theme toggle 
+            <ThemeToggle />   */}
             
             {/* Mobile links with icons */}
             {mobileLinks.map((link) => (
