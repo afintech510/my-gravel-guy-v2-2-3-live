@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -24,9 +25,10 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
                            item.contactInfo?.phone && 
                            item.contactInfo?.email;
 
-  // Auto-expand if autoExpandDelivery prop is true or if delivery info is incomplete
+  // Auto-expand only if delivery info is incomplete AND autoExpandDelivery is true
+  // Once delivery info is complete, don't auto-expand even if autoExpandDelivery is true
   useEffect(() => {
-    if (autoExpandDelivery || !isDeliveryComplete) {
+    if (!isDeliveryComplete && autoExpandDelivery) {
       setIsDeliveryFormOpen(true);
     }
   }, [autoExpandDelivery, isDeliveryComplete]);
@@ -286,7 +288,7 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
                   deliveryInstructions: details.deliveryInstructions,
                   locationPhotoUrl: details.locationPhotoUrl
                 });
-                // Close form after saving - this is the key change
+                // Close form after saving
                 setIsDeliveryFormOpen(false);
               }}
             />
