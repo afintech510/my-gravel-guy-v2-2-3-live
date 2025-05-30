@@ -41,7 +41,7 @@ const Cart = () => {
             Looks like you haven't added any products to your cart yet. 
             Start by exploring our products and adding some to your cart.
           </p>
-          <Button onClick={() => navigate('/products')} className="mt-4">
+          <Button onClick={() => navigate('/shop')} className="mt-4">
             Browse Products
           </Button>
         </div>
