@@ -16,7 +16,7 @@ export type DeliveryFormData = {
   state: string;
   zip: string;
   // Optional fields
-  deliveryTimePreference?: "morning" | "afternoon";
+  deliveryTimePreference?: "anytime" | "morning" | "afternoon";
   deliveryInstructions?: string;
   locationPhotoUrl?: string;
 };
