@@ -208,7 +208,7 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
 
           {/* Contact Information */}
           <div className="space-y-4">
-            <h4 className="font-medium text-base">Contact Information</h4>
+            <h4 className="font-medium text-base">Delivery Contact Information</h4>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
