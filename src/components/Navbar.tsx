@@ -46,7 +46,7 @@ const Navbar = () => {
           <div className="flex-1">
             {/* Theme Toggle positioned to the left of the logo */}
             <div className="absolute left-4 md:left-[calc((100%-72rem)/2+1rem)] -top-1 z-50 flex items-center gap-2">
-              <ThemeToggle />
+              {/*     <ThemeToggle /> */}
               {/* Logo floating above banner and navbar */}
               <Link to="/">
                 <img 
