@@ -150,9 +150,14 @@ serve(async (req) => {
     // Get origin for success/cancel URLs
     const origin = req.headers.get("origin") || "http://localhost:3000";
 
-    // Create a Stripe checkout session
+    // Create a Stripe checkout session with BNPL payment methods
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
+      payment_method_types: [
+        "card",
+        "klarna",
+        "afterpay_clearpay",
+        "affirm"
+      ],
       line_items: validatedLineItems,
       mode: "payment",
       success_url: `${origin}/payment-success`,
@@ -160,6 +165,18 @@ serve(async (req) => {
       metadata: orderMetadata,
       payment_intent_data: {
         metadata: orderMetadata
+      },
+      // Configure BNPL options
+      payment_method_options: {
+        klarna: {
+          preferred_locale: "en-US"
+        },
+        afterpay_clearpay: {
+          reference: `ORDER-${Date.now()}`
+        },
+        affirm: {
+          preferred_locale: "en-US"
+        }
       }
     });
 
