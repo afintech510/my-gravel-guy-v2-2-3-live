@@ -10,7 +10,7 @@ interface ShopProductGridProps {
 }
 
 export default function ShopProductGrid({ products, loading, searchTerm }: ShopProductGridProps) {
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
 
   // Filter products by search term if provided
   const filteredProducts = searchTerm 
@@ -22,7 +22,15 @@ export default function ShopProductGrid({ products, loading, searchTerm }: ShopP
     : products;
 
   const handleProductSelect = (productId: string) => {
-    setSelectedProductId(selectedProductId === productId ? null : productId);
+    setSelectedProductIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(productId)) {
+        newSet.delete(productId);
+      } else {
+        newSet.add(productId);
+      }
+      return newSet;
+    });
   };
 
   if (loading) {
@@ -65,7 +73,7 @@ export default function ShopProductGrid({ products, loading, searchTerm }: ShopP
           <ShopProductCard
             key={product.id}
             product={product}
-            isSelected={selectedProductId === String(product.id)}
+            isSelected={selectedProductIds.has(String(product.id))}
             onSelect={() => handleProductSelect(String(product.id))}
           />
         ))}
