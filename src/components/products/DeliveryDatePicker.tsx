@@ -3,7 +3,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
-import { format, addBusinessDays } from "date-fns";
+import { format, addHours } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -14,7 +14,18 @@ interface DeliveryDatePickerProps {
 
 const DeliveryDatePicker = ({ selectedDate, onDateSelect }: DeliveryDatePickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const minDate = addBusinessDays(new Date(), 3); // 72hr minimum lead time
+  const minDate = addHours(new Date(), 60); // 60 hours minimum lead time
+
+  // Function to disable Sundays and dates before minimum date
+  const isDateDisabled = (date: Date) => {
+    // Check if date is before minimum date
+    if (date < minDate) return true;
+    
+    // Check if date is Sunday (0 = Sunday)
+    if (date.getDay() === 0) return true;
+    
+    return false;
+  };
 
   return (
     <div className="space-y-2">
@@ -40,14 +51,14 @@ const DeliveryDatePicker = ({ selectedDate, onDateSelect }: DeliveryDatePickerPr
               onDateSelect(date);
               setIsOpen(false);
             }}
-            disabled={(date) => date < minDate}
+            disabled={isDateDisabled}
             initialFocus
             className="pointer-events-auto"
           />
         </PopoverContent>
       </Popover>
       <p className="text-xs text-muted-foreground">
-        * Minimum 72-hour lead time required for delivery
+        * Minimum 60-hour lead time required. Sundays unavailable for delivery.
       </p>
     </div>
   );

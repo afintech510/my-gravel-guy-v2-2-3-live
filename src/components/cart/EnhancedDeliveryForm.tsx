@@ -14,7 +14,7 @@ import { findZipCodeMatch } from "../../utils/zipCode";
 import { useToast } from "@/hooks/use-toast";
 import { CartItem } from "../../contexts/CartContext";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, addHours } from "date-fns";
 import { useZipCode } from "@/contexts/ZipCodeContext";
 
 const enhancedDeliverySchema = z.object({
@@ -147,9 +147,19 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
     onSubmit(formData);
   };
 
-  // Get minimum date (tomorrow)
-  const minDate = new Date();
-  minDate.setDate(minDate.getDate() + 1);
+  // Get minimum date (60 hours from now)
+  const minDate = addHours(new Date(), 60);
+
+  // Function to disable Sundays and dates before minimum date
+  const isDateDisabled = (date: Date) => {
+    // Check if date is before minimum date
+    if (date < minDate) return true;
+    
+    // Check if date is Sunday (0 = Sunday)
+    if (date.getDay() === 0) return true;
+    
+    return false;
+  };
 
   return (
     <div className="space-y-6">
@@ -196,11 +206,15 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
                         field.onChange(date);
                         setIsCalendarOpen(false);
                       }}
-                      disabled={(date) => date < minDate}
+                      disabled={isDateDisabled}
                       initialFocus
+                      className="pointer-events-auto"
                     />
                   </PopoverContent>
                 </Popover>
+                <p className="text-xs text-muted-foreground">
+                  * Minimum 60-hour lead time required. Sundays unavailable for delivery.
+                </p>
                 <FormMessage />
               </FormItem>
             )}
