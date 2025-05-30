@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronUp, ShoppingCart, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 interface ShopProductCardProps {
   product: Product;
@@ -80,6 +81,8 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
     return text.substring(0, maxLength).trim() + '...';
   };
 
+  const shouldShowMoreLink = product.description.length > 130;
+
   return (
     <Card 
       className={cn(
@@ -117,9 +120,18 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
                 )}
               </div>
             </div>
-            <p className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600">
               {truncateDescription(product.description)}
-            </p>
+              {shouldShowMoreLink && (
+                <Link 
+                  to={`/products/${product.slug}`}
+                  className="text-primary hover:text-primary/80 ml-1 inline-flex items-center"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  More Details...
+                </Link>
+              )}
+            </div>
           </div>
         </div>
 
