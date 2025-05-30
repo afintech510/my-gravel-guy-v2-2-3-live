@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { getProducts } from '@/services/productService';
 import { Product } from '@/services/productTypes';
 import { useCart } from '@/contexts/CartContext';
@@ -25,6 +26,8 @@ const ShoppingModule = () => {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
   const [productPricing, setProductPricing] = useState<Record<string, ProductPricing>>({});
+  const [syncTons, setSyncTons] = useState(false);
+  const [masterQuantity, setMasterQuantity] = useState(5);
   const {
     addToCart
   } = useCart();
@@ -192,10 +195,36 @@ const ShoppingModule = () => {
   };
 
   const updateQuantity = (productId: string, change: number) => {
-    setQuantities(prev => ({
-      ...prev,
-      [productId]: Math.max(3, (prev[productId] || 5) + change)
-    }));
+    if (syncTons) {
+      // Update master quantity and sync all products
+      const newMasterQuantity = Math.max(3, masterQuantity + change);
+      setMasterQuantity(newMasterQuantity);
+      
+      // Update all product quantities to match master quantity
+      const updatedQuantities: Record<string, number> = {};
+      filteredProducts.forEach(product => {
+        updatedQuantities[product.id.toString()] = newMasterQuantity;
+      });
+      setQuantities(prev => ({ ...prev, ...updatedQuantities }));
+    } else {
+      // Update individual product quantity
+      setQuantities(prev => ({
+        ...prev,
+        [productId]: Math.max(3, (prev[productId] || 5) + change)
+      }));
+    }
+  };
+
+  const handleSyncToggle = (checked: boolean) => {
+    setSyncTons(checked);
+    if (checked) {
+      // When enabling sync, set all quantities to the master quantity
+      const updatedQuantities: Record<string, number> = {};
+      filteredProducts.forEach(product => {
+        updatedQuantities[product.id.toString()] = masterQuantity;
+      });
+      setQuantities(prev => ({ ...prev, ...updatedQuantities }));
+    }
   };
 
   const handleAddToCart = (product: Product) => {
@@ -204,10 +233,6 @@ const ShoppingModule = () => {
       ...product,
       tons: quantity
     });
-  /*  toast({
-      title: "Added to Cart",
-      description: `${quantity} tons of ${product.name} added to cart.`
-    }); */
 
     // Navigate to cart page for delivery info completion
     navigate('/cart');
@@ -251,7 +276,22 @@ const ShoppingModule = () => {
         {/* Available Materials */}
         <Card>
           <CardContent className="p-4 md:p-6">
-            <h3 className="text-base md:text-lg font-semibold mb-4">Available Materials</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-base md:text-lg font-semibold">Available Materials</h3>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="sync-tons" 
+                  checked={syncTons}
+                  onCheckedChange={handleSyncToggle}
+                />
+                <label 
+                  htmlFor="sync-tons" 
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Sync Tons
+                </label>
+              </div>
+            </div>
             
             {filteredProducts.length === 0 ? <p className="text-gray-500 text-center py-8">No products found for this category</p> : <div className="grid grid-cols-1 gap-4 md:gap-6">
                 {filteredProducts.map(product => {
