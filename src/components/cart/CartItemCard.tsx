@@ -140,7 +140,7 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
                   <CalendarIcon className="h-4 w-4 mr-1" />
                   <span>Delivery: {formatDate(item.deliveryDate)}</span>
                   <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                    Complete
+                    Confirmed
                   </span>
                 </div>
               ) : (
