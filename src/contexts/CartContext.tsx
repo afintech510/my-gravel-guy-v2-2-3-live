@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useCallback, useEffect } from 'react';
 import { Product } from '../services/productTypes';
 import { useToast } from '@/hooks/use-toast';
@@ -25,7 +26,7 @@ export interface CartItem extends Product {
   deliveryDate?: Date;
   deliveryAddress?: DeliveryAddress;
   contactPhone?: string;
-  deliveryTimePreference?: 'morning' | 'afternoon';
+  deliveryTimePreference?: 'anytime' | 'morning' | 'afternoon';
   deliveryInstructions?: string;
   locationPhotoUrl?: string;
   contactInfo?: ContactInfo;
