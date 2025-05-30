@@ -109,12 +109,7 @@ const Index = () => {
         </div>
       </section>
 
-     {/* Test Query Button - Temporary addition for testing */}
-      <section className="py-6 px-4 bg-blue-50 border-b">
-        <div className="max-w-4xl mx-auto">
-          <TestQueryButton />
-        </div>
-      </section>
+
       
     </div>
   );
