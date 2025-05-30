@@ -27,7 +27,7 @@ const Index = () => {
             Get gravel, sand, and dirt delivered right to your location. Fast, reliable, and competitively priced.
           </p>
           <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-            <Link to="/products">
+            <Link to="/shop">
               <Button variant="outline" size="lg" className="bg-white hover:bg-primary hover:text-primary-foreground">
                 <Store className="mr-2 h-4 w-4" />
                 Shop Now
