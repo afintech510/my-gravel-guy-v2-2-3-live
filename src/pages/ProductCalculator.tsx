@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ProductFilterSelector from '@/components/product-calculator/ProductFilterSelector';
 import ProductDetails from '@/components/product-calculator/ProductDetails';
@@ -125,13 +126,29 @@ export default function ProductCalculator() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900">Material Calculator</h1>
         <p className="text-slate-600 mt-2">Find the perfect amount of material for your project and add it to your cart.</p>
+        
+        {/* Step-by-step guidance */}
+        <div className="mt-6 flex flex-col sm:flex-row gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-medium">1</span>
+            <span className="text-slate-600">Select Your Material - Choose a product</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-medium">2</span>
+            <span className="text-slate-600">Calculate Your Needs</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-medium">3</span>
+            <span className="text-slate-600">Add to cart</span>
+          </div>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
         {/* Left column - Product selection */}
         <div className="lg:col-span-7">
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-            <h2 className="text-xl font-semibold mb-6">Select Your Material</h2>
+            <h2 className="text-xl font-semibold mb-6">Step 1: Select Your Material</h2>
             <ProductFilterSelector 
               onProductSelected={setSelectedProduct}
               selectedProduct={selectedProduct}
@@ -148,7 +165,7 @@ export default function ProductCalculator() {
         {/* Right column - Calculator and actions */}
         <div className="lg:col-span-5">
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8 sticky top-24">
-            <h2 className="text-xl font-semibold mb-4">Calculate Your Needs</h2>
+            <h2 className="text-xl font-semibold mb-4">Step 2: Calculate Your Needs</h2>
             <AreaCalculator
               areas={areas}
               setAreas={setAreas}
@@ -165,6 +182,7 @@ export default function ProductCalculator() {
             
             {selectedProduct && calculationResult.totalTons > 0 && (
               <div className="mt-8 pt-6 border-t border-gray-200">
+                <h3 className="text-lg font-semibold mb-4">Step 3: Add to Cart</h3>
                 <AddToCartOptions 
                   product={selectedProduct}
                   calculatedTons={calculationResult.totalTons}
