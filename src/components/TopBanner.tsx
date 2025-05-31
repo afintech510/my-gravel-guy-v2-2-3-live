@@ -48,7 +48,7 @@ const TopBanner = ({ className }: TopBannerProps) => {
                 <MapPin className="h-3 w-3 ml-0.5" />
               </button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-md fixed left-[50%] translate-x-[-50%] top-4 sm:top-[50%] sm:translate-y-[-50%] translate-y-0">
               <DialogHeader>
                 <DialogTitle>Change Your Delivery Location</DialogTitle>
               </DialogHeader>
