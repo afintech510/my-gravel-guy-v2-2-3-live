@@ -29,6 +29,41 @@ const Cart = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  // Handle delivery details update with auto-checkout logic
+  const handleDeliveryUpdate = (productId: string | number, details: any) => {
+    updateDeliveryDetails(productId, {
+      deliveryDate: details.deliveryDate,
+      deliveryAddress: details.deliveryAddress,
+      contactInfo: details.contactInfo,
+      deliveryTimePreference: details.deliveryTimePreference,
+      deliveryInstructions: details.deliveryInstructions,
+      locationPhotoUrl: details.locationPhotoUrl
+    });
+
+    // Check if this update makes all items complete
+    // We need to simulate the updated state since React state updates are async
+    const updatedItems = items.map(item => 
+      item.id === productId 
+        ? { ...item, ...details }
+        : item
+    );
+    
+    const allWillBeComplete = updatedItems.every(item => 
+      item.deliveryDate && 
+      item.deliveryAddress?.street && 
+      item.contactInfo?.name && 
+      item.contactInfo?.phone && 
+      item.contactInfo?.email
+    );
+
+    // Auto-navigate to checkout if all items are now complete
+    if (allWillBeComplete) {
+      setTimeout(() => {
+        navigate('/checkout');
+      }, 100); // Small delay to ensure state updates
+    }
+  };
+
   if (items.length === 0) {
     return (
       <div className="py-16 px-4 max-w-6xl mx-auto">
@@ -63,16 +98,7 @@ const Cart = () => {
               key={`${item.id}-${index}`}
               item={item}
               onRemove={removeFromCart}
-              onUpdateDelivery={(productId, details) => {
-                updateDeliveryDetails(productId, {
-                  deliveryDate: details.deliveryDate,
-                  deliveryAddress: details.deliveryAddress,
-                  contactInfo: details.contactInfo,
-                  deliveryTimePreference: details.deliveryTimePreference,
-                  deliveryInstructions: details.deliveryInstructions,
-                  locationPhotoUrl: details.locationPhotoUrl
-                });
-              }}
+              onUpdateDelivery={handleDeliveryUpdate}
               autoExpandDelivery={true} // Auto-expand for better UX
             />
           ))}
@@ -112,7 +138,7 @@ const Cart = () => {
             {!allItemsComplete && (
               <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
                 <p className="text-sm text-amber-800">
-                  Please complete delivery information for all items before checkout.
+                  Complete delivery information for all items to proceed automatically to checkout.
                 </p>
               </div>
             )}

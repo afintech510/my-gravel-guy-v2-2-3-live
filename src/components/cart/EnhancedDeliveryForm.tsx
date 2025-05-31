@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -166,7 +167,7 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
       <div className="border-b pb-4">
         <h3 className="text-lg font-semibold">Delivery Information</h3>
         <p className="text-sm text-muted-foreground">
-          Please fill out all required fields (*) to complete your order
+          Complete all required fields (*) - this will automatically proceed to checkout when all items are ready
         </p>
       </div>
 
@@ -442,7 +443,7 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
           </div>
           
           <Button type="submit" className="w-full" size="lg">
-            Confirm Delivery Information
+            Confirm Delivery Information & Proceed
           </Button>
         </form>
       </Form>
