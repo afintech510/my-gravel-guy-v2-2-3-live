@@ -14,7 +14,8 @@ export class OrderService {
     try {
       console.log('Fetching orders with filters:', filters);
       
-      let query = supabase
+      // Use type assertion to work around missing orders table type
+      let query = (supabase as any)
         .from('orders')
         .select('*', { count: 'exact' });
 
@@ -79,7 +80,8 @@ export class OrderService {
     try {
       console.log('Fetching order by ID:', orderId);
       
-      const { data, error } = await supabase
+      // Use type assertion to work around missing orders table type
+      const { data, error } = await (supabase as any)
         .from('orders')
         .select('*')
         .eq('order_id', orderId);
@@ -108,7 +110,8 @@ export class OrderService {
     try {
       console.log('Updating order status:', { orderId, status });
       
-      const { error } = await supabase
+      // Use type assertion to work around missing orders table type
+      const { error } = await (supabase as any)
         .from('orders')
         .update({ 
           status,
