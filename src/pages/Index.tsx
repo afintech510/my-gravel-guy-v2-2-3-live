@@ -66,14 +66,7 @@ const Index = () => {
           />
         </div>
       </section>
-
-      {/* Calculator Section */}
-      <section className="py-16 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">Calculate Material Needs</h2>
-          <MaterialCalculator />
-        </div>
-      </section>
+ 
 
       {/* Quiz Section */}
       <section className="py-16 px-4">
@@ -82,7 +75,7 @@ const Index = () => {
           <p className="text-lg text-gray-600 mb-8">
             Step through our project planner and get FREE personalized recommendations for your project.
           </p>
-          <Link to="/quiz">
+          <Link to="/product-calculator">
             <Button size="lg">Build a Project Plan</Button>
           </Link>
         </div>
