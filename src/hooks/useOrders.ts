@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { OrderService } from '@/services/orderService';
 import type { Order, OrderFilters } from '@/types/order.types';
 import { useToast } from '@/hooks/use-toast';
+import { useEffect } from 'react';
 
 /**
  * Hook for fetching and managing orders
@@ -14,20 +15,26 @@ export function useOrders(
 ) {
   const { toast } = useToast();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['orders', filters, page, limit],
     queryFn: () => OrderService.fetchOrders(filters, page, limit),
     staleTime: 30000, // 30 seconds
-    retry: 2,
-    onError: (error: Error) => {
-      console.error('Error fetching orders:', error);
+    retry: 2
+  });
+
+  // Handle errors using useEffect
+  useEffect(() => {
+    if (query.error) {
+      console.error('Error fetching orders:', query.error);
       toast({
         title: "Error",
         description: "Failed to fetch orders. Please try again.",
         variant: "destructive",
       });
     }
-  });
+  }, [query.error, toast]);
+
+  return query;
 }
 
 /**
@@ -36,21 +43,27 @@ export function useOrders(
 export function useOrder(orderId: string) {
   const { toast } = useToast();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['order', orderId],
     queryFn: () => OrderService.fetchOrderById(orderId),
     enabled: !!orderId,
     staleTime: 30000,
-    retry: 2,
-    onError: (error: Error) => {
-      console.error('Error fetching order:', error);
+    retry: 2
+  });
+
+  // Handle errors using useEffect
+  useEffect(() => {
+    if (query.error) {
+      console.error('Error fetching order:', query.error);
       toast({
         title: "Error",
         description: "Failed to fetch order details. Please try again.",
         variant: "destructive",
       });
     }
-  });
+  }, [query.error, toast]);
+
+  return query;
 }
 
 /**
