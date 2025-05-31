@@ -12,71 +12,12 @@ import {
   Filter,
   Package,
   Calendar,
-  DollarSign
+  DollarSign,
+  Loader2
 } from "lucide-react";
 import { format } from "date-fns";
-
-// Mock data - will be replaced with actual data from Supabase
-const mockOrders = [
-  {
-    order_id: "ORDER-1234",
-    created_at: "2024-01-15T10:00:00Z",
-    total_amount: 450.00,
-    status: "confirmed",
-    items: [
-      {
-        id: "1",
-        product_name: "River Rock Gravel",
-        quantity: 3,
-        unit_price: 45.99,
-        delivery_date: "2024-01-20",
-        delivery_address: {
-          street: "123 Main St",
-          city: "Austin",
-          state: "TX",
-          zip: "78701"
-        },
-        status: "pending"
-      },
-      {
-        id: "2", 
-        product_name: "Fine Sand",
-        quantity: 2,
-        unit_price: 35.99,
-        delivery_date: "2024-01-22",
-        delivery_address: {
-          street: "456 Oak Ave",
-          city: "Austin", 
-          state: "TX",
-          zip: "78702"
-        },
-        status: "delivered"
-      }
-    ]
-  },
-  {
-    order_id: "ORDER-1235",
-    created_at: "2024-01-10T14:30:00Z",
-    total_amount: 280.50,
-    status: "processing",
-    items: [
-      {
-        id: "3",
-        product_name: "Premium Topsoil",
-        quantity: 1.5,
-        unit_price: 29.99,
-        delivery_date: "2024-01-18",
-        delivery_address: {
-          street: "789 Pine St",
-          city: "Round Rock",
-          state: "TX", 
-          zip: "78664"
-        },
-        status: "in_transit"
-      }
-    ]
-  }
-];
+import { useOrders, useUpdateOrderStatus } from '@/hooks/useOrders';
+import type { OrderFilters } from '@/types/order.types';
 
 const statusColors = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -89,9 +30,16 @@ const statusColors = {
 
 export function OrderList() {
   const [expandedOrders, setExpandedOrders] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("date_desc");
+  const [filters, setFilters] = useState<OrderFilters>({
+    searchTerm: "",
+    status: "all",
+    sortBy: "date_desc"
+  });
+  const [page] = useState(1);
+  const limit = 10;
+
+  const { data: orderData, isLoading, error } = useOrders(filters, page, limit);
+  const updateOrderStatus = useUpdateOrderStatus();
 
   const toggleOrderExpansion = (orderId: string) => {
     setExpandedOrders(prev => 
@@ -101,12 +49,43 @@ export function OrderList() {
     );
   };
 
-  const filteredOrders = mockOrders.filter(order => {
-    const matchesSearch = order.order_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.items.some(item => item.product_name.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const handleStatusUpdate = (orderId: string, newStatus: string) => {
+    updateOrderStatus.mutate({ orderId, status: newStatus });
+  };
+
+  const handleSearchChange = (value: string) => {
+    setFilters(prev => ({ ...prev, searchTerm: value }));
+  };
+
+  const handleStatusFilterChange = (value: string) => {
+    setFilters(prev => ({ ...prev, status: value }));
+  };
+
+  const handleSortChange = (value: string) => {
+    setFilters(prev => ({ ...prev, sortBy: value as any }));
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading orders...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="text-center py-8">
+          <Package className="h-12 w-12 text-red-400 mx-auto mb-4" />
+          <p className="text-red-600">Error loading orders. Please try again.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const orders = orderData?.orders || [];
 
   return (
     <div className="space-y-6">
@@ -116,13 +95,13 @@ export function OrderList() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             placeholder="Search orders or products..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            value={filters.searchTerm || ""}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-10"
           />
         </div>
         
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={filters.status} onValueChange={handleStatusFilterChange}>
           <SelectTrigger className="w-48">
             <Filter className="h-4 w-4 mr-2" />
             <SelectValue placeholder="Filter by status" />
@@ -138,7 +117,7 @@ export function OrderList() {
           </SelectContent>
         </Select>
 
-        <Select value={sortBy} onValueChange={setSortBy}>
+        <Select value={filters.sortBy} onValueChange={handleSortChange}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
@@ -153,7 +132,7 @@ export function OrderList() {
 
       {/* Orders List */}
       <div className="space-y-4">
-        {filteredOrders.map((order) => {
+        {orders.map((order) => {
           const isExpanded = expandedOrders.includes(order.order_id);
           
           return (
@@ -230,9 +209,19 @@ export function OrderList() {
                           <Button variant="outline" size="sm">
                             View Details
                           </Button>
-                          <Button variant="outline" size="sm">
-                            Update Status
-                          </Button>
+                          <Select onValueChange={(status) => handleStatusUpdate(order.order_id, status)}>
+                            <SelectTrigger className="w-40">
+                              <SelectValue placeholder="Update Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="confirmed">Confirmed</SelectItem>
+                              <SelectItem value="processing">Processing</SelectItem>
+                              <SelectItem value="in_transit">In Transit</SelectItem>
+                              <SelectItem value="delivered">Delivered</SelectItem>
+                              <SelectItem value="cancelled">Cancelled</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
                     ))}
@@ -244,7 +233,7 @@ export function OrderList() {
         })}
       </div>
 
-      {filteredOrders.length === 0 && (
+      {orders.length === 0 && (
         <Card>
           <CardContent className="text-center py-8">
             <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
