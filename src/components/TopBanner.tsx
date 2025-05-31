@@ -47,6 +47,7 @@ const TopBanner = ({ className }: TopBannerProps) => {
                   src="https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//wide-arrow.svg" 
                   alt="Arrow" 
                   className="h-3 w-5 ml-1"
+                  style="padding-right: 20px; display: block; border: none;"
                 />
                 &nbsp;&nbsp;{locationText}
                 <MapPin className="h-3 w-3 ml-0.5" />
