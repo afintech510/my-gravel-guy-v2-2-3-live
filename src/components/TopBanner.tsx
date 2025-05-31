@@ -48,7 +48,7 @@ const TopBanner = ({ className }: TopBannerProps) => {
                   alt="Arrow" 
                   className="h-3 w-5 ml-1"
                 />
-                &nbsp{locationText}
+                &nbsp;&nbsp;{locationText}
                 <MapPin className="h-3 w-3 ml-0.5" />
               </button>
             </DialogTrigger>
