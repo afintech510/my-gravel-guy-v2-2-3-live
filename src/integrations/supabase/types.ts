@@ -376,6 +376,67 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          id: string
+          order_id: string
+          created_at: string
+          updated_at: string | null
+          total_amount: number
+          status: string
+          stripe_session_id: string | null
+          stripe_payment_intent_id: string | null
+          product_name: string
+          quantity: number
+          unit_price: number
+          delivery_date: string
+          delivery_street: string
+          delivery_city: string
+          delivery_state: string
+          delivery_zip: string
+          item_status: string | null
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          created_at?: string
+          updated_at?: string | null
+          total_amount: number
+          status: string
+          stripe_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          product_name: string
+          quantity: number
+          unit_price: number
+          delivery_date: string
+          delivery_street: string
+          delivery_city: string
+          delivery_state: string
+          delivery_zip: string
+          item_status?: string | null
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          created_at?: string
+          updated_at?: string | null
+          total_amount?: number
+          status?: string
+          stripe_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          product_name?: string
+          quantity?: number
+          unit_price?: number
+          delivery_date?: string
+          delivery_street?: string
+          delivery_city?: string
+          delivery_state?: string
+          delivery_zip?: string
+          item_status?: string | null
+        }
+        Relationships: []
+      }
+
     }
     Views: {
       [_ in never]: never
