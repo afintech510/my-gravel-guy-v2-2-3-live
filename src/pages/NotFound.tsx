@@ -27,7 +27,7 @@ const NotFound = () => {
             <Link to="/">Return to Home</Link>
           </Button>
           <Button asChild variant="outline" className="w-full">
-            <Link to="/products" className="flex items-center justify-center">
+            <Link to="/shop" className="flex items-center justify-center">
               <Store className="mr-2 h-4 w-4" />
               Shop
             </Link>
