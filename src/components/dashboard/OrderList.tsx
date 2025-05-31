@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -162,7 +161,7 @@ export function OrderList() {
                         </div>
                         <div className="flex items-center gap-1">
                           <DollarSign className="h-4 w-4" />
-                          ${order.total_amount.toFixed(2)}
+                          ${order.total_price.toFixed(2)}
                         </div>
                       </div>
                     </div>

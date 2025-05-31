@@ -19,7 +19,7 @@ export interface OrderItem {
 export interface Order {
   order_id: string;
   created_at: string;
-  total_amount: number;
+  total_price: number; // Changed from total_amount to match database
   status: 'pending' | 'confirmed' | 'processing' | 'in_transit' | 'delivered' | 'cancelled';
   stripe_session_id?: string;
   stripe_payment_intent_id?: string;

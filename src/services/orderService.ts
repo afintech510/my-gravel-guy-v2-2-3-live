@@ -34,10 +34,10 @@ export class OrderService {
           query = query.order('created_at', { ascending: true });
           break;
         case 'amount_desc':
-          query = query.order('total_amount', { ascending: false });
+          query = query.order('total_price', { ascending: false }); // Changed from total_amount
           break;
         case 'amount_asc':
-          query = query.order('total_amount', { ascending: true });
+          query = query.order('total_price', { ascending: true }); // Changed from total_amount
           break;
         case 'date_desc':
         default:
@@ -139,7 +139,7 @@ export class OrderService {
         orderMap.set(orderId, {
           order_id: orderId,
           created_at: row.created_at,
-          total_amount: row.total_amount || 0,
+          total_price: row.total_price || (row.quantity * row.unit_price) || 0, // Calculate from item if missing
           status: row.status || 'pending',
           stripe_session_id: row.stripe_session_id,
           stripe_payment_intent_id: row.stripe_payment_intent_id,
