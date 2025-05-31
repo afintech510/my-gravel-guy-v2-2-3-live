@@ -16,21 +16,17 @@ export function useOrders(
 
   return useQuery({
     queryKey: ['orders', filters, page, limit],
-    queryFn: async () => {
-      try {
-        return await OrderService.fetchOrders(filters, page, limit);
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch orders. Please try again.",
-          variant: "destructive",
-        });
-        throw error;
-      }
-    },
+    queryFn: () => OrderService.fetchOrders(filters, page, limit),
     staleTime: 30000, // 30 seconds
-    retry: 2
+    retry: 2,
+    onError: (error: Error) => {
+      console.error('Error fetching orders:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch orders. Please try again.",
+        variant: "destructive",
+      });
+    }
   });
 }
 
@@ -42,22 +38,18 @@ export function useOrder(orderId: string) {
 
   return useQuery({
     queryKey: ['order', orderId],
-    queryFn: async () => {
-      try {
-        return await OrderService.fetchOrderById(orderId);
-      } catch (error) {
-        console.error('Error fetching order:', error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch order details. Please try again.",
-          variant: "destructive",
-        });
-        throw error;
-      }
-    },
+    queryFn: () => OrderService.fetchOrderById(orderId),
     enabled: !!orderId,
     staleTime: 30000,
-    retry: 2
+    retry: 2,
+    onError: (error: Error) => {
+      console.error('Error fetching order:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch order details. Please try again.",
+        variant: "destructive",
+      });
+    }
   });
 }
 
