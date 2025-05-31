@@ -68,9 +68,13 @@ serve(async (req) => {
       );
     }
 
+    // Generate a unique order ID for this entire order
+    const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    console.log('Generated order ID:', orderId);
+
     // Validate and transform each item with detailed error logging
     const validatedLineItems = [];
-    let orderMetadata = {};
+    let orderMetadata = { order_id: orderId };
     
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
@@ -160,7 +164,7 @@ serve(async (req) => {
       ],
       line_items: validatedLineItems,
       mode: "payment",
-      success_url: `${origin}/payment-success`,
+      success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&order_id=${orderId}`,
       cancel_url: `${origin}/cart`,
       metadata: orderMetadata,
       payment_intent_data: {
@@ -172,7 +176,7 @@ serve(async (req) => {
           preferred_locale: "en-US"
         },
         afterpay_clearpay: {
-          reference: `ORDER-${Date.now()}`
+          reference: orderId
         },
         affirm: {
           preferred_locale: "en-US"
@@ -182,9 +186,85 @@ serve(async (req) => {
 
     console.log('Stripe checkout session created:', session.id);
 
+    // After successful Stripe session creation, create order records
+    try {
+      // Create Supabase client with service role key to bypass RLS
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        }
+      );
+
+      // Prepare order records for each cart item
+      const orderRecords = items.map((item, index) => {
+        let deliveryAddress = null;
+        let contactInfo = null;
+
+        if (item.metadata?.deliveryAddress) {
+          try {
+            deliveryAddress = JSON.parse(item.metadata.deliveryAddress);
+          } catch (e) {
+            console.warn(`Failed to parse delivery address for item ${index}:`, e);
+          }
+        }
+
+        // Extract contact info from metadata
+        if (item.metadata?.contactPhone || deliveryAddress) {
+          contactInfo = {
+            phone: item.metadata?.contactPhone,
+            // We'll need to get name and email from the session or cart context
+            name: "Customer", // Placeholder - should come from cart context
+            email: "customer@example.com" // Placeholder - should come from cart context
+          };
+        }
+
+        return {
+          order_id: orderId,
+          stripe_session_id: session.id,
+          product_id: item.id,
+          product_name: item.name,
+          quantity: item.quantity,
+          unit_price: item.price,
+          total_price: item.price * item.quantity,
+          delivery_date: item.metadata?.deliveryDate || null,
+          delivery_address: deliveryAddress,
+          contact_info: contactInfo,
+          delivery_time_preference: item.metadata?.deliveryTimePreference || null,
+          delivery_instructions: item.metadata?.deliveryInstructions || null,
+          status: 'pending_payment',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+      });
+
+      console.log('Creating order records:', orderRecords);
+
+      // Insert order records into the database
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert(orderRecords)
+        .select();
+
+      if (orderError) {
+        console.error('Failed to create order records:', orderError);
+        // Log the error but don't fail the payment - we can handle this in the success page
+      } else {
+        console.log('Successfully created order records:', orderData);
+      }
+
+    } catch (dbError) {
+      console.error('Database error when creating orders:', dbError);
+      // Don't fail the payment process - we can handle order creation in the success page
+    }
+
     // Return the checkout URL
     return new Response(
-      JSON.stringify({ url: session.url }),
+      JSON.stringify({ url: session.url, orderId }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,

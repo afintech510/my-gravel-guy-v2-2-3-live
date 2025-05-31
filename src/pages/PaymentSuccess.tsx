@@ -2,37 +2,108 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, Truck } from "lucide-react";
+import { CheckCircle, Truck, Package, MapPin, Calendar } from "lucide-react";
 import { useCart } from '../contexts/CartContext';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+
+interface OrderItem {
+  id: string;
+  order_id: string;
+  product_name: string;
+  quantity: number;
+  total_price: number;
+  delivery_date: string | null;
+  delivery_address: any;
+  contact_info: any;
+  delivery_time_preference: string | null;
+  delivery_instructions: string | null;
+  status: string;
+}
 
 const PaymentSuccess = () => {
   const { clearCart } = useCart();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [hasProcessedPayment, setHasProcessedPayment] = useState(false);
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // Only clear cart if we have payment success indicators and haven't processed yet
-    const sessionId = searchParams.get('session_id');
-    const paymentSuccess = searchParams.get('success');
-    
-    if ((sessionId || paymentSuccess === 'true') && !hasProcessedPayment) {
-      // Clear the cart only when we have confirmation of successful payment
-      clearCart();
-      setHasProcessedPayment(true);
+    const processPaymentSuccess = async () => {
+      // Only process if we have payment success indicators and haven't processed yet
+      const sessionId = searchParams.get('session_id');
+      const orderIdParam = searchParams.get('order_id');
+      const paymentSuccess = searchParams.get('success');
       
-      // Show a success toast
-      toast({
-        title: "Payment Successful",
-        description: "Thank you for your order! Your delivery has been scheduled.",
-      });
+      if ((sessionId || paymentSuccess === 'true') && !hasProcessedPayment) {
+        setHasProcessedPayment(true);
+        
+        try {
+          // If we have a session ID, verify the payment and update orders
+          if (sessionId) {
+            console.log('Processing payment success for session:', sessionId);
+            
+            // Call edge function to verify payment and update order status
+            const { data, error } = await supabase.functions.invoke('verify-payment', {
+              body: { sessionId, orderId: orderIdParam }
+            });
 
-      // Store in localStorage that we've processed this payment to prevent double clearing
-      localStorage.setItem('lastProcessedPayment', sessionId || Date.now().toString());
-    }
+            if (error) {
+              console.error('Payment verification error:', error);
+            } else {
+              console.log('Payment verification result:', data);
+              
+              if (data?.orders) {
+                setOrderItems(data.orders);
+                setOrderId(data.orderId || orderIdParam);
+              }
+            }
+          }
+
+          // Clear the cart and show success toast
+          clearCart();
+          
+          toast({
+            title: "Payment Successful",
+            description: "Thank you for your order! Your delivery has been scheduled.",
+          });
+
+          // Store in localStorage that we've processed this payment
+          localStorage.setItem('lastProcessedPayment', sessionId || Date.now().toString());
+          
+        } catch (error) {
+          console.error('Error processing payment success:', error);
+          toast({
+            title: "Payment Processed",
+            description: "Your payment was successful. Order details are being processed.",
+            variant: "default"
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        setIsLoading(false);
+      }
+    };
+
+    processPaymentSuccess();
   }, [clearCart, toast, searchParams, hasProcessedPayment]);
+
+  const formatDeliveryTimePreference = (preference: string | null) => {
+    switch (preference) {
+      case 'anytime':
+        return 'Anytime (7am-5pm)';
+      case 'morning':
+        return 'Morning (7am-12pm)';
+      case 'afternoon':
+        return 'Afternoon (12pm-5pm)';
+      default:
+        return 'Not specified';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white py-16 px-4">
@@ -45,6 +116,11 @@ const PaymentSuccess = () => {
               </div>
             </div>
             <h1 className="text-3xl font-bold mb-4 text-green-800">Order Confirmed!</h1>
+            {orderId && (
+              <p className="text-green-700 mb-2 font-medium">
+                Order ID: {orderId}
+              </p>
+            )}
             <p className="text-green-700 mb-2">
               Thank you for your purchase. Your order has been processed successfully.
             </p>
@@ -53,6 +129,97 @@ const PaymentSuccess = () => {
             </p>
           </CardContent>
         </Card>
+
+        {/* Order Items Details */}
+        {orderItems.length > 0 && (
+          <Card className="mb-8">
+            <CardContent className="pt-6">
+              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                Order Details
+              </h2>
+              
+              <div className="space-y-6">
+                {orderItems.map((item, index) => (
+                  <div key={item.id} className="border-b pb-6 last:border-b-0">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="font-medium text-lg">{item.product_name}</h3>
+                        <p className="text-gray-600">Quantity: {item.quantity} tons</p>
+                        <p className="text-lg font-semibold text-green-600">
+                          ${item.total_price.toFixed(2)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          item.status === 'confirmed' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {item.status.replace('_', ' ').toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Delivery Information */}
+                    {(item.delivery_address || item.delivery_date) && (
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h4 className="font-medium mb-3 flex items-center gap-2">
+                          <Truck className="h-4 w-4" />
+                          Delivery Information
+                        </h4>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {item.delivery_address && (
+                            <div>
+                              <h5 className="font-medium text-sm mb-1 flex items-center gap-1">
+                                <MapPin className="h-3 w-3" />
+                                Delivery Address
+                              </h5>
+                              <div className="text-sm text-gray-600">
+                                <div>{item.delivery_address.street}</div>
+                                <div>
+                                  {item.delivery_address.city}, {item.delivery_address.state} {item.delivery_address.zip}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {item.delivery_date && (
+                            <div>
+                              <h5 className="font-medium text-sm mb-1 flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                Delivery Schedule
+                              </h5>
+                              <div className="text-sm text-gray-600">
+                                <div className="font-medium">
+                                  {new Date(item.delivery_date).toLocaleDateString('en-US', {
+                                    weekday: 'long',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  })}
+                                </div>
+                                <div>{formatDeliveryTimePreference(item.delivery_time_preference)}</div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {item.delivery_instructions && (
+                          <div className="mt-4 pt-4 border-t border-gray-200">
+                            <h5 className="font-medium text-sm mb-1">Special Instructions</h5>
+                            <p className="text-sm text-gray-600">{item.delivery_instructions}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
         
         <div className="space-y-8">
           <div>
