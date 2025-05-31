@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Product } from '@/services/productTypes';
 import { useCart } from '@/contexts/CartContext';
 import { useZipCode } from '@/contexts/ZipCodeContext';
@@ -34,6 +34,12 @@ export default function AddToCartOptions({
   
   // State for adjustable quantity with minimum of 3 tons
   const [adjustedTons, setAdjustedTons] = useState(() => Math.max(3, Math.round(calculatedTons)));
+  
+  // Update adjusted tons when calculated tons changes
+  useEffect(() => {
+    const newAdjustedTons = Math.max(3, Math.round(calculatedTons));
+    setAdjustedTons(newAdjustedTons);
+  }, [calculatedTons]);
   
   // Generate three options based on adjusted tons
   const options = [
