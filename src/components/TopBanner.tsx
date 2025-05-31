@@ -24,7 +24,7 @@ const TopBanner = ({ className }: TopBannerProps) => {
   // Use the city name and state from zipCodeData if available
   const locationText = zipCodeData ? 
     `${zipCodeData.city}, ${zipCodeData.state_id}` : 
-    'Your Area';
+    'Nationwide';
   
   // Callback to close the dialog when a ZIP code is selected
   const handleZipCodeSelected = () => {
