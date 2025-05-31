@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
@@ -283,6 +282,11 @@ const Checkout = () => {
               <div className="flex justify-between text-sm">
                 <span>Delivery</span>
                 <span className="text-green-600 font-medium">FREE</span>
+              </div>
+              
+              <div className="flex justify-between text-sm">
+                <span>Tax</span>
+                <span className="text-green-600 font-medium">Included</span>
               </div>
             </div>
             
