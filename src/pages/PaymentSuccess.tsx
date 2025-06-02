@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -42,37 +43,59 @@ const PaymentSuccess = () => {
       const orderIdParam = searchParams.get('order_id');
       const paymentSuccess = searchParams.get('success');
       
+      console.log('=== PAYMENT SUCCESS PAGE DEBUG ===');
+      console.log('Session ID:', sessionId);
+      console.log('Order ID param:', orderIdParam);
+      console.log('Payment success param:', paymentSuccess);
+      console.log('Has processed payment:', hasProcessedPayment);
+      
       if ((sessionId || paymentSuccess === 'true') && !hasProcessedPayment) {
         setHasProcessedPayment(true);
         
         try {
           if (sessionId) {
-            console.log('Processing payment success for session:', sessionId);
+            console.log('Calling verify-payment function...');
             
             // Call edge function to verify payment, save order, and send emails
             const { data, error } = await supabase.functions.invoke('verify-payment', {
               body: { sessionId, orderId: orderIdParam }
             });
 
+            console.log('Verify payment response:', { data, error });
+
             if (error) {
-              console.error('Payment verification error:', error);
+              console.error('Payment verification error details:', error);
               toast({
                 title: "Payment Processed",
                 description: "Your payment was successful. Order details are being processed.",
                 variant: "default"
               });
             } else {
-              console.log('Payment verification result:', data);
+              console.log('Payment verification successful:', data);
               
               if (data?.orders) {
                 setOrderItems(data.orders);
                 setOrderId(data.orderId || orderIdParam);
                 setEmailsSent(data.emailsSent || false);
                 
-                toast({
-                  title: "Payment Successful",
-                  description: "Thank you for your order! Confirmation emails have been sent.",
+                console.log('Email status:', {
+                  emailsSent: data.emailsSent,
+                  customerEmailSent: data.customerEmailSent,
+                  internalEmailSent: data.internalEmailSent
                 });
+                
+                if (data.emailsSent) {
+                  toast({
+                    title: "Payment Successful",
+                    description: "Thank you for your order! Confirmation emails have been sent.",
+                  });
+                } else {
+                  toast({
+                    title: "Payment Successful",
+                    description: "Thank you for your order! Emails are being processed.",
+                    variant: "default"
+                  });
+                }
               }
             }
           }
