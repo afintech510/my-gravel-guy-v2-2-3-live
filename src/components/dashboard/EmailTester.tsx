@@ -77,22 +77,14 @@ const EmailTester = () => {
   };
 
   const sendTestInternalEmail = async () => {
-    if (!testEmail) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please enter a test email address"
-      });
-      return;
-    }
-
     setIsLoading(true);
     try {
-      await sendInternalNotificationEmail(sampleOrderData, testEmail);
+      // Call without the second parameter to use the default internal email
+      await sendInternalNotificationEmail(sampleOrderData);
       
       toast({
         title: "Success",
-        description: `Test internal notification email sent to ${testEmail}`
+        description: "Test internal notification email sent to order.support@mygravelguy.com"
       });
     } catch (error) {
       console.error('Failed to send test email:', error);
@@ -116,7 +108,7 @@ const EmailTester = () => {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="testEmail">Test Email Address</Label>
+          <Label htmlFor="testEmail">Test Email Address (for customer emails)</Label>
           <Input
             id="testEmail"
             type="email"
@@ -125,7 +117,7 @@ const EmailTester = () => {
             onChange={(e) => setTestEmail(e.target.value)}
           />
           <p className="text-sm text-muted-foreground">
-            Enter your email address to receive test emails
+            Enter your email address to receive test customer confirmation emails
           </p>
         </div>
 
@@ -157,11 +149,11 @@ const EmailTester = () => {
           <div>
             <h4 className="font-medium mb-2">Internal Notification Email</h4>
             <p className="text-sm text-muted-foreground mb-3">
-              Test the email that the sales team receives for new orders
+              Test the email that the sales team receives for new orders (sent to order.support@mygravelguy.com)
             </p>
             <Button
               onClick={sendTestInternalEmail}
-              disabled={isLoading || !testEmail}
+              disabled={isLoading}
               variant="outline"
               className="w-full"
             >
