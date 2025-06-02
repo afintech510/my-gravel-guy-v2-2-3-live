@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,6 +6,7 @@ import { useCart } from '../contexts/CartContext';
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { sendBothOrderEmails } from '../services/emailService';
 
 interface OrderItem {
   id: string;
@@ -59,6 +59,35 @@ const PaymentSuccess = () => {
               if (data?.orders) {
                 setOrderItems(data.orders);
                 setOrderId(data.orderId || orderIdParam);
+                
+                // Send order confirmation emails
+                try {
+                  console.log('Sending order confirmation emails...');
+                  
+                  // Prepare order data for email templates
+                  const orderData = {
+                    order_id: data.orderId || orderIdParam || 'Unknown',
+                    items: data.orders.map((item: any) => ({
+                      product_name: item.product_name,
+                      quantity: item.quantity,
+                      total_price: item.total_price,
+                      delivery_date: item.delivery_date,
+                      delivery_address: item.delivery_address,
+                      contact_info: item.contact_info,
+                      delivery_time_preference: item.delivery_time_preference,
+                      delivery_instructions: item.delivery_instructions
+                    })),
+                    total_amount: data.orders.reduce((sum: number, item: any) => sum + item.total_price, 0),
+                    customer_email: data.orders[0]?.contact_info?.email || 'customer@example.com',
+                    customer_name: data.orders[0]?.contact_info?.name
+                  };
+                  
+                  await sendBothOrderEmails(orderData);
+                  console.log('Order confirmation emails sent successfully');
+                } catch (emailError) {
+                  console.error('Failed to send order emails:', emailError);
+                  // Don't show error to user - email failure shouldn't affect their experience
+                }
               }
             }
           }
@@ -68,7 +97,7 @@ const PaymentSuccess = () => {
           
           toast({
             title: "Payment Successful",
-            description: "Thank you for your order! Your delivery has been scheduled.",
+            description: "Thank you for your order! Your delivery has been scheduled and confirmation emails have been sent.",
           });
 
           // Store in localStorage that we've processed this payment
