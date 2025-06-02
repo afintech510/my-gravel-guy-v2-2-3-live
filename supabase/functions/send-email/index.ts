@@ -47,7 +47,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "orders@yourcompany.com", // Configure this in your Resend account
+        from: "team@mygravelguy.com",
         to: [to],
         subject: subject,
         html: html,
