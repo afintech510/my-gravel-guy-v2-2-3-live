@@ -27,6 +27,17 @@ serve(async (req) => {
   try {
     const { to, subject, html, type, orderData }: EmailRequest = await req.json();
     
+    console.log('=== EMAIL FUNCTION DEBUG ===');
+    console.log('Email type:', type);
+    console.log('Recipient (to):', to);
+    console.log('Recipient type:', typeof to);
+    console.log('Subject:', subject);
+    console.log('From address will be: team@mygravelguy.com');
+    
+    if (orderData) {
+      console.log('Order customer email:', orderData.customer_email);
+    }
+    
     if (!to || !subject || !html) {
       throw new Error("Missing required email fields: to, subject, or html");
     }
@@ -49,6 +60,15 @@ serve(async (req) => {
 
     console.log(`Sending ${type} email to: ${to}`);
 
+    const emailPayload = {
+      from: "team@mygravelguy.com",
+      to: [to],
+      subject: subject,
+      html: html,
+    };
+    
+    console.log('Resend payload:', JSON.stringify(emailPayload, null, 2));
+
     // Send email using Resend API
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -56,12 +76,7 @@ serve(async (req) => {
         "Authorization": `Bearer ${resendApiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        from: "team@mygravelguy.com",
-        to: [to],
-        subject: subject,
-        html: html,
-      }),
+      body: JSON.stringify(emailPayload),
     });
 
     if (!response.ok) {
@@ -72,12 +87,15 @@ serve(async (req) => {
 
     const result = await response.json();
     console.log("Email sent successfully:", result);
+    console.log("Email ID:", result.id);
 
     return new Response(
       JSON.stringify({ 
         success: true,
         emailId: result.id,
-        message: "Email sent successfully"
+        message: "Email sent successfully",
+        emailType: type,
+        recipient: to
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -94,7 +112,7 @@ serve(async (req) => {
         success: false
       }),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
       }
     );
