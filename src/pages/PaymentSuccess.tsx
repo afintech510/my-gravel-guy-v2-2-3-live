@@ -6,7 +6,6 @@ import { useCart } from '../contexts/CartContext';
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { sendBothOrderEmails, EmailResult } from '../services/emailService';
 
 interface OrderItem {
   id: string;
@@ -15,18 +14,16 @@ interface OrderItem {
   quantity: number;
   total_price: number;
   delivery_date: string | null;
-  delivery_address: any;
-  contact_info: any;
+  delivery_address_street: string | null;
+  delivery_address_city: string | null;
+  delivery_address_state: string | null;
+  delivery_address_zip: string | null;
+  contact_name: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
   delivery_time_preference: string | null;
   delivery_instructions: string | null;
   status: string;
-}
-
-interface EmailStatus {
-  customerEmail?: EmailResult;
-  internalEmail?: EmailResult;
-  overallSuccess?: boolean;
-  attempted?: boolean;
 }
 
 const PaymentSuccess = () => {
@@ -37,11 +34,10 @@ const PaymentSuccess = () => {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [emailStatus, setEmailStatus] = useState<EmailStatus>({});
+  const [emailsSent, setEmailsSent] = useState(false);
   
   useEffect(() => {
     const processPaymentSuccess = async () => {
-      // Only process if we have payment success indicators and haven't processed yet
       const sessionId = searchParams.get('session_id');
       const orderIdParam = searchParams.get('order_id');
       const paymentSuccess = searchParams.get('success');
@@ -50,80 +46,39 @@ const PaymentSuccess = () => {
         setHasProcessedPayment(true);
         
         try {
-          // If we have a session ID, verify the payment and update orders
           if (sessionId) {
             console.log('Processing payment success for session:', sessionId);
             
-            // Call edge function to verify payment and update order status
+            // Call edge function to verify payment, save order, and send emails
             const { data, error } = await supabase.functions.invoke('verify-payment', {
               body: { sessionId, orderId: orderIdParam }
             });
 
             if (error) {
               console.error('Payment verification error:', error);
+              toast({
+                title: "Payment Processed",
+                description: "Your payment was successful. Order details are being processed.",
+                variant: "default"
+              });
             } else {
               console.log('Payment verification result:', data);
               
               if (data?.orders) {
                 setOrderItems(data.orders);
                 setOrderId(data.orderId || orderIdParam);
+                setEmailsSent(data.emailsSent || false);
                 
-                // Send order confirmation emails with enhanced error handling
-                try {
-                  console.log('Sending order confirmation emails...');
-                  setEmailStatus({ attempted: true });
-                  
-                  // Prepare order data for email templates
-                  const orderData = {
-                    order_id: data.orderId || orderIdParam || 'Unknown',
-                    items: data.orders.map((item: any) => ({
-                      product_name: item.product_name,
-                      quantity: item.quantity,
-                      total_price: item.total_price,
-                      delivery_date: item.delivery_date,
-                      delivery_address: item.delivery_address,
-                      contact_info: item.contact_info,
-                      delivery_time_preference: item.delivery_time_preference,
-                      delivery_instructions: item.delivery_instructions
-                    })),
-                    total_amount: data.orders.reduce((sum: number, item: any) => sum + item.total_price, 0),
-                    customer_email: data.orders[0]?.contact_info?.email || 'customer@example.com',
-                    customer_name: data.orders[0]?.contact_info?.name
-                  };
-                  
-                  const emailResults = await sendBothOrderEmails(orderData);
-                  setEmailStatus(emailResults);
-                  
-                  if (emailResults.overallSuccess) {
-                    console.log('Order confirmation emails sent successfully');
-                  } else {
-                    console.warn('Some emails failed to send:', emailResults);
-                  }
-                } catch (emailError) {
-                  console.error('Failed to send order emails:', emailError);
-                  setEmailStatus({
-                    attempted: true,
-                    overallSuccess: false,
-                    customerEmail: {
-                      success: false,
-                      error: 'Email service error',
-                      emailType: 'customer_confirmation',
-                      recipient: 'unknown',
-                      timestamp: new Date().toISOString()
-                    }
-                  });
-                }
+                toast({
+                  title: "Payment Successful",
+                  description: "Thank you for your order! Confirmation emails have been sent.",
+                });
               }
             }
           }
 
-          // Clear the cart and show success toast
+          // Clear the cart
           clearCart();
-          
-          toast({
-            title: "Payment Successful",
-            description: "Thank you for your order! Your delivery has been scheduled.",
-          });
 
           // Store in localStorage that we've processed this payment
           localStorage.setItem('lastProcessedPayment', sessionId || Date.now().toString());
@@ -160,8 +115,6 @@ const PaymentSuccess = () => {
   };
 
   const EmailStatusCard = () => {
-    if (!emailStatus.attempted) return null;
-
     return (
       <Card className="mb-8 border-blue-200">
         <CardContent className="pt-6">
@@ -170,56 +123,24 @@ const PaymentSuccess = () => {
           </h3>
           
           <div className="space-y-3">
-            {emailStatus.customerEmail && (
-              <div className={`flex items-center gap-3 p-3 rounded-lg ${
-                emailStatus.customerEmail.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
-              }`}>
-                {emailStatus.customerEmail.success ? (
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                ) : (
-                  <AlertCircle className="h-5 w-5 text-red-600" />
-                )}
-                <div>
-                  <p className="font-medium">Customer Confirmation Email</p>
-                  <p className="text-sm text-gray-600">
-                    {emailStatus.customerEmail.success 
-                      ? `Sent to ${emailStatus.customerEmail.recipient}` 
-                      : `Failed: ${emailStatus.customerEmail.error}`
-                    }
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {emailStatus.internalEmail && (
-              <div className={`flex items-center gap-3 p-3 rounded-lg ${
-                emailStatus.internalEmail.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
-              }`}>
-                {emailStatus.internalEmail.success ? (
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                ) : (
-                  <AlertCircle className="h-5 w-5 text-red-600" />
-                )}
-                <div>
-                  <p className="font-medium">Internal Sales Notification</p>
-                  <p className="text-sm text-gray-600">
-                    {emailStatus.internalEmail.success 
-                      ? `Sent to ${emailStatus.internalEmail.recipient}` 
-                      : `Failed: ${emailStatus.internalEmail.error}`
-                    }
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {!emailStatus.overallSuccess && emailStatus.attempted && (
-              <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
-                <p className="text-sm text-yellow-800">
-                  <strong>Note:</strong> Some email notifications may have failed to send. 
-                  Your order is still confirmed and being processed. Our team will contact you directly if needed.
+            <div className={`flex items-center gap-3 p-3 rounded-lg ${
+              emailsSent ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'
+            }`}>
+              {emailsSent ? (
+                <CheckCircle className="h-5 w-5 text-green-600" />
+              ) : (
+                <AlertCircle className="h-5 w-5 text-yellow-600" />
+              )}
+              <div>
+                <p className="font-medium">Order Confirmation Emails</p>
+                <p className="text-sm text-gray-600">
+                  {emailsSent 
+                    ? 'Confirmation emails have been sent to you and our team' 
+                    : 'Email notifications are being processed'
+                  }
                 </p>
               </div>
-            )}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -285,7 +206,7 @@ const PaymentSuccess = () => {
                     </div>
 
                     {/* Delivery Information */}
-                    {(item.delivery_address || item.delivery_date) && (
+                    {(item.delivery_address_street || item.delivery_date) && (
                       <div className="bg-gray-50 rounded-lg p-4">
                         <h4 className="font-medium mb-3 flex items-center gap-2">
                           <Truck className="h-4 w-4" />
@@ -293,16 +214,16 @@ const PaymentSuccess = () => {
                         </h4>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {item.delivery_address && (
+                          {item.delivery_address_street && (
                             <div>
                               <h5 className="font-medium text-sm mb-1 flex items-center gap-1">
                                 <MapPin className="h-3 w-3" />
                                 Delivery Address
                               </h5>
                               <div className="text-sm text-gray-600">
-                                <div>{item.delivery_address.street}</div>
+                                <div>{item.delivery_address_street}</div>
                                 <div>
-                                  {item.delivery_address.city}, {item.delivery_address.state} {item.delivery_address.zip}
+                                  {item.delivery_address_city}, {item.delivery_address_state} {item.delivery_address_zip}
                                 </div>
                               </div>
                             </div>
