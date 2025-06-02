@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, Truck, Package, MapPin, Calendar } from "lucide-react";
+import { CheckCircle, Truck, Package, MapPin, Calendar, AlertCircle } from "lucide-react";
 import { useCart } from '../contexts/CartContext';
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { sendBothOrderEmails } from '../services/emailService';
+import { sendBothOrderEmails, EmailResult } from '../services/emailService';
 
 interface OrderItem {
   id: string;
@@ -22,6 +22,13 @@ interface OrderItem {
   status: string;
 }
 
+interface EmailStatus {
+  customerEmail?: EmailResult;
+  internalEmail?: EmailResult;
+  overallSuccess?: boolean;
+  attempted?: boolean;
+}
+
 const PaymentSuccess = () => {
   const { clearCart } = useCart();
   const { toast } = useToast();
@@ -30,6 +37,7 @@ const PaymentSuccess = () => {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [emailStatus, setEmailStatus] = useState<EmailStatus>({});
   
   useEffect(() => {
     const processPaymentSuccess = async () => {
@@ -60,9 +68,10 @@ const PaymentSuccess = () => {
                 setOrderItems(data.orders);
                 setOrderId(data.orderId || orderIdParam);
                 
-                // Send order confirmation emails
+                // Send order confirmation emails with enhanced error handling
                 try {
                   console.log('Sending order confirmation emails...');
+                  setEmailStatus({ attempted: true });
                   
                   // Prepare order data for email templates
                   const orderData = {
@@ -82,11 +91,27 @@ const PaymentSuccess = () => {
                     customer_name: data.orders[0]?.contact_info?.name
                   };
                   
-                  await sendBothOrderEmails(orderData);
-                  console.log('Order confirmation emails sent successfully');
+                  const emailResults = await sendBothOrderEmails(orderData);
+                  setEmailStatus(emailResults);
+                  
+                  if (emailResults.overallSuccess) {
+                    console.log('Order confirmation emails sent successfully');
+                  } else {
+                    console.warn('Some emails failed to send:', emailResults);
+                  }
                 } catch (emailError) {
                   console.error('Failed to send order emails:', emailError);
-                  // Don't show error to user - email failure shouldn't affect their experience
+                  setEmailStatus({
+                    attempted: true,
+                    overallSuccess: false,
+                    customerEmail: {
+                      success: false,
+                      error: 'Email service error',
+                      emailType: 'customer_confirmation',
+                      recipient: 'unknown',
+                      timestamp: new Date().toISOString()
+                    }
+                  });
                 }
               }
             }
@@ -97,7 +122,7 @@ const PaymentSuccess = () => {
           
           toast({
             title: "Payment Successful",
-            description: "Thank you for your order! Your delivery has been scheduled and confirmation emails have been sent.",
+            description: "Thank you for your order! Your delivery has been scheduled.",
           });
 
           // Store in localStorage that we've processed this payment
@@ -134,6 +159,73 @@ const PaymentSuccess = () => {
     }
   };
 
+  const EmailStatusCard = () => {
+    if (!emailStatus.attempted) return null;
+
+    return (
+      <Card className="mb-8 border-blue-200">
+        <CardContent className="pt-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            📧 Email Notifications
+          </h3>
+          
+          <div className="space-y-3">
+            {emailStatus.customerEmail && (
+              <div className={`flex items-center gap-3 p-3 rounded-lg ${
+                emailStatus.customerEmail.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+              }`}>
+                {emailStatus.customerEmail.success ? (
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                ) : (
+                  <AlertCircle className="h-5 w-5 text-red-600" />
+                )}
+                <div>
+                  <p className="font-medium">Customer Confirmation Email</p>
+                  <p className="text-sm text-gray-600">
+                    {emailStatus.customerEmail.success 
+                      ? `Sent to ${emailStatus.customerEmail.recipient}` 
+                      : `Failed: ${emailStatus.customerEmail.error}`
+                    }
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {emailStatus.internalEmail && (
+              <div className={`flex items-center gap-3 p-3 rounded-lg ${
+                emailStatus.internalEmail.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+              }`}>
+                {emailStatus.internalEmail.success ? (
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                ) : (
+                  <AlertCircle className="h-5 w-5 text-red-600" />
+                )}
+                <div>
+                  <p className="font-medium">Internal Sales Notification</p>
+                  <p className="text-sm text-gray-600">
+                    {emailStatus.internalEmail.success 
+                      ? `Sent to ${emailStatus.internalEmail.recipient}` 
+                      : `Failed: ${emailStatus.internalEmail.error}`
+                    }
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {!emailStatus.overallSuccess && emailStatus.attempted && (
+              <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  <strong>Note:</strong> Some email notifications may have failed to send. 
+                  Your order is still confirmed and being processed. Our team will contact you directly if needed.
+                </p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-white py-16 px-4">
       <div className="max-w-4xl mx-auto">
@@ -154,10 +246,12 @@ const PaymentSuccess = () => {
               Thank you for your purchase. Your order has been processed successfully.
             </p>
             <p className="text-green-600">
-              You will receive a confirmation email shortly with your delivery details.
+              You will receive confirmation emails shortly with your delivery details.
             </p>
           </CardContent>
         </Card>
+
+        <EmailStatusCard />
 
         {/* Order Items Details */}
         {orderItems.length > 0 && (
@@ -299,7 +393,7 @@ const PaymentSuccess = () => {
               <div>
                 <h3 className="font-medium mb-2">Customer Service</h3>
                 <p className="text-sm">Phone: (555) 123-4567</p>
-                <p className="text-sm">Email: support@company.com</p>
+                <p className="text-sm">Email: support@mygravelguy.com</p>
                 <p className="text-sm">Hours: Mon-Fri, 8am-5pm</p>
               </div>
               <div>
