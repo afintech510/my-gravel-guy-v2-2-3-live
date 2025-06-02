@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,15 @@ const Checkout = () => {
       default:
         return 'Not specified';
     }
+  };
+
+  // Helper function to get material size info
+  const getMaterialSizeInfo = (item: any) => {
+    // Check multiple possible sources for size information
+    if (item.size) return `Size: ${item.size}`;
+    if (item.specifications?.size) return `Size: ${item.specifications.size}`;
+    if (item.materialSize) return `Size: ${item.materialSize}`;
+    return null;
   };
 
   // Transform cart items to a format suitable for Stripe
@@ -122,8 +132,15 @@ const Checkout = () => {
                     <div className="flex justify-between mb-4">
                       <div>
                         <div className="font-medium">{item.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {item.tons} tons {item.yards && `(${item.yards.toFixed(1)} cu. yds.)`}
+                        <div className="text-sm text-muted-foreground space-y-1">
+                          <div>
+                            {item.tons} tons {item.yards && `(${item.yards.toFixed(1)} cu. yds.)`}
+                          </div>
+                          {getMaterialSizeInfo(item) && (
+                            <div className="text-xs text-gray-600">
+                              {getMaterialSizeInfo(item)}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="text-right">
