@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { generateCustomerConfirmationEmail, generateInternalNotificationEmail } from '@/utils/emailTemplates';
 
@@ -11,7 +12,10 @@ interface OrderData {
 
 export const sendOrderConfirmationEmail = async (orderData: OrderData) => {
   try {
-    console.log('Sending order confirmation email to:', orderData.customer_email);
+    console.log('=== CUSTOMER EMAIL DEBUG ===');
+    console.log('Sending customer confirmation email to:', orderData.customer_email);
+    console.log('Customer email type:', typeof orderData.customer_email);
+    console.log('Order data:', JSON.stringify(orderData, null, 2));
     
     const emailHtml = generateCustomerConfirmationEmail(orderData);
     
@@ -40,18 +44,29 @@ export const sendOrderConfirmationEmail = async (orderData: OrderData) => {
 
 export const sendInternalNotificationEmail = async (orderData: OrderData, salesEmail: string = 'order.support@mygravelguy.com') => {
   try {
+    console.log('=== INTERNAL EMAIL DEBUG ===');
     console.log('Sending internal notification email to:', salesEmail);
+    console.log('Sales email type:', typeof salesEmail);
+    console.log('Sales email length:', salesEmail.length);
+    console.log('Order customer email (for reference):', orderData.customer_email);
+    console.log('Are they the same?', salesEmail === orderData.customer_email);
+    console.log('Hardcoded internal email: order.support@mygravelguy.com');
+    console.log('Using default param?', salesEmail === 'order.support@mygravelguy.com');
     
     const emailHtml = generateInternalNotificationEmail(orderData);
     
+    const requestBody = {
+      to: salesEmail,
+      subject: `🚨 New Order: ${orderData.order_id} - $${orderData.total_amount.toFixed(2)}`,
+      html: emailHtml,
+      type: 'internal_notification',
+      orderData
+    };
+    
+    console.log('Internal email request body:', JSON.stringify(requestBody, null, 2));
+    
     const { data, error } = await supabase.functions.invoke('send-email', {
-      body: {
-        to: salesEmail,
-        subject: `🚨 New Order: ${orderData.order_id} - $${orderData.total_amount.toFixed(2)}`,
-        html: emailHtml,
-        type: 'internal_notification',
-        orderData
-      }
+      body: requestBody
     });
 
     if (error) {
@@ -69,10 +84,14 @@ export const sendInternalNotificationEmail = async (orderData: OrderData, salesE
 
 export const sendBothOrderEmails = async (orderData: OrderData) => {
   try {
+    console.log('=== SENDING BOTH EMAILS DEBUG ===');
+    console.log('Order data received:', JSON.stringify(orderData, null, 2));
+    console.log('Customer email from order data:', orderData.customer_email);
+    
     // Send both emails in parallel
     const [customerResult, internalResult] = await Promise.allSettled([
       sendOrderConfirmationEmail(orderData),
-      sendInternalNotificationEmail(orderData)
+      sendInternalNotificationEmail(orderData) // Using default internal email
     ]);
 
     const results = {
