@@ -68,6 +68,12 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
       infoText.push(formattedSubcategory);
     }
     
+    // Add size information if available
+    if (item.size || item.specifications?.size) {
+      const sizeInfo = item.size || item.specifications?.size;
+      infoText.push(`Size: ${sizeInfo}`);
+    }
+    
     if (item.materialSize) {
       infoText.push(`Size: ${item.materialSize}`);
     }
