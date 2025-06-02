@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { generateCustomerConfirmationEmail, generateInternalNotificationEmail } from '@/utils/emailTemplates';
 
@@ -39,7 +38,7 @@ export const sendOrderConfirmationEmail = async (orderData: OrderData) => {
   }
 };
 
-export const sendInternalNotificationEmail = async (orderData: OrderData, salesEmail: string = 'sales@yourcompany.com') => {
+export const sendInternalNotificationEmail = async (orderData: OrderData, salesEmail: string = 'order.support@mygravelguy.com') => {
   try {
     console.log('Sending internal notification email to:', salesEmail);
     
