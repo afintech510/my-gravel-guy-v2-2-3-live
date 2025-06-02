@@ -78,7 +78,7 @@ serve(async (req) => {
 
     // Extract customer info
     const customerEmail = session.customer_details?.email || session.metadata?.customer_email || 'unknown@example.com';
-    const customerName = session.customer_details?.name || session.metadata?.customer_name;
+    const customerName = session.customer_details?.name || session.metadata?.customer_name || 'Customer';
 
     // Process line items and create order records
     const lineItems = session.line_items?.data || [];
@@ -102,7 +102,7 @@ serve(async (req) => {
         zip: session.metadata?.delivery_zip || ''
       };
       const contactInfo = {
-        name: customerName || '',
+        name: customerName,
         email: customerEmail,
         phone: session.metadata?.contact_phone || ''
       };
@@ -143,10 +143,11 @@ serve(async (req) => {
 
       if (insertError) {
         console.error('Database insert error:', insertError);
-        throw new Error(`Failed to save order: ${insertError.message}`);
+        console.error('Insert error details:', JSON.stringify(insertError, null, 2));
+        // Don't throw here, continue with email sending even if DB insert fails
+      } else {
+        console.log('Order saved successfully:', insertedOrder);
       }
-
-      console.log('Order saved successfully:', insertedOrder);
 
       orderItems.push({
         product_name: productName,
@@ -169,17 +170,21 @@ serve(async (req) => {
       items: orderItems
     };
 
-    console.log('Sending emails for order:', finalOrderId);
+    console.log('=== SENDING EMAILS ===');
+    console.log('Order data for emails:', JSON.stringify(orderData, null, 2));
 
     // Send customer confirmation email
     let customerEmailSent = false;
     try {
-      console.log('Calling send-email function for customer...');
+      console.log('Sending customer confirmation email to:', customerEmail);
+      
+      const customerEmailHtml = generateCustomerConfirmationEmail(orderData);
+      
       const { data: customerEmailData, error: customerEmailError } = await supabase.functions.invoke('send-email', {
         body: {
           to: customerEmail,
           subject: `Order Confirmation - ${finalOrderId} 📦`,
-          html: generateCustomerConfirmationEmail(orderData),
+          html: customerEmailHtml,
           type: 'customer_confirmation',
           orderData
         }
@@ -187,23 +192,28 @@ serve(async (req) => {
 
       if (customerEmailError) {
         console.error('Customer email error:', customerEmailError);
+        console.error('Customer email error details:', JSON.stringify(customerEmailError, null, 2));
       } else {
         console.log('Customer email sent successfully:', customerEmailData);
         customerEmailSent = true;
       }
     } catch (emailError) {
       console.error('Customer email exception:', emailError);
+      console.error('Customer email exception details:', JSON.stringify(emailError, null, 2));
     }
 
     // Send internal notification email
     let internalEmailSent = false;
     try {
-      console.log('Calling send-email function for internal team...');
+      console.log('Sending internal notification email...');
+      
+      const internalEmailHtml = generateInternalNotificationEmail(orderData);
+      
       const { data: internalEmailData, error: internalEmailError } = await supabase.functions.invoke('send-email', {
         body: {
           to: 'order.support@mygravelguy.com',
           subject: `🚨 New Order: ${finalOrderId} - $${orderData.total_amount.toFixed(2)}`,
-          html: generateInternalNotificationEmail(orderData),
+          html: internalEmailHtml,
           type: 'internal_notification',
           orderData
         }
@@ -211,12 +221,14 @@ serve(async (req) => {
 
       if (internalEmailError) {
         console.error('Internal email error:', internalEmailError);
+        console.error('Internal email error details:', JSON.stringify(internalEmailError, null, 2));
       } else {
         console.log('Internal email sent successfully:', internalEmailData);
         internalEmailSent = true;
       }
     } catch (emailError) {
       console.error('Internal email exception:', emailError);
+      console.error('Internal email exception details:', JSON.stringify(emailError, null, 2));
     }
 
     // Fetch the complete order details to return
@@ -230,6 +242,9 @@ serve(async (req) => {
       console.error('Error fetching order details:', fetchError);
     }
 
+    console.log('=== EMAIL SENDING SUMMARY ===');
+    console.log('Customer email sent:', customerEmailSent);
+    console.log('Internal email sent:', internalEmailSent);
     console.log('=== VERIFY PAYMENT DEBUG END ===');
 
     return new Response(
@@ -252,6 +267,7 @@ serve(async (req) => {
     console.error("=== PAYMENT VERIFICATION ERROR ===");
     console.error("Error message:", error.message);
     console.error("Error stack:", error.stack);
+    console.error("Full error object:", JSON.stringify(error, null, 2));
     
     return new Response(
       JSON.stringify({ 
@@ -266,7 +282,7 @@ serve(async (req) => {
   }
 });
 
-// Email template functions
+// Email template functions - simplified and embedded
 const generateCustomerConfirmationEmail = (orderData: any) => {
   const customerName = orderData.customer_name || 'Valued Customer';
   const orderId = orderData.order_id;
