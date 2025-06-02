@@ -30,7 +30,7 @@ serve(async (req) => {
     }
 
     // Initialize Stripe
-    const stripeKey = Deno.env.get("stripe");
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
       console.error("Stripe secret key not found in environment");
       throw new Error("Stripe secret key not found");
@@ -107,6 +107,7 @@ serve(async (req) => {
         phone: session.metadata?.contact_phone || ''
       };
 
+      console.log('=== DATABASE INSERT DEBUG ===');
       console.log('Inserting order record:', {
         order_id: finalOrderId,
         product_name: productName,
@@ -115,37 +116,45 @@ serve(async (req) => {
       });
 
       // Insert order record into database
+      const orderRecord = {
+        order_id: finalOrderId,
+        stripe_session_id: sessionId,
+        stripe_payment_intent_id: session.payment_intent,
+        product_name: productName,
+        quantity: quantity,
+        unit_price: unitPrice,
+        total_price: totalPrice,
+        delivery_date: deliveryDate,
+        delivery_address_street: deliveryAddress.street,
+        delivery_address_city: deliveryAddress.city,
+        delivery_address_state: deliveryAddress.state,
+        delivery_address_zip: deliveryAddress.zip,
+        contact_name: contactInfo.name,
+        contact_email: contactInfo.email,
+        contact_phone: contactInfo.phone,
+        delivery_time_preference: session.metadata?.delivery_time_preference,
+        delivery_instructions: session.metadata?.delivery_instructions,
+        status: 'confirmed',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('Order record to insert:', JSON.stringify(orderRecord, null, 2));
+
       const { data: insertedOrder, error: insertError } = await supabase
         .from('orders')
-        .insert({
-          order_id: finalOrderId,
-          stripe_session_id: sessionId,
-          stripe_payment_intent_id: session.payment_intent,
-          product_name: productName,
-          quantity: quantity,
-          unit_price: unitPrice,
-          total_price: totalPrice,
-          delivery_date: deliveryDate,
-          delivery_address_street: deliveryAddress.street,
-          delivery_address_city: deliveryAddress.city,
-          delivery_address_state: deliveryAddress.state,
-          delivery_address_zip: deliveryAddress.zip,
-          contact_name: contactInfo.name,
-          contact_email: contactInfo.email,
-          contact_phone: contactInfo.phone,
-          delivery_time_preference: session.metadata?.delivery_time_preference,
-          delivery_instructions: session.metadata?.delivery_instructions,
-          status: 'confirmed',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
+        .insert(orderRecord)
         .select();
 
       if (insertError) {
-        console.error('Database insert error:', insertError);
-        console.error('Insert error details:', JSON.stringify(insertError, null, 2));
-        // Don't throw here, continue with email sending even if DB insert fails
+        console.error('=== DATABASE INSERT ERROR ===');
+        console.error('Insert error:', insertError);
+        console.error('Insert error message:', insertError.message);
+        console.error('Insert error details:', insertError.details);
+        console.error('Insert error hint:', insertError.hint);
+        console.error('Insert error code:', insertError.code);
       } else {
+        console.log('=== DATABASE INSERT SUCCESS ===');
         console.log('Order saved successfully:', insertedOrder);
       }
 
@@ -170,15 +179,85 @@ serve(async (req) => {
       items: orderItems
     };
 
-    console.log('=== SENDING EMAILS ===');
+    console.log('=== EMAIL SENDING DEBUG ===');
     console.log('Order data for emails:', JSON.stringify(orderData, null, 2));
+
+    // Generate email HTML content
+    const generateCustomerEmail = (data: any) => {
+      return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Order Confirmation - My Gravel Guy</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="margin: 0; font-size: 28px;">Order Confirmed! 🎉</h1>
+            <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Thank you for choosing My Gravel Guy</p>
+          </div>
+          
+          <div style="background: #f8fafc; padding: 30px; border-radius: 0 0 10px 10px;">
+            <h2 style="color: #1e3a8a; margin-top: 0;">Hi ${data.customer_name || 'Valued Customer'},</h2>
+            <p>Great news! Your order has been confirmed and is being processed.</p>
+            
+            <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
+              <h3 style="margin-top: 0; color: #1e3a8a;">Order Details</h3>
+              <p><strong>Order ID:</strong> ${data.order_id}</p>
+              <p><strong>Total Amount:</strong> $${data.total_amount.toFixed(2)}</p>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <p>Questions? Contact us:</p>
+              <p><strong>Phone:</strong> (555) 123-4567</p>
+              <p><strong>Email:</strong> support@mygravelguy.com</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+    };
+
+    const generateInternalEmail = (data: any) => {
+      return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>New Order Alert - ${data.order_id}</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: #dc2626; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="margin: 0; font-size: 24px;">🚨 NEW ORDER ALERT</h1>
+          </div>
+          
+          <div style="background: #f3f4f6; padding: 20px; border-radius: 0 0 8px 8px;">
+            <h2 style="color: #dc2626; margin-top: 0;">Order: ${data.order_id}</h2>
+            
+            <div style="background: white; padding: 15px; border-radius: 6px; margin: 15px 0;">
+              <h3 style="margin-top: 0;">Customer Information</h3>
+              <p><strong>Name:</strong> ${data.customer_name || 'Not provided'}</p>
+              <p><strong>Email:</strong> ${data.customer_email}</p>
+            </div>
+            
+            <div style="background: white; padding: 15px; border-radius: 6px; margin: 15px 0;">
+              <h3 style="margin-top: 0;">Order Summary</h3>
+              <p><strong>Total Amount:</strong> $${data.total_amount.toFixed(2)}</p>
+              <p><strong>Status:</strong> Confirmed - Ready for Processing</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+    };
 
     // Send customer confirmation email
     let customerEmailSent = false;
     try {
-      console.log('Sending customer confirmation email to:', customerEmail);
+      console.log('=== SENDING CUSTOMER EMAIL ===');
+      console.log('Customer email address:', customerEmail);
       
-      const customerEmailHtml = generateCustomerConfirmationEmail(orderData);
+      const customerEmailHtml = generateCustomerEmail(orderData);
       
       const { data: customerEmailData, error: customerEmailError } = await supabase.functions.invoke('send-email', {
         body: {
@@ -191,23 +270,27 @@ serve(async (req) => {
       });
 
       if (customerEmailError) {
-        console.error('Customer email error:', customerEmailError);
-        console.error('Customer email error details:', JSON.stringify(customerEmailError, null, 2));
+        console.error('=== CUSTOMER EMAIL ERROR ===');
+        console.error('Error:', customerEmailError);
+        console.error('Error message:', customerEmailError.message);
+        console.error('Error details:', JSON.stringify(customerEmailError, null, 2));
       } else {
-        console.log('Customer email sent successfully:', customerEmailData);
+        console.log('=== CUSTOMER EMAIL SUCCESS ===');
+        console.log('Response:', customerEmailData);
         customerEmailSent = true;
       }
     } catch (emailError) {
-      console.error('Customer email exception:', emailError);
-      console.error('Customer email exception details:', JSON.stringify(emailError, null, 2));
+      console.error('=== CUSTOMER EMAIL EXCEPTION ===');
+      console.error('Exception:', emailError);
+      console.error('Exception message:', emailError.message);
     }
 
     // Send internal notification email
     let internalEmailSent = false;
     try {
-      console.log('Sending internal notification email...');
+      console.log('=== SENDING INTERNAL EMAIL ===');
       
-      const internalEmailHtml = generateInternalNotificationEmail(orderData);
+      const internalEmailHtml = generateInternalEmail(orderData);
       
       const { data: internalEmailData, error: internalEmailError } = await supabase.functions.invoke('send-email', {
         body: {
@@ -220,15 +303,19 @@ serve(async (req) => {
       });
 
       if (internalEmailError) {
-        console.error('Internal email error:', internalEmailError);
-        console.error('Internal email error details:', JSON.stringify(internalEmailError, null, 2));
+        console.error('=== INTERNAL EMAIL ERROR ===');
+        console.error('Error:', internalEmailError);
+        console.error('Error message:', internalEmailError.message);
+        console.error('Error details:', JSON.stringify(internalEmailError, null, 2));
       } else {
-        console.log('Internal email sent successfully:', internalEmailData);
+        console.log('=== INTERNAL EMAIL SUCCESS ===');
+        console.log('Response:', internalEmailData);
         internalEmailSent = true;
       }
     } catch (emailError) {
-      console.error('Internal email exception:', emailError);
-      console.error('Internal email exception details:', JSON.stringify(emailError, null, 2));
+      console.error('=== INTERNAL EMAIL EXCEPTION ===');
+      console.error('Exception:', emailError);
+      console.error('Exception message:', emailError.message);
     }
 
     // Fetch the complete order details to return
@@ -242,9 +329,10 @@ serve(async (req) => {
       console.error('Error fetching order details:', fetchError);
     }
 
-    console.log('=== EMAIL SENDING SUMMARY ===');
+    console.log('=== FINAL SUMMARY ===');
     console.log('Customer email sent:', customerEmailSent);
     console.log('Internal email sent:', internalEmailSent);
+    console.log('Orders in database:', orderDetailsResult?.length || 0);
     console.log('=== VERIFY PAYMENT DEBUG END ===');
 
     return new Response(
@@ -281,100 +369,3 @@ serve(async (req) => {
     );
   }
 });
-
-// Email template functions - simplified and embedded
-const generateCustomerConfirmationEmail = (orderData: any) => {
-  const customerName = orderData.customer_name || 'Valued Customer';
-  const orderId = orderData.order_id;
-  const totalAmount = orderData.total_amount;
-  
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Order Confirmation - My Gravel Guy</title>
-    </head>
-    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-        <h1 style="margin: 0; font-size: 28px;">Order Confirmed! 🎉</h1>
-        <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Thank you for choosing My Gravel Guy</p>
-      </div>
-      
-      <div style="background: #f8fafc; padding: 30px; border-radius: 0 0 10px 10px;">
-        <h2 style="color: #1e3a8a; margin-top: 0;">Hi ${customerName},</h2>
-        <p>Great news! Your order has been confirmed and is being processed.</p>
-        
-        <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
-          <h3 style="margin-top: 0; color: #1e3a8a;">Order Details</h3>
-          <p><strong>Order ID:</strong> ${orderId}</p>
-          <p><strong>Total Amount:</strong> $${totalAmount.toFixed(2)}</p>
-        </div>
-        
-        <div style="background: #dcfce7; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="margin-top: 0; color: #166534;">What's Next?</h3>
-          <ol style="margin: 0; padding-left: 20px;">
-            <li>Our team will prepare your materials</li>
-            <li>We'll schedule your delivery</li>
-            <li>You'll receive delivery confirmation</li>
-          </ol>
-        </div>
-        
-        <div style="text-align: center; margin: 30px 0;">
-          <p>Questions? Contact us:</p>
-          <p><strong>Phone:</strong> (555) 123-4567</p>
-          <p><strong>Email:</strong> support@mygravelguy.com</p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-};
-
-const generateInternalNotificationEmail = (orderData: any) => {
-  const orderId = orderData.order_id;
-  const totalAmount = orderData.total_amount;
-  const customerEmail = orderData.customer_email;
-  const customerName = orderData.customer_name;
-  
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <title>New Order Alert - ${orderId}</title>
-    </head>
-    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <div style="background: #dc2626; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
-        <h1 style="margin: 0; font-size: 24px;">🚨 NEW ORDER ALERT</h1>
-      </div>
-      
-      <div style="background: #f3f4f6; padding: 20px; border-radius: 0 0 8px 8px;">
-        <h2 style="color: #dc2626; margin-top: 0;">Order: ${orderId}</h2>
-        
-        <div style="background: white; padding: 15px; border-radius: 6px; margin: 15px 0;">
-          <h3 style="margin-top: 0;">Customer Information</h3>
-          <p><strong>Name:</strong> ${customerName || 'Not provided'}</p>
-          <p><strong>Email:</strong> ${customerEmail}</p>
-        </div>
-        
-        <div style="background: white; padding: 15px; border-radius: 6px; margin: 15px 0;">
-          <h3 style="margin-top: 0;">Order Summary</h3>
-          <p><strong>Total Amount:</strong> $${totalAmount.toFixed(2)}</p>
-          <p><strong>Status:</strong> Confirmed - Ready for Processing</p>
-        </div>
-        
-        <div style="background: #fef3c7; padding: 15px; border-radius: 6px; margin: 15px 0;">
-          <h3 style="margin-top: 0; color: #92400e;">Action Required</h3>
-          <ol style="margin: 0; padding-left: 20px;">
-            <li>Review order details in dashboard</li>
-            <li>Schedule delivery</li>
-            <li>Contact customer if needed</li>
-          </ol>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-};
