@@ -1,4 +1,3 @@
-
 import { Product } from './types';
 
 /**
@@ -10,7 +9,7 @@ import { Product } from './types';
  * @param a The multiplier coefficient (default: 400)
  * @param b The exponential decay rate (default: -0.32)
  * @param c The base offset (default: 95)
- * @returns The calculated price per ton
+ * @returns The calculated price per ton, rounded to the nearest 10
  */
 export function calculateExponentialPrice(
   basePrice: number,
@@ -27,10 +26,12 @@ export function calculateExponentialPrice(
   
   // Ensure the price doesn't go below a reasonable minimum (use basePrice as fallback)
   const minimumPrice = Math.max(basePrice * 0.5, 50); // At least 50% of base price or $50
-  const finalPrice = Math.max(pricePerTon, minimumPrice);
+  const calculatedPrice = Math.max(pricePerTon, minimumPrice);
   
-  // Round to 2 decimal places
-  return Math.round(finalPrice * 100) / 100;
+  // Round to the nearest 10
+  const roundedPrice = Math.round(calculatedPrice / 10) * 10;
+  
+  return roundedPrice;
 }
 
 /**
