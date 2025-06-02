@@ -9,15 +9,264 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-interface EmailRequest {
-  to: string;
-  subject: string;
-  html: string;
-  type: 'customer_confirmation' | 'internal_notification';
-  orderData?: any;
-}
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
+    return new Response(null, { 
+      status: 200, 
+      headers: corsHeaders 
+    });
+  }
 
-// Email template functions (simplified versions)
+  try {
+    const { sessionId, orderId } = await req.json();
+    
+    console.log('=== VERIFY PAYMENT DEBUG START ===');
+    console.log('Session ID:', sessionId);
+    console.log('Order ID:', orderId);
+    
+    if (!sessionId) {
+      throw new Error("Session ID is required");
+    }
+
+    // Initialize Stripe
+    const stripeKey = Deno.env.get("stripe");
+    if (!stripeKey) {
+      console.error("Stripe secret key not found in environment");
+      throw new Error("Stripe secret key not found");
+    }
+    
+    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+
+    // Retrieve the session from Stripe to verify payment
+    console.log('Retrieving Stripe session...');
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['line_items.data.price.product']
+    });
+    
+    console.log('Stripe session retrieved:', {
+      id: session.id,
+      payment_status: session.payment_status,
+      customer_email: session.customer_details?.email,
+      amount_total: session.amount_total
+    });
+
+    if (session.payment_status !== 'paid') {
+      throw new Error(`Payment not completed. Status: ${session.payment_status}`);
+    }
+
+    // Create Supabase client with service role key to bypass RLS
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("Supabase configuration missing");
+      throw new Error("Supabase configuration missing");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+
+    // Extract order ID from session metadata or generate one
+    const finalOrderId = session.metadata?.order_id || orderId || `ORDER-${Date.now()}`;
+    
+    console.log('Processing order with ID:', finalOrderId);
+
+    // Extract customer info
+    const customerEmail = session.customer_details?.email || session.metadata?.customer_email || 'unknown@example.com';
+    const customerName = session.customer_details?.name || session.metadata?.customer_name;
+
+    // Process line items and create order records
+    const lineItems = session.line_items?.data || [];
+    const orderItems = [];
+    
+    console.log('Processing line items:', lineItems.length);
+
+    for (const item of lineItems) {
+      const product = item.price?.product as any;
+      const productName = product?.name || 'Unknown Product';
+      const quantity = item.quantity || 1;
+      const unitPrice = (item.price?.unit_amount || 0) / 100;
+      const totalPrice = unitPrice * quantity;
+
+      // Extract metadata from session for delivery info
+      const deliveryDate = session.metadata?.delivery_date;
+      const deliveryAddress = {
+        street: session.metadata?.delivery_street || '',
+        city: session.metadata?.delivery_city || '',
+        state: session.metadata?.delivery_state || '',
+        zip: session.metadata?.delivery_zip || ''
+      };
+      const contactInfo = {
+        name: customerName || '',
+        email: customerEmail,
+        phone: session.metadata?.contact_phone || ''
+      };
+
+      console.log('Inserting order record:', {
+        order_id: finalOrderId,
+        product_name: productName,
+        quantity: quantity,
+        total_price: totalPrice
+      });
+
+      // Insert order record into database
+      const { data: insertedOrder, error: insertError } = await supabase
+        .from('orders')
+        .insert({
+          order_id: finalOrderId,
+          stripe_session_id: sessionId,
+          stripe_payment_intent_id: session.payment_intent,
+          product_name: productName,
+          quantity: quantity,
+          unit_price: unitPrice,
+          total_price: totalPrice,
+          delivery_date: deliveryDate,
+          delivery_address_street: deliveryAddress.street,
+          delivery_address_city: deliveryAddress.city,
+          delivery_address_state: deliveryAddress.state,
+          delivery_address_zip: deliveryAddress.zip,
+          contact_name: contactInfo.name,
+          contact_email: contactInfo.email,
+          contact_phone: contactInfo.phone,
+          delivery_time_preference: session.metadata?.delivery_time_preference,
+          delivery_instructions: session.metadata?.delivery_instructions,
+          status: 'confirmed',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select();
+
+      if (insertError) {
+        console.error('Database insert error:', insertError);
+        throw new Error(`Failed to save order: ${insertError.message}`);
+      }
+
+      console.log('Order saved successfully:', insertedOrder);
+
+      orderItems.push({
+        product_name: productName,
+        quantity: quantity,
+        total_price: totalPrice,
+        delivery_date: deliveryDate,
+        delivery_address: deliveryAddress,
+        contact_info: contactInfo,
+        delivery_time_preference: session.metadata?.delivery_time_preference,
+        delivery_instructions: session.metadata?.delivery_instructions
+      });
+    }
+
+    // Prepare order data for emails
+    const orderData = {
+      order_id: finalOrderId,
+      customer_email: customerEmail,
+      customer_name: customerName,
+      total_amount: (session.amount_total || 0) / 100,
+      items: orderItems
+    };
+
+    console.log('Sending emails for order:', finalOrderId);
+
+    // Send customer confirmation email
+    let customerEmailSent = false;
+    try {
+      console.log('Calling send-email function for customer...');
+      const { data: customerEmailData, error: customerEmailError } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: customerEmail,
+          subject: `Order Confirmation - ${finalOrderId} 📦`,
+          html: generateCustomerConfirmationEmail(orderData),
+          type: 'customer_confirmation',
+          orderData
+        }
+      });
+
+      if (customerEmailError) {
+        console.error('Customer email error:', customerEmailError);
+      } else {
+        console.log('Customer email sent successfully:', customerEmailData);
+        customerEmailSent = true;
+      }
+    } catch (emailError) {
+      console.error('Customer email exception:', emailError);
+    }
+
+    // Send internal notification email
+    let internalEmailSent = false;
+    try {
+      console.log('Calling send-email function for internal team...');
+      const { data: internalEmailData, error: internalEmailError } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: 'order.support@mygravelguy.com',
+          subject: `🚨 New Order: ${finalOrderId} - $${orderData.total_amount.toFixed(2)}`,
+          html: generateInternalNotificationEmail(orderData),
+          type: 'internal_notification',
+          orderData
+        }
+      });
+
+      if (internalEmailError) {
+        console.error('Internal email error:', internalEmailError);
+      } else {
+        console.log('Internal email sent successfully:', internalEmailData);
+        internalEmailSent = true;
+      }
+    } catch (emailError) {
+      console.error('Internal email exception:', emailError);
+    }
+
+    // Fetch the complete order details to return
+    const { data: orderDetailsResult, error: fetchError } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('stripe_session_id', sessionId)
+      .order('created_at', { ascending: true });
+
+    if (fetchError) {
+      console.error('Error fetching order details:', fetchError);
+    }
+
+    console.log('=== VERIFY PAYMENT DEBUG END ===');
+
+    return new Response(
+      JSON.stringify({ 
+        success: true,
+        orders: orderDetailsResult || [],
+        orderId: finalOrderId,
+        paymentStatus: session.payment_status,
+        emailsSent: customerEmailSent && internalEmailSent,
+        customerEmailSent,
+        internalEmailSent
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      }
+    );
+
+  } catch (error) {
+    console.error("=== PAYMENT VERIFICATION ERROR ===");
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+    
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        success: false
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      }
+    );
+  }
+});
+
+// Email template functions
 const generateCustomerConfirmationEmail = (orderData: any) => {
   const customerName = orderData.customer_name || 'Valued Customer';
   const orderId = orderData.order_id;
@@ -113,246 +362,3 @@ const generateInternalNotificationEmail = (orderData: any) => {
     </html>
   `;
 };
-
-const sendEmailViaResend = async (emailData: EmailRequest) => {
-  const resendApiKey = Deno.env.get("RESEND_API_KEY");
-  if (!resendApiKey) {
-    throw new Error("RESEND_API_KEY not configured");
-  }
-
-  console.log(`Sending ${emailData.type} email to: ${emailData.to}`);
-
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${resendApiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: "team@mygravelguy.com",
-      to: [emailData.to],
-      subject: emailData.subject,
-      html: emailData.html,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.text();
-    console.error("Resend API error:", errorData);
-    throw new Error(`Failed to send email: ${response.status} ${errorData}`);
-  }
-
-  const result = await response.json();
-  console.log(`Email sent successfully:`, result);
-  return result;
-};
-
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response(null, { 
-      status: 200, 
-      headers: corsHeaders 
-    });
-  }
-
-  try {
-    const { sessionId, orderId } = await req.json();
-    
-    if (!sessionId) {
-      throw new Error("Session ID is required");
-    }
-
-    // Initialize Stripe
-    const stripeKey = Deno.env.get("stripe");
-    if (!stripeKey) {
-      throw new Error("Stripe secret key not found");
-    }
-    
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-
-    // Retrieve the session from Stripe to verify payment
-    const session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ['line_items.data.price.product']
-    });
-    
-    console.log('Retrieved Stripe session:', session);
-
-    if (session.payment_status !== 'paid') {
-      throw new Error(`Payment not completed. Status: ${session.payment_status}`);
-    }
-
-    // Create Supabase client with service role key to bypass RLS
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    );
-
-    // Extract order ID from session metadata or generate one
-    const finalOrderId = session.metadata?.order_id || orderId || `ORDER-${Date.now()}`;
-    
-    console.log('Processing order with ID:', finalOrderId);
-
-    // Extract customer info
-    const customerEmail = session.customer_details?.email || session.metadata?.customer_email || 'unknown@example.com';
-    const customerName = session.customer_details?.name || session.metadata?.customer_name;
-
-    // Process line items and create order records
-    const lineItems = session.line_items?.data || [];
-    const orderData = {
-      order_id: finalOrderId,
-      customer_email: customerEmail,
-      customer_name: customerName,
-      total_amount: (session.amount_total || 0) / 100, // Convert from cents
-      items: []
-    };
-
-    for (const item of lineItems) {
-      const product = item.price?.product as any;
-      const productName = product?.name || 'Unknown Product';
-      const quantity = item.quantity || 1;
-      const unitPrice = (item.price?.unit_amount || 0) / 100;
-      const totalPrice = unitPrice * quantity;
-
-      // Extract metadata from session for delivery info
-      const deliveryDate = session.metadata?.delivery_date;
-      const deliveryAddress = {
-        street: session.metadata?.delivery_street || '',
-        city: session.metadata?.delivery_city || '',
-        state: session.metadata?.delivery_state || '',
-        zip: session.metadata?.delivery_zip || ''
-      };
-      const contactInfo = {
-        name: customerName || '',
-        email: customerEmail,
-        phone: session.metadata?.contact_phone || ''
-      };
-
-      // Insert order record into database
-      const { data: insertedOrder, error: insertError } = await supabase
-        .from('orders')
-        .insert({
-          order_id: finalOrderId,
-          stripe_session_id: sessionId,
-          stripe_payment_intent_id: session.payment_intent,
-          product_name: productName,
-          quantity: quantity,
-          unit_price: unitPrice,
-          total_price: totalPrice,
-          delivery_date: deliveryDate,
-          delivery_address_street: deliveryAddress.street,
-          delivery_address_city: deliveryAddress.city,
-          delivery_address_state: deliveryAddress.state,
-          delivery_address_zip: deliveryAddress.zip,
-          contact_name: contactInfo.name,
-          contact_email: contactInfo.email,
-          contact_phone: contactInfo.phone,
-          delivery_time_preference: session.metadata?.delivery_time_preference,
-          delivery_instructions: session.metadata?.delivery_instructions,
-          status: 'confirmed',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select();
-
-      if (insertError) {
-        console.error('Error inserting order:', insertError);
-        throw new Error(`Failed to save order: ${insertError.message}`);
-      }
-
-      console.log('Order saved to database:', insertedOrder);
-
-      // Add to order data for emails
-      orderData.items.push({
-        product_name: productName,
-        quantity: quantity,
-        total_price: totalPrice,
-        delivery_date: deliveryDate,
-        delivery_address: deliveryAddress,
-        contact_info: contactInfo,
-        delivery_time_preference: session.metadata?.delivery_time_preference,
-        delivery_instructions: session.metadata?.delivery_instructions
-      });
-    }
-
-    // Send customer confirmation email
-    console.log('Sending customer confirmation email...');
-    try {
-      const customerEmailHtml = generateCustomerConfirmationEmail(orderData);
-      await sendEmailViaResend({
-        to: customerEmail,
-        subject: `Order Confirmation - ${finalOrderId} 📦`,
-        html: customerEmailHtml,
-        type: 'customer_confirmation',
-        orderData
-      });
-      console.log('Customer email sent successfully');
-    } catch (emailError) {
-      console.error('Failed to send customer email:', emailError);
-      // Don't fail the entire process if email fails
-    }
-
-    // Send internal notification email
-    console.log('Sending internal notification email...');
-    try {
-      const internalEmailHtml = generateInternalNotificationEmail(orderData);
-      await sendEmailViaResend({
-        to: 'order.support@mygravelguy.com',
-        subject: `🚨 New Order: ${finalOrderId} - $${orderData.total_amount.toFixed(2)}`,
-        html: internalEmailHtml,
-        type: 'internal_notification',
-        orderData
-      });
-      console.log('Internal email sent successfully');
-    } catch (emailError) {
-      console.error('Failed to send internal email:', emailError);
-      // Don't fail the entire process if email fails
-    }
-
-    // Fetch the complete order details to return
-    const { data: orderItems, error: fetchError } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('stripe_session_id', sessionId)
-      .order('created_at', { ascending: true });
-
-    if (fetchError) {
-      console.error('Error fetching order details:', fetchError);
-      throw new Error(`Failed to fetch order details: ${fetchError.message}`);
-    }
-
-    return new Response(
-      JSON.stringify({ 
-        success: true,
-        orders: orderItems,
-        orderId: finalOrderId,
-        paymentStatus: session.payment_status,
-        emailsSent: true
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      }
-    );
-
-  } catch (error) {
-    console.error("Payment verification error:", error);
-    
-    return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        success: false
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      }
-    );
-  }
-});
