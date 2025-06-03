@@ -43,7 +43,7 @@ serve(async (req) => {
 
     let session = null;
     let finalOrderId = orderId;
-    let customerEmail = 'customer@example.com';
+    let customerEmail = null;
     let customerName = 'Customer';
     let orderItems = [];
     let totalAmount = 0;
@@ -71,11 +71,18 @@ serve(async (req) => {
           amount_total: session.amount_total
         });
 
-        // Extract order details from session
+        // Extract order details from session - FIXED: Use Stripe customer email
         finalOrderId = session.metadata?.order_id || orderId || `ORDER-${Date.now()}`;
-        customerEmail = session.customer_details?.email || 'customer@example.com';
+        customerEmail = session.customer_details?.email; // Use email from Stripe session
         customerName = session.customer_details?.name || 'Customer';
         totalAmount = (session.amount_total || 0) / 100;
+
+        console.log('Extracted customer info:', {
+          customerEmail,
+          customerName,
+          finalOrderId,
+          totalAmount
+        });
 
         // Process line items and save to database
         const lineItems = session.line_items?.data || [];
@@ -182,20 +189,24 @@ serve(async (req) => {
       }
     }
 
-    // Send emails if we have valid order data
+    // Send emails if we have valid order data and customer email
     let customerEmailSent = false;
     let internalEmailSent = false;
 
-    if (orderItems.length > 0 && customerEmail !== 'customer@example.com') {
+    // FIXED: Check for valid customer email instead of comparing to default
+    if (orderItems.length > 0 && customerEmail && customerEmail.includes('@')) {
       console.log('=== SENDING EMAILS ===');
+      console.log('Customer email:', customerEmail);
       
       const orderData = {
         order_id: finalOrderId,
-        customer_email: customerEmail,
+        customer_email: customerEmail, // Use actual customer email from Stripe
         customer_name: customerName,
         total_amount: totalAmount,
         items: orderItems
       };
+
+      console.log('Order data for emails:', orderData);
 
       // Send customer confirmation email
       try {
@@ -203,7 +214,7 @@ serve(async (req) => {
         
         const { data: customerEmailData, error: customerEmailError } = await supabase.functions.invoke('send-email', {
           body: {
-            to: customerEmail,
+            to: customerEmail, // Use actual customer email
             subject: `Order Confirmation - ${finalOrderId}`,
             html: customerEmailHtml,
             type: 'customer_confirmation',
@@ -221,13 +232,13 @@ serve(async (req) => {
         console.error('Customer email exception:', emailError);
       }
 
-      // Send internal notification email
+      // Send internal notification email - FIXED: Use correct email address
       try {
         const internalEmailHtml = generateInternalEmail(orderData);
         
         const { data: internalEmailData, error: internalEmailError } = await supabase.functions.invoke('send-email', {
           body: {
-            to: 'orders@mygravelguy.com',
+            to: 'order.support@mygravelguy.com', // FIXED: Correct internal email
             subject: `New Order: ${finalOrderId} - $${totalAmount.toFixed(2)}`,
             html: internalEmailHtml,
             type: 'internal_notification',
@@ -244,6 +255,12 @@ serve(async (req) => {
       } catch (emailError) {
         console.error('Internal email exception:', emailError);
       }
+    } else {
+      console.log('Skipping email sending - missing data:', {
+        hasOrderItems: orderItems.length > 0,
+        hasCustomerEmail: !!customerEmail,
+        customerEmail
+      });
     }
 
     console.log('=== VERIFICATION COMPLETE ===');
