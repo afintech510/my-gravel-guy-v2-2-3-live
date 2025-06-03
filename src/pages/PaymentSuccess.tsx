@@ -132,7 +132,7 @@ const PaymentSuccess = () => {
                 if (!acc[order.order_id]) {
                   acc[order.order_id] = [];
                 }
-                // Map database fields to OrderItem interface using correct field names
+                // Map database fields to OrderItem interface using correct database field names
                 const mappedOrder: OrderItem = {
                   id: order.id,
                   order_id: order.order_id,
@@ -140,15 +140,15 @@ const PaymentSuccess = () => {
                   quantity: order.quantity,
                   total_price: order.total_price,
                   delivery_date: order.delivery_date,
-                  delivery_address_street: order.delivery_address_street,
-                  delivery_address_city: order.delivery_address_city,
-                  delivery_address_state: order.delivery_address_state,
-                  delivery_address_zip: order.delivery_address_zip,
-                  contact_name: order.contact_name || null,
-                  contact_email: order.contact_email || null,
-                  contact_phone: order.contact_phone || null,
-                  delivery_time_preference: order.delivery_time_preference || null,
-                  delivery_instructions: order.delivery_instructions || null,
+                  delivery_address_street: order.delivery_street || null,
+                  delivery_address_city: order.delivery_city || null,
+                  delivery_address_state: order.delivery_state || null,
+                  delivery_address_zip: order.delivery_zip || null,
+                  contact_name: null, // Not available in current schema
+                  contact_email: null, // Not available in current schema
+                  contact_phone: null, // Not available in current schema
+                  delivery_time_preference: null, // Not available in current schema
+                  delivery_instructions: null, // Not available in current schema
                   status: order.status
                 };
                 acc[order.order_id].push(mappedOrder);
@@ -187,15 +187,15 @@ const PaymentSuccess = () => {
                 quantity: order.quantity,
                 total_price: order.total_price,
                 delivery_date: order.delivery_date,
-                delivery_address_street: order.delivery_address_street,
-                delivery_address_city: order.delivery_address_city,
-                delivery_address_state: order.delivery_address_state,
-                delivery_address_zip: order.delivery_address_zip,
-                contact_name: order.contact_name,
-                contact_email: order.contact_email,
-                contact_phone: order.contact_phone,
-                delivery_time_preference: order.delivery_time_preference,
-                delivery_instructions: order.delivery_instructions,
+                delivery_address_street: order.delivery_address_street || order.delivery_street || null,
+                delivery_address_city: order.delivery_address_city || order.delivery_city || null,
+                delivery_address_state: order.delivery_address_state || order.delivery_state || null,
+                delivery_address_zip: order.delivery_address_zip || order.delivery_zip || null,
+                contact_name: order.contact_name || null,
+                contact_email: order.contact_email || null,
+                contact_phone: order.contact_phone || null,
+                delivery_time_preference: order.delivery_time_preference || null,
+                delivery_instructions: order.delivery_instructions || null,
                 status: order.status
               }));
               
