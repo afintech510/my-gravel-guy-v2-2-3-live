@@ -6,7 +6,7 @@ import { useCart } from '../contexts/CartContext';
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { detectPaymentSuccess } from '../utils/paymentUtils';
+import { detectPaymentSuccess, clearCheckoutBackup, getCheckoutBackup } from '../utils/paymentUtils';
 
 interface OrderItem {
   id: string;
@@ -58,16 +58,14 @@ const PaymentSuccess = () => {
       });
       
       // Check localStorage for backup order information
-      const checkoutOrderBackup = localStorage.getItem('checkout-order-backup');
+      const checkoutOrderBackup = getCheckoutBackup();
       const checkoutInProgress = localStorage.getItem('checkout-in-progress');
       const checkoutOrderId = localStorage.getItem('checkout-order-id');
-      const lastProcessedPayment = localStorage.getItem('lastProcessedPayment');
       
       console.log('LocalStorage Data:', {
         hasCheckoutOrderBackup: !!checkoutOrderBackup,
         checkoutInProgress,
-        checkoutOrderId,
-        lastProcessedPayment
+        checkoutOrderId
       });
       
       // Determine if we should process the payment
@@ -89,78 +87,25 @@ const PaymentSuccess = () => {
           if (sessionId) {
             console.log('Processing with session ID:', sessionId);
             
-            // Call edge function to verify payment with session ID
             const { data, error } = await supabase.functions.invoke('verify-payment', {
               body: { sessionId, orderId: orderIdParam || checkoutOrderId }
             });
 
             console.log('Verify payment response:', { data, error });
             verificationResult = { data, error };
-          } else if (checkoutOrderId && checkoutOrderBackup) {
-            console.log('Processing with backup order data');
+          } else if (checkoutOrderId) {
+            console.log('Processing with order ID:', checkoutOrderId);
             
-            // Try to process using backup order information
-            const backupData = JSON.parse(checkoutOrderBackup);
-            
-            // Attempt to find the order by timestamp or order ID
             const { data, error } = await supabase.functions.invoke('verify-payment', {
               body: { 
                 orderId: checkoutOrderId,
                 fallbackMode: true,
-                backupData: backupData
+                backupData: checkoutOrderBackup
               }
             });
 
             console.log('Fallback verification response:', { data, error });
             verificationResult = { data, error };
-          } else {
-            console.log('No valid payment identifiers found, checking recent orders');
-            
-            // Last resort: check for recent orders in the database
-            const { data: recentOrders, error: queryError } = await supabase
-              .from('orders')
-              .select('*')
-              .gte('created_at', new Date(Date.now() - 30 * 60 * 1000).toISOString()) // Last 30 minutes
-              .order('created_at', { ascending: false })
-              .limit(5);
-              
-            if (!queryError && recentOrders && recentOrders.length > 0) {
-              console.log('Found recent orders:', recentOrders);
-              
-              // Group orders by order_id and map to OrderItem interface
-              const groupedOrders = recentOrders.reduce((acc, order) => {
-                if (!acc[order.order_id]) {
-                  acc[order.order_id] = [];
-                }
-                // Map database fields to OrderItem interface using correct database field names
-                const mappedOrder: OrderItem = {
-                  id: order.id,
-                  order_id: order.order_id,
-                  product_name: order.product_name,
-                  quantity: order.quantity,
-                  total_price: order.total_price,
-                  delivery_date: order.delivery_date,
-                  delivery_address_street: order.delivery_street || null,
-                  delivery_address_city: order.delivery_city || null,
-                  delivery_address_state: order.delivery_state || null,
-                  delivery_address_zip: order.delivery_zip || null,
-                  contact_name: null, // Not available in current schema
-                  contact_email: null, // Not available in current schema
-                  contact_phone: null, // Not available in current schema
-                  delivery_time_preference: null, // Not available in current schema
-                  delivery_instructions: null, // Not available in current schema
-                  status: order.status
-                };
-                acc[order.order_id].push(mappedOrder);
-                return acc;
-              }, {} as Record<string, OrderItem[]>);
-              
-              // Use the most recent order
-              const latestOrderId = Object.keys(groupedOrders)[0];
-              setOrderItems(groupedOrders[latestOrderId]);
-              setOrderId(latestOrderId);
-              setEmailsSent(true); // Assume emails were sent if order exists
-            }
           }
           
           // Process verification result
@@ -176,30 +121,10 @@ const PaymentSuccess = () => {
                 description: "Your payment was successful. Order details are being processed.",
                 variant: "default"
               });
-            } else if (data?.orders) {
+            } else if (data?.orders && data.orders.length > 0) {
               console.log('Payment verification successful:', data);
               
-              // Map database orders to OrderItem interface
-              const mappedOrders: OrderItem[] = data.orders.map((order: any) => ({
-                id: order.id,
-                order_id: order.order_id,
-                product_name: order.product_name,
-                quantity: order.quantity,
-                total_price: order.total_price,
-                delivery_date: order.delivery_date,
-                delivery_address_street: order.delivery_address_street || order.delivery_street || null,
-                delivery_address_city: order.delivery_address_city || order.delivery_city || null,
-                delivery_address_state: order.delivery_address_state || order.delivery_state || null,
-                delivery_address_zip: order.delivery_address_zip || order.delivery_zip || null,
-                contact_name: order.contact_name || null,
-                contact_email: order.contact_email || null,
-                contact_phone: order.contact_phone || null,
-                delivery_time_preference: order.delivery_time_preference || null,
-                delivery_instructions: order.delivery_instructions || null,
-                status: order.status
-              }));
-              
-              setOrderItems(mappedOrders);
+              setOrderItems(data.orders);
               setOrderId(data.orderId || orderIdParam || checkoutOrderId);
               setEmailsSent(data.emailsSent || false);
               
@@ -215,17 +140,15 @@ const PaymentSuccess = () => {
                   variant: "default"
                 });
               }
+            } else {
+              console.warn('No order data found in verification response');
+              setProcessingError('Order details not found, but payment was successful');
             }
           }
 
           // Clear the cart and localStorage
           clearCart();
-          localStorage.removeItem('checkout-in-progress');
-          localStorage.removeItem('checkout-order-backup');
-          
-          // Store processed payment info
-          const processedSessionId = sessionId || checkoutOrderId || Date.now().toString();
-          localStorage.setItem('lastProcessedPayment', processedSessionId);
+          clearCheckoutBackup();
           
         } catch (error) {
           console.error('Error processing payment success:', error);
