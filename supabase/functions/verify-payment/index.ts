@@ -61,28 +61,87 @@ serve(async (req) => {
 
         console.log('Retrieving Stripe session...');
         session = await stripe.checkout.sessions.retrieve(sessionId, {
-          expand: ['line_items.data.price.product']
+          expand: ['line_items.data.price.product', 'customer']
         });
         
-        console.log('Stripe session retrieved:', {
-          id: session.id,
-          payment_status: session.payment_status,
-          customer_email: session.customer_details?.email,
-          amount_total: session.amount_total
+        console.log('=== RAW STRIPE SESSION DATA ===');
+        console.log('Session ID:', session.id);
+        console.log('Payment Status:', session.payment_status);
+        console.log('Customer Details:', session.customer_details);
+        console.log('Customer ID:', session.customer);
+        console.log('Amount Total:', session.amount_total);
+        console.log('Raw session object (key fields):', {
+          customer_details: session.customer_details,
+          customer_creation: session.customer_creation,
+          payment_status: session.payment_status
+        });
+        
+        // Enhanced customer email extraction with multiple fallback sources
+        console.log('=== CUSTOMER EMAIL EXTRACTION DEBUG ===');
+        
+        // Try multiple sources for customer email
+        let extractedEmail = null;
+        let emailSource = 'none';
+        
+        // Source 1: customer_details.email (most reliable)
+        if (session.customer_details?.email) {
+          extractedEmail = session.customer_details.email;
+          emailSource = 'customer_details';
+        }
+        
+        // Source 2: customer object (if expanded)
+        if (!extractedEmail && session.customer && typeof session.customer === 'object') {
+          extractedEmail = session.customer.email;
+          emailSource = 'customer_object';
+        }
+        
+        // Source 3: payment_intent if available
+        if (!extractedEmail && session.payment_intent) {
+          try {
+            const paymentIntent = await stripe.paymentIntents.retrieve(session.payment_intent);
+            if (paymentIntent.receipt_email) {
+              extractedEmail = paymentIntent.receipt_email;
+              emailSource = 'payment_intent_receipt';
+            }
+          } catch (piError) {
+            console.warn('Could not retrieve payment intent for email:', piError.message);
+          }
+        }
+        
+        console.log('Email extraction results:', {
+          extractedEmail,
+          emailSource,
+          isValidEmail: extractedEmail ? extractedEmail.includes('@') : false
         });
 
-        // Extract order details from session - FIXED: Use Stripe customer email
+        // Extract order details from session
         finalOrderId = session.metadata?.order_id || orderId || `ORDER-${Date.now()}`;
-        customerEmail = session.customer_details?.email; // Use email from Stripe session
+        customerEmail = extractedEmail;
         customerName = session.customer_details?.name || 'Customer';
         totalAmount = (session.amount_total || 0) / 100;
 
-        console.log('Extracted customer info:', {
-          customerEmail,
-          customerName,
-          finalOrderId,
-          totalAmount
-        });
+        console.log('=== FINAL EXTRACTED CUSTOMER INFO ===');
+        console.log('Customer Email:', customerEmail);
+        console.log('Customer Name:', customerName);
+        console.log('Final Order ID:', finalOrderId);
+        console.log('Total Amount:', totalAmount);
+        console.log('Email Source:', emailSource);
+
+        // Validate extracted email
+        if (customerEmail) {
+          const emailValid = customerEmail.includes('@') && customerEmail.includes('.');
+          console.log('Email validation:', {
+            email: customerEmail,
+            hasAtSymbol: customerEmail.includes('@'),
+            hasDot: customerEmail.includes('.'),
+            isValid: emailValid
+          });
+          
+          if (!emailValid) {
+            console.warn('Extracted email appears invalid:', customerEmail);
+            customerEmail = null; // Reset to null if invalid
+          }
+        }
 
         // Process line items and save to database
         const lineItems = session.line_items?.data || [];
@@ -189,56 +248,71 @@ serve(async (req) => {
       }
     }
 
-    // Send emails if we have valid order data and customer email
+    // Send emails with enhanced debugging and improved flow logic
     let customerEmailSent = false;
     let internalEmailSent = false;
 
-    // FIXED: Check for valid customer email instead of comparing to default
-    if (orderItems.length > 0 && customerEmail && customerEmail.includes('@')) {
+    console.log('=== EMAIL SENDING DECISION LOGIC ===');
+    console.log('Order items count:', orderItems.length);
+    console.log('Customer email:', customerEmail);
+    console.log('Customer email valid:', customerEmail && customerEmail.includes('@'));
+    
+    // Always attempt to send internal email regardless of customer email
+    if (orderItems.length > 0) {
       console.log('=== SENDING EMAILS ===');
-      console.log('Customer email:', customerEmail);
       
       const orderData = {
         order_id: finalOrderId,
-        customer_email: customerEmail, // Use actual customer email from Stripe
+        customer_email: customerEmail || 'no-email@customer.com', // Fallback for internal tracking
         customer_name: customerName,
         total_amount: totalAmount,
         items: orderItems
       };
 
-      console.log('Order data for emails:', orderData);
+      console.log('Order data for emails:', JSON.stringify(orderData, null, 2));
 
-      // Send customer confirmation email
-      try {
-        const customerEmailHtml = generateCustomerEmail(orderData);
-        
-        const { data: customerEmailData, error: customerEmailError } = await supabase.functions.invoke('send-email', {
-          body: {
-            to: customerEmail, // Use actual customer email
-            subject: `Order Confirmation - ${finalOrderId}`,
-            html: customerEmailHtml,
-            type: 'customer_confirmation',
-            orderData
+      // Send customer confirmation email only if we have a valid email
+      if (customerEmail && customerEmail.includes('@')) {
+        try {
+          console.log('=== SENDING CUSTOMER EMAIL ===');
+          console.log('Recipient:', customerEmail);
+          
+          const customerEmailHtml = generateCustomerEmail(orderData);
+          
+          const { data: customerEmailData, error: customerEmailError } = await supabase.functions.invoke('send-email', {
+            body: {
+              to: customerEmail,
+              subject: `Order Confirmation - ${finalOrderId}`,
+              html: customerEmailHtml,
+              type: 'customer_confirmation',
+              orderData
+            }
+          });
+
+          if (customerEmailError) {
+            console.error('Customer email error:', customerEmailError);
+          } else {
+            console.log('Customer email sent successfully');
+            customerEmailSent = true;
           }
-        });
-
-        if (customerEmailError) {
-          console.error('Customer email error:', customerEmailError);
-        } else {
-          console.log('Customer email sent successfully');
-          customerEmailSent = true;
+        } catch (emailError) {
+          console.error('Customer email exception:', emailError);
         }
-      } catch (emailError) {
-        console.error('Customer email exception:', emailError);
+      } else {
+        console.log('Skipping customer email - no valid email address');
+        console.log('Customer email value:', customerEmail);
       }
 
-      // Send internal notification email - FIXED: Use correct email address
+      // Always send internal notification email
       try {
+        console.log('=== SENDING INTERNAL EMAIL ===');
+        console.log('Internal recipient: order.support@mygravelguy.com');
+        
         const internalEmailHtml = generateInternalEmail(orderData);
         
         const { data: internalEmailData, error: internalEmailError } = await supabase.functions.invoke('send-email', {
           body: {
-            to: 'order.support@mygravelguy.com', // FIXED: Correct internal email
+            to: 'order.support@mygravelguy.com',
             subject: `New Order: ${finalOrderId} - $${totalAmount.toFixed(2)}`,
             html: internalEmailHtml,
             type: 'internal_notification',
@@ -256,11 +330,7 @@ serve(async (req) => {
         console.error('Internal email exception:', emailError);
       }
     } else {
-      console.log('Skipping email sending - missing data:', {
-        hasOrderItems: orderItems.length > 0,
-        hasCustomerEmail: !!customerEmail,
-        customerEmail
-      });
+      console.log('Skipping email sending - no order items found');
     }
 
     console.log('=== VERIFICATION COMPLETE ===');
@@ -268,6 +338,7 @@ serve(async (req) => {
     console.log('Customer email sent:', customerEmailSent);
     console.log('Internal email sent:', internalEmailSent);
     console.log('Orders found:', orderItems.length);
+    console.log('Customer email available:', !!customerEmail);
 
     return new Response(
       JSON.stringify({ 
@@ -277,7 +348,8 @@ serve(async (req) => {
         paymentStatus: session?.payment_status || 'processed',
         emailsSent: customerEmailSent && internalEmailSent,
         customerEmailSent,
-        internalEmailSent
+        internalEmailSent,
+        customerEmailAvailable: !!customerEmail
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
