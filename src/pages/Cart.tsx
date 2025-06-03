@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
@@ -68,11 +67,23 @@ const Cart = () => {
     }
   };
 
-  // Send cart confirmation email to internal team
+  // Send cart confirmation email using the form email directly
   const sendCartConfirmationEmail = async () => {
     try {
       console.log('=== CART CONFIRMATION EMAIL DEBUG ===');
       console.log('Sending cart confirmation email...');
+      
+      // Get the email from the first item's contact info (from the form)
+      const customerEmail = items[0]?.contactInfo?.email;
+      const customerName = items[0]?.contactInfo?.name || 'Cart Customer';
+      
+      console.log('Cart confirmation customer email from form:', customerEmail);
+      console.log('Cart confirmation customer name from form:', customerName);
+      
+      if (!customerEmail) {
+        console.error('No customer email found in cart form data');
+        return;
+      }
       
       const orderData = {
         order_id: `CART-${Date.now()}`,
@@ -85,8 +96,8 @@ const Cart = () => {
           contact_info: item.contactInfo
         })),
         total_amount: discountTotal,
-        customer_email: items[0]?.contactInfo?.email || 'cart-confirmation@customer.com',
-        customer_name: items[0]?.contactInfo?.name || 'Cart Customer'
+        customer_email: customerEmail,
+        customer_name: customerName
       };
 
       console.log('Cart confirmation order data:', orderData);
@@ -155,7 +166,7 @@ const Cart = () => {
     setIsProcessingCheckout(true);
     
     try {
-      // Send cart confirmation email
+      // Send cart confirmation email using form data
       await sendCartConfirmationEmail();
       
       // Navigate to checkout

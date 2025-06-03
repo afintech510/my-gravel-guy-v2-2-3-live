@@ -19,11 +19,18 @@ serve(async (req) => {
   }
 
   try {
+    console.log('=== VERIFY PAYMENT FUNCTION START ===');
+    
     const requestBody = await req.json();
+    console.log('Verify payment request body:', requestBody);
+    
     const { sessionId, orderId, fallbackMode, backupData } = requestBody;
     
     console.log('=== VERIFY PAYMENT DEBUG START ===');
-    console.log('Request body:', { sessionId, orderId, fallbackMode, hasBackupData: !!backupData });
+    console.log('Session ID:', sessionId);
+    console.log('Order ID:', orderId);
+    console.log('Fallback mode:', fallbackMode);
+    console.log('Has backup data:', !!backupData);
     
     // Create Supabase client with service role key to bypass RLS
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -51,7 +58,7 @@ serve(async (req) => {
     // Try to retrieve Stripe session if sessionId is provided
     if (sessionId) {
       try {
-        const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+        const stripeKey = Deno.env.get("STRIPE_SECRET_KEY") || Deno.env.get("stripe");
         if (!stripeKey) {
           console.error("Stripe secret key not found in environment");
           throw new Error("Stripe secret key not found");
@@ -59,22 +66,21 @@ serve(async (req) => {
         
         const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
-        console.log('Retrieving Stripe session...');
+        console.log('=== RETRIEVING STRIPE SESSION ===');
         session = await stripe.checkout.sessions.retrieve(sessionId, {
-          expand: ['line_items.data.price.product', 'customer']
+          expand: ['line_items.data.price.product', 'customer', 'payment_intent']
         });
         
         console.log('=== RAW STRIPE SESSION DATA ===');
         console.log('Session ID:', session.id);
         console.log('Payment Status:', session.payment_status);
         console.log('Customer Details:', session.customer_details);
+        console.log('Customer Email from customer_details:', session.customer_details?.email);
+        console.log('Customer Name from customer_details:', session.customer_details?.name);
         console.log('Customer ID:', session.customer);
         console.log('Amount Total:', session.amount_total);
-        console.log('Raw session object (key fields):', {
-          customer_details: session.customer_details,
-          customer_creation: session.customer_creation,
-          payment_status: session.payment_status
-        });
+        console.log('Session customer_creation:', session.customer_creation);
+        console.log('Session customer_email (deprecated):', session.customer_email);
         
         // Enhanced customer email extraction with multiple fallback sources
         console.log('=== CUSTOMER EMAIL EXTRACTION DEBUG ===');
@@ -83,36 +89,50 @@ serve(async (req) => {
         let extractedEmail = null;
         let emailSource = 'none';
         
-        // Source 1: customer_details.email (most reliable)
+        // Source 1: customer_details.email (most reliable for new sessions)
         if (session.customer_details?.email) {
           extractedEmail = session.customer_details.email;
           emailSource = 'customer_details';
+          console.log('✓ Found email in customer_details:', extractedEmail);
         }
         
-        // Source 2: customer object (if expanded)
+        // Source 2: customer object (if expanded and exists)
         if (!extractedEmail && session.customer && typeof session.customer === 'object') {
           extractedEmail = session.customer.email;
           emailSource = 'customer_object';
+          console.log('✓ Found email in customer object:', extractedEmail);
         }
         
-        // Source 3: payment_intent if available
+        // Source 3: payment_intent receipt_email
         if (!extractedEmail && session.payment_intent) {
           try {
-            const paymentIntent = await stripe.paymentIntents.retrieve(session.payment_intent);
+            let paymentIntent;
+            if (typeof session.payment_intent === 'string') {
+              paymentIntent = await stripe.paymentIntents.retrieve(session.payment_intent);
+            } else {
+              paymentIntent = session.payment_intent;
+            }
             if (paymentIntent.receipt_email) {
               extractedEmail = paymentIntent.receipt_email;
               emailSource = 'payment_intent_receipt';
+              console.log('✓ Found email in payment intent:', extractedEmail);
             }
           } catch (piError) {
             console.warn('Could not retrieve payment intent for email:', piError.message);
           }
         }
         
-        console.log('Email extraction results:', {
-          extractedEmail,
-          emailSource,
-          isValidEmail: extractedEmail ? extractedEmail.includes('@') : false
-        });
+        // Source 4: Deprecated customer_email field (fallback)
+        if (!extractedEmail && session.customer_email) {
+          extractedEmail = session.customer_email;
+          emailSource = 'deprecated_customer_email';
+          console.log('✓ Found email in deprecated field:', extractedEmail);
+        }
+        
+        console.log('=== EMAIL EXTRACTION RESULTS ===');
+        console.log('Extracted email:', extractedEmail);
+        console.log('Email source:', emailSource);
+        console.log('Is valid email format:', extractedEmail ? extractedEmail.includes('@') : false);
 
         // Extract order details from session
         finalOrderId = session.metadata?.order_id || orderId || `ORDER-${Date.now()}`;
@@ -130,22 +150,26 @@ serve(async (req) => {
         // Validate extracted email
         if (customerEmail) {
           const emailValid = customerEmail.includes('@') && customerEmail.includes('.');
-          console.log('Email validation:', {
-            email: customerEmail,
-            hasAtSymbol: customerEmail.includes('@'),
-            hasDot: customerEmail.includes('.'),
-            isValid: emailValid
-          });
+          console.log('=== EMAIL VALIDATION ===');
+          console.log('Email:', customerEmail);
+          console.log('Has @ symbol:', customerEmail.includes('@'));
+          console.log('Has dot:', customerEmail.includes('.'));
+          console.log('Is valid:', emailValid);
           
           if (!emailValid) {
-            console.warn('Extracted email appears invalid:', customerEmail);
+            console.warn('⚠️ Extracted email appears invalid:', customerEmail);
             customerEmail = null; // Reset to null if invalid
+          } else {
+            console.log('✅ Email validation passed');
           }
+        } else {
+          console.warn('⚠️ No customer email found in any source');
         }
 
         // Process line items and save to database
         const lineItems = session.line_items?.data || [];
-        console.log('Processing line items:', lineItems.length);
+        console.log('=== PROCESSING LINE ITEMS ===');
+        console.log('Line items count:', lineItems.length);
 
         for (const item of lineItems) {
           const product = item.price?.product as any;
@@ -153,6 +177,15 @@ serve(async (req) => {
           const quantity = item.quantity || 1;
           const unitPrice = (item.price?.unit_amount || 0) / 100;
           const totalPrice = unitPrice * quantity;
+
+          console.log(`Processing item: ${productName}, Qty: ${quantity}, Price: $${unitPrice}`);
+
+          // Extract delivery info from metadata
+          const deliveryDate = session.metadata?.delivery_date || null;
+          const deliveryStreet = session.metadata?.delivery_street || null;
+          const deliveryCity = session.metadata?.delivery_city || null;
+          const deliveryState = session.metadata?.delivery_state || null;
+          const deliveryZip = session.metadata?.delivery_zip || null;
 
           // Insert order record into database
           const orderRecord = {
@@ -163,17 +196,19 @@ serve(async (req) => {
             quantity: quantity,
             unit_price: unitPrice,
             total_price: totalPrice,
-            delivery_date: session.metadata?.delivery_date || null,
-            delivery_street: session.metadata?.delivery_street || null,
-            delivery_city: session.metadata?.delivery_city || null,
-            delivery_state: session.metadata?.delivery_state || null,
-            delivery_zip: session.metadata?.delivery_zip || null,
+            delivery_date: deliveryDate,
+            delivery_street: deliveryStreet,
+            delivery_city: deliveryCity,
+            delivery_state: deliveryState,
+            delivery_zip: deliveryZip,
+            customer_email: customerEmail,
+            customer_name: customerName,
             status: 'confirmed',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           };
 
-          console.log('Inserting order record for item:', productName);
+          console.log('Inserting order record:', orderRecord);
 
           const { data: insertedOrder, error: insertError } = await supabase
             .from('orders')
@@ -181,9 +216,9 @@ serve(async (req) => {
             .select();
 
           if (insertError) {
-            console.error('Database insert error:', insertError);
+            console.error('❌ Database insert error:', insertError);
           } else {
-            console.log('Order saved successfully');
+            console.log('✅ Order saved successfully:', insertedOrder?.[0]?.id);
           }
 
           orderItems.push({
@@ -192,11 +227,11 @@ serve(async (req) => {
             product_name: productName,
             quantity: quantity,
             total_price: totalPrice,
-            delivery_date: session.metadata?.delivery_date || null,
-            delivery_address_street: session.metadata?.delivery_street || null,
-            delivery_address_city: session.metadata?.delivery_city || null,
-            delivery_address_state: session.metadata?.delivery_state || null,
-            delivery_address_zip: session.metadata?.delivery_zip || null,
+            delivery_date: deliveryDate,
+            delivery_address_street: deliveryStreet,
+            delivery_address_city: deliveryCity,
+            delivery_address_state: deliveryState,
+            delivery_address_zip: deliveryZip,
             contact_name: customerName,
             contact_email: customerEmail,
             contact_phone: session.metadata?.contact_phone || null,
@@ -206,14 +241,15 @@ serve(async (req) => {
           });
         }
       } catch (stripeError) {
-        console.error('Stripe session retrieval failed:', stripeError);
+        console.error('❌ Stripe session retrieval failed:', stripeError);
+        console.error('Stripe error details:', stripeError.message);
         // Continue with fallback processing
       }
     }
 
     // Fallback mode: use backup data or find existing orders
     if ((fallbackMode || !session) && finalOrderId) {
-      console.log('Using fallback mode for order processing');
+      console.log('=== USING FALLBACK MODE ===');
       
       // Try to find existing orders first
       const { data: existingOrders, error: queryError } = await supabase
@@ -236,8 +272,8 @@ serve(async (req) => {
           delivery_address_city: order.delivery_city || null,
           delivery_address_state: order.delivery_state || null,
           delivery_address_zip: order.delivery_zip || null,
-          contact_name: customerName,
-          contact_email: customerEmail,
+          contact_name: order.customer_name || customerName,
+          contact_email: order.customer_email || customerEmail,
           contact_phone: null,
           delivery_time_preference: null,
           delivery_instructions: null,
@@ -245,6 +281,13 @@ serve(async (req) => {
         }));
         
         totalAmount = existingOrders.reduce((sum, order) => sum + (order.total_price || 0), 0);
+        // Use customer info from existing orders if available
+        if (existingOrders[0]?.customer_email) {
+          customerEmail = existingOrders[0].customer_email;
+        }
+        if (existingOrders[0]?.customer_name) {
+          customerName = existingOrders[0].customer_name;
+        }
       }
     }
 
@@ -254,8 +297,9 @@ serve(async (req) => {
 
     console.log('=== EMAIL SENDING DECISION LOGIC ===');
     console.log('Order items count:', orderItems.length);
-    console.log('Customer email:', customerEmail);
-    console.log('Customer email valid:', customerEmail && customerEmail.includes('@'));
+    console.log('Customer email available:', !!customerEmail);
+    console.log('Customer email value:', customerEmail);
+    console.log('Customer email valid format:', customerEmail && customerEmail.includes('@'));
     
     // Always attempt to send internal email regardless of customer email
     if (orderItems.length > 0) {
@@ -290,16 +334,16 @@ serve(async (req) => {
           });
 
           if (customerEmailError) {
-            console.error('Customer email error:', customerEmailError);
+            console.error('❌ Customer email error:', customerEmailError);
           } else {
-            console.log('Customer email sent successfully');
+            console.log('✅ Customer email sent successfully');
             customerEmailSent = true;
           }
         } catch (emailError) {
-          console.error('Customer email exception:', emailError);
+          console.error('❌ Customer email exception:', emailError);
         }
       } else {
-        console.log('Skipping customer email - no valid email address');
+        console.log('⚠️ Skipping customer email - no valid email address');
         console.log('Customer email value:', customerEmail);
       }
 
@@ -313,7 +357,7 @@ serve(async (req) => {
         const { data: internalEmailData, error: internalEmailError } = await supabase.functions.invoke('send-email', {
           body: {
             to: 'order.support@mygravelguy.com',
-            subject: `New Order: ${finalOrderId} - $${totalAmount.toFixed(2)}`,
+            subject: `🎉 Payment Confirmed: ${finalOrderId} - $${totalAmount.toFixed(2)}`,
             html: internalEmailHtml,
             type: 'internal_notification',
             orderData
@@ -321,16 +365,16 @@ serve(async (req) => {
         });
 
         if (internalEmailError) {
-          console.error('Internal email error:', internalEmailError);
+          console.error('❌ Internal email error:', internalEmailError);
         } else {
-          console.log('Internal email sent successfully');
+          console.log('✅ Internal email sent successfully');
           internalEmailSent = true;
         }
       } catch (emailError) {
-        console.error('Internal email exception:', emailError);
+        console.error('❌ Internal email exception:', emailError);
       }
     } else {
-      console.log('Skipping email sending - no order items found');
+      console.log('⚠️ Skipping email sending - no order items found');
     }
 
     console.log('=== VERIFICATION COMPLETE ===');
@@ -349,7 +393,8 @@ serve(async (req) => {
         emailsSent: customerEmailSent && internalEmailSent,
         customerEmailSent,
         internalEmailSent,
-        customerEmailAvailable: !!customerEmail
+        customerEmailAvailable: !!customerEmail,
+        customerEmail: customerEmail // Include for debugging
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -360,11 +405,13 @@ serve(async (req) => {
   } catch (error) {
     console.error("=== PAYMENT VERIFICATION ERROR ===");
     console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
     
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        success: false
+        success: false,
+        details: "Payment verification failed"
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -416,15 +463,16 @@ function generateInternalEmail(data: any) {
     <html>
     <head>
       <meta charset="utf-8">
-      <title>New Order Alert - ${data.order_id}</title>
+      <title>Payment Confirmed - ${data.order_id}</title>
     </head>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <div style="background: #dc2626; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
-        <h1 style="margin: 0; font-size: 24px;">🚨 NEW ORDER ALERT</h1>
+      <div style="background: #16a34a; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+        <h1 style="margin: 0; font-size: 28px;">🎉 Payment Confirmed!</h1>
+        <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Order successfully processed</p>
       </div>
       
-      <div style="background: #f3f4f6; padding: 20px; border-radius: 0 0 8px 8px;">
-        <h2 style="color: #dc2626; margin-top: 0;">Order: ${data.order_id}</h2>
+      <div style="background: #f8fafc; padding: 30px; border-radius: 0 0 10px 10px;">
+        <h2 style="color: #16a34a; margin-top: 0;">Order: ${data.order_id}</h2>
         
         <div style="background: white; padding: 15px; border-radius: 6px; margin: 15px 0;">
           <h3 style="margin-top: 0;">Customer Information</h3>
@@ -435,7 +483,15 @@ function generateInternalEmail(data: any) {
         <div style="background: white; padding: 15px; border-radius: 6px; margin: 15px 0;">
           <h3 style="margin-top: 0;">Order Summary</h3>
           <p><strong>Total Amount:</strong> $${data.total_amount.toFixed(2)}</p>
-          <p><strong>Status:</strong> Confirmed - Ready for Processing</p>
+          <p><strong>Status:</strong> ✅ Payment Confirmed</p>
+          <p><strong>Items:</strong> ${data.items.length}</p>
+        </div>
+        
+        <div style="background: white; padding: 15px; border-radius: 6px; margin: 15px 0;">
+          <h3 style="margin-top: 0;">Next Steps</h3>
+          <p>• Process order for delivery</p>
+          <p>• Contact customer for delivery coordination</p>
+          <p>• Update internal order management system</p>
         </div>
       </div>
     </body>
