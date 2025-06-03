@@ -72,6 +72,88 @@ const Checkout = () => {
     });
   };
 
+  // Send checkout confirmation email to internal team
+  const sendCheckoutConfirmationEmail = async (orderId: string) => {
+    try {
+      console.log('=== CHECKOUT CONFIRMATION EMAIL DEBUG ===');
+      console.log('Sending checkout confirmation email...');
+      
+      const orderData = {
+        order_id: orderId,
+        items: items.map(item => ({
+          product_name: item.name,
+          quantity: item.tons,
+          total_price: item.price * item.tons,
+          delivery_date: item.deliveryDate?.toISOString(),
+          delivery_address: item.deliveryAddress,
+          contact_info: item.contactInfo
+        })),
+        total_amount: discountTotal,
+        customer_email: items[0]?.contactInfo?.email || 'checkout-confirmation@customer.com',
+        customer_name: items[0]?.contactInfo?.name || 'Checkout Customer'
+      };
+
+      console.log('Checkout confirmation order data:', orderData);
+
+      const { data, error } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: 'order.support@mygravelguy.com',
+          subject: 'Continued to Payment - Customer Proceeded to Stripe',
+          html: generateCheckoutConfirmationEmail(orderData),
+          type: 'internal_notification',
+          orderData
+        }
+      });
+
+      if (error) {
+        console.error('Checkout confirmation email error:', error);
+      } else {
+        console.log('Checkout confirmation email sent successfully:', data);
+      }
+    } catch (error) {
+      console.error('Checkout confirmation email exception:', error);
+    }
+  };
+
+  // Generate simple email template for checkout confirmation
+  const generateCheckoutConfirmationEmail = (orderData: any) => {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Continued to Payment</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: #dc2626; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="margin: 0; font-size: 28px;">Continued to Payment 💳</h1>
+          <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Customer proceeded to Stripe checkout</p>
+        </div>
+        
+        <div style="background: #f8fafc; padding: 30px; border-radius: 0 0 10px 10px;">
+          <h2 style="color: #dc2626; margin-top: 0;">Order ID: ${orderData.order_id}</h2>
+          <p><strong>Customer:</strong> ${orderData.customer_name}</p>
+          <p><strong>Email:</strong> ${orderData.customer_email}</p>
+          <p><strong>Total Amount:</strong> $${orderData.total_amount.toFixed(2)}</p>
+          <p><strong>Items:</strong> ${orderData.items.length}</p>
+          <p><strong>Status:</strong> Proceeding to Stripe Payment</p>
+          
+          <div style="margin: 20px 0;">
+            <h3>Items:</h3>
+            ${orderData.items.map((item: any) => `
+              <div style="background: white; padding: 15px; margin: 10px 0; border-radius: 6px;">
+                <strong>${item.product_name}</strong><br>
+                Quantity: ${item.quantity} tons<br>
+                Price: $${item.total_price.toFixed(2)}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  };
+
   const handleCheckout = async () => {
     setIsLoading(true);
     
@@ -85,6 +167,9 @@ const Checkout = () => {
       console.log('=== CHECKOUT DEBUG START ===');
       console.log('Order ID generated:', orderId);
       console.log('Formatted items:', formattedItems);
+      
+      // Send checkout confirmation email first
+      await sendCheckoutConfirmationEmail(orderId);
       
       // Store order information in localStorage as backup
       const orderBackup = {

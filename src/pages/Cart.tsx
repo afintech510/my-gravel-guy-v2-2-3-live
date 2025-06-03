@@ -1,15 +1,19 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, ArrowRight } from 'lucide-react';
+import { ShoppingCart, ArrowRight, Loader2 } from 'lucide-react';
 import CartItemCard from '../components/cart/CartItemCard';
 import { CartPricingUpdater } from '../components/cart/CartPricingUpdater';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const Cart = () => {
   const { items, total, discountTotal, removeFromCart, updateDeliveryDetails } = useCart();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
   
   // Check if any discounts have been applied
   const hasDiscounts = total !== discountTotal;
@@ -61,6 +65,110 @@ const Cart = () => {
       setTimeout(() => {
         navigate('/checkout');
       }, 100); // Small delay to ensure state updates
+    }
+  };
+
+  // Send cart confirmation email to internal team
+  const sendCartConfirmationEmail = async () => {
+    try {
+      console.log('=== CART CONFIRMATION EMAIL DEBUG ===');
+      console.log('Sending cart confirmation email...');
+      
+      const orderData = {
+        order_id: `CART-${Date.now()}`,
+        items: items.map(item => ({
+          product_name: item.name,
+          quantity: item.tons,
+          total_price: item.price * item.tons,
+          delivery_date: item.deliveryDate?.toISOString(),
+          delivery_address: item.deliveryAddress,
+          contact_info: item.contactInfo
+        })),
+        total_amount: discountTotal,
+        customer_email: items[0]?.contactInfo?.email || 'cart-confirmation@customer.com',
+        customer_name: items[0]?.contactInfo?.name || 'Cart Customer'
+      };
+
+      console.log('Cart confirmation order data:', orderData);
+
+      const { data, error } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: 'order.support@mygravelguy.com',
+          subject: 'Confirmed in Cart - Cart Information Completed',
+          html: generateCartConfirmationEmail(orderData),
+          type: 'internal_notification',
+          orderData
+        }
+      });
+
+      if (error) {
+        console.error('Cart confirmation email error:', error);
+      } else {
+        console.log('Cart confirmation email sent successfully:', data);
+      }
+    } catch (error) {
+      console.error('Cart confirmation email exception:', error);
+    }
+  };
+
+  // Generate simple email template for cart confirmation
+  const generateCartConfirmationEmail = (orderData: any) => {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Confirmed in Cart</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: #1e3a8a; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="margin: 0; font-size: 28px;">Confirmed in Cart 🛒</h1>
+          <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Customer completed delivery information</p>
+        </div>
+        
+        <div style="background: #f8fafc; padding: 30px; border-radius: 0 0 10px 10px;">
+          <h2 style="color: #1e3a8a; margin-top: 0;">Cart ID: ${orderData.order_id}</h2>
+          <p><strong>Customer:</strong> ${orderData.customer_name}</p>
+          <p><strong>Email:</strong> ${orderData.customer_email}</p>
+          <p><strong>Total Amount:</strong> $${orderData.total_amount.toFixed(2)}</p>
+          <p><strong>Items:</strong> ${orderData.items.length}</p>
+          
+          <div style="margin: 20px 0;">
+            <h3>Items:</h3>
+            ${orderData.items.map((item: any) => `
+              <div style="background: white; padding: 15px; margin: 10px 0; border-radius: 6px;">
+                <strong>${item.product_name}</strong><br>
+                Quantity: ${item.quantity} tons<br>
+                Price: $${item.total_price.toFixed(2)}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  };
+
+  const handleProceedToCheckout = async () => {
+    if (!allItemsComplete) return;
+    
+    setIsProcessingCheckout(true);
+    
+    try {
+      // Send cart confirmation email
+      await sendCartConfirmationEmail();
+      
+      // Navigate to checkout
+      navigate('/checkout');
+    } catch (error) {
+      console.error('Error processing checkout:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to process checkout. Please try again.",
+      });
+    } finally {
+      setIsProcessingCheckout(false);
     }
   };
 
@@ -144,12 +252,21 @@ const Cart = () => {
             )}
             
             <Button 
-              onClick={() => navigate('/checkout')} 
+              onClick={handleProceedToCheckout}
+              disabled={!allItemsComplete || isProcessingCheckout}
               className="w-full"
-              disabled={!allItemsComplete}
             >
-              {allItemsComplete ? 'Proceed to Checkout' : 'Complete Delivery Info'}
-              <ArrowRight className="ml-2 h-4 w-4" />
+              {isProcessingCheckout ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  {allItemsComplete ? 'Confirm Delivery Information & Proceed' : 'Complete Delivery Info'}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
             </Button>
           </div>
         </div>
