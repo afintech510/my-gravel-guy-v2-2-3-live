@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { useCart } from '../contexts/CartContext';
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { detectPaymentSuccess } from '../utils/paymentUtils';
 
 interface OrderItem {
   id: string;
@@ -126,12 +128,31 @@ const PaymentSuccess = () => {
             if (!queryError && recentOrders && recentOrders.length > 0) {
               console.log('Found recent orders:', recentOrders);
               
-              // Group orders by order_id
+              // Group orders by order_id and map to OrderItem interface
               const groupedOrders = recentOrders.reduce((acc, order) => {
                 if (!acc[order.order_id]) {
                   acc[order.order_id] = [];
                 }
-                acc[order.order_id].push(order);
+                // Map database fields to OrderItem interface
+                const mappedOrder: OrderItem = {
+                  id: order.id,
+                  order_id: order.order_id,
+                  product_name: order.product_name,
+                  quantity: order.quantity,
+                  total_price: order.total_price,
+                  delivery_date: order.delivery_date,
+                  delivery_address_street: order.delivery_street,
+                  delivery_address_city: order.delivery_city,
+                  delivery_address_state: order.delivery_state,
+                  delivery_address_zip: order.delivery_zip,
+                  contact_name: order.contact_name || null,
+                  contact_email: order.contact_email || null,
+                  contact_phone: order.contact_phone || null,
+                  delivery_time_preference: order.delivery_time_preference,
+                  delivery_instructions: order.delivery_instructions,
+                  status: order.status
+                };
+                acc[order.order_id].push(mappedOrder);
                 return acc;
               }, {} as Record<string, OrderItem[]>);
               
@@ -159,7 +180,27 @@ const PaymentSuccess = () => {
             } else if (data?.orders) {
               console.log('Payment verification successful:', data);
               
-              setOrderItems(data.orders);
+              // Map database orders to OrderItem interface
+              const mappedOrders: OrderItem[] = data.orders.map((order: any) => ({
+                id: order.id,
+                order_id: order.order_id,
+                product_name: order.product_name,
+                quantity: order.quantity,
+                total_price: order.total_price,
+                delivery_date: order.delivery_date,
+                delivery_address_street: order.delivery_address_street,
+                delivery_address_city: order.delivery_address_city,
+                delivery_address_state: order.delivery_address_state,
+                delivery_address_zip: order.delivery_address_zip,
+                contact_name: order.contact_name,
+                contact_email: order.contact_email,
+                contact_phone: order.contact_phone,
+                delivery_time_preference: order.delivery_time_preference,
+                delivery_instructions: order.delivery_instructions,
+                status: order.status
+              }));
+              
+              setOrderItems(mappedOrders);
               setOrderId(data.orderId || orderIdParam || checkoutOrderId);
               setEmailsSent(data.emailsSent || false);
               
