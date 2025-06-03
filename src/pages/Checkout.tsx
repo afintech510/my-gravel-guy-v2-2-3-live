@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
@@ -117,7 +118,7 @@ const Checkout = () => {
       console.log('Payment URL received:', data.url);
       console.log('=== CHECKOUT DEBUG END ===');
       
-      // Redirect to Stripe checkout in the same tab
+      // Redirect to Stripe checkout in the same tab (FIXED: was opening new window)
       window.location.href = data.url;
       
     } catch (error) {
