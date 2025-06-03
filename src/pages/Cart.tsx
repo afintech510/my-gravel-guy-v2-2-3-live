@@ -265,18 +265,20 @@ const Cart = () => {
             <Button 
               onClick={handleProceedToCheckout}
               disabled={!allItemsComplete || isProcessingCheckout}
-              className="w-full"
+              className="w-full h-auto py-3 px-4 text-sm leading-tight"
             >
               {isProcessingCheckout ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin flex-shrink-0" />
+                  <span className="text-center">Processing...</span>
                 </>
               ) : (
-                <>
-                  {allItemsComplete ? 'Confirm Delivery Information & Proceed' : 'Complete Delivery Info'}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </>
+                <div className="flex items-center justify-center w-full">
+                  <span className="text-center flex-1">
+                    {allItemsComplete ? 'Confirm Delivery & Proceed' : 'Complete Delivery Info'}
+                  </span>
+                  <ArrowRight className="ml-2 h-4 w-4 flex-shrink-0" />
+                </div>
               )}
             </Button>
           </div>
