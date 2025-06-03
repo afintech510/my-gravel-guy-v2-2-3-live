@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { storeCheckoutBackup } from '../utils/paymentUtils';
 
 const Checkout = () => {
   const { items, total, discountTotal, clearCart } = useCart();
@@ -91,12 +91,10 @@ const Checkout = () => {
         items: formattedItems,
         total: discountTotal,
         timestamp: Date.now(),
-        cartItems: items // Store original cart items for recovery
+        cartItems: items
       };
       
-      localStorage.setItem('checkout-order-backup', JSON.stringify(orderBackup));
-      localStorage.setItem('checkout-in-progress', 'true');
-      localStorage.setItem('checkout-order-id', orderId);
+      storeCheckoutBackup(orderBackup);
       
       console.log('Order backup stored in localStorage:', orderBackup);
       
@@ -119,53 +117,8 @@ const Checkout = () => {
       console.log('Payment URL received:', data.url);
       console.log('=== CHECKOUT DEBUG END ===');
       
-      // Store the session URL for potential recovery
-      localStorage.setItem('stripe-checkout-url', data.url);
-      
-      // Open Stripe checkout in a new tab to preserve the current page
-      const checkoutWindow = window.open(data.url, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
-      
-      if (!checkoutWindow) {
-        // Fallback if popup was blocked
-        toast({
-          title: "Popup Blocked",
-          description: "Please allow popups and try again, or we'll redirect you directly.",
-          variant: "default",
-        });
-        
-        // Wait a moment then redirect directly
-        setTimeout(() => {
-          window.location.href = data.url;
-        }, 2000);
-      } else {
-        // Monitor the popup window
-        const checkInterval = setInterval(() => {
-          try {
-            if (checkoutWindow.closed) {
-              clearInterval(checkInterval);
-              // Check if payment was successful by looking for success indicators
-              setTimeout(() => {
-                const checkoutInProgress = localStorage.getItem('checkout-in-progress');
-                if (checkoutInProgress === 'true') {
-                  // Payment window was closed, check if we should redirect to success
-                  const shouldCheckStatus = confirm('Payment window was closed. Would you like to check your payment status?');
-                  if (shouldCheckStatus) {
-                    navigate('/payment-success?check_status=true');
-                  }
-                }
-              }, 1000);
-            }
-          } catch (e) {
-            // Cross-origin error when trying to access closed window
-            clearInterval(checkInterval);
-          }
-        }, 1000);
-        
-        // Set a timeout to stop monitoring after 30 minutes
-        setTimeout(() => {
-          clearInterval(checkInterval);
-        }, 30 * 60 * 1000);
-      }
+      // Redirect to Stripe checkout in the same tab
+      window.location.href = data.url;
       
     } catch (error) {
       console.error('Checkout error:', error);
