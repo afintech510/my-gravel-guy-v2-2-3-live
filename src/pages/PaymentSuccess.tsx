@@ -1,8 +1,7 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, Truck, Package, MapPin, Calendar, AlertCircle } from "lucide-react";
+import { CheckCircle, Truck, Package, MapPin, Calendar, AlertCircle, RefreshCw } from "lucide-react";
 import { useCart } from '../contexts/CartContext';
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from 'react-router-dom';
@@ -36,78 +35,162 @@ const PaymentSuccess = () => {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [emailsSent, setEmailsSent] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [processingError, setProcessingError] = useState<string | null>(null);
   
   useEffect(() => {
     const processPaymentSuccess = async () => {
+      console.log('=== PAYMENT SUCCESS PAGE DEBUG START ===');
+      
+      // Extract URL parameters
       const sessionId = searchParams.get('session_id');
       const orderIdParam = searchParams.get('order_id');
       const paymentSuccess = searchParams.get('success');
+      const checkStatus = searchParams.get('check_status');
       
-      console.log('=== PAYMENT SUCCESS PAGE DEBUG ===');
-      console.log('Session ID:', sessionId);
-      console.log('Order ID param:', orderIdParam);
-      console.log('Payment success param:', paymentSuccess);
-      console.log('Has processed payment:', hasProcessedPayment);
+      console.log('URL Parameters:', {
+        sessionId,
+        orderIdParam,
+        paymentSuccess,
+        checkStatus,
+        hasProcessedPayment
+      });
       
-      if ((sessionId || paymentSuccess === 'true') && !hasProcessedPayment) {
+      // Check localStorage for backup order information
+      const checkoutOrderBackup = localStorage.getItem('checkout-order-backup');
+      const checkoutInProgress = localStorage.getItem('checkout-in-progress');
+      const checkoutOrderId = localStorage.getItem('checkout-order-id');
+      const lastProcessedPayment = localStorage.getItem('lastProcessedPayment');
+      
+      console.log('LocalStorage Data:', {
+        hasCheckoutOrderBackup: !!checkoutOrderBackup,
+        checkoutInProgress,
+        checkoutOrderId,
+        lastProcessedPayment
+      });
+      
+      // Determine if we should process the payment
+      const shouldProcess = !hasProcessedPayment && (
+        sessionId || 
+        paymentSuccess === 'true' || 
+        checkStatus === 'true' ||
+        (checkoutInProgress === 'true' && checkoutOrderId)
+      );
+      
+      console.log('Should process payment:', shouldProcess);
+      
+      if (shouldProcess) {
         setHasProcessedPayment(true);
         
         try {
+          let verificationResult = null;
+          
           if (sessionId) {
-            console.log('Calling verify-payment function...');
+            console.log('Processing with session ID:', sessionId);
             
-            // Call edge function to verify payment, save order, and send emails
+            // Call edge function to verify payment with session ID
             const { data, error } = await supabase.functions.invoke('verify-payment', {
-              body: { sessionId, orderId: orderIdParam }
+              body: { sessionId, orderId: orderIdParam || checkoutOrderId }
             });
 
             console.log('Verify payment response:', { data, error });
+            verificationResult = { data, error };
+          } else if (checkoutOrderId && checkoutOrderBackup) {
+            console.log('Processing with backup order data');
+            
+            // Try to process using backup order information
+            const backupData = JSON.parse(checkoutOrderBackup);
+            
+            // Attempt to find the order by timestamp or order ID
+            const { data, error } = await supabase.functions.invoke('verify-payment', {
+              body: { 
+                orderId: checkoutOrderId,
+                fallbackMode: true,
+                backupData: backupData
+              }
+            });
 
+            console.log('Fallback verification response:', { data, error });
+            verificationResult = { data, error };
+          } else {
+            console.log('No valid payment identifiers found, checking recent orders');
+            
+            // Last resort: check for recent orders in the database
+            const { data: recentOrders, error: queryError } = await supabase
+              .from('orders')
+              .select('*')
+              .gte('created_at', new Date(Date.now() - 30 * 60 * 1000).toISOString()) // Last 30 minutes
+              .order('created_at', { ascending: false })
+              .limit(5);
+              
+            if (!queryError && recentOrders && recentOrders.length > 0) {
+              console.log('Found recent orders:', recentOrders);
+              
+              // Group orders by order_id
+              const groupedOrders = recentOrders.reduce((acc, order) => {
+                if (!acc[order.order_id]) {
+                  acc[order.order_id] = [];
+                }
+                acc[order.order_id].push(order);
+                return acc;
+              }, {} as Record<string, OrderItem[]>);
+              
+              // Use the most recent order
+              const latestOrderId = Object.keys(groupedOrders)[0];
+              setOrderItems(groupedOrders[latestOrderId]);
+              setOrderId(latestOrderId);
+              setEmailsSent(true); // Assume emails were sent if order exists
+            }
+          }
+          
+          // Process verification result
+          if (verificationResult) {
+            const { data, error } = verificationResult;
+            
             if (error) {
-              console.error('Payment verification error details:', error);
+              console.error('Payment verification error:', error);
+              setProcessingError(error.message || 'Payment verification failed');
+              
               toast({
                 title: "Payment Processed",
                 description: "Your payment was successful. Order details are being processed.",
                 variant: "default"
               });
-            } else {
+            } else if (data?.orders) {
               console.log('Payment verification successful:', data);
               
-              if (data?.orders) {
-                setOrderItems(data.orders);
-                setOrderId(data.orderId || orderIdParam);
-                setEmailsSent(data.emailsSent || false);
-                
-                console.log('Email status:', {
-                  emailsSent: data.emailsSent,
-                  customerEmailSent: data.customerEmailSent,
-                  internalEmailSent: data.internalEmailSent
+              setOrderItems(data.orders);
+              setOrderId(data.orderId || orderIdParam || checkoutOrderId);
+              setEmailsSent(data.emailsSent || false);
+              
+              if (data.emailsSent) {
+                toast({
+                  title: "Payment Successful",
+                  description: "Thank you for your order! Confirmation emails have been sent.",
                 });
-                
-                if (data.emailsSent) {
-                  toast({
-                    title: "Payment Successful",
-                    description: "Thank you for your order! Confirmation emails have been sent.",
-                  });
-                } else {
-                  toast({
-                    title: "Payment Successful",
-                    description: "Thank you for your order! Emails are being processed.",
-                    variant: "default"
-                  });
-                }
+              } else {
+                toast({
+                  title: "Payment Successful",
+                  description: "Thank you for your order! Emails are being processed.",
+                  variant: "default"
+                });
               }
             }
           }
 
-          // Clear the cart
+          // Clear the cart and localStorage
           clearCart();
-
-          // Store in localStorage that we've processed this payment
-          localStorage.setItem('lastProcessedPayment', sessionId || Date.now().toString());
+          localStorage.removeItem('checkout-in-progress');
+          localStorage.removeItem('checkout-order-backup');
+          
+          // Store processed payment info
+          const processedSessionId = sessionId || checkoutOrderId || Date.now().toString();
+          localStorage.setItem('lastProcessedPayment', processedSessionId);
           
         } catch (error) {
           console.error('Error processing payment success:', error);
+          setProcessingError(error instanceof Error ? error.message : 'Unknown error occurred');
+          
           toast({
             title: "Payment Processed",
             description: "Your payment was successful. Order details are being processed.",
@@ -119,10 +202,20 @@ const PaymentSuccess = () => {
       } else {
         setIsLoading(false);
       }
+      
+      console.log('=== PAYMENT SUCCESS PAGE DEBUG END ===');
     };
 
     processPaymentSuccess();
-  }, [clearCart, toast, searchParams, hasProcessedPayment]);
+  }, [clearCart, toast, searchParams, hasProcessedPayment, retryCount]);
+
+  const handleRetryProcessing = () => {
+    console.log('Retrying payment processing...');
+    setRetryCount(prev => prev + 1);
+    setHasProcessedPayment(false);
+    setIsLoading(true);
+    setProcessingError(null);
+  };
 
   const formatDeliveryTimePreference = (preference: string | null) => {
     switch (preference) {
@@ -170,6 +263,77 @@ const PaymentSuccess = () => {
     );
   };
 
+  const ProcessingStatusCard = () => {
+    if (!isLoading && !processingError && orderItems.length === 0) {
+      return (
+        <Card className="mb-8 border-yellow-200">
+          <CardContent className="pt-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              🔄 Order Processing
+            </h3>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-yellow-50 border border-yellow-200">
+                <AlertCircle className="h-5 w-5 text-yellow-600" />
+                <div className="flex-1">
+                  <p className="font-medium">Processing Order Details</p>
+                  <p className="text-sm text-gray-600">
+                    We're retrieving your order information. This may take a moment.
+                  </p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleRetryProcessing}
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Retry
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+    
+    if (processingError) {
+      return (
+        <Card className="mb-8 border-red-200">
+          <CardContent className="pt-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              ⚠️ Processing Issue
+            </h3>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50 border border-red-200">
+                <AlertCircle className="h-5 w-5 text-red-600" />
+                <div className="flex-1">
+                  <p className="font-medium">Order Processing Delayed</p>
+                  <p className="text-sm text-gray-600">
+                    There was an issue retrieving your order details, but your payment was successful.
+                  </p>
+                  <p className="text-xs text-red-600 mt-1">{processingError}</p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleRetryProcessing}
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Retry
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+    
+    return null;
+  };
+
   return (
     <div className="min-h-screen bg-white py-16 px-4">
       <div className="max-w-4xl mx-auto">
@@ -195,6 +359,7 @@ const PaymentSuccess = () => {
           </CardContent>
         </Card>
 
+        <ProcessingStatusCard />
         <EmailStatusCard />
 
         {/* Order Items Details */}

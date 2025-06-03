@@ -78,9 +78,34 @@ const Checkout = () => {
       // Format cart items for Stripe
       const formattedItems = formatCartItemsForStripe();
       
+      // Generate a unique order ID for tracking
+      const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      console.log('=== CHECKOUT DEBUG START ===');
+      console.log('Order ID generated:', orderId);
+      console.log('Formatted items:', formattedItems);
+      
+      // Store order information in localStorage as backup
+      const orderBackup = {
+        orderId,
+        items: formattedItems,
+        total: discountTotal,
+        timestamp: Date.now(),
+        cartItems: items // Store original cart items for recovery
+      };
+      
+      localStorage.setItem('checkout-order-backup', JSON.stringify(orderBackup));
+      localStorage.setItem('checkout-in-progress', 'true');
+      localStorage.setItem('checkout-order-id', orderId);
+      
+      console.log('Order backup stored in localStorage:', orderBackup);
+      
       // Call the create-payment Supabase Edge function
       const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: JSON.stringify({ items: formattedItems })
+        body: JSON.stringify({ 
+          items: formattedItems,
+          orderId: orderId
+        })
       });
       
       if (error) {
@@ -91,11 +116,62 @@ const Checkout = () => {
         throw new Error('Invalid response from payment service');
       }
       
-      // Redirect to Stripe checkout
-      window.location.href = data.url;
+      console.log('Payment URL received:', data.url);
+      console.log('=== CHECKOUT DEBUG END ===');
+      
+      // Store the session URL for potential recovery
+      localStorage.setItem('stripe-checkout-url', data.url);
+      
+      // Open Stripe checkout in a new tab to preserve the current page
+      const checkoutWindow = window.open(data.url, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+      
+      if (!checkoutWindow) {
+        // Fallback if popup was blocked
+        toast({
+          title: "Popup Blocked",
+          description: "Please allow popups and try again, or we'll redirect you directly.",
+          variant: "default",
+        });
+        
+        // Wait a moment then redirect directly
+        setTimeout(() => {
+          window.location.href = data.url;
+        }, 2000);
+      } else {
+        // Monitor the popup window
+        const checkInterval = setInterval(() => {
+          try {
+            if (checkoutWindow.closed) {
+              clearInterval(checkInterval);
+              // Check if payment was successful by looking for success indicators
+              setTimeout(() => {
+                const checkoutInProgress = localStorage.getItem('checkout-in-progress');
+                if (checkoutInProgress === 'true') {
+                  // Payment window was closed, check if we should redirect to success
+                  const shouldCheckStatus = confirm('Payment window was closed. Would you like to check your payment status?');
+                  if (shouldCheckStatus) {
+                    navigate('/payment-success?check_status=true');
+                  }
+                }
+              }, 1000);
+            }
+          } catch (e) {
+            // Cross-origin error when trying to access closed window
+            clearInterval(checkInterval);
+          }
+        }, 1000);
+        
+        // Set a timeout to stop monitoring after 30 minutes
+        setTimeout(() => {
+          clearInterval(checkInterval);
+        }, 30 * 60 * 1000);
+      }
       
     } catch (error) {
       console.error('Checkout error:', error);
+      
+      // Clear the checkout progress flag on error
+      localStorage.removeItem('checkout-in-progress');
       
       toast({
         variant: "destructive",
