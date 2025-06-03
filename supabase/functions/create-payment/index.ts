@@ -154,7 +154,7 @@ serve(async (req) => {
     // Get origin for success/cancel URLs
     const origin = req.headers.get("origin") || "http://localhost:3000";
 
-    // Create a Stripe checkout session with BNPL payment methods
+    // Create a Stripe checkout session with BNPL payment methods and customer email collection
     const session = await stripe.checkout.sessions.create({
       payment_method_types: [
         "card",
@@ -170,6 +170,10 @@ serve(async (req) => {
       payment_intent_data: {
         metadata: orderMetadata
       },
+      // FIXED: Enable customer email collection
+      customer_email: undefined, // Let Stripe prompt for email
+      billing_address_collection: 'required',
+      customer_creation: 'always',
       // Configure BNPL options
       payment_method_options: {
         klarna: {
@@ -185,6 +189,7 @@ serve(async (req) => {
     });
 
     console.log('Stripe checkout session created:', session.id);
+    console.log('Customer email collection enabled for session');
 
     // After successful Stripe session creation, create order records
     try {
