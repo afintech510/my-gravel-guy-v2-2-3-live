@@ -9,7 +9,13 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Email template functions - now properly defined in this file
+// Enhanced logging function
+const logStep = (step: string, details?: any) => {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] [VERIFY-PAYMENT] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
+};
+
+// Email template functions moved to this file for direct access
 function generateCustomerConfirmationEmail(data: any) {
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Not specified';
@@ -271,25 +277,32 @@ serve(async (req) => {
   }
 
   try {
-    console.log('=== VERIFY PAYMENT FUNCTION START ===');
+    logStep('=== VERIFY PAYMENT FUNCTION START ===');
     
     const requestBody = await req.json();
-    console.log('Verify payment request body:', requestBody);
+    logStep('Request received', { 
+      sessionId: requestBody.sessionId, 
+      orderId: requestBody.orderId,
+      fallbackMode: requestBody.fallbackMode,
+      hasBackupData: !!requestBody.backupData
+    });
     
     const { sessionId, orderId, fallbackMode, backupData } = requestBody;
     
-    console.log('=== VERIFY PAYMENT DEBUG START ===');
-    console.log('Session ID:', sessionId);
-    console.log('Order ID:', orderId);
-    console.log('Fallback mode:', fallbackMode);
-    console.log('Has backup data:', !!backupData);
-    
-    // Create Supabase client with service role key to bypass RLS
+    // Environment validation
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    
+    logStep('Environment check', {
+      hasSupabaseUrl: !!supabaseUrl,
+      hasSupabaseServiceKey: !!supabaseServiceKey,
+      hasStripeKey: !!stripeKey,
+      hasResendApiKey: !!resendApiKey
+    });
     
     if (!supabaseUrl || !supabaseServiceKey) {
-      console.error("Supabase configuration missing");
       throw new Error("Supabase configuration missing");
     }
 
@@ -308,55 +321,34 @@ serve(async (req) => {
     let totalAmount = 0;
 
     // Try to retrieve Stripe session if sessionId is provided
-    if (sessionId) {
+    if (sessionId && stripeKey) {
       try {
-        const stripeKey = Deno.env.get("STRIPE_SECRET_KEY") || Deno.env.get("stripe");
-        if (!stripeKey) {
-          console.error("Stripe secret key not found in environment");
-          throw new Error("Stripe secret key not found");
-        }
+        logStep('Retrieving Stripe session', { sessionId });
         
         const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-
-        console.log('=== RETRIEVING STRIPE SESSION ===');
         session = await stripe.checkout.sessions.retrieve(sessionId, {
           expand: ['line_items.data.price.product', 'customer', 'payment_intent']
         });
         
-        console.log('=== RAW STRIPE SESSION DATA ===');
-        console.log('Session ID:', session.id);
-        console.log('Payment Status:', session.payment_status);
-        console.log('Customer Details:', session.customer_details);
-        console.log('Customer Email from customer_details:', session.customer_details?.email);
-        console.log('Customer Name from customer_details:', session.customer_details?.name);
-        console.log('Customer ID:', session.customer);
-        console.log('Amount Total:', session.amount_total);
-        console.log('Session customer_creation:', session.customer_creation);
-        console.log('Session customer_email (deprecated):', session.customer_email);
-        
-        // Enhanced customer email extraction with multiple fallback sources
-        console.log('=== CUSTOMER EMAIL EXTRACTION DEBUG ===');
-        
-        // Try multiple sources for customer email
+        logStep('Stripe session retrieved', {
+          sessionId: session.id,
+          paymentStatus: session.payment_status,
+          amountTotal: session.amount_total,
+          customerDetailsEmail: session.customer_details?.email,
+          customerDetailsName: session.customer_details?.name
+        });
+
+        // Enhanced customer email extraction
         let extractedEmail = null;
         let emailSource = 'none';
         
-        // Source 1: customer_details.email (most reliable for new sessions)
         if (session.customer_details?.email) {
           extractedEmail = session.customer_details.email;
           emailSource = 'customer_details';
-          console.log('✓ Found email in customer_details:', extractedEmail);
-        }
-        
-        // Source 2: customer object (if expanded and exists)
-        if (!extractedEmail && session.customer && typeof session.customer === 'object') {
+        } else if (session.customer && typeof session.customer === 'object') {
           extractedEmail = session.customer.email;
           emailSource = 'customer_object';
-          console.log('✓ Found email in customer object:', extractedEmail);
-        }
-        
-        // Source 3: payment_intent receipt_email
-        if (!extractedEmail && session.payment_intent) {
+        } else if (session.payment_intent) {
           try {
             let paymentIntent;
             if (typeof session.payment_intent === 'string') {
@@ -367,61 +359,36 @@ serve(async (req) => {
             if (paymentIntent.receipt_email) {
               extractedEmail = paymentIntent.receipt_email;
               emailSource = 'payment_intent_receipt';
-              console.log('✓ Found email in payment intent:', extractedEmail);
             }
           } catch (piError) {
-            console.warn('Could not retrieve payment intent for email:', piError.message);
+            logStep('Could not retrieve payment intent for email', { error: piError.message });
           }
-        }
-        
-        // Source 4: Deprecated customer_email field (fallback)
-        if (!extractedEmail && session.customer_email) {
+        } else if (session.customer_email) {
           extractedEmail = session.customer_email;
           emailSource = 'deprecated_customer_email';
-          console.log('✓ Found email in deprecated field:', extractedEmail);
         }
         
-        console.log('=== EMAIL EXTRACTION RESULTS ===');
-        console.log('Extracted email:', extractedEmail);
-        console.log('Email source:', emailSource);
-        console.log('Is valid email format:', extractedEmail ? extractedEmail.includes('@') : false);
+        logStep('Email extraction results', { 
+          extractedEmail, 
+          emailSource,
+          isValidFormat: extractedEmail ? extractedEmail.includes('@') : false
+        });
 
-        // Extract order details from session
+        // Validate extracted email
+        if (extractedEmail && extractedEmail.includes('@') && extractedEmail.includes('.')) {
+          customerEmail = extractedEmail;
+        } else {
+          logStep('Invalid or missing email', { extractedEmail });
+          customerEmail = null;
+        }
+
         finalOrderId = session.metadata?.order_id || orderId || `ORDER-${Date.now()}`;
-        customerEmail = extractedEmail;
         customerName = session.customer_details?.name || 'Customer';
         totalAmount = (session.amount_total || 0) / 100;
 
-        console.log('=== FINAL EXTRACTED CUSTOMER INFO ===');
-        console.log('Customer Email:', customerEmail);
-        console.log('Customer Name:', customerName);
-        console.log('Final Order ID:', finalOrderId);
-        console.log('Total Amount:', totalAmount);
-        console.log('Email Source:', emailSource);
-
-        // Validate extracted email
-        if (customerEmail) {
-          const emailValid = customerEmail.includes('@') && customerEmail.includes('.');
-          console.log('=== EMAIL VALIDATION ===');
-          console.log('Email:', customerEmail);
-          console.log('Has @ symbol:', customerEmail.includes('@'));
-          console.log('Has dot:', customerEmail.includes('.'));
-          console.log('Is valid:', emailValid);
-          
-          if (!emailValid) {
-            console.warn('⚠️ Extracted email appears invalid:', customerEmail);
-            customerEmail = null; // Reset to null if invalid
-          } else {
-            console.log('✅ Email validation passed');
-          }
-        } else {
-          console.warn('⚠️ No customer email found in any source');
-        }
-
         // Process line items and save to database
         const lineItems = session.line_items?.data || [];
-        console.log('=== PROCESSING LINE ITEMS ===');
-        console.log('Line items count:', lineItems.length);
+        logStep('Processing line items', { count: lineItems.length });
 
         for (const item of lineItems) {
           const product = item.price?.product as any;
@@ -430,7 +397,7 @@ serve(async (req) => {
           const unitPrice = (item.price?.unit_amount || 0) / 100;
           const totalPrice = unitPrice * quantity;
 
-          console.log(`Processing item: ${productName}, Qty: ${quantity}, Price: $${unitPrice}`);
+          logStep('Processing item', { productName, quantity, unitPrice, totalPrice });
 
           // Extract delivery info from metadata
           const deliveryDate = session.metadata?.delivery_date || null;
@@ -460,7 +427,7 @@ serve(async (req) => {
             updated_at: new Date().toISOString()
           };
 
-          console.log('Inserting order record:', orderRecord);
+          logStep('Inserting order record', orderRecord);
 
           const { data: insertedOrder, error: insertError } = await supabase
             .from('orders')
@@ -468,9 +435,10 @@ serve(async (req) => {
             .select();
 
           if (insertError) {
-            console.error('❌ Database insert error:', insertError);
+            logStep('Database insert error', insertError);
+            throw new Error(`Database error: ${insertError.message}`);
           } else {
-            console.log('✅ Order saved successfully:', insertedOrder?.[0]?.id);
+            logStep('Order saved successfully', { orderId: insertedOrder?.[0]?.id });
           }
 
           orderItems.push({
@@ -493,17 +461,15 @@ serve(async (req) => {
           });
         }
       } catch (stripeError) {
-        console.error('❌ Stripe session retrieval failed:', stripeError);
-        console.error('Stripe error details:', stripeError.message);
+        logStep('Stripe session retrieval failed', { error: stripeError.message });
         // Continue with fallback processing
       }
     }
 
     // Fallback mode: use backup data or find existing orders
     if ((fallbackMode || !session) && finalOrderId) {
-      console.log('=== USING FALLBACK MODE ===');
+      logStep('Using fallback mode', { finalOrderId });
       
-      // Try to find existing orders first
       const { data: existingOrders, error: queryError } = await supabase
         .from('orders')
         .select('*')
@@ -511,7 +477,7 @@ serve(async (req) => {
         .order('created_at', { ascending: true });
 
       if (!queryError && existingOrders && existingOrders.length > 0) {
-        console.log('Found existing orders:', existingOrders.length);
+        logStep('Found existing orders', { count: existingOrders.length });
         
         orderItems = existingOrders.map(order => ({
           id: order.id,
@@ -533,7 +499,6 @@ serve(async (req) => {
         }));
         
         totalAmount = existingOrders.reduce((sum, order) => sum + (order.total_price || 0), 0);
-        // Use customer info from existing orders if available
         if (existingOrders[0]?.customer_email) {
           customerEmail = existingOrders[0].customer_email;
         }
@@ -543,35 +508,30 @@ serve(async (req) => {
       }
     }
 
-    // Send emails with enhanced debugging and improved flow logic
+    // Send emails with proper error handling
     let customerEmailSent = false;
     let internalEmailSent = false;
+    let emailErrors = [];
 
-    console.log('=== EMAIL SENDING DECISION LOGIC ===');
-    console.log('Order items count:', orderItems.length);
-    console.log('Customer email available:', !!customerEmail);
-    console.log('Customer email value:', customerEmail);
-    console.log('Customer email valid format:', customerEmail && customerEmail.includes('@'));
-    
-    // Always attempt to send internal email regardless of customer email
+    logStep('Email sending phase', { 
+      orderItemsCount: orderItems.length,
+      customerEmail,
+      hasResendApiKey: !!resendApiKey
+    });
+
     if (orderItems.length > 0) {
-      console.log('=== SENDING EMAILS ===');
-      
       const orderData = {
         order_id: finalOrderId,
-        customer_email: customerEmail || 'no-email@customer.com', // Fallback for internal tracking
+        customer_email: customerEmail || 'no-email@customer.com',
         customer_name: customerName,
         total_amount: totalAmount,
         items: orderItems
       };
 
-      console.log('Order data for emails:', JSON.stringify(orderData, null, 2));
-
-      // Send customer confirmation email only if we have a valid email
-      if (customerEmail && customerEmail.includes('@')) {
+      // Send customer confirmation email if we have a valid email
+      if (customerEmail && customerEmail.includes('@') && resendApiKey) {
         try {
-          console.log('=== SENDING CUSTOMER EMAIL ===');
-          console.log('Recipient:', customerEmail);
+          logStep('Sending customer email', { recipient: customerEmail });
           
           const customerEmailHtml = generateCustomerConfirmationEmail(orderData);
           
@@ -586,55 +546,69 @@ serve(async (req) => {
           });
 
           if (customerEmailError) {
-            console.error('❌ Customer email error:', customerEmailError);
+            logStep('Customer email error', customerEmailError);
+            emailErrors.push(`Customer email error: ${customerEmailError.message}`);
           } else {
-            console.log('✅ Customer email sent successfully');
+            logStep('Customer email sent successfully');
             customerEmailSent = true;
           }
         } catch (emailError) {
-          console.error('❌ Customer email exception:', emailError);
+          logStep('Customer email exception', { error: emailError.message });
+          emailErrors.push(`Customer email exception: ${emailError.message}`);
         }
       } else {
-        console.log('⚠️ Skipping customer email - no valid email address');
-        console.log('Customer email value:', customerEmail);
+        logStep('Skipping customer email', { 
+          reason: !customerEmail ? 'no email' : !resendApiKey ? 'no api key' : 'invalid format',
+          customerEmail,
+          hasResendApiKey: !!resendApiKey
+        });
       }
 
-      // Always send internal notification email
-      try {
-        console.log('=== SENDING INTERNAL EMAIL ===');
-        console.log('Internal recipient: order.support@mygravelguy.com');
-        
-        const internalEmailHtml = generateInternalNotificationEmail(orderData);
-        
-        const { data: internalEmailData, error: internalEmailError } = await supabase.functions.invoke('send-email', {
-          body: {
-            to: 'order.support@mygravelguy.com',
-            subject: `🚨 New Order: ${finalOrderId} - $${totalAmount.toFixed(2)}`,
-            html: internalEmailHtml,
-            type: 'internal_notification',
-            orderData
-          }
-        });
+      // Always send internal notification email if Resend is configured
+      if (resendApiKey) {
+        try {
+          logStep('Sending internal email');
+          
+          const internalEmailHtml = generateInternalNotificationEmail(orderData);
+          
+          const { data: internalEmailData, error: internalEmailError } = await supabase.functions.invoke('send-email', {
+            body: {
+              to: 'order.support@mygravelguy.com',
+              subject: `🚨 New Order: ${finalOrderId} - $${totalAmount.toFixed(2)}`,
+              html: internalEmailHtml,
+              type: 'internal_notification',
+              orderData
+            }
+          });
 
-        if (internalEmailError) {
-          console.error('❌ Internal email error:', internalEmailError);
-        } else {
-          console.log('✅ Internal email sent successfully');
-          internalEmailSent = true;
+          if (internalEmailError) {
+            logStep('Internal email error', internalEmailError);
+            emailErrors.push(`Internal email error: ${internalEmailError.message}`);
+          } else {
+            logStep('Internal email sent successfully');
+            internalEmailSent = true;
+          }
+        } catch (emailError) {
+          logStep('Internal email exception', { error: emailError.message });
+          emailErrors.push(`Internal email exception: ${emailError.message}`);
         }
-      } catch (emailError) {
-        console.error('❌ Internal email exception:', emailError);
+      } else {
+        logStep('Skipping internal email - no Resend API key configured');
+        emailErrors.push('Internal email skipped - no Resend API key configured');
       }
     } else {
-      console.log('⚠️ Skipping email sending - no order items found');
+      logStep('Skipping email sending - no order items found');
+      emailErrors.push('No order items found for email sending');
     }
 
-    console.log('=== VERIFICATION COMPLETE ===');
-    console.log('Order ID:', finalOrderId);
-    console.log('Customer email sent:', customerEmailSent);
-    console.log('Internal email sent:', internalEmailSent);
-    console.log('Orders found:', orderItems.length);
-    console.log('Customer email available:', !!customerEmail);
+    logStep('=== VERIFICATION COMPLETE ===', {
+      orderId: finalOrderId,
+      customerEmailSent,
+      internalEmailSent,
+      orderCount: orderItems.length,
+      customerEmailAvailable: !!customerEmail,
+      emailErrors: emailErrors.length > 0 ? emailErrors : null
+    });
 
     return new Response(
       JSON.stringify({ 
@@ -646,7 +620,14 @@ serve(async (req) => {
         customerEmailSent,
         internalEmailSent,
         customerEmailAvailable: !!customerEmail,
-        customerEmail: customerEmail // Include for debugging
+        customerEmail: customerEmail,
+        emailErrors: emailErrors.length > 0 ? emailErrors : null,
+        debugInfo: {
+          hasStripeKey: !!stripeKey,
+          hasResendKey: !!resendApiKey,
+          sessionProcessed: !!session,
+          fallbackUsed: fallbackMode || !session
+        }
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -655,15 +636,17 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error("=== PAYMENT VERIFICATION ERROR ===");
-    console.error("Error message:", error.message);
-    console.error("Error stack:", error.stack);
+    logStep("=== PAYMENT VERIFICATION ERROR ===", {
+      message: error.message,
+      stack: error.stack
+    });
     
     return new Response(
       JSON.stringify({ 
         error: error.message,
         success: false,
-        details: "Payment verification failed"
+        details: "Payment verification failed",
+        timestamp: new Date().toISOString()
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
