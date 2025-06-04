@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
@@ -94,7 +95,10 @@ const Cart = () => {
           total_price: item.price * item.tons,
           delivery_date: item.deliveryDate?.toISOString(),
           delivery_address: item.deliveryAddress,
-          contact_info: item.contactInfo
+          contact_info: item.contactInfo,
+          delivery_time_preference: item.deliveryTimePreference,
+          delivery_instructions: item.deliveryInstructions,
+          location_photo_url: item.locationPhotoUrl
         })),
         total_amount: discountTotal,
         customer_email: customerEmail,
@@ -123,7 +127,7 @@ const Cart = () => {
     }
   };
 
-  // Generate simple email template for cart confirmation
+  // Generate enhanced email template for cart confirmation with delivery details
   const generateCartConfirmationEmail = (orderData: any) => {
     return `
       <!DOCTYPE html>
@@ -146,12 +150,64 @@ const Cart = () => {
           <p><strong>Items:</strong> ${orderData.items.length}</p>
           
           <div style="margin: 20px 0;">
-            <h3>Items:</h3>
+            <h3>Order Items with Delivery Details:</h3>
             ${orderData.items.map((item: any) => `
-              <div style="background: white; padding: 15px; margin: 10px 0; border-radius: 6px;">
-                <strong>${item.product_name}</strong><br>
-                Quantity: ${item.quantity} tons<br>
-                Price: $${item.total_price.toFixed(2)}
+              <div style="background: white; padding: 20px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #1e3a8a;">
+                <h4 style="margin-top: 0; color: #1e3a8a;">${item.product_name}</h4>
+                <p><strong>Quantity:</strong> ${item.quantity} tons</p>
+                <p><strong>Price:</strong> $${item.total_price.toFixed(2)}</p>
+                
+                ${item.contact_info ? `
+                  <div style="background: #f0f9ff; padding: 15px; border-radius: 6px; margin: 10px 0;">
+                    <h5 style="margin-top: 0; color: #1e40af;">Contact Information:</h5>
+                    <p><strong>Name:</strong> ${item.contact_info.name}</p>
+                    <p><strong>Phone:</strong> ${item.contact_info.phone}</p>
+                    <p><strong>Email:</strong> ${item.contact_info.email}</p>
+                  </div>
+                ` : ''}
+                
+                ${item.delivery_address ? `
+                  <div style="background: #f0f9ff; padding: 15px; border-radius: 6px; margin: 10px 0;">
+                    <h5 style="margin-top: 0; color: #1e40af;">Delivery Address:</h5>
+                    <p>${item.delivery_address.street}</p>
+                    <p>${item.delivery_address.city}, ${item.delivery_address.state} ${item.delivery_address.zip}</p>
+                  </div>
+                ` : ''}
+                
+                ${item.delivery_date ? `
+                  <div style="background: #f0f9ff; padding: 15px; border-radius: 6px; margin: 10px 0;">
+                    <h5 style="margin-top: 0; color: #1e40af;">Delivery Schedule:</h5>
+                    <p><strong>Date:</strong> ${new Date(item.delivery_date).toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      month: 'short', 
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}</p>
+                    ${item.delivery_time_preference ? `
+                      <p><strong>Time Preference:</strong> ${
+                        item.delivery_time_preference === 'anytime' ? 'Anytime (7am-5pm)' :
+                        item.delivery_time_preference === 'morning' ? 'Morning (7am-12pm)' :
+                        item.delivery_time_preference === 'afternoon' ? 'Afternoon (12pm-5pm)' :
+                        'Not specified'
+                      }</p>
+                    ` : ''}
+                  </div>
+                ` : ''}
+                
+                ${item.delivery_instructions ? `
+                  <div style="background: #fff7ed; padding: 15px; border-radius: 6px; margin: 10px 0;">
+                    <h5 style="margin-top: 0; color: #c2410c;">Special Instructions:</h5>
+                    <p>${item.delivery_instructions}</p>
+                  </div>
+                ` : ''}
+                
+                ${item.location_photo_url ? `
+                  <div style="background: #f3f4f6; padding: 15px; border-radius: 6px; margin: 10px 0;">
+                    <h5 style="margin-top: 0; color: #374151;">Location Photo:</h5>
+                    <p>📷 Photo uploaded by customer</p>
+                    <p style="font-size: 12px; color: #6b7280;">URL: ${item.location_photo_url}</p>
+                  </div>
+                ` : ''}
               </div>
             `).join('')}
           </div>
