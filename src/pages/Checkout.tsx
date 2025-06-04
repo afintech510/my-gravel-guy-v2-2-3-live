@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { storeCheckoutBackup } from '../utils/paymentUtils';
+import CouponCode from '../components/cart/CouponCode';
 
 const Checkout = () => {
   const { items, total, discountTotal, clearCart } = useCart();
@@ -20,6 +20,10 @@ const Checkout = () => {
     navigate('/cart');
     return null;
   }
+
+  // Calculate if discounts are applied
+  const hasDiscounts = total !== discountTotal;
+  const totalDiscount = total - discountTotal;
 
   // Helper function to format delivery time preference
   const formatDeliveryTimePreference = (preference?: "anytime" | "morning" | "afternoon") => {
@@ -404,10 +408,10 @@ const Checkout = () => {
               </div>
               
               {/* Show discount if applied */}
-              {total !== discountTotal && (
+              {hasDiscounts && (
                 <div className="flex justify-between text-sm text-green-600">
                   <span>Discount</span>
-                  <span>-${(total - discountTotal).toFixed(2)}</span>
+                  <span>-${totalDiscount.toFixed(2)}</span>
                 </div>
               )}
               
@@ -425,6 +429,11 @@ const Checkout = () => {
             <div className="flex justify-between font-semibold text-lg mb-6">
               <span>Total</span>
               <span>${discountTotal.toFixed(2)}</span>
+            </div>
+
+            {/* Coupon Code Component */}
+            <div className="mb-6">
+              <CouponCode />
             </div>
             
             <Button 
