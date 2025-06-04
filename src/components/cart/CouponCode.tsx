@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +14,8 @@ const COUPON_CODES = {
   'SAVE10': { discount: 10, type: 'percentage' as const, description: '10% off your order' },
   'WELCOME20': { discount: 20, type: 'percentage' as const, description: '20% off for new customers' },
   'FLAT50': { discount: 50, type: 'fixed' as const, description: '$50 off your order' },
-  'FREE25': { discount: 25, type: 'fixed' as const, description: '$25 off your order' }
+  'FREE25': { discount: 25, type: 'fixed' as const, description: '$25 off your order' },
+  'MEGA99': { discount: 99, type: 'percentage' as const, description: '99% off your order - Special promotion!' }
 };
 
 const CouponCode: React.FC<CouponCodeProps> = ({ onCouponApplied }) => {
@@ -164,7 +164,7 @@ const CouponCode: React.FC<CouponCodeProps> = ({ onCouponApplied }) => {
                 </Button>
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                Try: SAVE10, WELCOME20, FLAT50, or FREE25
+                Try: SAVE10, WELCOME20, FLAT50, FREE25, or MEGA99
               </p>
             </div>
           )}
