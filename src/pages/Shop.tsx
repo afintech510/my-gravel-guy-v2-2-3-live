@@ -95,6 +95,8 @@ const Shop = () => {
                 <DropdownMenuRadioItem value="nameDesc">Name (Z-A)</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="priceAsc">Price (Low-High)</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="priceDesc">Price (High-Low)</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="sizeAsc">Size (Small-Large)</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="sizeDesc">Size (Large-Small)</DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
