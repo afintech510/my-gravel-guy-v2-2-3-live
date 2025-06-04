@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
@@ -52,6 +51,12 @@ const Checkout = () => {
   // Transform cart items to a format suitable for Stripe
   const formatCartItemsForStripe = () => {
     return items.map(item => {
+      // Calculate the actual price per ton after applying coupon discount
+      const itemTotal = item.price * item.tons;
+      const couponDiscount = item.couponApplied && item.couponAmount ? item.couponAmount : 0;
+      const discountedTotal = itemTotal - couponDiscount;
+      const discountedPricePerTon = discountedTotal / item.tons;
+
       // Create metadata object for delivery details
       let metadata = {};
       
@@ -69,7 +74,7 @@ const Checkout = () => {
         id: item.id,
         name: item.name,
         description: item.description?.substring(0, 100) || '',
-        price: item.price,
+        price: Math.max(0.01, discountedPricePerTon), // Use discounted price, ensure minimum $0.01
         quantity: item.tons,
         image: item.image || item.images?.[0],
         metadata
@@ -218,7 +223,7 @@ const Checkout = () => {
     setIsLoading(true);
     
     try {
-      // Format cart items for Stripe
+      // Format cart items for Stripe with discounted prices
       const formattedItems = formatCartItemsForStripe();
       
       // Generate a unique order ID for tracking
@@ -226,7 +231,9 @@ const Checkout = () => {
       
       console.log('=== CHECKOUT DEBUG START ===');
       console.log('Order ID generated:', orderId);
-      console.log('Formatted items:', formattedItems);
+      console.log('Formatted items with discounts:', formattedItems);
+      console.log('Original total:', total);
+      console.log('Discounted total:', discountTotal);
       
       // Send checkout confirmation email first
       await sendCheckoutConfirmationEmail(orderId);
@@ -319,7 +326,23 @@ const Checkout = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div>${(item.price * item.tons).toFixed(2)}</div>
+                        <div className="space-y-1">
+                          {item.couponApplied && item.couponAmount && item.couponAmount > 0 ? (
+                            <>
+                              <div className="text-sm text-gray-500 line-through">
+                                ${(item.price * item.tons).toFixed(2)}
+                              </div>
+                              <div className="font-medium text-green-600">
+                                ${((item.price * item.tons) - item.couponAmount).toFixed(2)}
+                              </div>
+                              <div className="text-xs text-green-600">
+                                Saved ${item.couponAmount.toFixed(2)}
+                              </div>
+                            </>
+                          ) : (
+                            <div>${(item.price * item.tons).toFixed(2)}</div>
+                          )}
+                        </div>
                       </div>
                     </div>
                     
