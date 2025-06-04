@@ -50,6 +50,38 @@ export default function ShopProductFilterSelector({ onFilterChange, sortOrder = 
     loadProducts();
   }, []);
 
+  // Function to convert size string to numerical value for sorting
+  const getSizeValue = (size: string | undefined): number => {
+    if (!size) return 0;
+    
+    // Extract numeric value from size string (e.g., "3/4\"" -> 0.75, "2-3\"" -> 2.5)
+    const sizeStr = size.toLowerCase();
+    
+    if (sizeStr.includes('/')) {
+      // Handle fractions like "3/4", "1/2"
+      const parts = sizeStr.split('/');
+      if (parts.length === 2) {
+        const numerator = parseFloat(parts[0]);
+        const denominator = parseFloat(parts[1].replace(/[^0-9]/g, ''));
+        return numerator / denominator;
+      }
+    }
+    
+    if (sizeStr.includes('-')) {
+      // Handle ranges like "2-3", take the average
+      const parts = sizeStr.split('-');
+      if (parts.length === 2) {
+        const min = parseFloat(parts[0]);
+        const max = parseFloat(parts[1].replace(/[^0-9]/g, ''));
+        return (min + max) / 2;
+      }
+    }
+    
+    // Extract first number from string
+    const match = sizeStr.match(/(\d+\.?\d*)/);
+    return match ? parseFloat(match[1]) : 0;
+  };
+
   // Function to sort products based on sortOrder
   const sortProducts = (productsToSort: Product[], order: string) => {
     return [...productsToSort].sort((a, b) => {
@@ -60,6 +92,10 @@ export default function ShopProductFilterSelector({ onFilterChange, sortOrder = 
           return a.price - b.price;
         case 'priceDesc':
           return b.price - a.price;
+        case 'sizeAsc':
+          return getSizeValue(a.size) - getSizeValue(b.size);
+        case 'sizeDesc':
+          return getSizeValue(b.size) - getSizeValue(a.size);
         case 'nameAsc':
         default:
           return a.name.localeCompare(b.name);
