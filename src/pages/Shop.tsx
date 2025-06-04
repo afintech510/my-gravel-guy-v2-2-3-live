@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Search, Filter, SortAsc, SortDesc } from 'lucide-react';
@@ -68,8 +69,12 @@ const Shop = () => {
           />
         </div>
 
-        {/* Sort Button - Right justified above product grid */}
-        <div className="mb-6 flex justify-end">
+        {/* Products Header with Sort Button - Aligned on same line */}
+        <div className="mb-6 flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            Products ({filteredProducts.length})
+          </h2>
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="flex items-center gap-2 h-12 px-4">

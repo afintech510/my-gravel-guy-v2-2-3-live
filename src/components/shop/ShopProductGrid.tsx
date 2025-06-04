@@ -61,23 +61,15 @@ export default function ShopProductGrid({ products, loading, searchTerm }: ShopP
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-gray-900">
-          Products ({filteredProducts.length})
-        </h2>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProducts.map((product) => (
-          <ShopProductCard
-            key={product.id}
-            product={product}
-            isSelected={selectedProductIds.has(String(product.id))}
-            onSelect={() => handleProductSelect(String(product.id))}
-          />
-        ))}
-      </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {filteredProducts.map((product) => (
+        <ShopProductCard
+          key={product.id}
+          product={product}
+          isSelected={selectedProductIds.has(String(product.id))}
+          onSelect={() => handleProductSelect(String(product.id))}
+        />
+      ))}
     </div>
   );
 }
