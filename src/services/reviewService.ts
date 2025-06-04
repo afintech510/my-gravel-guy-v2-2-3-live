@@ -293,3 +293,158 @@ export const voteReviewHelpful = async (reviewId: string): Promise<boolean> => {
     return false;
   }
 };
+
+// Insert sample reviews into the database (admin function)
+export const insertSampleReviews = async (): Promise<boolean> => {
+  try {
+    const sampleReviews = [
+      {
+        user_name: "bobby",
+        rating: 5,
+        title: "On time and looks top notch",
+        content: "I must say these guys make it easy. they confirm the material with a photo before the truck is dispatched. Thank you !",
+        verified_purchase: true,
+        helpful_votes: 0,
+        created_at: "2025-05-27T14:30:00Z",
+        product_name: "Driveway Gravel",
+        product_id: "driveway-gravel"
+      },
+      {
+        user_name: "Lisa Chen",
+        rating: 5,
+        title: "Great quality stone",
+        content: "Perfect for my landscaping project. Fast delivery and exactly what I ordered.",
+        verified_purchase: true,
+        helpful_votes: 2,
+        created_at: "2025-05-29T10:15:00Z",
+        product_name: "River Rock - 1-2 inch",
+        product_id: "river-rock-1-2"
+      },
+      {
+        user_name: "Mark Thompson",
+        rating: 4,
+        title: "Good product, minor delivery delay",
+        content: "The gravel quality is excellent. Delivery was about an hour late but driver was courteous.",
+        verified_purchase: true,
+        helpful_votes: 1,
+        created_at: "2025-05-30T16:45:00Z",
+        product_name: "Gray Gravel - 3/4 inch",
+        product_id: "gravel-gray-34"
+      },
+      {
+        user_name: "Rachel Green",
+        rating: 5,
+        title: "Amazing customer service",
+        content: "Called with questions and they walked me through everything. Highly recommend!",
+        verified_purchase: true,
+        helpful_votes: 5,
+        created_at: "2025-06-02T11:20:00Z",
+        product_name: "Decorative Pebbles - Multi",
+        product_id: "pebbles-multi"
+      },
+      {
+        user_name: "David Wilson",
+        rating: 4,
+        title: "Solid choice for driveway",
+        content: "Used this for my new driveway. Looks professional and drains well.",
+        verified_purchase: true,
+        helpful_votes: 3,
+        created_at: "2025-06-03T13:30:00Z",
+        product_name: "Construction Gravel - 1 inch",
+        product_id: "gravel-construction-1"
+      },
+      {
+        user_name: "Amanda Lee",
+        rating: 3,
+        title: "Decent but had some dust",
+        content: "Product is okay but came with more dust than expected. Had to wash it down first.",
+        verified_purchase: true,
+        helpful_votes: 1,
+        created_at: "2025-06-04T09:45:00Z",
+        product_name: "White Marble Chips",
+        product_id: "marble-white"
+      },
+      {
+        user_name: "Steve Martinez",
+        rating: 5,
+        title: "Exactly as advertised",
+        content: "Perfect size and color. Makes my garden beds look fantastic.",
+        verified_purchase: true,
+        helpful_votes: 4,
+        created_at: "2025-06-05T15:10:00Z",
+        product_name: "River Rock - 1-2 inch",
+        product_id: "river-rock-1-2"
+      },
+      {
+        user_name: "Karen Brown",
+        rating: 4,
+        title: "Great for walkway project",
+        content: "Easy to work with and looks clean. Would definitely order again.",
+        verified_purchase: true,
+        helpful_votes: 2,
+        created_at: "2025-06-06T12:00:00Z",
+        product_name: "Decorative Pebbles - Multi",
+        product_id: "pebbles-multi"
+      },
+      {
+        user_name: "Tom Anderson",
+        rating: 5,
+        title: "Professional delivery service",
+        content: "Driver was on time and placed material exactly where I needed it. Top notch service.",
+        verified_purchase: true,
+        helpful_votes: 6,
+        created_at: "2025-06-07T08:30:00Z",
+        product_name: "Gray Gravel - 3/4 inch",
+        product_id: "gravel-gray-34"
+      },
+      {
+        user_name: "Michelle Taylor",
+        rating: 4,
+        title: "Good value for the price",
+        content: "Quality is solid and pricing was competitive. Happy with my purchase.",
+        verified_purchase: true,
+        helpful_votes: 1,
+        created_at: "2025-06-10T14:20:00Z",
+        product_name: "Construction Gravel - 1 inch",
+        product_id: "gravel-construction-1"
+      },
+      {
+        user_name: "Chris Johnson",
+        rating: 3,
+        title: "Average experience",
+        content: "Product is fine but nothing special. Delivery was smooth though.",
+        verified_purchase: false,
+        helpful_votes: 0,
+        created_at: "2025-06-11T17:45:00Z",
+        product_name: "White Marble Chips",
+        product_id: "marble-white"
+      },
+      {
+        user_name: "Nicole Davis",
+        rating: 5,
+        title: "Perfect for my patio project",
+        content: "Beautiful stones that really made my outdoor space pop. Very satisfied!",
+        verified_purchase: true,
+        helpful_votes: 3,
+        created_at: "2025-06-12T11:15:00Z",
+        product_name: "Decorative Pebbles - Multi",
+        product_id: "pebbles-multi"
+      }
+    ];
+
+    const { data, error } = await supabase
+      .from('customer_reviews')
+      .insert(sampleReviews);
+
+    if (error) {
+      console.error("Error inserting sample reviews:", error);
+      return false;
+    }
+
+    console.log("Sample reviews inserted successfully");
+    return true;
+  } catch (err) {
+    console.error("Unexpected error inserting sample reviews:", err);
+    return false;
+  }
+};
