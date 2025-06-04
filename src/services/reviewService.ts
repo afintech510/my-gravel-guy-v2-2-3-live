@@ -429,6 +429,139 @@ export const insertSampleReviews = async (): Promise<boolean> => {
         created_at: "2025-06-12T11:15:00Z",
         product_name: "Decorative Pebbles - Multi",
         product_id: "pebbles-multi"
+      },
+      // NEW 12 REALISTIC REVIEWS FOR ACTUAL PRODUCTS
+      {
+        user_name: "Jason Miller",
+        rating: 5,
+        title: "Great for my new patio",
+        content: "Delivery was quick and the stones look amazing. Perfect for outdoor entertaining.",
+        verified_purchase: true,
+        helpful_votes: 0,
+        created_at: "2025-06-13T09:20:00Z",
+        product_name: "Flagstone Pavers",
+        product_id: "flagstone-pavers"
+      },
+      {
+        user_name: "Sarah Thompson",
+        rating: 4,
+        title: "Good quality crushed stone",
+        content: "Used for my driveway base. Compacts well and drainage is excellent.",
+        verified_purchase: true,
+        helpful_votes: 2,
+        created_at: "2025-06-16T14:15:00Z",
+        product_name: "Crushed Stone Base",
+        product_id: "crushed-stone-base"
+      },
+      {
+        user_name: "Brian Lopez",
+        rating: 5,
+        title: "Perfect landscaping material",
+        content: "The color variation is beautiful and it's held up great through the weather.",
+        verified_purchase: true,
+        helpful_votes: 1,
+        created_at: "2025-06-18T11:30:00Z",
+        product_name: "Decorative River Rock",
+        product_id: "decorative-river-rock"
+      },
+      {
+        user_name: "Emily Rodriguez",
+        rating: 4,
+        title: "Solid choice for drainage",
+        content: "Works well for French drain project. Good size consistency throughout.",
+        verified_purchase: true,
+        helpful_votes: 0,
+        created_at: "2025-06-19T16:45:00Z",
+        product_name: "Drainage Gravel",
+        product_id: "drainage-gravel"
+      },
+      {
+        user_name: "Mike Johnson",
+        rating: 3,
+        title: "Decent sand quality",
+        content: "It's fine for basic concrete work but could be cleaner.",
+        verified_purchase: true,
+        helpful_votes: 1,
+        created_at: "2025-06-20T13:10:00Z",
+        product_name: "Concrete Sand",
+        product_id: "concrete-sand"
+      },
+      {
+        user_name: "Jennifer Clark",
+        rating: 5,
+        title: "Excellent playground sand",
+        content: "Kids love it and it's perfect for our sandbox. Very clean and fine texture.",
+        verified_purchase: true,
+        helpful_votes: 3,
+        created_at: "2025-06-23T10:25:00Z",
+        product_name: "Play Sand",
+        product_id: "play-sand"
+      },
+      {
+        user_name: "Robert Kim",
+        rating: 4,
+        title: "Good for retaining wall",
+        content: "Strong material that's easy to work with. Delivery was right on schedule.",
+        verified_purchase: true,
+        helpful_votes: 2,
+        created_at: "2025-06-24T15:40:00Z",
+        product_name: "Retaining Wall Stone",
+        product_id: "retaining-wall-stone"
+      },
+      {
+        user_name: "Lisa Wang",
+        rating: 5,
+        title: "Beautiful mulch alternative",
+        content: "Looks much better than wood mulch and won't blow away in storms.",
+        verified_purchase: true,
+        helpful_votes: 4,
+        created_at: "2025-06-25T08:55:00Z",
+        product_name: "Decorative Stone Mulch",
+        product_id: "decorative-stone-mulch"
+      },
+      {
+        user_name: "Paul Anderson",
+        rating: 4,
+        title: "Great for fire pit area",
+        content: "Perfect size and color for around our outdoor fire pit. Easy to install.",
+        verified_purchase: true,
+        helpful_votes: 1,
+        created_at: "2025-06-26T12:20:00Z",
+        product_name: "Lava Rock",
+        product_id: "lava-rock"
+      },
+      {
+        user_name: "Angela Martinez",
+        rating: 3,
+        title: "Okay for the price",
+        content: "Does the job but some pieces were smaller than expected.",
+        verified_purchase: true,
+        helpful_votes: 0,
+        created_at: "2025-06-27T14:35:00Z",
+        product_name: "Limestone Chips",
+        product_id: "limestone-chips"
+      },
+      {
+        user_name: "Derek Brown",
+        rating: 5,
+        title: "Excellent topsoil blend",
+        content: "Plants are thriving in this soil. Great quality and rich nutrients.",
+        verified_purchase: true,
+        helpful_votes: 2,
+        created_at: "2025-06-30T09:15:00Z",
+        product_name: "Premium Topsoil",
+        product_id: "premium-topsoil"
+      },
+      {
+        user_name: "Stephanie Lee",
+        rating: 4,
+        title: "Nice accent stones",
+        content: "Really brightens up the garden beds. Good variety of sizes in the mix.",
+        verified_purchase: true,
+        helpful_votes: 1,
+        created_at: "2025-07-01T16:50:00Z",
+        product_name: "White Decorative Stone",
+        product_id: "white-decorative-stone"
       }
     ];
 
