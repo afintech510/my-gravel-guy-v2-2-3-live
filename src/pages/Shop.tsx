@@ -53,8 +53,19 @@ const Shop = () => {
           />
         </div>
 
-        {/* Sort Button - Right aligned */}
-        <div className="mb-6 flex justify-end">
+        {/* Search Bar and Sort Button - Same row */}
+        <div className="mb-6 flex gap-4 items-center">
+          <div className="relative flex-1 max-w-lg">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
+            <Input
+              type="text"
+              placeholder="Search materials..."
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-9 h-12 text-lg dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+            />
+          </div>
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="flex items-center gap-2 h-12 px-4">
@@ -80,20 +91,6 @@ const Shop = () => {
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-
-        {/* Search Bar */}
-        <div className="mb-6">
-          <div className="relative max-w-2xl">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
-            <Input
-              type="text"
-              placeholder="Search materials..."
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="pl-9 h-12 text-lg dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
-            />
-          </div>
         </div>
 
         {/* Materials Header */}
