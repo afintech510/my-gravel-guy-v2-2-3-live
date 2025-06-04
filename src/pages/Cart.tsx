@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ShoppingCart, ArrowRight, Loader2 } from 'lucide-react';
 import CartItemCard from '../components/cart/CartItemCard';
 import { CartPricingUpdater } from '../components/cart/CartPricingUpdater';
+import CouponCode from '../components/cart/CouponCode';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -246,6 +247,11 @@ const Cart = () => {
                 <span>Delivery</span>
                 <span className="text-green-600 font-medium">FREE</span>
               </div>
+              
+              <div className="flex justify-between text-sm">
+                <span>Tax</span>
+                <span className="text-green-600 font-medium">Included</span>
+              </div>
             </div>
             
             <div className="flex justify-between font-semibold text-lg mb-6">
@@ -281,6 +287,9 @@ const Cart = () => {
                 </div>
               )}
             </Button>
+
+            {/* Coupon Code Component */}
+            <CouponCode />
           </div>
         </div>
       </div>
