@@ -1,13 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import StarRating from '@/components/reviews/StarRating';
 import ReviewList from '@/components/reviews/ReviewList';
 import ReviewForm from '@/components/reviews/ReviewForm';
-import { fetchReviews } from '@/services/reviewService';
+import { fetchReviews, insertSampleReviews } from '@/services/reviewService';
 import { ReviewFilter, CustomerReview } from '@/types/review.types';
+import { useToast } from '@/hooks/use-toast';
 
 const Reviews = () => {
   const [loading, setLoading] = useState(true);
@@ -16,6 +17,8 @@ const Reviews = () => {
   const [currentFilter, setCurrentFilter] = useState<ReviewFilter>('all');
   const [averageRating, setAverageRating] = useState(0);
   const [ratingCounts, setRatingCounts] = useState<Record<string, number>>({});
+  const [importing, setImporting] = useState(false);
+  const { toast } = useToast();
   
   useEffect(() => {
     const loadInitialData = async () => {
@@ -59,6 +62,51 @@ const Reviews = () => {
     loadReviews();
   };
   
+  const handleImportSampleReviews = async () => {
+    setImporting(true);
+    try {
+      const success = await insertSampleReviews();
+      if (success) {
+        toast({
+          title: "Success",
+          description: "Sample reviews imported successfully!",
+        });
+        // Refresh the reviews list
+        const { reviews: refreshedReviews, total: totalReviews } = await fetchReviews('all', 1, 10);
+        setReviews(refreshedReviews);
+        setTotal(totalReviews);
+        
+        // Recalculate stats
+        if (refreshedReviews.length > 0) {
+          const sum = refreshedReviews.reduce((acc, review) => acc + review.rating, 0);
+          setAverageRating(sum / refreshedReviews.length);
+          
+          const counts = { '5': 0, '4': 0, '3': 0, '2': 0, '1': 0 };
+          refreshedReviews.forEach(review => {
+            const rating = review.rating.toString();
+            counts[rating] = (counts[rating] || 0) + 1;
+          });
+          setRatingCounts(counts);
+        }
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to import sample reviews. Please try again.",
+        });
+      }
+    } catch (error) {
+      console.error('Error importing reviews:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An error occurred while importing reviews.",
+      });
+    } finally {
+      setImporting(false);
+    }
+  };
+  
   // Calculate percentage for each rating
   const calculatePercentage = (rating: string) => {
     if (total === 0) return 0;
@@ -79,6 +127,18 @@ const Reviews = () => {
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             See what our customers have to say about their experience with our products and services.
           </p>
+          
+          {/* Temporary Admin Button */}
+          <div className="mt-4">
+            <Button 
+              onClick={handleImportSampleReviews}
+              disabled={importing}
+              variant="outline"
+              size="sm"
+            >
+              {importing ? 'Importing...' : 'Import Sample Reviews (Admin)'}
+            </Button>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
