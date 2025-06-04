@@ -45,23 +45,7 @@ const Shop = () => {
         {/* Page Header */}
         <h1 className="text-4xl font-bold text-center mb-8 text-gray-900 dark:text-gray-100">Shop Premium Materials</h1>
         
-        {/* Search Bar */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row gap-4 items-center">
-            <div className="relative flex-grow max-w-2xl">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
-              <Input
-                type="text"
-                placeholder="Search materials..."
-                value={searchTerm}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pl-9 h-12 text-lg dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Category Selector */}
+        {/* Category Selector - Without heading */}
         <div className="mb-8">
           <ShopProductFilterSelector
             onFilterChange={handleFilterChange}
@@ -69,12 +53,8 @@ const Shop = () => {
           />
         </div>
 
-        {/* Products Header with Sort Button - Aligned on same line */}
-        <div className="mb-6 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            Products ({filteredProducts.length})
-          </h2>
-          
+        {/* Sort Button - Right aligned */}
+        <div className="mb-6 flex justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="flex items-center gap-2 h-12 px-4">
@@ -100,6 +80,27 @@ const Shop = () => {
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
+        </div>
+
+        {/* Search Bar */}
+        <div className="mb-6">
+          <div className="relative max-w-2xl">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
+            <Input
+              type="text"
+              placeholder="Search materials..."
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-9 h-12 text-lg dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+            />
+          </div>
+        </div>
+
+        {/* Materials Header */}
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            Materials ({filteredProducts.length})
+          </h2>
         </div>
 
         {/* Product Grid */}

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { getProducts } from '@/services/productService';
 import { Product } from '@/services/productTypes';
@@ -165,30 +164,24 @@ export default function ShopProductFilterSelector({ onFilterChange, sortOrder = 
   };
 
   return (
-    <div className="space-y-6">
-      {/* Category Selection */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium text-gray-700">Material Category</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-          {categories.map(category => (
-            <button
-              key={category.id}
-              onClick={() => handleCategorySelect(category.id)}
-              className={cn(
-                "flex items-center justify-center p-3 border rounded-md transition-colors",
-                selectedCategory === category.id
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
-              )}
-            >
-              {category.icon}
-              <span className={cn("ml-2", isMobile ? "text-xs" : "text-sm")}>
-                {category.label}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+      {categories.map(category => (
+        <button
+          key={category.id}
+          onClick={() => handleCategorySelect(category.id)}
+          className={cn(
+            "flex items-center justify-center p-3 border rounded-md transition-colors",
+            selectedCategory === category.id
+              ? "bg-primary text-primary-foreground border-primary"
+              : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
+          )}
+        >
+          {category.icon}
+          <span className={cn("ml-2", isMobile ? "text-xs" : "text-sm")}>
+            {category.label}
+          </span>
+        </button>
+      ))}
     </div>
   );
 }
