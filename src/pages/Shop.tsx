@@ -55,6 +55,11 @@ const Shop = () => {
 
         {/* Search Bar, Sort Button, and Materials Header - Same row */}
         <div className="mb-6 flex gap-4 items-center">
+
+         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
+            Materials ({filteredProducts.length})
+          </h2>
+          
           <div className="relative flex-1 max-w-lg">
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
             <Input
@@ -65,10 +70,6 @@ const Shop = () => {
               className="pl-9 h-12 text-lg dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
             />
           </div>
-          
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
-            Materials ({filteredProducts.length})
-          </h2>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
