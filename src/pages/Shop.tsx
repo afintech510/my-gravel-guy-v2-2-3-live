@@ -60,17 +60,44 @@ const Shop = () => {
         {/* Page Header */}
         <h1 className="text-4xl font-bold text-center mb-8 text-gray-900 dark:text-gray-100">Shop Premium Materials</h1>
         
-        {/* Search Bar */}
+        {/* Search Bar and Filter Button */}
         <div className="mb-8">
-          <div className="relative max-w-2xl mx-auto">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
-            <Input
-              type="text"
-              placeholder="Search materials..."
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="pl-9 h-12 text-lg dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
-            />
+          <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <div className="relative flex-grow max-w-2xl">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
+              <Input
+                type="text"
+                placeholder="Search materials..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="pl-9 h-12 text-lg dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+              />
+            </div>
+            
+            {/* Sort Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2 h-12 px-4">
+                  <Filter className="h-4 w-4" />
+                  Sort
+                  {sortOrder.includes('Desc') ? (
+                    <SortDesc className="h-4 w-4" />
+                  ) : (
+                    <SortAsc className="h-4 w-4" />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-gray-800">
+                <DropdownMenuLabel>Sort By</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioGroup value={sortOrder} onValueChange={handleSortChange}>
+                  <DropdownMenuRadioItem value="nameAsc">Name (A-Z)</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="nameDesc">Name (Z-A)</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="priceAsc">Price (Low-High)</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="priceDesc">Price (High-Low)</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -79,38 +106,6 @@ const Shop = () => {
           <ShopProductFilterSelector
             onFilterChange={handleFilterChange}
           />
-        </div>
-
-        {/* Products Count and Sort Button Row */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            Products ({filteredProducts.length})
-          </h2>
-          
-          {/* Sort Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                Sort
-                {sortOrder.includes('Desc') ? (
-                  <SortDesc className="h-4 w-4" />
-                ) : (
-                  <SortAsc className="h-4 w-4" />
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-gray-800">
-              <DropdownMenuLabel>Sort By</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuRadioGroup value={sortOrder} onValueChange={handleSortChange}>
-                <DropdownMenuRadioItem value="nameAsc">Name (A-Z)</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="nameDesc">Name (Z-A)</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="priceAsc">Price (Low-High)</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="priceDesc">Price (High-Low)</DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
 
         {/* Product Grid */}
