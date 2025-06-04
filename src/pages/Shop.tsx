@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Search, Filter, SortAsc, SortDesc } from 'lucide-react';
@@ -35,23 +34,8 @@ const Shop = () => {
 
   const handleSortChange = (value: string) => {
     setSortOrder(value);
-    
-    // Sort the current filtered products
-    const sortedProducts = [...filteredProducts].sort((a, b) => {
-      switch (value) {
-        case 'nameDesc':
-          return b.name.localeCompare(a.name);
-        case 'priceAsc':
-          return a.price - b.price;
-        case 'priceDesc':
-          return b.price - a.price;
-        case 'nameAsc':
-        default:
-          return a.name.localeCompare(b.name);
-      }
-    });
-    
-    setFilteredProducts(sortedProducts);
+    // Note: The actual sorting is now handled by ShopProductFilterSelector
+    // when it receives the updated sortOrder prop
   };
 
   return (
@@ -80,6 +64,7 @@ const Shop = () => {
         <div className="mb-8">
           <ShopProductFilterSelector
             onFilterChange={handleFilterChange}
+            sortOrder={sortOrder}
           />
         </div>
 

@@ -11,9 +11,10 @@ interface ShopProductFilterSelectorProps {
     category: string;
     filteredProducts: Product[];
   }) => void;
+  sortOrder?: string;
 }
 
-export default function ShopProductFilterSelector({ onFilterChange }: ShopProductFilterSelectorProps) {
+export default function ShopProductFilterSelector({ onFilterChange, sortOrder = 'nameAsc' }: ShopProductFilterSelectorProps) {
   const isMobile = useIsMobile();
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
@@ -49,7 +50,24 @@ export default function ShopProductFilterSelector({ onFilterChange }: ShopProduc
     loadProducts();
   }, []);
 
-  // Filter products based on selected category
+  // Function to sort products based on sortOrder
+  const sortProducts = (productsToSort: Product[], order: string) => {
+    return [...productsToSort].sort((a, b) => {
+      switch (order) {
+        case 'nameDesc':
+          return b.name.localeCompare(a.name);
+        case 'priceAsc':
+          return a.price - b.price;
+        case 'priceDesc':
+          return b.price - a.price;
+        case 'nameAsc':
+        default:
+          return a.name.localeCompare(b.name);
+      }
+    });
+  };
+
+  // Filter and sort products based on selected category and sort order
   useEffect(() => {
     if (!selectedCategory) return;
     
@@ -94,33 +112,17 @@ export default function ShopProductFilterSelector({ onFilterChange }: ShopProduc
       });
     }
 
-    // Sort products
-    if (selectedCategory === 'all') {
-      result.sort((a, b) => {
-        const isDrivewayA = (a.uses?.includes('driveway') || a.description?.toLowerCase().includes('driveway')) ?? false;
-        const isWalkwayA = (a.uses?.includes('walkway') || a.description?.toLowerCase().includes('walkway')) ?? false;
-        const isDrivewayB = (b.uses?.includes('driveway') || b.description?.toLowerCase().includes('driveway')) ?? false;
-        const isWalkwayB = (b.uses?.includes('walkway') || b.description?.toLowerCase().includes('walkway')) ?? false;
-        
-        if ((isDrivewayA || isWalkwayA) && !(isDrivewayB || isWalkwayB)) return -1;
-        if (!(isDrivewayA || isWalkwayA) && (isDrivewayB || isWalkwayB)) return 1;
-        if (isDrivewayA && !isDrivewayB) return -1;
-        if (!isDrivewayA && isDrivewayB) return 1;
-        
-        return a.name.localeCompare(b.name);
-      });
-    } else {
-      result.sort((a, b) => a.name.localeCompare(b.name));
-    }
+    // Apply sorting based on the passed sortOrder prop
+    result = sortProducts(result, sortOrder);
     
-    console.log(`Filtered products count for ${selectedCategory}: ${result.length}`);
+    console.log(`Filtered and sorted products count for ${selectedCategory}: ${result.length}`);
     
     // Notify parent component of filter changes
     onFilterChange({
       category: selectedCategory,
       filteredProducts: result
     });
-  }, [selectedCategory, products, onFilterChange]);
+  }, [selectedCategory, products, sortOrder, onFilterChange]);
 
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategory(categoryId);
