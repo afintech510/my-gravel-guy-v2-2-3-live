@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -87,14 +88,14 @@ function generateCustomerConfirmationEmail(data: any) {
                 </div>
               </div>
               
-              ${item.delivery_street ? `
+              ${item.delivery_address_street ? `
                 <div class="delivery-info">
                   <h5 style="color: #0c4a6e; margin: 0 0 10px 0;">🚚 Delivery Information</h5>
                   <p style="color: #1e40af; margin: 2px 0;"><strong>📅 Date:</strong> ${formatDate(item.delivery_date)}</p>
                   <p style="color: #1e40af; margin: 2px 0;"><strong>🕒 Time:</strong> ${formatDeliveryTime(item.delivery_time_preference)}</p>
                   <p style="color: #1e40af; margin: 2px 0;"><strong>📍 Address:</strong><br>
-                    ${item.delivery_street}<br>
-                    ${item.delivery_city}, ${item.delivery_state} ${item.delivery_zip}
+                    ${item.delivery_address_street}<br>
+                    ${item.delivery_address_city}, ${item.delivery_address_state} ${item.delivery_address_zip}
                   </p>
                   ${item.delivery_instructions ? `
                     <p style="color: #1e40af; margin: 10px 0 0 0;"><strong>📝 Special Instructions:</strong> ${item.delivery_instructions}</p>
@@ -221,14 +222,14 @@ function generateInternalNotificationEmail(data: any) {
                 </div>
               </div>
 
-              ${item.delivery_street ? `
+              ${item.delivery_address_street ? `
                 <div class="delivery-info">
                   <h5 style="color: #92400e; margin: 0 0 10px 0;">🚚 Delivery Details</h5>
                   ${item.delivery_date ? `<p style="color: #92400e; margin: 2px 0;"><strong>📅 Date:</strong> ${new Date(item.delivery_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</p>` : ''}
                   ${item.delivery_time_preference ? `<p style="color: #92400e; margin: 2px 0;"><strong>🕒 Time:</strong> ${item.delivery_time_preference}</p>` : ''}
                   <p style="color: #92400e; margin: 2px 0;"><strong>📍 Address:</strong><br>
-                    ${item.delivery_street}<br>
-                    ${item.delivery_city}, ${item.delivery_state} ${item.delivery_zip}
+                    ${item.delivery_address_street}<br>
+                    ${item.delivery_address_city}, ${item.delivery_address_state} ${item.delivery_address_zip}
                   </p>
                   ${item.delivery_instructions ? `<p style="color: #92400e; margin: 10px 0 0 0;"><strong>📝 Instructions:</strong> ${item.delivery_instructions}</p>` : ''}
                 </div>
@@ -398,29 +399,32 @@ serve(async (req) => {
 
           logStep('Processing item', { productName, quantity, unitPrice, totalPrice });
 
-          // Extract delivery info from metadata - matching database schema
+          // Extract delivery info from metadata
           const deliveryDate = session.metadata?.delivery_date || null;
           const deliveryStreet = session.metadata?.delivery_street || null;
           const deliveryCity = session.metadata?.delivery_city || null;
           const deliveryState = session.metadata?.delivery_state || null;
           const deliveryZip = session.metadata?.delivery_zip || null;
 
-          // Insert order record into database - using correct field names from schema
+          // Insert order record into database
           const orderRecord = {
             order_id: finalOrderId,
             stripe_session_id: sessionId,
-            stripe_payment_intent_id: typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id,
+            stripe_payment_intent_id: session.payment_intent,
             product_name: productName,
             quantity: quantity,
             unit_price: unitPrice,
-            total_price: totalPrice, // This matches the schema
+            total_price: totalPrice,
             delivery_date: deliveryDate,
-            delivery_street: deliveryStreet, // This matches the schema
-            delivery_city: deliveryCity, // This matches the schema
-            delivery_state: deliveryState, // This matches the schema
-            delivery_zip: deliveryZip, // This matches the schema
+            delivery_street: deliveryStreet,
+            delivery_city: deliveryCity,
+            delivery_state: deliveryState,
+            delivery_zip: deliveryZip,
+            customer_email: customerEmail,
+            customer_name: customerName,
             status: 'confirmed',
-            item_status: 'confirmed'
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           };
 
           logStep('Inserting order record', orderRecord);
@@ -444,10 +448,10 @@ serve(async (req) => {
             quantity: quantity,
             total_price: totalPrice,
             delivery_date: deliveryDate,
-            delivery_street: deliveryStreet,
-            delivery_city: deliveryCity,
-            delivery_state: deliveryState,
-            delivery_zip: deliveryZip,
+            delivery_address_street: deliveryStreet,
+            delivery_address_city: deliveryCity,
+            delivery_address_state: deliveryState,
+            delivery_address_zip: deliveryZip,
             contact_name: customerName,
             contact_email: customerEmail,
             contact_phone: session.metadata?.contact_phone || null,
@@ -482,12 +486,12 @@ serve(async (req) => {
           quantity: order.quantity,
           total_price: order.total_price,
           delivery_date: order.delivery_date,
-          delivery_street: order.delivery_street,
-          delivery_city: order.delivery_city,
-          delivery_state: order.delivery_state,
-          delivery_zip: order.delivery_zip,
-          contact_name: customerName,
-          contact_email: customerEmail,
+          delivery_address_street: order.delivery_street || null,
+          delivery_address_city: order.delivery_city || null,
+          delivery_address_state: order.delivery_state || null,
+          delivery_address_zip: order.delivery_zip || null,
+          contact_name: order.customer_name || customerName,
+          contact_email: order.customer_email || customerEmail,
           contact_phone: null,
           delivery_time_preference: null,
           delivery_instructions: null,
@@ -495,6 +499,12 @@ serve(async (req) => {
         }));
         
         totalAmount = existingOrders.reduce((sum, order) => sum + (order.total_price || 0), 0);
+        if (existingOrders[0]?.customer_email) {
+          customerEmail = existingOrders[0].customer_email;
+        }
+        if (existingOrders[0]?.customer_name) {
+          customerName = existingOrders[0].customer_name;
+        }
       }
     }
 
