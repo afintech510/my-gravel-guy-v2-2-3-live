@@ -7,6 +7,30 @@ interface CheckoutBackup {
   cartItems: any[];
 }
 
+// Enhanced interface for order data with all required fields
+export interface OrderItemData {
+  id: string | number;
+  name: string;
+  category?: string;
+  materialCategory?: string;
+  price: number;
+  quantity: number;
+  tons?: number;
+  yards?: number;
+  size?: string;
+  materialSize?: string;
+  image?: string;
+  metadata?: {
+    deliveryDate?: string;
+    deliveryAddress?: string;
+    contactName?: string;
+    contactPhone?: string;
+    contactEmail?: string;
+    deliveryTimePreference?: string;
+    deliveryInstructions?: string;
+  };
+}
+
 export const storeCheckoutBackup = (data: CheckoutBackup) => {
   try {
     localStorage.setItem('checkout-order-backup', JSON.stringify(data));
@@ -65,4 +89,51 @@ export const detectPaymentSuccess = (): {
     success: urlParams.get('success') === 'true',
     checkStatus: urlParams.get('check_status') === 'true'
   };
+};
+
+// Helper function to prepare cart items for Stripe with all required metadata
+export const prepareItemsForStripe = (cartItems: any[]): OrderItemData[] => {
+  return cartItems.map(item => {
+    // Build comprehensive metadata object
+    const metadata: any = {};
+    
+    if (item.deliveryDate) {
+      metadata.deliveryDate = item.deliveryDate instanceof Date ? 
+        item.deliveryDate.toISOString() : item.deliveryDate;
+    }
+    
+    if (item.deliveryAddress) {
+      metadata.deliveryAddress = typeof item.deliveryAddress === 'string' ? 
+        item.deliveryAddress : JSON.stringify(item.deliveryAddress);
+    }
+    
+    if (item.contactInfo) {
+      metadata.contactName = item.contactInfo.name;
+      metadata.contactPhone = item.contactInfo.phone;
+      metadata.contactEmail = item.contactInfo.email;
+    }
+    
+    if (item.deliveryTimePreference) {
+      metadata.deliveryTimePreference = item.deliveryTimePreference;
+    }
+    
+    if (item.deliveryInstructions) {
+      metadata.deliveryInstructions = item.deliveryInstructions;
+    }
+
+    return {
+      id: item.id,
+      name: item.name,
+      category: item.category,
+      materialCategory: item.materialCategory,
+      price: item.price,
+      quantity: item.tons || item.quantity,
+      tons: item.tons,
+      yards: item.yards,
+      size: item.size,
+      materialSize: item.materialSize,
+      image: item.image || item.images?.[0],
+      metadata
+    };
+  });
 };

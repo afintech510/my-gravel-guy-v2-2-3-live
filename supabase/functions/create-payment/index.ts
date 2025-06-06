@@ -100,33 +100,50 @@ serve(async (req) => {
           }
         }
 
-        // Add this item's metadata to the order metadata
+        // Enhanced metadata collection for proper database mapping
+        orderMetadata[`item_${i+1}_product_id`] = item.id || '';
+        orderMetadata[`item_${i+1}_product_name`] = cleanName;
+        orderMetadata[`item_${i+1}_material_category`] = item.category || item.materialCategory || '';
+        orderMetadata[`item_${i+1}_quantity_tons`] = item.quantity || item.tons || 0;
+        orderMetadata[`item_${i+1}_quantity_yards`] = item.yards || 0;
+        orderMetadata[`item_${i+1}_unit_price`] = item.price || 0;
+        orderMetadata[`item_${i+1}_total_price`] = (item.price * item.quantity) || 0;
+        orderMetadata[`item_${i+1}_material_size`] = item.size || item.materialSize || '';
+
+        // Add delivery and contact metadata from item metadata
         if (item.metadata) {
-          orderMetadata[`item_${i+1}_id`] = item.id;
-          orderMetadata[`item_${i+1}_name`] = cleanName;
-          
           if (item.metadata.deliveryDate) {
             orderMetadata[`item_${i+1}_delivery_date`] = item.metadata.deliveryDate;
           }
           
           if (item.metadata.deliveryAddress) {
             const address = JSON.parse(item.metadata.deliveryAddress);
-            orderMetadata[`item_${i+1}_address`] = 
-              `${address.street}, ${address.city}, ${address.state} ${address.zip}`;
+            orderMetadata[`item_${i+1}_delivery_address_street`] = address.street || '';
+            orderMetadata[`item_${i+1}_delivery_address_city`] = address.city || '';
+            orderMetadata[`item_${i+1}_delivery_address_state`] = address.state || '';
+            orderMetadata[`item_${i+1}_delivery_address_zip`] = address.zip || '';
           }
           
           if (item.metadata.contactPhone) {
-            orderMetadata[`item_${i+1}_phone`] = item.metadata.contactPhone;
+            orderMetadata[`item_${i+1}_contact_phone`] = item.metadata.contactPhone;
+          }
+
+          if (item.metadata.contactName) {
+            orderMetadata[`item_${i+1}_contact_name`] = item.metadata.contactName;
+          }
+
+          if (item.metadata.contactEmail) {
+            orderMetadata[`item_${i+1}_contact_email`] = item.metadata.contactEmail;
           }
           
           if (item.metadata.deliveryTimePreference) {
-            orderMetadata[`item_${i+1}_time_preference`] = item.metadata.deliveryTimePreference;
+            orderMetadata[`item_${i+1}_delivery_time_preference`] = item.metadata.deliveryTimePreference;
           }
           
           if (item.metadata.deliveryInstructions) {
             // Truncate long instructions for metadata limits
             const instructions = item.metadata.deliveryInstructions;
-            orderMetadata[`item_${i+1}_instructions`] = 
+            orderMetadata[`item_${i+1}_delivery_instructions`] = 
               instructions.length > 100 ? instructions.substring(0, 97) + '...' : instructions;
           }
         }
@@ -205,7 +222,7 @@ serve(async (req) => {
         }
       );
 
-      // Prepare order records for each cart item
+      // Prepare order records for each cart item with correct field mapping
       const orderRecords = items.map((item, index) => {
         let deliveryAddress = null;
         let contactInfo = null;
@@ -222,23 +239,32 @@ serve(async (req) => {
         if (item.metadata?.contactPhone || deliveryAddress) {
           contactInfo = {
             phone: item.metadata?.contactPhone,
-            // We'll need to get name and email from the session or cart context
-            name: "Customer", // Placeholder - should come from cart context
-            email: "customer@example.com" // Placeholder - should come from cart context
+            name: item.metadata?.contactName || "Customer",
+            email: item.metadata?.contactEmail || "customer@example.com"
           };
         }
 
         return {
           order_id: orderId,
           stripe_session_id: session.id,
-          product_id: item.id,
+          product_id: String(item.id || ''),
           product_name: item.name,
-          quantity: item.quantity,
+          material_category: item.category || item.materialCategory || null,
+          quantity_tons: item.quantity || item.tons || 0,
+          quantity_yards: item.yards || null,
           unit_price: item.price,
-          total_price: item.price * item.quantity,
+          total_price: item.price * (item.quantity || item.tons || 0),
+          material_size: item.size || item.materialSize || null,
           delivery_date: item.metadata?.deliveryDate || null,
-          delivery_address: deliveryAddress,
-          contact_info: contactInfo,
+          delivery_address_street: deliveryAddress?.street || null,
+          delivery_address_city: deliveryAddress?.city || null,
+          delivery_address_state: deliveryAddress?.state || null,
+          delivery_address_zip: deliveryAddress?.zip || null,
+          contact_name: item.metadata?.contactName || null,
+          contact_phone: item.metadata?.contactPhone || null,
+          contact_email: item.metadata?.contactEmail || null,
+          customer_email: item.metadata?.contactEmail || null,
+          customer_name: item.metadata?.contactName || null,
           delivery_time_preference: item.metadata?.deliveryTimePreference || null,
           delivery_instructions: item.metadata?.deliveryInstructions || null,
           status: 'pending_payment',
@@ -247,7 +273,7 @@ serve(async (req) => {
         };
       });
 
-      console.log('Creating order records:', orderRecords);
+      console.log('Creating order records with correct field mapping:', orderRecords);
 
       // Insert order records into the database
       const { data: orderData, error: orderError } = await supabase
