@@ -9,169 +9,232 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+// Enhanced logging system for comprehensive debugging
+const logger = {
+  info: (message: string, data?: any) => {
+    console.log(`[VERIFY-PAYMENT] ${new Date().toISOString()} INFO: ${message}`, data ? JSON.stringify(data, null, 2) : '');
+  },
+  error: (message: string, error?: any) => {
+    console.error(`[VERIFY-PAYMENT] ${new Date().toISOString()} ERROR: ${message}`, error);
+  },
+  debug: (message: string, data?: any) => {
+    console.log(`[VERIFY-PAYMENT] ${new Date().toISOString()} DEBUG: ${message}`, data ? JSON.stringify(data, null, 2) : '');
+  }
+};
+
+// Helper function to extract and validate order data from Stripe metadata
+const extractOrderDataFromMetadata = (metadata: any, customerEmail: string, customerName?: string) => {
+  logger.debug("Extracting order data from metadata", metadata);
+  
+  const orderItems = [];
+  const itemIndices = new Set();
+  
+  // Find all item indices in metadata
+  Object.keys(metadata).forEach(key => {
+    const match = key.match(/^item_(\d+)_/);
+    if (match) {
+      itemIndices.add(parseInt(match[1]));
+    }
+  });
+  
+  logger.info(`Found ${itemIndices.size} items in metadata`);
+  
+  // Extract data for each item
+  itemIndices.forEach(index => {
+    const item = {
+      product_id: metadata[`item_${index}_product_id`] || '',
+      product_name: metadata[`item_${index}_product_name`] || 'Unknown Product',
+      material_category: metadata[`item_${index}_material_category`] || null,
+      quantity_tons: parseFloat(metadata[`item_${index}_quantity_tons`]) || 0,
+      quantity_yards: parseFloat(metadata[`item_${index}_quantity_yards`]) || null,
+      unit_price: parseFloat(metadata[`item_${index}_unit_price`]) || 0,
+      total_price: parseFloat(metadata[`item_${index}_total_price`]) || 0,
+      material_size: metadata[`item_${index}_material_size`] || null,
+      delivery_date: metadata[`item_${index}_delivery_date`] || null,
+      delivery_address_street: metadata[`item_${index}_delivery_address_street`] || null,
+      delivery_address_city: metadata[`item_${index}_delivery_address_city`] || null,
+      delivery_address_state: metadata[`item_${index}_delivery_address_state`] || null,
+      delivery_address_zip: metadata[`item_${index}_delivery_address_zip`] || null,
+      contact_name: metadata[`item_${index}_contact_name`] || customerName || null,
+      contact_phone: metadata[`item_${index}_contact_phone`] || null,
+      contact_email: metadata[`item_${index}_contact_email`] || customerEmail || null,
+      delivery_time_preference: metadata[`item_${index}_delivery_time_preference`] || null,
+      delivery_instructions: metadata[`item_${index}_delivery_instructions`] || null,
+      customer_email: customerEmail,
+      customer_name: customerName || metadata[`item_${index}_contact_name`] || null
+    };
+    
+    orderItems.push(item);
+    logger.debug(`Extracted item ${index}`, item);
+  });
+  
+  return orderItems;
+};
+
+// Helper function to send order confirmation emails
+const sendOrderEmails = async (orderData: any) => {
+  try {
+    logger.info("Attempting to send order confirmation emails");
+    
+    // Calculate total amount for email
+    const totalAmount = orderData.items.reduce((sum: number, item: any) => sum + (item.total_price || 0), 0);
+    
+    const emailData = {
+      order_id: orderData.order_id,
+      items: orderData.items,
+      total_amount: totalAmount,
+      customer_email: orderData.customer_email,
+      customer_name: orderData.customer_name
+    };
+    
+    logger.debug("Email data prepared", emailData);
+    
+    // Send emails using the existing email service pattern
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+    
+    // Send customer confirmation email
+    const customerEmailResult = await supabase.functions.invoke('send-email', {
+      body: {
+        to: emailData.customer_email,
+        subject: `Order Confirmation - ${emailData.order_id} 📦`,
+        html: generateCustomerEmailTemplate(emailData),
+        type: 'customer_confirmation',
+        orderData: emailData
+      }
+    });
+    
+    // Send internal notification email
+    const internalEmailResult = await supabase.functions.invoke('send-email', {
+      body: {
+        to: 'order.support@mygravelguy.com',
+        subject: `🚨 New Order: ${emailData.order_id} - $${totalAmount.toFixed(2)}`,
+        html: generateInternalEmailTemplate(emailData),
+        type: 'internal_notification',
+        orderData: emailData
+      }
+    });
+    
+    logger.info("Email sending completed", {
+      customerEmail: customerEmailResult.error ? 'failed' : 'success',
+      internalEmail: internalEmailResult.error ? 'failed' : 'success'
+    });
+    
+    return {
+      customerEmailSent: !customerEmailResult.error,
+      internalEmailSent: !internalEmailResult.error
+    };
+    
+  } catch (error) {
+    logger.error("Failed to send order emails", error);
+    return {
+      customerEmailSent: false,
+      internalEmailSent: false,
+      emailError: error.message
+    };
+  }
+};
+
+// Simple email templates (basic versions)
+const generateCustomerEmailTemplate = (orderData: any) => {
+  return `
+    <h2>Order Confirmation</h2>
+    <p>Thank you for your order!</p>
+    <p><strong>Order ID:</strong> ${orderData.order_id}</p>
+    <p><strong>Total:</strong> $${orderData.total_amount.toFixed(2)}</p>
+    <h3>Items:</h3>
+    <ul>
+      ${orderData.items.map((item: any) => `
+        <li>${item.product_name} - ${item.quantity_tons} tons - $${item.total_price.toFixed(2)}</li>
+      `).join('')}
+    </ul>
+    <p>We'll process your order and contact you with delivery details.</p>
+  `;
+};
+
+const generateInternalEmailTemplate = (orderData: any) => {
+  return `
+    <h2>New Order Received</h2>
+    <p><strong>Order ID:</strong> ${orderData.order_id}</p>
+    <p><strong>Customer:</strong> ${orderData.customer_name || 'N/A'} (${orderData.customer_email})</p>
+    <p><strong>Total:</strong> $${orderData.total_amount.toFixed(2)}</p>
+    <h3>Items:</h3>
+    <ul>
+      ${orderData.items.map((item: any) => `
+        <li>${item.product_name} - ${item.quantity_tons} tons - $${item.total_price.toFixed(2)}</li>
+      `).join('')}
+    </ul>
+  `;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  logger.info("=== VERIFY PAYMENT FUNCTION STARTED ===");
+
   try {
-    const { sessionId } = await req.json();
+    // Step 1: Environment validation
+    logger.info("Step 1: Validating environment variables");
+    
+    const stripeKey = Deno.env.get("stripe");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    if (!stripeKey) {
+      logger.error("Stripe secret key not found in environment");
+      throw new Error("Stripe secret key not configured");
+    }
+    if (!supabaseUrl || !supabaseServiceKey) {
+      logger.error("Supabase environment variables missing");
+      throw new Error("Supabase not properly configured");
+    }
+    
+    logger.info("Environment variables validated successfully");
+
+    // Step 2: Parse request body
+    logger.info("Step 2: Parsing request body");
+    
+    const requestBody = await req.json();
+    logger.debug("Request body received", requestBody);
+    
+    const { sessionId } = requestBody;
     
     if (!sessionId) {
+      logger.error("Session ID missing from request");
       throw new Error("Session ID is required");
     }
+    
+    logger.info(`Processing payment verification for session: ${sessionId}`);
 
-    console.log('Verifying payment for session:', sessionId);
-
-    // Initialize Stripe
-    const stripeKey = Deno.env.get("stripe");
-    if (!stripeKey) {
-      throw new Error("Stripe secret key not found");
-    }
+    // Step 3: Initialize Stripe
+    logger.info("Step 3: Initializing Stripe client");
     
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
-    // Retrieve the session from Stripe
+    // Step 4: Retrieve Stripe session
+    logger.info("Step 4: Retrieving Stripe checkout session");
+    
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
       expand: ['payment_intent', 'customer']
     });
 
-    console.log('Retrieved Stripe session:', {
+    logger.info("Stripe session retrieved", {
       id: session.id,
       payment_status: session.payment_status,
       customer_email: session.customer_details?.email,
-      metadata: session.metadata
+      amount_total: session.amount_total,
+      metadata_keys: Object.keys(session.metadata || {})
     });
 
-    // Create Supabase client with service role key to bypass RLS
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    );
-
-    // Check if payment was successful
-    if (session.payment_status === 'paid') {
-      console.log('Payment confirmed as paid, updating order status');
-      
-      // Extract order ID from metadata
-      const orderId = session.metadata?.order_id;
-      if (!orderId) {
-        console.error('No order_id found in session metadata');
-        throw new Error('Order ID not found in payment session');
-      }
-
-      // Update order status to 'paid' and add payment intent ID
-      const { data: updateData, error: updateError } = await supabase
-        .from('orders')
-        .update({
-          status: 'paid',
-          stripe_payment_intent_id: session.payment_intent?.id || null,
-          customer_email: session.customer_details?.email || null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('stripe_session_id', sessionId)
-        .select();
-
-      if (updateError) {
-        console.error('Failed to update order status:', updateError);
-        throw new Error(`Failed to update order: ${updateError.message}`);
-      }
-
-      console.log('Successfully updated order status to paid:', updateData);
-
-      // If there are items with incomplete data, try to extract from metadata
-      if (session.metadata) {
-        console.log('Checking for additional order data in metadata...');
-        
-        // Extract item data from metadata and update any missing fields
-        const metadataKeys = Object.keys(session.metadata);
-        const itemUpdates = [];
-
-        // Group metadata by item number
-        const itemData = {};
-        metadataKeys.forEach(key => {
-          const match = key.match(/^item_(\d+)_(.+)$/);
-          if (match) {
-            const itemIndex = match[1];
-            const fieldName = match[2];
-            if (!itemData[itemIndex]) {
-              itemData[itemIndex] = {};
-            }
-            itemData[itemIndex][fieldName] = session.metadata[key];
-          }
-        });
-
-        console.log('Extracted item data from metadata:', itemData);
-
-        // Update each order record with missing data
-        for (const [itemIndex, data] of Object.entries(itemData)) {
-          const updateFields = {};
-          
-          // Map metadata fields to database fields with correct names
-          if (data.product_id) updateFields.product_id = data.product_id;
-          if (data.product_name) updateFields.product_name = data.product_name;
-          if (data.material_category) updateFields.material_category = data.material_category;
-          if (data.quantity_tons) updateFields.quantity_tons = parseFloat(data.quantity_tons);
-          if (data.quantity_yards) updateFields.quantity_yards = parseFloat(data.quantity_yards);
-          if (data.unit_price) updateFields.unit_price = parseFloat(data.unit_price);
-          if (data.total_price) updateFields.total_price = parseFloat(data.total_price);
-          if (data.material_size) updateFields.material_size = data.material_size;
-          if (data.delivery_date) updateFields.delivery_date = data.delivery_date;
-          if (data.delivery_address_street) updateFields.delivery_address_street = data.delivery_address_street;
-          if (data.delivery_address_city) updateFields.delivery_address_city = data.delivery_address_city;
-          if (data.delivery_address_state) updateFields.delivery_address_state = data.delivery_address_state;
-          if (data.delivery_address_zip) updateFields.delivery_address_zip = data.delivery_address_zip;
-          if (data.contact_name) updateFields.contact_name = data.contact_name;
-          if (data.contact_phone) updateFields.contact_phone = data.contact_phone;
-          if (data.contact_email) updateFields.contact_email = data.contact_email;
-          if (data.delivery_time_preference) updateFields.delivery_time_preference = data.delivery_time_preference;
-          if (data.delivery_instructions) updateFields.delivery_instructions = data.delivery_instructions;
-
-          // Also set customer_name and customer_email if available
-          if (data.contact_name) updateFields.customer_name = data.contact_name;
-          if (data.contact_email) updateFields.customer_email = data.contact_email;
-
-          updateFields.updated_at = new Date().toISOString();
-
-          if (Object.keys(updateFields).length > 1) { // More than just updated_at
-            console.log(`Updating order record ${itemIndex} with:`, updateFields);
-            
-            const { error: itemUpdateError } = await supabase
-              .from('orders')
-              .update(updateFields)
-              .eq('order_id', orderId)
-              .eq('stripe_session_id', sessionId);
-
-            if (itemUpdateError) {
-              console.error(`Failed to update item ${itemIndex}:`, itemUpdateError);
-            } else {
-              console.log(`Successfully updated item ${itemIndex}`);
-            }
-          }
-        }
-      }
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          payment_status: session.payment_status,
-          order_id: orderId,
-          customer_email: session.customer_details?.email
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        }
-      );
-    } else {
-      console.log('Payment not completed, status:', session.payment_status);
-      
+    // Step 5: Verify payment status
+    logger.info("Step 5: Verifying payment status");
+    
+    if (session.payment_status !== 'paid') {
+      logger.info(`Payment not completed. Status: ${session.payment_status}`);
       return new Response(
         JSON.stringify({
           success: false,
@@ -185,13 +248,148 @@ serve(async (req) => {
       );
     }
 
+    logger.info("Payment confirmed as successful");
+
+    // Step 6: Extract order ID and validate metadata
+    logger.info("Step 6: Extracting order data from metadata");
+    
+    const orderId = session.metadata?.order_id;
+    if (!orderId) {
+      logger.error("Order ID not found in session metadata");
+      throw new Error('Order ID not found in payment session');
+    }
+
+    const customerEmail = session.customer_details?.email;
+    const customerName = session.customer_details?.name;
+    
+    if (!customerEmail) {
+      logger.error("Customer email not found in session");
+      throw new Error('Customer email not found in payment session');
+    }
+
+    logger.info("Order identification successful", {
+      orderId,
+      customerEmail,
+      customerName
+    });
+
+    // Step 7: Extract order items from metadata
+    logger.info("Step 7: Processing order items from metadata");
+    
+    const orderItems = extractOrderDataFromMetadata(session.metadata, customerEmail, customerName);
+    
+    if (orderItems.length === 0) {
+      logger.error("No order items found in metadata");
+      throw new Error('No order items found in payment session');
+    }
+
+    logger.info(`Successfully extracted ${orderItems.length} order items`);
+
+    // Step 8: Initialize Supabase client
+    logger.info("Step 8: Initializing Supabase client");
+    
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+
+    // Step 9: Insert order records into database
+    logger.info("Step 9: Creating order records in database");
+    
+    const orderRecords = orderItems.map(item => ({
+      order_id: orderId,
+      stripe_session_id: sessionId,
+      stripe_payment_intent_id: session.payment_intent?.id || null,
+      product_id: item.product_id,
+      product_name: item.product_name,
+      material_category: item.material_category,
+      quantity_tons: item.quantity_tons,
+      quantity_yards: item.quantity_yards,
+      unit_price: item.unit_price,
+      total_price: item.total_price,
+      material_size: item.material_size,
+      delivery_date: item.delivery_date,
+      delivery_address_street: item.delivery_address_street,
+      delivery_address_city: item.delivery_address_city,
+      delivery_address_state: item.delivery_address_state,
+      delivery_address_zip: item.delivery_address_zip,
+      contact_name: item.contact_name,
+      contact_phone: item.contact_phone,
+      contact_email: item.contact_email,
+      customer_email: item.customer_email,
+      customer_name: item.customer_name,
+      delivery_time_preference: item.delivery_time_preference,
+      delivery_instructions: item.delivery_instructions,
+      status: 'paid',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }));
+
+    logger.debug("Order records prepared for insertion", orderRecords);
+
+    const { data: insertedOrders, error: insertError } = await supabase
+      .from('orders')
+      .insert(orderRecords)
+      .select();
+
+    if (insertError) {
+      logger.error('Failed to insert order records', insertError);
+      throw new Error(`Database error: ${insertError.message}`);
+    }
+
+    logger.info(`Successfully inserted ${insertedOrders?.length || 0} order records`);
+
+    // Step 10: Send confirmation emails
+    logger.info("Step 10: Sending confirmation emails");
+    
+    const emailResults = await sendOrderEmails({
+      order_id: orderId,
+      items: orderItems,
+      customer_email: customerEmail,
+      customer_name: customerName
+    });
+
+    logger.info("Email sending completed", emailResults);
+
+    // Step 11: Return success response
+    logger.info("Step 11: Preparing success response");
+    
+    const response = {
+      success: true,
+      payment_status: session.payment_status,
+      order_id: orderId,
+      customer_email: customerEmail,
+      orders_created: insertedOrders?.length || 0,
+      emails_sent: {
+        customer: emailResults.customerEmailSent,
+        internal: emailResults.internalEmailSent
+      }
+    };
+
+    logger.info("=== VERIFY PAYMENT FUNCTION COMPLETED SUCCESSFULLY ===", response);
+
+    return new Response(
+      JSON.stringify(response),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      }
+    );
+
   } catch (error) {
-    console.error("Payment verification error:", error);
+    logger.error("=== VERIFY PAYMENT FUNCTION FAILED ===", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message
+        error: error.message,
+        timestamp: new Date().toISOString()
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
