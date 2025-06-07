@@ -9,7 +9,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Enhanced logging system
+// Enhanced logging system with timestamps and detailed context
 const logger = {
   info: (message: string, data?: any) => {
     console.log(`[VERIFY-PAYMENT] ${new Date().toISOString()} INFO: ${message}`, data ? JSON.stringify(data, null, 2) : '');
@@ -19,6 +19,9 @@ const logger = {
   },
   debug: (message: string, data?: any) => {
     console.log(`[VERIFY-PAYMENT] ${new Date().toISOString()} DEBUG: ${message}`, data ? JSON.stringify(data, null, 2) : '');
+  },
+  step: (stepNumber: number, description: string, data?: any) => {
+    console.log(`[VERIFY-PAYMENT] ${new Date().toISOString()} STEP ${stepNumber}: ${description}`, data ? JSON.stringify(data, null, 2) : '');
   }
 };
 
@@ -30,40 +33,36 @@ serve(async (req) => {
   logger.info("=== VERIFY PAYMENT FUNCTION STARTED ===");
 
   try {
-    // Step 1: Environment validation with proper error handling
-    logger.info("Step 1: Validating environment variables");
+    // Step 1: Enhanced environment validation
+    logger.step(1, "Validating environment variables");
     
     const stripeKey = Deno.env.get("stripe") || Deno.env.get("STRIPE_SECRET_KEY");
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
     
     logger.debug("Environment check", {
       stripeKeyExists: !!stripeKey,
       stripeKeyPrefix: stripeKey ? stripeKey.substring(0, 7) + "..." : "not found",
       supabaseUrlExists: !!supabaseUrl,
-      supabaseServiceKeyExists: !!supabaseServiceKey
+      supabaseServiceKeyExists: !!supabaseServiceKey,
+      resendApiKeyExists: !!resendApiKey
     });
     
-    if (!stripeKey) {
-      const error = "Stripe secret key not found. Please set 'stripe' or 'STRIPE_SECRET_KEY' in Edge Function secrets";
-      logger.error(error);
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error,
-        debug: "Check Supabase Edge Function secrets configuration"
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      });
-    }
+    // Critical environment variables check
+    const missingVars = [];
+    if (!stripeKey) missingVars.push("Stripe secret key ('stripe' or 'STRIPE_SECRET_KEY')");
+    if (!supabaseUrl) missingVars.push("SUPABASE_URL");
+    if (!supabaseServiceKey) missingVars.push("SUPABASE_SERVICE_ROLE_KEY");
     
-    if (!supabaseUrl || !supabaseServiceKey) {
-      const error = "Supabase environment variables missing";
+    if (missingVars.length > 0) {
+      const error = `Missing required environment variables: ${missingVars.join(', ')}`;
       logger.error(error);
       return new Response(JSON.stringify({ 
         success: false, 
         error,
-        debug: "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY required"
+        debug: "Check Supabase Edge Function secrets configuration",
+        missing_variables: missingVars
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
@@ -72,14 +71,15 @@ serve(async (req) => {
     
     logger.info("Environment variables validated successfully");
 
-    // Step 2: Parse and validate request
-    logger.info("Step 2: Parsing request body");
+    // Step 2: Enhanced request parsing and validation
+    logger.step(2, "Parsing and validating request");
     
     let requestBody;
     try {
       const rawBody = await req.text();
-      logger.debug("Raw request body", { body: rawBody });
+      logger.debug("Raw request body received", { bodyLength: rawBody.length });
       requestBody = JSON.parse(rawBody);
+      logger.debug("Request body parsed successfully", requestBody);
     } catch (parseError) {
       logger.error("Failed to parse request body", parseError);
       return new Response(JSON.stringify({
@@ -94,12 +94,12 @@ serve(async (req) => {
     
     const { sessionId } = requestBody;
     
-    if (!sessionId) {
-      logger.error("Session ID missing from request");
+    if (!sessionId || typeof sessionId !== 'string') {
+      logger.error("Session ID validation failed", { sessionId, type: typeof sessionId });
       return new Response(JSON.stringify({
         success: false,
-        error: "Session ID is required",
-        debug: "sessionId parameter missing in request body"
+        error: "Valid sessionId is required",
+        debug: "sessionId must be a non-empty string"
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
@@ -108,13 +108,27 @@ serve(async (req) => {
     
     logger.info(`Processing payment verification for session: ${sessionId}`);
 
-    // Step 3: Initialize Stripe
-    logger.info("Step 3: Initializing Stripe client");
+    // Step 3: Initialize Stripe with enhanced error handling
+    logger.step(3, "Initializing Stripe client");
     
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    let stripe;
+    try {
+      stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+      logger.info("Stripe client initialized successfully");
+    } catch (stripeInitError) {
+      logger.error("Failed to initialize Stripe", stripeInitError);
+      return new Response(JSON.stringify({
+        success: false,
+        error: "Failed to initialize payment service",
+        debug: stripeInitError.message
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
+    }
 
-    // Step 4: Retrieve Stripe session
-    logger.info("Step 4: Retrieving Stripe checkout session");
+    // Step 4: Retrieve and validate Stripe session
+    logger.step(4, "Retrieving Stripe checkout session");
     
     let session;
     try {
@@ -134,7 +148,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         success: false,
         error: "Failed to retrieve payment session",
-        debug: stripeError.message
+        debug: `Stripe API error: ${stripeError.message}`
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
@@ -142,14 +156,15 @@ serve(async (req) => {
     }
 
     // Step 5: Verify payment status
-    logger.info("Step 5: Verifying payment status");
+    logger.step(5, "Verifying payment status");
     
     if (session.payment_status !== 'paid') {
       logger.info(`Payment not completed. Status: ${session.payment_status}`);
       return new Response(JSON.stringify({
         success: false,
         payment_status: session.payment_status,
-        message: "Payment not completed"
+        message: "Payment not completed",
+        session_id: sessionId
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -158,31 +173,25 @@ serve(async (req) => {
 
     logger.info("Payment confirmed as successful");
 
-    // Step 6: Extract order data from metadata
-    logger.info("Step 6: Extracting order data from metadata");
+    // Step 6: Extract and validate order data
+    logger.step(6, "Extracting order data from session metadata");
     
     const orderId = session.metadata?.order_id;
-    if (!orderId) {
-      logger.error("Order ID not found in session metadata");
-      return new Response(JSON.stringify({
-        success: false,
-        error: "Order ID not found in payment session",
-        debug: "order_id missing in session metadata"
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
-      });
-    }
-
     const customerEmail = session.customer_details?.email;
     const customerName = session.customer_details?.name;
     
-    if (!customerEmail) {
-      logger.error("Customer email not found in session");
+    // Enhanced validation
+    const validationErrors = [];
+    if (!orderId) validationErrors.push("order_id missing in session metadata");
+    if (!customerEmail) validationErrors.push("customer email not found in session");
+    
+    if (validationErrors.length > 0) {
+      logger.error("Order data validation failed", { validationErrors, metadata: session.metadata });
       return new Response(JSON.stringify({
         success: false,
-        error: "Customer email not found in payment session",
-        debug: "customer_details.email missing"
+        error: "Invalid order data in payment session",
+        debug: validationErrors.join(", "),
+        validation_errors: validationErrors
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
@@ -195,8 +204,8 @@ serve(async (req) => {
       customerName
     });
 
-    // Step 7: Extract order items from metadata
-    logger.info("Step 7: Processing order items from metadata");
+    // Step 7: Enhanced order items extraction
+    logger.step(7, "Processing order items from metadata");
     
     const orderItems = [];
     const itemIndices = new Set();
@@ -209,16 +218,16 @@ serve(async (req) => {
       }
     });
     
-    logger.info(`Found ${itemIndices.size} items in metadata`);
+    logger.info(`Found ${itemIndices.size} items in metadata`, { itemIndices: Array.from(itemIndices) });
     
-    // Extract data for each item
+    // Extract and validate data for each item
     itemIndices.forEach(index => {
       const item = {
         product_id: session.metadata[`item_${index}_product_id`] || '',
         product_name: session.metadata[`item_${index}_product_name`] || 'Unknown Product',
         material_category: session.metadata[`item_${index}_material_category`] || null,
         quantity_tons: parseFloat(session.metadata[`item_${index}_quantity_tons`]) || 0,
-        quantity_yards: parseFloat(session.metadata[`item_${index}_quantity_yards`]) || null,
+        quantity_yards: session.metadata[`item_${index}_quantity_yards`] ? parseFloat(session.metadata[`item_${index}_quantity_yards`]) : null,
         unit_price: parseFloat(session.metadata[`item_${index}_unit_price`]) || 0,
         total_price: parseFloat(session.metadata[`item_${index}_total_price`]) || 0,
         material_size: session.metadata[`item_${index}_material_size`] || null,
@@ -241,11 +250,11 @@ serve(async (req) => {
     });
     
     if (orderItems.length === 0) {
-      logger.error("No order items found in metadata");
+      logger.error("No order items found in metadata", { metadata: session.metadata });
       return new Response(JSON.stringify({
         success: false,
         error: "No order items found in payment session",
-        debug: "No item_X_ metadata found"
+        debug: "No item_X_ metadata found in session"
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
@@ -254,18 +263,32 @@ serve(async (req) => {
 
     logger.info(`Successfully extracted ${orderItems.length} order items`);
 
-    // Step 8: Initialize Supabase client
-    logger.info("Step 8: Initializing Supabase client");
+    // Step 8: Initialize Supabase client with enhanced configuration
+    logger.step(8, "Initializing Supabase client");
     
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
+    let supabase;
+    try {
+      supabase = createClient(supabaseUrl, supabaseServiceKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      });
+      logger.info("Supabase client initialized successfully");
+    } catch (supabaseError) {
+      logger.error("Failed to initialize Supabase", supabaseError);
+      return new Response(JSON.stringify({
+        success: false,
+        error: "Failed to initialize database service",
+        debug: supabaseError.message
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
+    }
 
-    // Step 9: Insert order records into database
-    logger.info("Step 9: Creating order records in database");
+    // Step 9: Enhanced database insertion with proper schema alignment
+    logger.step(9, "Creating order records in database");
     
     const orderRecords = orderItems.map(item => ({
       order_id: orderId,
@@ -296,7 +319,10 @@ serve(async (req) => {
       updated_at: new Date().toISOString()
     }));
 
-    logger.debug("Order records prepared for insertion", { count: orderRecords.length });
+    logger.debug("Order records prepared for insertion", { 
+      count: orderRecords.length,
+      sampleRecord: orderRecords[0]
+    });
 
     let insertedOrders;
     try {
@@ -306,30 +332,42 @@ serve(async (req) => {
         .select();
 
       if (insertError) {
+        logger.error('Database insertion error details', {
+          message: insertError.message,
+          details: insertError.details,
+          hint: insertError.hint,
+          code: insertError.code
+        });
         throw insertError;
       }
       
       insertedOrders = data;
       logger.info(`Successfully inserted ${insertedOrders?.length || 0} order records`);
     } catch (dbError) {
-      logger.error('Failed to insert order records', dbError);
+      logger.error('Failed to insert order records', {
+        error: dbError.message,
+        details: dbError.details || 'No additional details',
+        recordCount: orderRecords.length
+      });
       return new Response(JSON.stringify({
         success: false,
-        error: "Failed to create order records",
-        debug: dbError.message
+        error: "Failed to create order records in database",
+        debug: `Database error: ${dbError.message}`,
+        database_details: dbError.details || null
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
       });
     }
 
-    // Step 10: Send confirmation emails
-    logger.info("Step 10: Sending confirmation emails");
+    // Step 10: Enhanced email service with robust error handling
+    logger.step(10, "Sending confirmation emails");
     
     let emailResults = {
       customerEmailSent: false,
       internalEmailSent: false,
-      emailError: null
+      emailError: null,
+      emailService: resendApiKey ? 'resend' : 'disabled'
     };
 
     try {
@@ -341,60 +379,78 @@ serve(async (req) => {
         items: orderItems,
         total_amount: totalAmount,
         customer_email: customerEmail,
-        customer_name: customerName
+        customer_name: customerName,
+        session_id: sessionId
       };
       
       logger.debug("Email data prepared", emailData);
       
-      // Send customer confirmation email
-      const customerEmailResult = await supabase.functions.invoke('send-email', {
-        body: {
-          to: emailData.customer_email,
-          subject: `Order Confirmation - ${emailData.order_id} 📦`,
-          html: generateCustomerEmailTemplate(emailData),
-          type: 'customer_confirmation',
-          orderData: emailData
-        }
-      });
-      
-      // Send internal notification email
-      const internalEmailResult = await supabase.functions.invoke('send-email', {
-        body: {
-          to: 'order.support@mygravelguy.com',
-          subject: `🚨 New Order: ${emailData.order_id} - $${totalAmount.toFixed(2)}`,
-          html: generateInternalEmailTemplate(emailData),
-          type: 'internal_notification',
-          orderData: emailData
-        }
-      });
-      
-      emailResults = {
-        customerEmailSent: !customerEmailResult.error,
-        internalEmailSent: !internalEmailResult.error,
-        emailError: customerEmailResult.error || internalEmailResult.error
-      };
-      
-      logger.info("Email sending completed", emailResults);
+      if (resendApiKey) {
+        // Send customer confirmation email
+        logger.debug("Sending customer confirmation email");
+        const customerEmailResult = await supabase.functions.invoke('send-email', {
+          body: {
+            to: emailData.customer_email,
+            subject: `Order Confirmation - ${emailData.order_id} 📦`,
+            html: generateCustomerEmailTemplate(emailData),
+            type: 'customer_confirmation',
+            orderData: emailData
+          }
+        });
+        
+        // Send internal notification email
+        logger.debug("Sending internal notification email");
+        const internalEmailResult = await supabase.functions.invoke('send-email', {
+          body: {
+            to: 'order.support@mygravelguy.com',
+            subject: `🚨 New Order: ${emailData.order_id} - $${totalAmount.toFixed(2)}`,
+            html: generateInternalEmailTemplate(emailData),
+            type: 'internal_notification',
+            orderData: emailData
+          }
+        });
+        
+        emailResults = {
+          customerEmailSent: !customerEmailResult.error,
+          internalEmailSent: !internalEmailResult.error,
+          emailError: customerEmailResult.error || internalEmailResult.error,
+          emailService: 'resend'
+        };
+        
+        logger.info("Email sending completed", emailResults);
+      } else {
+        logger.info("Email service disabled - RESEND_API_KEY not configured");
+        emailResults.emailError = "Email service not configured - RESEND_API_KEY missing";
+      }
       
     } catch (error) {
-      logger.error("Failed to send order emails", error);
+      logger.error("Failed to send order emails", {
+        error: error.message,
+        stack: error.stack
+      });
       emailResults.emailError = error.message;
     }
 
-    // Step 11: Return success response
-    logger.info("Step 11: Preparing success response");
+    // Step 11: Generate comprehensive success response
+    logger.step(11, "Preparing success response");
     
     const response = {
       success: true,
       payment_status: session.payment_status,
       order_id: orderId,
       customer_email: customerEmail,
+      customer_name: customerName,
+      session_id: sessionId,
       orders_created: insertedOrders?.length || 0,
+      items_processed: orderItems.length,
+      total_amount: orderItems.reduce((sum, item) => sum + (item.total_price || 0), 0),
       emails_sent: {
         customer: emailResults.customerEmailSent,
-        internal: emailResults.internalEmailSent
+        internal: emailResults.internalEmailSent,
+        service: emailResults.emailService
       },
-      email_error: emailResults.emailError
+      email_error: emailResults.emailError,
+      timestamp: new Date().toISOString()
     };
 
     logger.info("=== VERIFY PAYMENT FUNCTION COMPLETED SUCCESSFULLY ===", response);
@@ -411,7 +467,8 @@ serve(async (req) => {
     logger.error("=== VERIFY PAYMENT FUNCTION FAILED ===", {
       message: error.message,
       stack: error.stack,
-      name: error.name
+      name: error.name,
+      timestamp: new Date().toISOString()
     });
     
     return new Response(
@@ -419,7 +476,8 @@ serve(async (req) => {
         success: false,
         error: error.message,
         debug: error.stack,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        function: "verify-payment"
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -429,34 +487,123 @@ serve(async (req) => {
   }
 });
 
-// Simple email templates
+// Enhanced email templates with better formatting and error handling
 const generateCustomerEmailTemplate = (orderData: any) => {
-  return `
-    <h2>Order Confirmation</h2>
-    <p>Thank you for your order!</p>
-    <p><strong>Order ID:</strong> ${orderData.order_id}</p>
-    <p><strong>Total:</strong> $${orderData.total_amount.toFixed(2)}</p>
-    <h3>Items:</h3>
-    <ul>
-      ${orderData.items.map((item: any) => `
-        <li>${item.product_name} - ${item.quantity_tons} tons - $${item.total_price.toFixed(2)}</li>
-      `).join('')}
-    </ul>
-    <p>We'll process your order and contact you with delivery details.</p>
-  `;
+  try {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Order Confirmation</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: #16a34a; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="margin: 0; font-size: 28px;">Order Confirmation 📦</h1>
+          <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Thank you for your order!</p>
+        </div>
+        
+        <div style="background: #f8fafc; padding: 30px; border-radius: 0 0 10px 10px;">
+          <h2 style="color: #16a34a; margin-top: 0;">Order Details</h2>
+          <p><strong>Order ID:</strong> ${orderData.order_id}</p>
+          <p><strong>Customer:</strong> ${orderData.customer_name || 'Valued Customer'}</p>
+          <p><strong>Total Amount:</strong> $${orderData.total_amount.toFixed(2)}</p>
+          
+          <h3>Items Ordered:</h3>
+          <ul style="background: white; padding: 20px; border-radius: 8px;">
+            ${orderData.items.map((item: any) => `
+              <li style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e5e7eb;">
+                <strong>${item.product_name}</strong><br>
+                Quantity: ${item.quantity_tons} tons<br>
+                Price: $${item.total_price.toFixed(2)}
+                ${item.delivery_date ? `<br>Delivery Date: ${new Date(item.delivery_date).toLocaleDateString()}` : ''}
+              </li>
+            `).join('')}
+          </ul>
+          
+          <div style="background: #dcfce7; padding: 20px; border-radius: 8px; margin-top: 20px;">
+            <h3 style="color: #16a34a; margin-top: 0;">What's Next?</h3>
+            <p>We're processing your order and will contact you within 24 hours with delivery details.</p>
+            <p>If you have any questions, please contact us at order.support@mygravelguy.com</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  } catch (error) {
+    logger.error("Error generating customer email template", error);
+    return `<h2>Order Confirmation</h2><p>Order ID: ${orderData.order_id}</p><p>Total: $${orderData.total_amount.toFixed(2)}</p>`;
+  }
 };
 
 const generateInternalEmailTemplate = (orderData: any) => {
-  return `
-    <h2>New Order Received</h2>
-    <p><strong>Order ID:</strong> ${orderData.order_id}</p>
-    <p><strong>Customer:</strong> ${orderData.customer_name || 'N/A'} (${orderData.customer_email})</p>
-    <p><strong>Total:</strong> $${orderData.total_amount.toFixed(2)}</p>
-    <h3>Items:</h3>
-    <ul>
-      ${orderData.items.map((item: any) => `
-        <li>${item.product_name} - ${item.quantity_tons} tons - $${item.total_price.toFixed(2)}</li>
-      `).join('')}
-    </ul>
-  `;
+  try {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>New Order Received</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: #dc2626; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="margin: 0; font-size: 28px;">🚨 New Order Received</h1>
+          <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Payment completed successfully</p>
+        </div>
+        
+        <div style="background: #f8fafc; padding: 30px; border-radius: 0 0 10px 10px;">
+          <h2 style="color: #dc2626; margin-top: 0;">Order Information</h2>
+          <p><strong>Order ID:</strong> ${orderData.order_id}</p>
+          <p><strong>Session ID:</strong> ${orderData.session_id}</p>
+          <p><strong>Customer:</strong> ${orderData.customer_name || 'N/A'} (${orderData.customer_email})</p>
+          <p><strong>Total Amount:</strong> $${orderData.total_amount.toFixed(2)}</p>
+          <p><strong>Items Count:</strong> ${orderData.items.length}</p>
+          
+          <h3>Order Items with Delivery Details:</h3>
+          ${orderData.items.map((item: any) => `
+            <div style="background: white; padding: 20px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #dc2626;">
+              <h4 style="margin-top: 0; color: #dc2626;">${item.product_name}</h4>
+              <p><strong>Quantity:</strong> ${item.quantity_tons} tons</p>
+              <p><strong>Price:</strong> $${item.total_price.toFixed(2)}</p>
+              
+              ${item.contact_name || item.contact_phone || item.contact_email ? `
+                <div style="background: #fef2f2; padding: 15px; border-radius: 6px; margin: 10px 0;">
+                  <h5 style="margin-top: 0; color: #991b1b;">Contact Information:</h5>
+                  ${item.contact_name ? `<p><strong>Name:</strong> ${item.contact_name}</p>` : ''}
+                  ${item.contact_phone ? `<p><strong>Phone:</strong> ${item.contact_phone}</p>` : ''}
+                  ${item.contact_email ? `<p><strong>Email:</strong> ${item.contact_email}</p>` : ''}
+                </div>
+              ` : ''}
+              
+              ${item.delivery_address_street ? `
+                <div style="background: #fef2f2; padding: 15px; border-radius: 6px; margin: 10px 0;">
+                  <h5 style="margin-top: 0; color: #991b1b;">Delivery Address:</h5>
+                  <p>${item.delivery_address_street}</p>
+                  <p>${item.delivery_address_city}, ${item.delivery_address_state} ${item.delivery_address_zip}</p>
+                </div>
+              ` : ''}
+              
+              ${item.delivery_date ? `
+                <div style="background: #fef2f2; padding: 15px; border-radius: 6px; margin: 10px 0;">
+                  <h5 style="margin-top: 0; color: #991b1b;">Delivery Details:</h5>
+                  <p><strong>Date:</strong> ${new Date(item.delivery_date).toLocaleDateString()}</p>
+                  ${item.delivery_time_preference ? `<p><strong>Time Preference:</strong> ${item.delivery_time_preference}</p>` : ''}
+                  ${item.delivery_instructions ? `<p><strong>Instructions:</strong> ${item.delivery_instructions}</p>` : ''}
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+          
+          <div style="background: #fee2e2; padding: 20px; border-radius: 8px; margin-top: 20px;">
+            <h3 style="color: #dc2626; margin-top: 0;">Action Required</h3>
+            <p>Process this order and contact the customer within 24 hours to confirm delivery details.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  } catch (error) {
+    logger.error("Error generating internal email template", error);
+    return `<h2>New Order</h2><p>Order ID: ${orderData.order_id}</p><p>Customer: ${orderData.customer_email}</p><p>Total: $${orderData.total_amount.toFixed(2)}</p>`;
+  }
 };
