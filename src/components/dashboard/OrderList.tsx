@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +25,8 @@ const statusColors = {
   processing: "bg-orange-100 text-orange-800",
   in_transit: "bg-purple-100 text-purple-800",
   delivered: "bg-green-100 text-green-800",
-  cancelled: "bg-red-100 text-red-800"
+  cancelled: "bg-red-100 text-red-800",
+  paid: "bg-emerald-100 text-emerald-800"
 };
 
 export function OrderList() {
@@ -113,6 +115,7 @@ export function OrderList() {
             <SelectItem value="in_transit">In Transit</SelectItem>
             <SelectItem value="delivered">Delivered</SelectItem>
             <SelectItem value="cancelled">Cancelled</SelectItem>
+            <SelectItem value="paid">Paid</SelectItem>
           </SelectContent>
         </Select>
 
@@ -182,7 +185,7 @@ export function OrderList() {
                           <div>
                             <h4 className="font-medium">{item.product_name}</h4>
                             <p className="text-sm text-gray-600">
-                              Quantity: {item.quantity} × ${item.unit_price.toFixed(2)} = ${(item.quantity * item.unit_price).toFixed(2)}
+                              Quantity: {item.quantity_tons} tons × ${item.unit_price.toFixed(2)} = ${item.total_price.toFixed(2)}
                             </p>
                           </div>
                           <Badge className={statusColors[item.status as keyof typeof statusColors]}>
@@ -219,6 +222,7 @@ export function OrderList() {
                               <SelectItem value="in_transit">In Transit</SelectItem>
                               <SelectItem value="delivered">Delivered</SelectItem>
                               <SelectItem value="cancelled">Cancelled</SelectItem>
+                              <SelectItem value="paid">Paid</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>

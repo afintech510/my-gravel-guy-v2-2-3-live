@@ -1,7 +1,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { OrderService } from '@/services/orderService';
-import type { Order, OrderFilters } from '@/types/order.types';
+import type { GroupedOrder, OrderFilters } from '@/types/order.types';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect } from 'react';
 
