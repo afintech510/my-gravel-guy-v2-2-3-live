@@ -81,7 +81,7 @@ export interface OrderServiceResponse {
 export function orderRowToOrderItem(row: OrderRow): OrderItem {
   return {
     id: row.id,
-    product_name: row.product_name || 'Unknown Product',
+    product_name: row.product_id || 'Unknown Product', // Use product_id as fallback since product_name doesn't exist
     quantity: row.quantity_tons,
     unit_price: row.unit_price,
     delivery_date: row.delivery_date || row.created_at || new Date().toISOString(),

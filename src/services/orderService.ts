@@ -4,8 +4,7 @@ import type {
   GroupedOrder, 
   OrderFilters, 
   OrderServiceResponse, 
-  OrderRow,
-  groupOrderRows 
+  OrderRow
 } from '@/types/order.types';
 import { groupOrderRows } from '@/types/order.types';
 
@@ -25,9 +24,9 @@ export class OrderService {
         .from('orders')
         .select('*', { count: 'exact' });
 
-      // Apply search filter
+      // Apply search filter - search by order_id or product_id since product_name isn't in orders table
       if (filters.searchTerm) {
-        query = query.or(`order_id.ilike.%${filters.searchTerm}%,product_name.ilike.%${filters.searchTerm}%`);
+        query = query.or(`order_id.ilike.%${filters.searchTerm}%,product_id.ilike.%${filters.searchTerm}%`);
       }
 
       // Apply status filter
