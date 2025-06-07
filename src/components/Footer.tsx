@@ -57,7 +57,7 @@ const Footer = () => {
         </div>
         <Separator className="my-8" />
         <div className="text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} Gravel Delivery. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} My Gravel Guy. All rights reserved.</p>
         </div>
       </div>
     </footer>
