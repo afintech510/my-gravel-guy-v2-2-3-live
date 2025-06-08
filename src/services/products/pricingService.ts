@@ -1,5 +1,5 @@
 
-import { Product, PriceTier } from './types';
+import { Product } from './types';
 import { 
   getPriceTiersForProduct as fetchPriceTiers,
   findPriceMultiplierForQuantity,
