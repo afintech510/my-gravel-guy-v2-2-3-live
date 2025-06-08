@@ -48,14 +48,7 @@ export interface ZipCodeData {
   timezone: string;
 }
 
-export interface PriceTier {
-  id: string;
-  product_id: string[];
-  min_tons: number;
-  max_tons?: number | null;
-  multiplier: number;
-  created_at?: string;
-}
+
 
 // Updated type definition for MaterialSize to be a string instead of specific literal types
 export type MaterialCategory = Product['category'];
