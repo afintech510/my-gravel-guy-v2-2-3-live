@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { Product, PriceTier as ProductPriceTier } from '@/services/productTypes';
+import { Product } from '@/services/productTypes';
 import { getProductBySlug } from '@/services/productService';
 import { 
   getPriceAdjustmentForZipCode, 
@@ -9,7 +9,7 @@ import {
 import { calculateProductExponentialPrice } from '@/services/products/exponentialPricing';
 
 // Type alias to ensure compatibility
-type PriceTier = ProductPriceTier;
+// type PriceTier = ProductPriceTier;
 
 export const useProduct = (slug: string | undefined, zipCode?: string, tons: number = 10) => {
   const [product, setProduct] = useState<Product | undefined>(undefined);
