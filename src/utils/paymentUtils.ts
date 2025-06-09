@@ -5,6 +5,10 @@ interface CheckoutBackup {
   total: number;
   timestamp: number;
   cartItems: any[];
+  customerInfo?: {
+    email?: string;
+    name?: string;
+  };
 }
 
 // Enhanced interface for order data with all required fields that match orders table schema
@@ -93,7 +97,7 @@ export const detectPaymentSuccess = (): {
   };
 };
 
-// Helper function to prepare cart items for Stripe with all required metadata
+// Enhanced helper function to prepare cart items for Stripe with comprehensive backup data
 export const prepareItemsForStripe = (cartItems: any[]): OrderItemData[] => {
   return cartItems.map(item => {
     // Build comprehensive metadata object
@@ -127,15 +131,33 @@ export const prepareItemsForStripe = (cartItems: any[]): OrderItemData[] => {
       id: item.id,
       name: item.name,
       category: item.category,
-      materialCategory: item.materialCategory || item.category, // Ensure materialCategory is set
+      materialCategory: item.materialCategory || item.category,
       price: item.price,
       quantity: item.tons || item.quantity,
       tons: item.tons,
       yards: item.yards,
       size: item.size,
-      materialSize: item.materialSize || item.size, // Ensure materialSize is set
+      materialSize: item.materialSize || item.size,
       image: item.image || item.images?.[0],
       metadata
     };
   });
+};
+
+// Enhanced function to create comprehensive backup data
+export const createEnhancedBackup = (orderId: string, cartItems: any[], customerInfo?: any): CheckoutBackup => {
+  const preparedItems = prepareItemsForStripe(cartItems);
+  const total = preparedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  
+  return {
+    orderId,
+    items: preparedItems,
+    total,
+    timestamp: Date.now(),
+    cartItems,
+    customerInfo: customerInfo || {
+      email: 'guest@mygravelguy.com',
+      name: 'Guest User'
+    }
+  };
 };
