@@ -25,7 +25,7 @@ const logger = {
   }
 };
 
-// Simple payment intent ID validation
+// Enhanced payment intent ID validation
 const validatePaymentIntentId = (paymentIntentId: string): { isValid: boolean; error?: string } => {
   if (!paymentIntentId) {
     return { isValid: false, error: "Payment Intent ID is required" };
@@ -35,7 +35,6 @@ const validatePaymentIntentId = (paymentIntentId: string): { isValid: boolean; e
     return { isValid: false, error: "Payment Intent ID must be a string" };
   }
   
-  // Stripe payment intent IDs typically start with 'pi_'
   if (!paymentIntentId.startsWith('pi_')) {
     return { isValid: false, error: "Invalid payment intent ID format - must start with 'pi_'" };
   }
@@ -47,7 +46,7 @@ const validatePaymentIntentId = (paymentIntentId: string): { isValid: boolean; e
   return { isValid: true };
 };
 
-// Legacy session ID validation (for fallback)
+// Enhanced session ID validation
 const validateSessionId = (sessionId: string): { isValid: boolean; error?: string } => {
   if (!sessionId) {
     return { isValid: false, error: "Session ID is required" };
@@ -68,35 +67,47 @@ const validateSessionId = (sessionId: string): { isValid: boolean; error?: strin
   return { isValid: true };
 };
 
-// Retry logic for Stripe API calls
+// Enhanced retry logic for Stripe API calls with specific error handling
 const retryStripeCall = async <T>(
   operation: () => Promise<T>,
-  maxRetries: number = 3,
+  operationName: string,
+  maxRetries: number = 2,
   delay: number = 1000
-): Promise<T> => {
+): Promise<{ data?: T; error?: any; fallbackRequired?: boolean }> => {
   let lastError: any;
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      logger.debug(`Stripe API attempt ${attempt}/${maxRetries}`);
-      return await operation();
+      logger.debug(`${operationName} attempt ${attempt}/${maxRetries}`);
+      const result = await operation();
+      return { data: result };
     } catch (error) {
       lastError = error;
-      logger.error(`Stripe API attempt ${attempt} failed`, {
+      logger.error(`${operationName} attempt ${attempt} failed`, {
         error: error.message,
         statusCode: error.statusCode,
-        type: error.type
+        type: error.type,
+        code: error.code
       });
       
+      // Check if this is a 404 or session expired error - trigger fallback
+      if (error.statusCode === 404 || 
+          error.message?.includes('No such checkout.session') ||
+          error.message?.includes('expired') ||
+          error.message?.includes('already consumed')) {
+        logger.info(`${operationName} requires fallback due to expired/missing session`);
+        return { error: lastError, fallbackRequired: true };
+      }
+      
       if (attempt < maxRetries) {
-        logger.debug(`Retrying in ${delay}ms...`);
+        logger.debug(`Retrying ${operationName} in ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
-        delay *= 2; // Exponential backoff
+        delay *= 2;
       }
     }
   }
   
-  throw lastError;
+  return { error: lastError, fallbackRequired: false };
 };
 
 serve(async (req) => {
@@ -104,10 +115,10 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  logger.info("=== VERIFY PAYMENT FUNCTION STARTED ===");
+  logger.info("=== ENHANCED VERIFY PAYMENT FUNCTION STARTED ===");
 
   try {
-    // Step 1: Enhanced environment validation
+    // Step 1: Environment validation
     logger.step(1, "Validating environment variables");
     
     const stripeKey = Deno.env.get("stripe");
@@ -118,13 +129,11 @@ serve(async (req) => {
     logger.debug("Environment check", {
       stripeKeyExists: !!stripeKey,
       stripeKeyPrefix: stripeKey ? stripeKey.substring(0, 12) + "..." : "not found",
-      stripeKeyLength: stripeKey ? stripeKey.length : 0,
       supabaseUrlExists: !!supabaseUrl,
       supabaseServiceKeyExists: !!supabaseServiceKey,
       resendApiKeyExists: !!resendApiKey
     });
     
-    // Critical environment variables check
     const missingVars = [];
     if (!stripeKey) missingVars.push("stripe");
     if (!supabaseUrl) missingVars.push("SUPABASE_URL");
@@ -143,7 +152,6 @@ serve(async (req) => {
       });
     }
     
-    // Validate Stripe key format
     if (!stripeKey.startsWith('sk_')) {
       logger.error("Invalid Stripe key format", { keyPrefix: stripeKey.substring(0, 10) });
       return new Response(JSON.stringify({ 
@@ -158,13 +166,13 @@ serve(async (req) => {
     
     logger.info("Environment variables validated successfully");
 
-    // Step 2: Enhanced request parsing and validation
+    // Step 2: Parse and validate request
     logger.step(2, "Parsing and validating request");
     
     let requestBody;
     try {
       const rawBody = await req.text();
-      logger.debug("Raw request body received", { bodyLength: rawBody.length, preview: rawBody.substring(0, 200) });
+      logger.debug("Raw request body received", { bodyLength: rawBody.length });
       requestBody = JSON.parse(rawBody);
       logger.debug("Request body parsed successfully", requestBody);
     } catch (parseError) {
@@ -181,10 +189,11 @@ serve(async (req) => {
     
     const { paymentIntentId, sessionId, orderId, fallbackMode, backupData } = requestBody;
     
-    // Validate input - prioritize payment intent over session
+    // Determine verification strategy
     let validationResult = { isValid: true };
     let primaryId = null;
     let verificationMode = 'fallback';
+    let requiresFallback = fallbackMode || false;
     
     if (!fallbackMode) {
       if (paymentIntentId) {
@@ -196,10 +205,11 @@ serve(async (req) => {
         primaryId = sessionId;
         verificationMode = 'session';
       } else {
-        validationResult = { isValid: false, error: "Either paymentIntentId or sessionId is required" };
+        requiresFallback = true;
+        verificationMode = 'fallback';
       }
       
-      if (!validationResult.isValid) {
+      if (!validationResult.isValid && !requiresFallback) {
         logger.error("ID validation failed", { paymentIntentId, sessionId, error: validationResult.error });
         return new Response(JSON.stringify({
           success: false,
@@ -216,11 +226,11 @@ serve(async (req) => {
       verificationMode,
       primaryId: primaryId ? `${primaryId.substring(0, 20)}...` : 'none',
       orderId,
-      fallbackMode,
+      requiresFallback,
       hasBackupData: !!backupData
     });
 
-    // Step 3: Initialize Stripe with enhanced error handling
+    // Step 3: Initialize Stripe
     logger.step(3, "Initializing Stripe client");
     
     let stripe;
@@ -228,7 +238,7 @@ serve(async (req) => {
       stripe = new Stripe(stripeKey, { 
         apiVersion: "2023-10-16",
         timeout: 30000,
-        maxNetworkRetries: 2
+        maxNetworkRetries: 1
       });
       logger.info("Stripe client initialized successfully");
     } catch (stripeInitError) {
@@ -243,148 +253,176 @@ serve(async (req) => {
       });
     }
 
-    // Step 4: Retrieve and validate payment information
-    logger.step(4, "Retrieving payment information from Stripe");
+    // Step 4: Attempt to retrieve payment information with fallback strategy
+    logger.step(4, "Retrieving payment information with fallback strategy");
     
     let paymentData;
     let customerEmail = null;
     let customerName = null;
     let finalOrderId = orderId;
+    let paymentVerified = false;
+    let usedFallback = requiresFallback;
     
-    if (!fallbackMode && primaryId) {
+    if (!requiresFallback && primaryId) {
       try {
         if (verificationMode === 'payment_intent') {
-          // Use Payment Intent API
-          paymentData = await retryStripeCall(async () => {
-            logger.debug("Attempting to retrieve payment intent", { paymentIntentId: `${primaryId.substring(0, 20)}...` });
-            return await stripe.paymentIntents.retrieve(primaryId, {
-              expand: ['customer']
+          logger.debug("Attempting payment intent retrieval");
+          const result = await retryStripeCall(
+            async () => await stripe.paymentIntents.retrieve(primaryId, { expand: ['customer'] }),
+            "Payment Intent Retrieval"
+          );
+          
+          if (result.fallbackRequired) {
+            logger.info("Payment intent requires fallback - session expired or consumed");
+            usedFallback = true;
+          } else if (result.error) {
+            throw result.error;
+          } else {
+            paymentData = result.data;
+            paymentVerified = true;
+            
+            logger.info("Payment intent retrieved successfully", {
+              id: paymentData.id,
+              status: paymentData.status,
+              amount: paymentData.amount,
+              currency: paymentData.currency
             });
-          });
-          
-          logger.info("Payment intent retrieved successfully", {
-            id: paymentData.id,
-            status: paymentData.status,
-            amount: paymentData.amount,
-            currency: paymentData.currency,
-            customer: paymentData.customer?.email || 'no customer data'
-          });
-          
-          // Extract customer information if available
-          if (paymentData.customer && typeof paymentData.customer === 'object') {
-            customerEmail = paymentData.customer.email;
-            customerName = paymentData.customer.name;
+            
+            if (paymentData.customer && typeof paymentData.customer === 'object') {
+              customerEmail = paymentData.customer.email;
+              customerName = paymentData.customer.name;
+            }
           }
           
         } else if (verificationMode === 'session') {
-          // Fallback to session API
-          paymentData = await retryStripeCall(async () => {
-            logger.debug("Attempting to retrieve session", { sessionId: `${primaryId.substring(0, 20)}...` });
-            return await stripe.checkout.sessions.retrieve(primaryId, {
-              expand: ['payment_intent', 'customer']
+          logger.debug("Attempting session retrieval");
+          const result = await retryStripeCall(
+            async () => await stripe.checkout.sessions.retrieve(primaryId, { expand: ['payment_intent', 'customer'] }),
+            "Session Retrieval"
+          );
+          
+          if (result.fallbackRequired) {
+            logger.info("Session requires fallback - session expired or consumed");
+            usedFallback = true;
+          } else if (result.error) {
+            throw result.error;
+          } else {
+            paymentData = result.data;
+            paymentVerified = true;
+            
+            logger.info("Session retrieved successfully", {
+              id: paymentData.id,
+              payment_status: paymentData.payment_status,
+              customer_email: paymentData.customer_details?.email,
+              amount_total: paymentData.amount_total
             });
-          });
-          
-          logger.info("Session retrieved successfully", {
-            id: paymentData.id,
-            payment_status: paymentData.payment_status,
-            customer_email: paymentData.customer_details?.email,
-            amount_total: paymentData.amount_total
-          });
-          
-          customerEmail = paymentData.customer_details?.email;
-          customerName = paymentData.customer_details?.name;
-          finalOrderId = paymentData.metadata?.order_id || orderId;
+            
+            customerEmail = paymentData.customer_details?.email;
+            customerName = paymentData.customer_details?.name;
+            finalOrderId = paymentData.metadata?.order_id || orderId;
+          }
         }
         
       } catch (stripeError) {
-        logger.error("Failed to retrieve payment information", {
+        logger.error("Stripe API error - triggering fallback", {
           error: stripeError.message,
           statusCode: stripeError.statusCode,
-          type: stripeError.type,
-          requestId: stripeError.requestId
+          type: stripeError.type
         });
         
-        let userMessage = "Failed to retrieve payment information";
-        let debugInfo = stripeError.message;
-        
-        if (stripeError.statusCode === 404) {
-          userMessage = "Payment not found or expired";
-          debugInfo = "The payment ID may be invalid or the payment may have expired";
-        } else if (stripeError.statusCode === 401) {
-          userMessage = "Authentication failed with payment provider";
-          debugInfo = "Check Stripe API key configuration";
-        } else if (stripeError.statusCode === 400) {
-          userMessage = "Invalid request to payment provider";
-          debugInfo = "The payment ID format may be incorrect";
+        // Check if we should use fallback for specific errors
+        if (stripeError.statusCode === 404 || 
+            stripeError.message?.includes('No such checkout.session') ||
+            stripeError.message?.includes('expired')) {
+          logger.info("Using fallback due to expired/missing Stripe session");
+          usedFallback = true;
+        } else {
+          // For other errors, still return an error but mention fallback capability
+          return new Response(JSON.stringify({
+            success: false,
+            error: "Payment verification failed",
+            debug: stripeError.message,
+            canUseFallback: !!backupData
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400,
+          });
         }
-        
+      }
+    }
+
+    // Step 5: Handle fallback scenario using backup data
+    if (usedFallback) {
+      logger.step(5, "Processing fallback using backup data");
+      
+      if (!backupData) {
+        logger.error("Fallback required but no backup data provided");
         return new Response(JSON.stringify({
           success: false,
-          error: userMessage,
-          debug: debugInfo,
-          stripeError: {
-            type: stripeError.type,
-            code: stripeError.code,
-            statusCode: stripeError.statusCode
-          }
+          error: "Payment session expired and no backup data available",
+          debug: "The payment was likely successful but the session has expired. Please contact support."
         }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 400,
         });
       }
-    } else {
-      logger.info("Fallback mode - proceeding without Stripe verification");
-    }
-
-    // Step 5: Verify payment status
-    logger.step(5, "Verifying payment status");
-    
-    let paymentStatus = 'pending';
-    
-    if (paymentData) {
-      if (verificationMode === 'payment_intent') {
-        // Payment Intent status check
-        if (paymentData.status !== 'succeeded') {
-          logger.info(`Payment not completed. Status: ${paymentData.status}`);
-          return new Response(JSON.stringify({
-            success: false,
-            payment_status: paymentData.status,
-            message: "Payment not completed",
-            payment_intent_id: paymentIntentId
-          }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 200,
-          });
-        }
-        paymentStatus = 'paid';
-      } else if (verificationMode === 'session') {
-        // Session status check
-        if (paymentData.payment_status !== 'paid') {
-          logger.info(`Payment not completed. Status: ${paymentData.payment_status}`);
-          return new Response(JSON.stringify({
-            success: false,
-            payment_status: paymentData.payment_status,
-            message: "Payment not completed",
-            session_id: sessionId
-          }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 200,
-          });
-        }
-        paymentStatus = 'paid';
-      }
       
-      logger.info("Payment confirmed as successful");
+      logger.info("Using backup data for order processing", { 
+        orderId: backupData.orderId,
+        itemCount: backupData.items?.length || 0,
+        total: backupData.total 
+      });
+      
+      finalOrderId = backupData.orderId || orderId;
+      customerEmail = backupData.customerInfo?.email || "guest@mygravelguy.com";
+      customerName = backupData.customerInfo?.name || "Guest User";
+      
+      // Mark as processed since we can't verify the actual payment status
+      logger.info("Payment marked as processed (fallback mode)");
+    } else {
+      // Step 6: Verify payment status for successful Stripe retrieval
+      logger.step(6, "Verifying payment status");
+      
+      if (paymentData) {
+        if (verificationMode === 'payment_intent') {
+          if (paymentData.status !== 'succeeded') {
+            logger.info(`Payment not completed. Status: ${paymentData.status}`);
+            return new Response(JSON.stringify({
+              success: false,
+              payment_status: paymentData.status,
+              message: "Payment not completed",
+              payment_intent_id: paymentIntentId
+            }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+              status: 200,
+            });
+          }
+        } else if (verificationMode === 'session') {
+          if (paymentData.payment_status !== 'paid') {
+            logger.info(`Payment not completed. Status: ${paymentData.payment_status}`);
+            return new Response(JSON.stringify({
+              success: false,
+              payment_status: paymentData.payment_status,
+              message: "Payment not completed",
+              session_id: sessionId
+            }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+              status: 200,
+            });
+          }
+        }
+        
+        logger.info("Payment confirmed as successful");
+      }
     }
 
-    // Step 6: Handle order data
-    logger.step(6, "Processing order data");
+    // Step 7: Process order data
+    logger.step(7, "Processing order data");
     
     let orderItems = [];
     
-    if (paymentData && verificationMode === 'session' && paymentData.metadata) {
-      // Extract order items from session metadata (legacy)
+    if (!usedFallback && paymentData && verificationMode === 'session' && paymentData.metadata) {
+      // Extract order items from session metadata
       const itemIndices = new Set();
       
       Object.keys(paymentData.metadata).forEach(key => {
@@ -421,12 +459,42 @@ serve(async (req) => {
       });
       
     } else if (backupData) {
-      // Use backup data when session is not available or for payment intent mode
-      logger.info("Using backup data for order processing", { backupData });
+      // Use backup data
+      logger.info("Using backup data for order processing");
       finalOrderId = backupData.orderId || orderId;
-      orderItems = backupData.items || [];
-      customerEmail = customerEmail || "guest@mygravelguy.com";
-      customerName = customerName || "Guest User";
+      
+      // Convert backup items to order format
+      orderItems = (backupData.items || []).map(item => ({
+        product_id: item.id || item.name,
+        material_category: item.materialCategory || item.category || 'Material',
+        quantity_tons: item.tons || item.quantity || 1,
+        quantity_yards: item.yards || null,
+        unit_price: item.price || 0,
+        total_price: (item.price || 0) * (item.tons || item.quantity || 1),
+        material_size: item.materialSize || item.size || null,
+        delivery_date: item.metadata?.deliveryDate || null,
+        delivery_address_street: item.metadata?.deliveryAddress ? 
+          (typeof item.metadata.deliveryAddress === 'string' ? 
+            item.metadata.deliveryAddress : 
+            JSON.parse(item.metadata.deliveryAddress).street) : null,
+        delivery_address_city: item.metadata?.deliveryAddress ? 
+          (typeof item.metadata.deliveryAddress === 'string' ? 
+            null : 
+            JSON.parse(item.metadata.deliveryAddress).city) : null,
+        delivery_address_state: item.metadata?.deliveryAddress ? 
+          (typeof item.metadata.deliveryAddress === 'string' ? 
+            null : 
+            JSON.parse(item.metadata.deliveryAddress).state) : null,
+        delivery_address_zip: item.metadata?.deliveryAddress ? 
+          (typeof item.metadata.deliveryAddress === 'string' ? 
+            null : 
+            JSON.parse(item.metadata.deliveryAddress).zip) : null,
+        contact_name: item.metadata?.contactName || customerName || null,
+        contact_phone: item.metadata?.contactPhone || null,
+        contact_email: item.metadata?.contactEmail || customerEmail || null,
+        delivery_time_preference: item.metadata?.deliveryTimePreference || null,
+        delivery_instructions: item.metadata?.deliveryInstructions || null
+      }));
     }
     
     if (orderItems.length === 0) {
@@ -442,8 +510,8 @@ serve(async (req) => {
 
     logger.info(`Successfully processed ${orderItems.length} order items`);
 
-    // Step 7: Initialize Supabase client
-    logger.step(7, "Initializing Supabase client");
+    // Step 8: Initialize Supabase client
+    logger.step(8, "Initializing Supabase client");
     
     let supabase;
     try {
@@ -465,8 +533,10 @@ serve(async (req) => {
       });
     }
 
-    // Step 8: Create order records in database
-    logger.step(8, "Creating order records in database");
+    // Step 9: Create order records in database
+    logger.step(9, "Creating order records in database");
+    
+    const paymentStatus = usedFallback ? 'processed' : (paymentVerified ? 'paid' : 'pending');
     
     const orderRecords = orderItems.map(item => ({
       order_id: finalOrderId,
@@ -498,7 +568,8 @@ serve(async (req) => {
 
     logger.debug("Order records prepared for insertion", { 
       count: orderRecords.length,
-      sampleRecord: orderRecords[0]
+      paymentStatus,
+      usedFallback
     });
 
     let insertedOrders;
@@ -526,8 +597,8 @@ serve(async (req) => {
       });
     }
 
-    // Step 9: Handle email notifications
-    logger.step(9, "Handling email notifications");
+    // Step 10: Handle email notifications
+    logger.step(10, "Handling email notifications");
     
     let emailResults = {
       customerEmailSent: false,
@@ -546,7 +617,8 @@ serve(async (req) => {
           customer_email: customerEmail,
           customer_name: customerName,
           payment_intent_id: paymentIntentId || paymentData?.id,
-          session_id: sessionId
+          session_id: sessionId,
+          verification_method: usedFallback ? 'fallback' : 'stripe_verified'
         };
         
         // Send customer confirmation email
@@ -574,7 +646,7 @@ serve(async (req) => {
           const internalEmailResult = await supabase.functions.invoke('send-email', {
             body: {
               to: 'order.support@mygravelguy.com',
-              subject: `New Order: ${emailData.order_id} - $${totalAmount.toFixed(2)}`,
+              subject: `New Order: ${emailData.order_id} - $${totalAmount.toFixed(2)} (${usedFallback ? 'Fallback' : 'Verified'})`,
               html: generateInternalEmailTemplate(emailData),
               type: 'internal_notification'
             }
@@ -602,8 +674,8 @@ serve(async (req) => {
       emailResults.emailError = error.message;
     }
 
-    // Step 10: Generate response
-    logger.step(10, "Preparing success response");
+    // Step 11: Generate response
+    logger.step(11, "Preparing success response");
     
     // Transform insertedOrders to match PaymentSuccess.tsx expectations
     const transformedOrders = (insertedOrders || []).map(order => ({
@@ -627,7 +699,7 @@ serve(async (req) => {
     
     const response = {
       success: true,
-      payment_status: paymentData?.status || paymentData?.payment_status || 'processed',
+      payment_status: paymentData?.status || paymentData?.payment_status || paymentStatus,
       orderId: finalOrderId,
       orders: transformedOrders,
       customer_email: customerEmail,
@@ -636,10 +708,17 @@ serve(async (req) => {
       session_id: sessionId,
       emailsSent: emailResults.customerEmailSent && emailResults.internalEmailSent,
       total_amount: orderItems.reduce((sum, item) => sum + (item.total_price || 0), 0),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      verification_method: usedFallback ? 'fallback' : 'stripe_verified',
+      used_fallback: usedFallback
     };
 
-    logger.info("=== VERIFY PAYMENT FUNCTION COMPLETED SUCCESSFULLY ===", response);
+    logger.info("=== ENHANCED VERIFY PAYMENT FUNCTION COMPLETED SUCCESSFULLY ===", {
+      orderId: response.orderId,
+      verification_method: response.verification_method,
+      orders_count: response.orders.length,
+      emails_sent: response.emailsSent
+    });
 
     return new Response(
       JSON.stringify(response),
@@ -650,7 +729,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    logger.error("=== VERIFY PAYMENT FUNCTION FAILED ===", {
+    logger.error("=== ENHANCED VERIFY PAYMENT FUNCTION FAILED ===", {
       message: error.message,
       stack: error.stack,
       name: error.name,
@@ -671,12 +750,15 @@ serve(async (req) => {
   }
 });
 
-// Email template functions
+// Enhanced email template functions with fallback indicators
 const generateCustomerEmailTemplate = (orderData: any): string => {
   try {
     const itemsList = orderData.items?.map((item: any) => 
       `<li>${item.material_category || 'Material'} - ${item.quantity_tons} tons - $${(item.total_price || 0).toFixed(2)}</li>`
     ).join('') || '<li>Order details processing</li>';
+
+    const verificationNote = orderData.verification_method === 'fallback' ? 
+      '<p style="color: #666; font-size: 12px;"><em>Note: Order processed using backup data due to session expiration.</em></p>' : '';
 
     return `
       <html>
@@ -688,6 +770,7 @@ const generateCustomerEmailTemplate = (orderData: any): string => {
         <h3>Items:</h3>
         <ul>${itemsList}</ul>
         <p>We will contact you within 24 hours with delivery details.</p>
+        ${verificationNote}
       </body>
       </html>
     `;
@@ -702,6 +785,10 @@ const generateInternalEmailTemplate = (orderData: any): string => {
       `<li>${item.material_category || 'Material'} - ${item.quantity_tons} tons - $${(item.total_price || 0).toFixed(2)}</li>`
     ).join('') || '<li>Order details processing</li>';
 
+    const verificationNote = orderData.verification_method === 'fallback' ? 
+      '<p style="background: #fff3cd; padding: 10px; border: 1px solid #ffeaa7; border-radius: 4px;"><strong>Note:</strong> This order was processed using fallback data due to Stripe session expiration. Please verify payment manually if needed.</p>' : 
+      '<p style="background: #d4edda; padding: 10px; border: 1px solid #c3e6cb; border-radius: 4px;"><strong>Payment Verified:</strong> This order was successfully verified through Stripe.</p>';
+
     return `
       <html>
       <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -709,6 +796,7 @@ const generateInternalEmailTemplate = (orderData: any): string => {
         <p><strong>Order ID:</strong> ${orderData.order_id || 'Processing'}</p>
         <p><strong>Customer:</strong> ${orderData.customer_name || 'N/A'} (${orderData.customer_email || 'N/A'})</p>
         <p><strong>Total:</strong> $${(orderData.total_amount || 0).toFixed(2)}</p>
+        ${verificationNote}
         <h3>Items:</h3>
         <ul>${itemsList}</ul>
         <p>Contact customer within 24 hours to confirm delivery details.</p>

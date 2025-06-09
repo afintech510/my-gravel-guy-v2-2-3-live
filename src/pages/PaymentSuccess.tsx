@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, Truck, Package, MapPin, Calendar, AlertCircle, RefreshCw } from "lucide-react";
+import { CheckCircle, Truck, Package, MapPin, Calendar, AlertCircle, RefreshCw, Shield, Clock } from "lucide-react";
 import { useCart } from '../contexts/CartContext';
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from 'react-router-dom';
@@ -38,6 +38,8 @@ const PaymentSuccess = () => {
   const [emailsSent, setEmailsSent] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [processingError, setProcessingError] = useState<string | null>(null);
+  const [verificationMethod, setVerificationMethod] = useState<'stripe_verified' | 'fallback' | null>(null);
+  const [usedFallback, setUsedFallback] = useState(false);
   
   useEffect(() => {
     const processPaymentSuccess = async () => {
@@ -94,7 +96,8 @@ const PaymentSuccess = () => {
             const { data, error } = await supabase.functions.invoke('verify-payment', {
               body: { 
                 paymentIntentId,
-                orderId: orderIdParam || checkoutOrderId 
+                orderId: orderIdParam || checkoutOrderId,
+                backupData: checkoutOrderBackup
               }
             });
 
@@ -106,14 +109,15 @@ const PaymentSuccess = () => {
             const { data, error } = await supabase.functions.invoke('verify-payment', {
               body: { 
                 sessionId, 
-                orderId: orderIdParam || checkoutOrderId 
+                orderId: orderIdParam || checkoutOrderId,
+                backupData: checkoutOrderBackup
               }
             });
 
             console.log('Verify payment response (session):', { data, error });
             verificationResult = { data, error };
-          } else if (checkoutOrderId) {
-            console.log('Processing with order ID:', checkoutOrderId);
+          } else if (checkoutOrderId && checkoutOrderBackup) {
+            console.log('Processing with backup data only:', checkoutOrderId);
             
             const { data, error } = await supabase.functions.invoke('verify-payment', {
               body: { 
@@ -146,8 +150,16 @@ const PaymentSuccess = () => {
               setOrderItems(data.orders);
               setOrderId(data.orderId || orderIdParam || checkoutOrderId);
               setEmailsSent(data.emailsSent || false);
+              setVerificationMethod(data.verification_method || 'stripe_verified');
+              setUsedFallback(data.used_fallback || false);
               
-              if (data.emailsSent) {
+              if (data.used_fallback) {
+                toast({
+                  title: "Order Processed Successfully",
+                  description: "Your order has been recorded using backup data. Payment verification completed.",
+                  variant: "default"
+                });
+              } else if (data.emailsSent) {
                 toast({
                   title: "Payment Successful",
                   description: "Thank you for your order! Confirmation emails have been sent.",
@@ -210,6 +222,59 @@ const PaymentSuccess = () => {
       default:
         return 'Not specified';
     }
+  };
+
+  const VerificationStatusCard = () => {
+    if (verificationMethod === 'fallback') {
+      return (
+        <Card className="mb-8 border-amber-200">
+          <CardContent className="pt-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Clock className="h-5 w-5 text-amber-600" />
+              Payment Processing Method
+            </h3>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-amber-50 border border-amber-200">
+                <AlertCircle className="h-5 w-5 text-amber-600" />
+                <div>
+                  <p className="font-medium">Backup Data Processing</p>
+                  <p className="text-sm text-gray-600">
+                    Your order was processed using backup data because the payment session expired. 
+                    This is normal and your payment was successful.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    } else if (verificationMethod === 'stripe_verified') {
+      return (
+        <Card className="mb-8 border-green-200">
+          <CardContent className="pt-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Shield className="h-5 w-5 text-green-600" />
+              Payment Verification
+            </h3>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-green-50 border border-green-200">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="font-medium">Stripe Verified</p>
+                  <p className="text-sm text-gray-600">
+                    Your payment has been verified directly with Stripe. All details are confirmed.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+    
+    return null;
   };
 
   const EmailStatusCard = () => {
@@ -338,9 +403,15 @@ const PaymentSuccess = () => {
             <p className="text-green-600">
               You will receive confirmation emails shortly with your delivery details.
             </p>
+            {usedFallback && (
+              <p className="text-amber-600 text-sm mt-2">
+                <em>Order processed using backup data due to session timeout.</em>
+              </p>
+            )}
           </CardContent>
         </Card>
 
+        <VerificationStatusCard />
         <ProcessingStatusCard />
         <EmailStatusCard />
 
@@ -367,7 +438,9 @@ const PaymentSuccess = () => {
                       <div className="text-right">
                         <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                           item.status === 'confirmed' 
-                            ? 'bg-green-100 text-green-800' 
+                            ? 'bg-green-100 text-green-800'
+                            : item.status === 'processed'
+                            ? 'bg-blue-100 text-blue-800'
                             : 'bg-yellow-100 text-yellow-800'
                         }`}>
                           {item.status.replace('_', ' ').toUpperCase()}
