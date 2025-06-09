@@ -77,6 +77,7 @@ export const generateOrderId = (): string => {
 };
 
 export const detectPaymentSuccess = (): { 
+  paymentIntentId?: string;
   sessionId?: string; 
   orderId?: string; 
   success?: boolean; 
@@ -84,6 +85,7 @@ export const detectPaymentSuccess = (): {
 } => {
   const urlParams = new URLSearchParams(window.location.search);
   return {
+    paymentIntentId: urlParams.get('payment_intent') || urlParams.get('payment_intent_id') || undefined,
     sessionId: urlParams.get('session_id') || undefined,
     orderId: urlParams.get('order_id') || undefined,
     success: urlParams.get('success') === 'true',

@@ -25,7 +25,29 @@ const logger = {
   }
 };
 
-// Enhanced session ID validation
+// Simple payment intent ID validation
+const validatePaymentIntentId = (paymentIntentId: string): { isValid: boolean; error?: string } => {
+  if (!paymentIntentId) {
+    return { isValid: false, error: "Payment Intent ID is required" };
+  }
+  
+  if (typeof paymentIntentId !== 'string') {
+    return { isValid: false, error: "Payment Intent ID must be a string" };
+  }
+  
+  // Stripe payment intent IDs typically start with 'pi_'
+  if (!paymentIntentId.startsWith('pi_')) {
+    return { isValid: false, error: "Invalid payment intent ID format - must start with 'pi_'" };
+  }
+  
+  if (paymentIntentId.length < 20) {
+    return { isValid: false, error: "Payment intent ID appears too short" };
+  }
+  
+  return { isValid: true };
+};
+
+// Legacy session ID validation (for fallback)
 const validateSessionId = (sessionId: string): { isValid: boolean; error?: string } => {
   if (!sessionId) {
     return { isValid: false, error: "Session ID is required" };
@@ -35,18 +57,12 @@ const validateSessionId = (sessionId: string): { isValid: boolean; error?: strin
     return { isValid: false, error: "Session ID must be a string" };
   }
   
-  // Stripe checkout session IDs typically start with 'cs_' and are around 100+ characters
   if (!sessionId.startsWith('cs_')) {
     return { isValid: false, error: "Invalid session ID format - must start with 'cs_'" };
   }
   
   if (sessionId.length < 50) {
     return { isValid: false, error: "Session ID appears too short" };
-  }
-  
-  // Check for valid characters (alphanumeric and underscores)
-  if (!/^[a-zA-Z0-9_]+$/.test(sessionId)) {
-    return { isValid: false, error: "Session ID contains invalid characters" };
   }
   
   return { isValid: true };
@@ -163,17 +179,32 @@ serve(async (req) => {
       });
     }
     
-    const { sessionId, orderId, fallbackMode, backupData } = requestBody;
+    const { paymentIntentId, sessionId, orderId, fallbackMode, backupData } = requestBody;
     
-    // Enhanced session ID validation
+    // Validate input - prioritize payment intent over session
+    let validationResult = { isValid: true };
+    let primaryId = null;
+    let verificationMode = 'fallback';
+    
     if (!fallbackMode) {
-      const validation = validateSessionId(sessionId);
-      if (!validation.isValid) {
-        logger.error("Session ID validation failed", { sessionId, error: validation.error });
+      if (paymentIntentId) {
+        validationResult = validatePaymentIntentId(paymentIntentId);
+        primaryId = paymentIntentId;
+        verificationMode = 'payment_intent';
+      } else if (sessionId) {
+        validationResult = validateSessionId(sessionId);
+        primaryId = sessionId;
+        verificationMode = 'session';
+      } else {
+        validationResult = { isValid: false, error: "Either paymentIntentId or sessionId is required" };
+      }
+      
+      if (!validationResult.isValid) {
+        logger.error("ID validation failed", { paymentIntentId, sessionId, error: validationResult.error });
         return new Response(JSON.stringify({
           success: false,
-          error: validation.error,
-          debug: "Please check the session ID format"
+          error: validationResult.error,
+          debug: "Please check the payment identifier format"
         }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 400,
@@ -182,7 +213,8 @@ serve(async (req) => {
     }
     
     logger.info(`Processing payment verification`, { 
-      sessionId: sessionId ? `${sessionId.substring(0, 20)}...` : 'none',
+      verificationMode,
+      primaryId: primaryId ? `${primaryId.substring(0, 20)}...` : 'none',
       orderId,
       fallbackMode,
       hasBackupData: !!backupData
@@ -195,7 +227,7 @@ serve(async (req) => {
     try {
       stripe = new Stripe(stripeKey, { 
         apiVersion: "2023-10-16",
-        timeout: 30000, // 30 second timeout
+        timeout: 30000,
         maxNetworkRetries: 2
       });
       logger.info("Stripe client initialized successfully");
@@ -211,47 +243,80 @@ serve(async (req) => {
       });
     }
 
-    // Step 4: Retrieve and validate Stripe session with retry logic
-    logger.step(4, "Retrieving Stripe checkout session");
+    // Step 4: Retrieve and validate payment information
+    logger.step(4, "Retrieving payment information from Stripe");
     
-    let session;
-    if (!fallbackMode && sessionId) {
+    let paymentData;
+    let customerEmail = null;
+    let customerName = null;
+    let finalOrderId = orderId;
+    
+    if (!fallbackMode && primaryId) {
       try {
-        session = await retryStripeCall(async () => {
-          logger.debug("Attempting to retrieve Stripe session", { sessionId: `${sessionId.substring(0, 20)}...` });
-          return await stripe.checkout.sessions.retrieve(sessionId, {
-            expand: ['payment_intent', 'customer']
+        if (verificationMode === 'payment_intent') {
+          // Use Payment Intent API
+          paymentData = await retryStripeCall(async () => {
+            logger.debug("Attempting to retrieve payment intent", { paymentIntentId: `${primaryId.substring(0, 20)}...` });
+            return await stripe.paymentIntents.retrieve(primaryId, {
+              expand: ['customer']
+            });
           });
-        });
+          
+          logger.info("Payment intent retrieved successfully", {
+            id: paymentData.id,
+            status: paymentData.status,
+            amount: paymentData.amount,
+            currency: paymentData.currency,
+            customer: paymentData.customer?.email || 'no customer data'
+          });
+          
+          // Extract customer information if available
+          if (paymentData.customer && typeof paymentData.customer === 'object') {
+            customerEmail = paymentData.customer.email;
+            customerName = paymentData.customer.name;
+          }
+          
+        } else if (verificationMode === 'session') {
+          // Fallback to session API
+          paymentData = await retryStripeCall(async () => {
+            logger.debug("Attempting to retrieve session", { sessionId: `${primaryId.substring(0, 20)}...` });
+            return await stripe.checkout.sessions.retrieve(primaryId, {
+              expand: ['payment_intent', 'customer']
+            });
+          });
+          
+          logger.info("Session retrieved successfully", {
+            id: paymentData.id,
+            payment_status: paymentData.payment_status,
+            customer_email: paymentData.customer_details?.email,
+            amount_total: paymentData.amount_total
+          });
+          
+          customerEmail = paymentData.customer_details?.email;
+          customerName = paymentData.customer_details?.name;
+          finalOrderId = paymentData.metadata?.order_id || orderId;
+        }
         
-        logger.info("Stripe session retrieved successfully", {
-          id: session.id,
-          payment_status: session.payment_status,
-          customer_email: session.customer_details?.email,
-          amount_total: session.amount_total,
-          metadata_keys: Object.keys(session.metadata || {})
-        });
       } catch (stripeError) {
-        logger.error("Failed to retrieve Stripe session after retries", {
+        logger.error("Failed to retrieve payment information", {
           error: stripeError.message,
           statusCode: stripeError.statusCode,
           type: stripeError.type,
           requestId: stripeError.requestId
         });
         
-        // Provide specific error messages based on Stripe error type
-        let userMessage = "Failed to retrieve payment session";
+        let userMessage = "Failed to retrieve payment information";
         let debugInfo = stripeError.message;
         
         if (stripeError.statusCode === 404) {
-          userMessage = "Payment session not found or expired";
-          debugInfo = "The session ID may be invalid or the session may have expired";
+          userMessage = "Payment not found or expired";
+          debugInfo = "The payment ID may be invalid or the payment may have expired";
         } else if (stripeError.statusCode === 401) {
           userMessage = "Authentication failed with payment provider";
           debugInfo = "Check Stripe API key configuration";
         } else if (stripeError.statusCode === 400) {
           userMessage = "Invalid request to payment provider";
-          debugInfo = "The session ID format may be incorrect";
+          debugInfo = "The payment ID format may be incorrect";
         }
         
         return new Response(JSON.stringify({
@@ -269,115 +334,103 @@ serve(async (req) => {
         });
       }
     } else {
-      logger.info("Fallback mode or no session ID - proceeding without Stripe session verification");
+      logger.info("Fallback mode - proceeding without Stripe verification");
     }
 
-    // Step 5: Verify payment status (if session exists)
-    if (session) {
-      logger.step(5, "Verifying payment status");
-      
-      if (session.payment_status !== 'paid') {
-        logger.info(`Payment not completed. Status: ${session.payment_status}`);
-        return new Response(JSON.stringify({
-          success: false,
-          payment_status: session.payment_status,
-          message: "Payment not completed",
-          session_id: sessionId
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        });
+    // Step 5: Verify payment status
+    logger.step(5, "Verifying payment status");
+    
+    let paymentStatus = 'pending';
+    
+    if (paymentData) {
+      if (verificationMode === 'payment_intent') {
+        // Payment Intent status check
+        if (paymentData.status !== 'succeeded') {
+          logger.info(`Payment not completed. Status: ${paymentData.status}`);
+          return new Response(JSON.stringify({
+            success: false,
+            payment_status: paymentData.status,
+            message: "Payment not completed",
+            payment_intent_id: paymentIntentId
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
+        }
+        paymentStatus = 'paid';
+      } else if (verificationMode === 'session') {
+        // Session status check
+        if (paymentData.payment_status !== 'paid') {
+          logger.info(`Payment not completed. Status: ${paymentData.payment_status}`);
+          return new Response(JSON.stringify({
+            success: false,
+            payment_status: paymentData.payment_status,
+            message: "Payment not completed",
+            session_id: sessionId
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
+        }
+        paymentStatus = 'paid';
       }
-
+      
       logger.info("Payment confirmed as successful");
     }
 
-    // Step 6: Extract and validate order data
-    logger.step(6, "Extracting order data");
+    // Step 6: Handle order data
+    logger.step(6, "Processing order data");
     
-    let finalOrderId = orderId;
-    let customerEmail = null;
-    let customerName = null;
     let orderItems = [];
-
-    if (session) {
-      finalOrderId = session.metadata?.order_id || orderId;
-      customerEmail = session.customer_details?.email;
-      customerName = session.customer_details?.name;
-      
-      if (!finalOrderId) {
-        logger.error("Order ID missing in session metadata", { metadata: session.metadata });
-        return new Response(JSON.stringify({
-          success: false,
-          error: "Order ID not found in payment session"
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400,
-        });
-      }
-
-      if (!customerEmail) {
-        logger.error("Customer email missing in session", { customer_details: session.customer_details });
-        return new Response(JSON.stringify({
-          success: false,
-          error: "Customer email not found in payment session"
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400,
-        });
-      }
-
-      // Extract order items from metadata
-      logger.step(7, "Processing order items from metadata");
-      
+    
+    if (paymentData && verificationMode === 'session' && paymentData.metadata) {
+      // Extract order items from session metadata (legacy)
       const itemIndices = new Set();
       
-      // Find all item indices in metadata
-      Object.keys(session.metadata).forEach(key => {
+      Object.keys(paymentData.metadata).forEach(key => {
         const match = key.match(/^item_(\d+)_/);
         if (match) {
           itemIndices.add(parseInt(match[1]));
         }
       });
       
-      logger.info(`Found ${itemIndices.size} items in metadata`, { itemIndices: Array.from(itemIndices) });
+      logger.info(`Found ${itemIndices.size} items in session metadata`);
       
-      // Extract data for each item
       itemIndices.forEach(index => {
         const item = {
-          product_id: session.metadata[`item_${index}_product_id`] || '',
-          material_category: session.metadata[`item_${index}_material_category`] || null,
-          quantity_tons: parseFloat(session.metadata[`item_${index}_quantity_tons`]) || 0,
-          quantity_yards: session.metadata[`item_${index}_quantity_yards`] ? parseFloat(session.metadata[`item_${index}_quantity_yards`]) : null,
-          unit_price: parseFloat(session.metadata[`item_${index}_unit_price`]) || 0,
-          total_price: parseFloat(session.metadata[`item_${index}_total_price`]) || 0,
-          material_size: session.metadata[`item_${index}_material_size`] || null,
-          delivery_date: session.metadata[`item_${index}_delivery_date`] || null,
-          delivery_address_street: session.metadata[`item_${index}_delivery_address_street`] || null,
-          delivery_address_city: session.metadata[`item_${index}_delivery_address_city`] || null,
-          delivery_address_state: session.metadata[`item_${index}_delivery_address_state`] || null,
-          delivery_address_zip: session.metadata[`item_${index}_delivery_address_zip`] || null,
-          contact_name: session.metadata[`item_${index}_contact_name`] || customerName || null,
-          contact_phone: session.metadata[`item_${index}_contact_phone`] || null,
-          contact_email: session.metadata[`item_${index}_contact_email`] || customerEmail || null,
-          delivery_time_preference: session.metadata[`item_${index}_delivery_time_preference`] || null,
-          delivery_instructions: session.metadata[`item_${index}_delivery_instructions`] || null
+          product_id: paymentData.metadata[`item_${index}_product_id`] || '',
+          material_category: paymentData.metadata[`item_${index}_material_category`] || null,
+          quantity_tons: parseFloat(paymentData.metadata[`item_${index}_quantity_tons`]) || 0,
+          quantity_yards: paymentData.metadata[`item_${index}_quantity_yards`] ? parseFloat(paymentData.metadata[`item_${index}_quantity_yards`]) : null,
+          unit_price: parseFloat(paymentData.metadata[`item_${index}_unit_price`]) || 0,
+          total_price: parseFloat(paymentData.metadata[`item_${index}_total_price`]) || 0,
+          material_size: paymentData.metadata[`item_${index}_material_size`] || null,
+          delivery_date: paymentData.metadata[`item_${index}_delivery_date`] || null,
+          delivery_address_street: paymentData.metadata[`item_${index}_delivery_address_street`] || null,
+          delivery_address_city: paymentData.metadata[`item_${index}_delivery_address_city`] || null,
+          delivery_address_state: paymentData.metadata[`item_${index}_delivery_address_state`] || null,
+          delivery_address_zip: paymentData.metadata[`item_${index}_delivery_address_zip`] || null,
+          contact_name: paymentData.metadata[`item_${index}_contact_name`] || customerName || null,
+          contact_phone: paymentData.metadata[`item_${index}_contact_phone`] || null,
+          contact_email: paymentData.metadata[`item_${index}_contact_email`] || customerEmail || null,
+          delivery_time_preference: paymentData.metadata[`item_${index}_delivery_time_preference`] || null,
+          delivery_instructions: paymentData.metadata[`item_${index}_delivery_instructions`] || null
         };
         
         orderItems.push(item);
-        logger.debug(`Extracted item ${index}`, item);
       });
+      
     } else if (backupData) {
-      // Use backup data when session is not available
+      // Use backup data when session is not available or for payment intent mode
       logger.info("Using backup data for order processing", { backupData });
       finalOrderId = backupData.orderId || orderId;
       orderItems = backupData.items || [];
-      customerEmail = "guest@mygravelguy.com"; // Default for fallback
-      customerName = "Guest User";
+      customerEmail = customerEmail || "guest@mygravelguy.com";
+      customerName = customerName || "Guest User";
     }
     
     if (orderItems.length === 0) {
-      logger.error("No order items found", { hasSession: !!session, hasBackupData: !!backupData });
+      logger.error("No order items found", { hasPaymentData: !!paymentData, hasBackupData: !!backupData });
       return new Response(JSON.stringify({
         success: false,
         error: "No order items found"
@@ -387,10 +440,10 @@ serve(async (req) => {
       });
     }
 
-    logger.info(`Successfully extracted ${orderItems.length} order items`);
+    logger.info(`Successfully processed ${orderItems.length} order items`);
 
-    // Step 8: Initialize Supabase client
-    logger.step(8, "Initializing Supabase client");
+    // Step 7: Initialize Supabase client
+    logger.step(7, "Initializing Supabase client");
     
     let supabase;
     try {
@@ -412,13 +465,13 @@ serve(async (req) => {
       });
     }
 
-    // Step 9: Create order records in database
-    logger.step(9, "Creating order records in database");
+    // Step 8: Create order records in database
+    logger.step(8, "Creating order records in database");
     
     const orderRecords = orderItems.map(item => ({
       order_id: finalOrderId,
       stripe_session_id: sessionId || null,
-      stripe_payment_intent_id: session?.payment_intent?.id || null,
+      stripe_payment_intent_id: paymentIntentId || paymentData?.id || null,
       product_id: item.product_id,
       material_category: item.material_category,
       quantity_tons: item.quantity_tons,
@@ -438,7 +491,7 @@ serve(async (req) => {
       customer_name: customerName,
       delivery_time_preference: item.delivery_time_preference,
       delivery_instructions: item.delivery_instructions,
-      status: session ? 'paid' : 'pending',
+      status: paymentStatus,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }));
@@ -473,8 +526,8 @@ serve(async (req) => {
       });
     }
 
-    // Step 10: Handle email notifications with robust error handling
-    logger.step(10, "Handling email notifications");
+    // Step 9: Handle email notifications
+    logger.step(9, "Handling email notifications");
     
     let emailResults = {
       customerEmailSent: false,
@@ -492,6 +545,7 @@ serve(async (req) => {
           total_amount: totalAmount,
           customer_email: customerEmail,
           customer_name: customerName,
+          payment_intent_id: paymentIntentId || paymentData?.id,
           session_id: sessionId
         };
         
@@ -548,8 +602,8 @@ serve(async (req) => {
       emailResults.emailError = error.message;
     }
 
-    // Step 11: Generate response
-    logger.step(11, "Preparing success response");
+    // Step 10: Generate response
+    logger.step(10, "Preparing success response");
     
     // Transform insertedOrders to match PaymentSuccess.tsx expectations
     const transformedOrders = (insertedOrders || []).map(order => ({
@@ -573,11 +627,12 @@ serve(async (req) => {
     
     const response = {
       success: true,
-      payment_status: session?.payment_status || 'processed',
+      payment_status: paymentData?.status || paymentData?.payment_status || 'processed',
       orderId: finalOrderId,
       orders: transformedOrders,
       customer_email: customerEmail,
       customer_name: customerName,
+      payment_intent_id: paymentIntentId || paymentData?.id,
       session_id: sessionId,
       emailsSent: emailResults.customerEmailSent && emailResults.internalEmailSent,
       total_amount: orderItems.reduce((sum, item) => sum + (item.total_price || 0), 0),
