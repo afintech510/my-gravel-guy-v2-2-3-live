@@ -43,13 +43,15 @@ const PaymentSuccess = () => {
     const processPaymentSuccess = async () => {
       console.log('=== PAYMENT SUCCESS PAGE DEBUG START ===');
       
-      // Extract URL parameters
+      // Extract URL parameters - prioritize payment_intent over session_id
+      const paymentIntentId = searchParams.get('payment_intent') || searchParams.get('payment_intent_id');
       const sessionId = searchParams.get('session_id');
       const orderIdParam = searchParams.get('order_id');
       const paymentSuccess = searchParams.get('success');
       const checkStatus = searchParams.get('check_status');
       
       console.log('URL Parameters:', {
+        paymentIntentId,
         sessionId,
         orderIdParam,
         paymentSuccess,
@@ -70,6 +72,7 @@ const PaymentSuccess = () => {
       
       // Determine if we should process the payment
       const shouldProcess = !hasProcessedPayment && (
+        paymentIntentId || 
         sessionId || 
         paymentSuccess === 'true' || 
         checkStatus === 'true' ||
@@ -84,14 +87,30 @@ const PaymentSuccess = () => {
         try {
           let verificationResult = null;
           
-          if (sessionId) {
-            console.log('Processing with session ID:', sessionId);
+          // Prioritize payment_intent verification over session_id
+          if (paymentIntentId) {
+            console.log('Processing with payment intent ID:', paymentIntentId);
             
             const { data, error } = await supabase.functions.invoke('verify-payment', {
-              body: { sessionId, orderId: orderIdParam || checkoutOrderId }
+              body: { 
+                paymentIntentId,
+                orderId: orderIdParam || checkoutOrderId 
+              }
             });
 
-            console.log('Verify payment response:', { data, error });
+            console.log('Verify payment response (payment intent):', { data, error });
+            verificationResult = { data, error };
+          } else if (sessionId) {
+            console.log('Processing with session ID (fallback):', sessionId);
+            
+            const { data, error } = await supabase.functions.invoke('verify-payment', {
+              body: { 
+                sessionId, 
+                orderId: orderIdParam || checkoutOrderId 
+              }
+            });
+
+            console.log('Verify payment response (session):', { data, error });
             verificationResult = { data, error };
           } else if (checkoutOrderId) {
             console.log('Processing with order ID:', checkoutOrderId);
