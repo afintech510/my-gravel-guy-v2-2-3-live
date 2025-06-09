@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Product, PriceTier } from './types';
+import { Product } from './types';
 import { applyZipCodeAdjustment } from './priceUtils';
 import { calculateProductExponentialPrice } from './exponentialPricing';
 
@@ -126,11 +126,7 @@ export async function calculateFinalPrice(
   }
 }
 
-// Legacy functions for backward compatibility - now use exponential pricing
-export async function getPriceTiersForProduct(productId: string | number): Promise<PriceTier[]> {
-  console.log(`[pricingUtils] getPriceTiersForProduct called - now using exponential pricing`);
-  return []; // Return empty array since we no longer use tiers
-}
+
 
 export function findPriceMultiplierForQuantity(tiers: PriceTier[], tons: number): number {
   console.log(`[pricingUtils] findPriceMultiplierForQuantity called - now using exponential pricing`);
