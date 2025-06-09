@@ -21,22 +21,7 @@ export const {
 import { getPriceAdjustmentForZipCode as getPriceAdjustmentForZipCodeZipModule } from './zipCode';
 export { getPriceAdjustmentForZipCodeZipModule };
 
-// Export pricingService functions with explicit naming to avoid conflicts
-import { 
-  getPriceTiersForProduct as getPriceTiersForProductService,
-  getPriceMultiplierForQuantity,
-  getPriceAdjustmentForZipCode as getPriceAdjustmentForZipCodeService,
-  calculateFinalPrice as calculateFinalPriceService
-} from './pricingService';
-
-export {
-  getPriceTiersForProductService,
-  getPriceMultiplierForQuantity,
-  getPriceAdjustmentForZipCodeService,
-  calculateFinalPriceService
-};
-
-// Export pricingUtils functions
+// Export pricingUtils functions directly
 export * from './pricingUtils';
 export * from './sampleData';
 export * from './imageUtils';
