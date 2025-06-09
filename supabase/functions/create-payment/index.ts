@@ -186,7 +186,7 @@ serve(async (req) => {
       ],
       line_items: validatedLineItems,
       mode: "payment",
-      success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&order_id=${orderId}`,
+      success_url: `${origin}/payment-success?payment_intent={CHECKOUT_SESSION_ID}&order_id=${orderId}`,
       cancel_url: `${origin}/cart`,
       metadata: orderMetadata,
       payment_intent_data: {

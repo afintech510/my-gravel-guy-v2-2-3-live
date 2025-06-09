@@ -35,8 +35,6 @@ const PaymentSuccess = () => {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [emailsSent, setEmailsSent] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
   const [processingError, setProcessingError] = useState<string | null>(null);
   const [verificationMethod, setVerificationMethod] = useState<'stripe_verified' | 'fallback' | null>(null);
   const [usedFallback, setUsedFallback] = useState(false);
@@ -45,19 +43,15 @@ const PaymentSuccess = () => {
     const processPaymentSuccess = async () => {
       console.log('=== PAYMENT SUCCESS PAGE DEBUG START ===');
       
-      // Extract URL parameters - prioritize payment_intent over session_id
+      // Extract URL parameters - prioritize payment_intent
       const paymentIntentId = searchParams.get('payment_intent') || searchParams.get('payment_intent_id');
-      const sessionId = searchParams.get('session_id');
       const orderIdParam = searchParams.get('order_id');
       const paymentSuccess = searchParams.get('success');
-      const checkStatus = searchParams.get('check_status');
       
       console.log('URL Parameters:', {
         paymentIntentId,
-        sessionId,
         orderIdParam,
         paymentSuccess,
-        checkStatus,
         hasProcessedPayment
       });
       
@@ -75,9 +69,7 @@ const PaymentSuccess = () => {
       // Determine if we should process the payment
       const shouldProcess = !hasProcessedPayment && (
         paymentIntentId || 
-        sessionId || 
         paymentSuccess === 'true' || 
-        checkStatus === 'true' ||
         (checkoutInProgress === 'true' && checkoutOrderId)
       );
       
@@ -89,7 +81,7 @@ const PaymentSuccess = () => {
         try {
           let verificationResult = null;
           
-          // Prioritize payment_intent verification over session_id
+          // Primary: Try payment intent verification
           if (paymentIntentId) {
             console.log('Processing with payment intent ID:', paymentIntentId);
             
@@ -103,20 +95,9 @@ const PaymentSuccess = () => {
 
             console.log('Verify payment response (payment intent):', { data, error });
             verificationResult = { data, error };
-          } else if (sessionId) {
-            console.log('Processing with session ID (fallback):', sessionId);
-            
-            const { data, error } = await supabase.functions.invoke('verify-payment', {
-              body: { 
-                sessionId, 
-                orderId: orderIdParam || checkoutOrderId,
-                backupData: checkoutOrderBackup
-              }
-            });
-
-            console.log('Verify payment response (session):', { data, error });
-            verificationResult = { data, error };
-          } else if (checkoutOrderId && checkoutOrderBackup) {
+          } 
+          // Fallback: Use backup data only
+          else if (checkoutOrderId && checkoutOrderBackup) {
             console.log('Processing with backup data only:', checkoutOrderId);
             
             const { data, error } = await supabase.functions.invoke('verify-payment', {
@@ -149,26 +130,19 @@ const PaymentSuccess = () => {
               
               setOrderItems(data.orders);
               setOrderId(data.orderId || orderIdParam || checkoutOrderId);
-              setEmailsSent(data.emailsSent || false);
               setVerificationMethod(data.verification_method || 'stripe_verified');
               setUsedFallback(data.used_fallback || false);
               
               if (data.used_fallback) {
                 toast({
                   title: "Order Processed Successfully",
-                  description: "Your order has been recorded using backup data. Payment verification completed.",
+                  description: "Your order has been recorded. Payment verification completed.",
                   variant: "default"
-                });
-              } else if (data.emailsSent) {
-                toast({
-                  title: "Payment Successful",
-                  description: "Thank you for your order! Confirmation emails have been sent.",
                 });
               } else {
                 toast({
                   title: "Payment Successful",
-                  description: "Thank you for your order! Emails are being processed.",
-                  variant: "default"
+                  description: "Thank you for your order! Your payment has been confirmed.",
                 });
               }
             } else {
@@ -201,15 +175,7 @@ const PaymentSuccess = () => {
     };
 
     processPaymentSuccess();
-  }, [clearCart, toast, searchParams, hasProcessedPayment, retryCount]);
-
-  const handleRetryProcessing = () => {
-    console.log('Retrying payment processing...');
-    setRetryCount(prev => prev + 1);
-    setHasProcessedPayment(false);
-    setIsLoading(true);
-    setProcessingError(null);
-  };
+  }, [clearCart, toast, searchParams, hasProcessedPayment]);
 
   const formatDeliveryTimePreference = (preference: string | null) => {
     switch (preference) {
@@ -240,8 +206,7 @@ const PaymentSuccess = () => {
                 <div>
                   <p className="font-medium">Backup Data Processing</p>
                   <p className="text-sm text-gray-600">
-                    Your order was processed using backup data because the payment session expired. 
-                    This is normal and your payment was successful.
+                    Your order was processed using backup data. This is normal and your payment was successful.
                   </p>
                 </div>
               </div>
@@ -277,39 +242,6 @@ const PaymentSuccess = () => {
     return null;
   };
 
-  const EmailStatusCard = () => {
-    return (
-      <Card className="mb-8 border-blue-200">
-        <CardContent className="pt-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            📧 Email Notifications
-          </h3>
-          
-          <div className="space-y-3">
-            <div className={`flex items-center gap-3 p-3 rounded-lg ${
-              emailsSent ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'
-            }`}>
-              {emailsSent ? (
-                <CheckCircle className="h-5 w-5 text-green-600" />
-              ) : (
-                <AlertCircle className="h-5 w-5 text-yellow-600" />
-              )}
-              <div>
-                <p className="font-medium">Order Confirmation Emails</p>
-                <p className="text-sm text-gray-600">
-                  {emailsSent 
-                    ? 'Confirmation emails have been sent to you and our team' 
-                    : 'Email notifications are being processed'
-                  }
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
-
   const ProcessingStatusCard = () => {
     if (!isLoading && !processingError && orderItems.length === 0) {
       return (
@@ -328,15 +260,6 @@ const PaymentSuccess = () => {
                     We're retrieving your order information. This may take a moment.
                   </p>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleRetryProcessing}
-                  className="flex items-center gap-2"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                  Retry
-                </Button>
               </div>
             </div>
           </CardContent>
@@ -362,15 +285,6 @@ const PaymentSuccess = () => {
                   </p>
                   <p className="text-xs text-red-600 mt-1">{processingError}</p>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleRetryProcessing}
-                  className="flex items-center gap-2"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                  Retry
-                </Button>
               </div>
             </div>
           </CardContent>
@@ -405,7 +319,7 @@ const PaymentSuccess = () => {
             </p>
             {usedFallback && (
               <p className="text-amber-600 text-sm mt-2">
-                <em>Order processed using backup data due to session timeout.</em>
+                <em>Order processed using backup data.</em>
               </p>
             )}
           </CardContent>
@@ -413,7 +327,6 @@ const PaymentSuccess = () => {
 
         <VerificationStatusCard />
         <ProcessingStatusCard />
-        <EmailStatusCard />
 
         {/* Order Items Details */}
         {orderItems.length > 0 && (
