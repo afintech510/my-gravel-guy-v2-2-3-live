@@ -25,6 +25,64 @@ const logger = {
   }
 };
 
+// Enhanced session ID validation
+const validateSessionId = (sessionId: string): { isValid: boolean; error?: string } => {
+  if (!sessionId) {
+    return { isValid: false, error: "Session ID is required" };
+  }
+  
+  if (typeof sessionId !== 'string') {
+    return { isValid: false, error: "Session ID must be a string" };
+  }
+  
+  // Stripe checkout session IDs typically start with 'cs_' and are around 100+ characters
+  if (!sessionId.startsWith('cs_')) {
+    return { isValid: false, error: "Invalid session ID format - must start with 'cs_'" };
+  }
+  
+  if (sessionId.length < 50) {
+    return { isValid: false, error: "Session ID appears too short" };
+  }
+  
+  // Check for valid characters (alphanumeric and underscores)
+  if (!/^[a-zA-Z0-9_]+$/.test(sessionId)) {
+    return { isValid: false, error: "Session ID contains invalid characters" };
+  }
+  
+  return { isValid: true };
+};
+
+// Retry logic for Stripe API calls
+const retryStripeCall = async <T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  delay: number = 1000
+): Promise<T> => {
+  let lastError: any;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      logger.debug(`Stripe API attempt ${attempt}/${maxRetries}`);
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      logger.error(`Stripe API attempt ${attempt} failed`, {
+        error: error.message,
+        statusCode: error.statusCode,
+        type: error.type
+      });
+      
+      if (attempt < maxRetries) {
+        logger.debug(`Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2; // Exponential backoff
+      }
+    }
+  }
+  
+  throw lastError;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -33,17 +91,18 @@ serve(async (req) => {
   logger.info("=== VERIFY PAYMENT FUNCTION STARTED ===");
 
   try {
-    // Step 1: Enhanced environment validation - Fixed to use 'stripe' consistently
+    // Step 1: Enhanced environment validation
     logger.step(1, "Validating environment variables");
     
-    const stripeKey = Deno.env.get("stripe"); // Fixed: use 'stripe' as per other functions
+    const stripeKey = Deno.env.get("stripe");
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     
     logger.debug("Environment check", {
       stripeKeyExists: !!stripeKey,
-      stripeKeyPrefix: stripeKey ? stripeKey.substring(0, 7) + "..." : "not found",
+      stripeKeyPrefix: stripeKey ? stripeKey.substring(0, 12) + "..." : "not found",
+      stripeKeyLength: stripeKey ? stripeKey.length : 0,
       supabaseUrlExists: !!supabaseUrl,
       supabaseServiceKeyExists: !!supabaseServiceKey,
       resendApiKeyExists: !!resendApiKey
@@ -68,6 +127,19 @@ serve(async (req) => {
       });
     }
     
+    // Validate Stripe key format
+    if (!stripeKey.startsWith('sk_')) {
+      logger.error("Invalid Stripe key format", { keyPrefix: stripeKey.substring(0, 10) });
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: "Invalid Stripe secret key format",
+        debug: "Stripe secret key should start with 'sk_'"
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
+    }
+    
     logger.info("Environment variables validated successfully");
 
     // Step 2: Enhanced request parsing and validation
@@ -76,180 +148,239 @@ serve(async (req) => {
     let requestBody;
     try {
       const rawBody = await req.text();
-      logger.debug("Raw request body received", { bodyLength: rawBody.length });
+      logger.debug("Raw request body received", { bodyLength: rawBody.length, preview: rawBody.substring(0, 200) });
       requestBody = JSON.parse(rawBody);
       logger.debug("Request body parsed successfully", requestBody);
     } catch (parseError) {
       logger.error("Failed to parse request body", parseError);
       return new Response(JSON.stringify({
         success: false,
-        error: "Invalid JSON in request body"
+        error: "Invalid JSON in request body",
+        debug: parseError.message
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
       });
     }
     
-    const { sessionId } = requestBody;
+    const { sessionId, orderId, fallbackMode, backupData } = requestBody;
     
-    if (!sessionId || typeof sessionId !== 'string') {
-      logger.error("Session ID validation failed", { sessionId, type: typeof sessionId });
-      return new Response(JSON.stringify({
-        success: false,
-        error: "Valid sessionId is required"
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
-      });
+    // Enhanced session ID validation
+    if (!fallbackMode) {
+      const validation = validateSessionId(sessionId);
+      if (!validation.isValid) {
+        logger.error("Session ID validation failed", { sessionId, error: validation.error });
+        return new Response(JSON.stringify({
+          success: false,
+          error: validation.error,
+          debug: "Please check the session ID format"
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        });
+      }
     }
     
-    logger.info(`Processing payment verification for session: ${sessionId}`);
+    logger.info(`Processing payment verification`, { 
+      sessionId: sessionId ? `${sessionId.substring(0, 20)}...` : 'none',
+      orderId,
+      fallbackMode,
+      hasBackupData: !!backupData
+    });
 
     // Step 3: Initialize Stripe with enhanced error handling
     logger.step(3, "Initializing Stripe client");
     
     let stripe;
     try {
-      stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+      stripe = new Stripe(stripeKey, { 
+        apiVersion: "2023-10-16",
+        timeout: 30000, // 30 second timeout
+        maxNetworkRetries: 2
+      });
       logger.info("Stripe client initialized successfully");
     } catch (stripeInitError) {
       logger.error("Failed to initialize Stripe", stripeInitError);
       return new Response(JSON.stringify({
         success: false,
-        error: "Failed to initialize payment service"
+        error: "Failed to initialize payment service",
+        debug: stripeInitError.message
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
       });
     }
 
-    // Step 4: Retrieve and validate Stripe session
+    // Step 4: Retrieve and validate Stripe session with retry logic
     logger.step(4, "Retrieving Stripe checkout session");
     
     let session;
-    try {
-      session = await stripe.checkout.sessions.retrieve(sessionId, {
-        expand: ['payment_intent', 'customer']
-      });
+    if (!fallbackMode && sessionId) {
+      try {
+        session = await retryStripeCall(async () => {
+          logger.debug("Attempting to retrieve Stripe session", { sessionId: `${sessionId.substring(0, 20)}...` });
+          return await stripe.checkout.sessions.retrieve(sessionId, {
+            expand: ['payment_intent', 'customer']
+          });
+        });
+        
+        logger.info("Stripe session retrieved successfully", {
+          id: session.id,
+          payment_status: session.payment_status,
+          customer_email: session.customer_details?.email,
+          amount_total: session.amount_total,
+          metadata_keys: Object.keys(session.metadata || {})
+        });
+      } catch (stripeError) {
+        logger.error("Failed to retrieve Stripe session after retries", {
+          error: stripeError.message,
+          statusCode: stripeError.statusCode,
+          type: stripeError.type,
+          requestId: stripeError.requestId
+        });
+        
+        // Provide specific error messages based on Stripe error type
+        let userMessage = "Failed to retrieve payment session";
+        let debugInfo = stripeError.message;
+        
+        if (stripeError.statusCode === 404) {
+          userMessage = "Payment session not found or expired";
+          debugInfo = "The session ID may be invalid or the session may have expired";
+        } else if (stripeError.statusCode === 401) {
+          userMessage = "Authentication failed with payment provider";
+          debugInfo = "Check Stripe API key configuration";
+        } else if (stripeError.statusCode === 400) {
+          userMessage = "Invalid request to payment provider";
+          debugInfo = "The session ID format may be incorrect";
+        }
+        
+        return new Response(JSON.stringify({
+          success: false,
+          error: userMessage,
+          debug: debugInfo,
+          stripeError: {
+            type: stripeError.type,
+            code: stripeError.code,
+            statusCode: stripeError.statusCode
+          }
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        });
+      }
+    } else {
+      logger.info("Fallback mode or no session ID - proceeding without Stripe session verification");
+    }
+
+    // Step 5: Verify payment status (if session exists)
+    if (session) {
+      logger.step(5, "Verifying payment status");
       
-      logger.info("Stripe session retrieved successfully", {
-        id: session.id,
-        payment_status: session.payment_status,
-        customer_email: session.customer_details?.email,
-        amount_total: session.amount_total,
-        metadata_keys: Object.keys(session.metadata || {})
-      });
-    } catch (stripeError) {
-      logger.error("Failed to retrieve Stripe session", stripeError);
-      return new Response(JSON.stringify({
-        success: false,
-        error: "Failed to retrieve payment session"
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
-      });
-    }
+      if (session.payment_status !== 'paid') {
+        logger.info(`Payment not completed. Status: ${session.payment_status}`);
+        return new Response(JSON.stringify({
+          success: false,
+          payment_status: session.payment_status,
+          message: "Payment not completed",
+          session_id: sessionId
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
 
-    // Step 5: Verify payment status
-    logger.step(5, "Verifying payment status");
-    
-    if (session.payment_status !== 'paid') {
-      logger.info(`Payment not completed. Status: ${session.payment_status}`);
-      return new Response(JSON.stringify({
-        success: false,
-        payment_status: session.payment_status,
-        message: "Payment not completed",
-        session_id: sessionId
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
+      logger.info("Payment confirmed as successful");
     }
-
-    logger.info("Payment confirmed as successful");
 
     // Step 6: Extract and validate order data
-    logger.step(6, "Extracting order data from session metadata");
+    logger.step(6, "Extracting order data");
     
-    const orderId = session.metadata?.order_id;
-    const customerEmail = session.customer_details?.email;
-    const customerName = session.customer_details?.name;
-    
-    if (!orderId) {
-      logger.error("Order ID missing in session metadata", { metadata: session.metadata });
-      return new Response(JSON.stringify({
-        success: false,
-        error: "Order ID not found in payment session"
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
-      });
-    }
+    let finalOrderId = orderId;
+    let customerEmail = null;
+    let customerName = null;
+    let orderItems = [];
 
-    if (!customerEmail) {
-      logger.error("Customer email missing in session", { customer_details: session.customer_details });
-      return new Response(JSON.stringify({
-        success: false,
-        error: "Customer email not found in payment session"
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
-      });
-    }
-
-    logger.info("Order identification successful", {
-      orderId,
-      customerEmail,
-      customerName
-    });
-
-    // Step 7: Extract order items from metadata
-    logger.step(7, "Processing order items from metadata");
-    
-    const orderItems = [];
-    const itemIndices = new Set();
-    
-    // Find all item indices in metadata
-    Object.keys(session.metadata).forEach(key => {
-      const match = key.match(/^item_(\d+)_/);
-      if (match) {
-        itemIndices.add(parseInt(match[1]));
-      }
-    });
-    
-    logger.info(`Found ${itemIndices.size} items in metadata`, { itemIndices: Array.from(itemIndices) });
-    
-    // Extract data for each item
-    itemIndices.forEach(index => {
-      const item = {
-        product_id: session.metadata[`item_${index}_product_id`] || '',
-        material_category: session.metadata[`item_${index}_material_category`] || null,
-        quantity_tons: parseFloat(session.metadata[`item_${index}_quantity_tons`]) || 0,
-        quantity_yards: session.metadata[`item_${index}_quantity_yards`] ? parseFloat(session.metadata[`item_${index}_quantity_yards`]) : null,
-        unit_price: parseFloat(session.metadata[`item_${index}_unit_price`]) || 0,
-        total_price: parseFloat(session.metadata[`item_${index}_total_price`]) || 0,
-        material_size: session.metadata[`item_${index}_material_size`] || null,
-        delivery_date: session.metadata[`item_${index}_delivery_date`] || null,
-        delivery_address_street: session.metadata[`item_${index}_delivery_address_street`] || null,
-        delivery_address_city: session.metadata[`item_${index}_delivery_address_city`] || null,
-        delivery_address_state: session.metadata[`item_${index}_delivery_address_state`] || null,
-        delivery_address_zip: session.metadata[`item_${index}_delivery_address_zip`] || null,
-        contact_name: session.metadata[`item_${index}_contact_name`] || customerName || null,
-        contact_phone: session.metadata[`item_${index}_contact_phone`] || null,
-        contact_email: session.metadata[`item_${index}_contact_email`] || customerEmail || null,
-        delivery_time_preference: session.metadata[`item_${index}_delivery_time_preference`] || null,
-        delivery_instructions: session.metadata[`item_${index}_delivery_instructions`] || null
-      };
+    if (session) {
+      finalOrderId = session.metadata?.order_id || orderId;
+      customerEmail = session.customer_details?.email;
+      customerName = session.customer_details?.name;
       
-      orderItems.push(item);
-      logger.debug(`Extracted item ${index}`, item);
-    });
+      if (!finalOrderId) {
+        logger.error("Order ID missing in session metadata", { metadata: session.metadata });
+        return new Response(JSON.stringify({
+          success: false,
+          error: "Order ID not found in payment session"
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        });
+      }
+
+      if (!customerEmail) {
+        logger.error("Customer email missing in session", { customer_details: session.customer_details });
+        return new Response(JSON.stringify({
+          success: false,
+          error: "Customer email not found in payment session"
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        });
+      }
+
+      // Extract order items from metadata
+      logger.step(7, "Processing order items from metadata");
+      
+      const itemIndices = new Set();
+      
+      // Find all item indices in metadata
+      Object.keys(session.metadata).forEach(key => {
+        const match = key.match(/^item_(\d+)_/);
+        if (match) {
+          itemIndices.add(parseInt(match[1]));
+        }
+      });
+      
+      logger.info(`Found ${itemIndices.size} items in metadata`, { itemIndices: Array.from(itemIndices) });
+      
+      // Extract data for each item
+      itemIndices.forEach(index => {
+        const item = {
+          product_id: session.metadata[`item_${index}_product_id`] || '',
+          material_category: session.metadata[`item_${index}_material_category`] || null,
+          quantity_tons: parseFloat(session.metadata[`item_${index}_quantity_tons`]) || 0,
+          quantity_yards: session.metadata[`item_${index}_quantity_yards`] ? parseFloat(session.metadata[`item_${index}_quantity_yards`]) : null,
+          unit_price: parseFloat(session.metadata[`item_${index}_unit_price`]) || 0,
+          total_price: parseFloat(session.metadata[`item_${index}_total_price`]) || 0,
+          material_size: session.metadata[`item_${index}_material_size`] || null,
+          delivery_date: session.metadata[`item_${index}_delivery_date`] || null,
+          delivery_address_street: session.metadata[`item_${index}_delivery_address_street`] || null,
+          delivery_address_city: session.metadata[`item_${index}_delivery_address_city`] || null,
+          delivery_address_state: session.metadata[`item_${index}_delivery_address_state`] || null,
+          delivery_address_zip: session.metadata[`item_${index}_delivery_address_zip`] || null,
+          contact_name: session.metadata[`item_${index}_contact_name`] || customerName || null,
+          contact_phone: session.metadata[`item_${index}_contact_phone`] || null,
+          contact_email: session.metadata[`item_${index}_contact_email`] || customerEmail || null,
+          delivery_time_preference: session.metadata[`item_${index}_delivery_time_preference`] || null,
+          delivery_instructions: session.metadata[`item_${index}_delivery_instructions`] || null
+        };
+        
+        orderItems.push(item);
+        logger.debug(`Extracted item ${index}`, item);
+      });
+    } else if (backupData) {
+      // Use backup data when session is not available
+      logger.info("Using backup data for order processing", { backupData });
+      finalOrderId = backupData.orderId || orderId;
+      orderItems = backupData.items || [];
+      customerEmail = "guest@mygravelguy.com"; // Default for fallback
+      customerName = "Guest User";
+    }
     
     if (orderItems.length === 0) {
-      logger.error("No order items found in metadata", { metadata: session.metadata });
+      logger.error("No order items found", { hasSession: !!session, hasBackupData: !!backupData });
       return new Response(JSON.stringify({
         success: false,
-        error: "No order items found in payment session"
+        error: "No order items found"
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
@@ -281,13 +412,13 @@ serve(async (req) => {
       });
     }
 
-    // Step 9: Create order records in database - Fixed to match expected response format
+    // Step 9: Create order records in database
     logger.step(9, "Creating order records in database");
     
     const orderRecords = orderItems.map(item => ({
-      order_id: orderId,
-      stripe_session_id: sessionId,
-      stripe_payment_intent_id: session.payment_intent?.id || null,
+      order_id: finalOrderId,
+      stripe_session_id: sessionId || null,
+      stripe_payment_intent_id: session?.payment_intent?.id || null,
       product_id: item.product_id,
       material_category: item.material_category,
       quantity_tons: item.quantity_tons,
@@ -307,7 +438,7 @@ serve(async (req) => {
       customer_name: customerName,
       delivery_time_preference: item.delivery_time_preference,
       delivery_instructions: item.delivery_instructions,
-      status: 'paid',
+      status: session ? 'paid' : 'pending',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }));
@@ -342,7 +473,7 @@ serve(async (req) => {
       });
     }
 
-    // Step 10: Handle email notifications with robust error handling - Fixed email template functions
+    // Step 10: Handle email notifications with robust error handling
     logger.step(10, "Handling email notifications");
     
     let emailResults = {
@@ -352,11 +483,11 @@ serve(async (req) => {
     };
 
     try {
-      if (resendApiKey) {
+      if (resendApiKey && customerEmail && customerEmail !== "guest@mygravelguy.com") {
         const totalAmount = orderItems.reduce((sum, item) => sum + (item.total_price || 0), 0);
         
         const emailData = {
-          order_id: orderId,
+          order_id: finalOrderId,
           items: orderItems,
           total_amount: totalAmount,
           customer_email: customerEmail,
@@ -364,7 +495,7 @@ serve(async (req) => {
           session_id: sessionId
         };
         
-        // Send customer confirmation email with safe template generation
+        // Send customer confirmation email
         logger.debug("Sending customer confirmation email");
         try {
           const customerEmailResult = await supabase.functions.invoke('send-email', {
@@ -404,8 +535,12 @@ serve(async (req) => {
         
         logger.info("Email sending completed", emailResults);
       } else {
-        logger.info("Email service disabled - RESEND_API_KEY not configured");
-        emailResults.emailError = "Email service not configured";
+        logger.info("Email service skipped", { 
+          hasResendKey: !!resendApiKey,
+          customerEmail,
+          reason: !resendApiKey ? "No API key" : "Guest checkout"
+        });
+        emailResults.emailError = !resendApiKey ? "Email service not configured" : "Guest checkout - no email sent";
       }
       
     } catch (error) {
@@ -413,14 +548,14 @@ serve(async (req) => {
       emailResults.emailError = error.message;
     }
 
-    // Step 11: Generate response matching frontend expectations - Fixed response format
+    // Step 11: Generate response
     logger.step(11, "Preparing success response");
     
     // Transform insertedOrders to match PaymentSuccess.tsx expectations
     const transformedOrders = (insertedOrders || []).map(order => ({
       id: order.id,
       order_id: order.order_id,
-      product_name: order.material_category || order.product_id, // Map to expected field
+      product_name: order.material_category || order.product_id,
       quantity: order.quantity_tons,
       total_price: order.total_price,
       delivery_date: order.delivery_date,
@@ -438,9 +573,9 @@ serve(async (req) => {
     
     const response = {
       success: true,
-      payment_status: session.payment_status,
-      orderId: orderId,
-      orders: transformedOrders, // Fixed: provide orders array as expected by PaymentSuccess.tsx
+      payment_status: session?.payment_status || 'processed',
+      orderId: finalOrderId,
+      orders: transformedOrders,
       customer_email: customerEmail,
       customer_name: customerName,
       session_id: sessionId,
@@ -481,7 +616,7 @@ serve(async (req) => {
   }
 });
 
-// Fixed and simplified email templates with proper error handling
+// Email template functions
 const generateCustomerEmailTemplate = (orderData: any): string => {
   try {
     const itemsList = orderData.items?.map((item: any) => 
