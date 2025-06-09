@@ -128,7 +128,7 @@ export async function calculateFinalPrice(
 
 
 
-export function findPriceMultiplierForQuantity(tiers: PriceTier[], tons: number): number {
+export function findPriceMultiplierForQuantity(tons: number): number {
   console.log(`[pricingUtils] findPriceMultiplierForQuantity called - now using exponential pricing`);
   return 1; // Default multiplier since we use exponential calculation now
 }
