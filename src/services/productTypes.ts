@@ -1,3 +1,4 @@
+
 export interface Product {
   id: string | number;
   name: string;
@@ -48,7 +49,27 @@ export interface ZipCodeData {
   timezone: string;
 }
 
-
+// Enhanced interface for cart items with all required fields for orders
+export interface CartItemForOrders {
+  id: string | number;
+  name: string;
+  category?: string;
+  price: number;
+  quantity: number;
+  tons?: number;
+  yards?: number;
+  size?: string;
+  image?: string;
+  metadata?: {
+    deliveryDate?: string;
+    deliveryAddress?: string;
+    contactName?: string;
+    contactPhone?: string;
+    contactEmail?: string;
+    deliveryTimePreference?: string;
+    deliveryInstructions?: string;
+  };
+}
 
 // Updated type definition for MaterialSize to be a string instead of specific literal types
 export type MaterialCategory = Product['category'];

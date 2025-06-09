@@ -7,7 +7,7 @@ interface CheckoutBackup {
   cartItems: any[];
 }
 
-// Enhanced interface for order data with all required fields
+// Enhanced interface for order data with all required fields that match orders table schema
 export interface OrderItemData {
   id: string | number;
   name: string;
@@ -125,13 +125,13 @@ export const prepareItemsForStripe = (cartItems: any[]): OrderItemData[] => {
       id: item.id,
       name: item.name,
       category: item.category,
-      materialCategory: item.materialCategory,
+      materialCategory: item.materialCategory || item.category, // Ensure materialCategory is set
       price: item.price,
       quantity: item.tons || item.quantity,
       tons: item.tons,
       yards: item.yards,
       size: item.size,
-      materialSize: item.materialSize,
+      materialSize: item.materialSize || item.size, // Ensure materialSize is set
       image: item.image || item.images?.[0],
       metadata
     };

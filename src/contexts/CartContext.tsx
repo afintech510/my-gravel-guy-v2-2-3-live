@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useCallback, useEffect } from 'react';
 import { Product } from '../services/productTypes';
 import { useToast } from '@/hooks/use-toast';
@@ -34,7 +33,7 @@ export interface CartItem extends Product {
   couponApplied?: boolean; // Track if a coupon has been applied
   couponAmount?: number; // Amount of the coupon discount
   
-  // Additional material properties
+  // Additional material properties that map to orders table
   materialCategory?: string;
   materialSubcategory?: string;
   materialSize?: string;
@@ -64,7 +63,7 @@ interface CartContextType {
     details: Partial<Omit<CartItem, keyof Product | 'tons'>>
   ) => void;
   updateQuantity: (productId: string | number, newTons: number) => void;
-  updateItemPrice: (productId: string | number, newPrice: number) => void; // New function
+  updateItemPrice: (productId: string | number, newPrice: number) => void;
   clearCart: () => void;
   total: number;
   discountTotal: number;
@@ -122,9 +121,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         basePrice: product.price, // Store original price for potential adjustments later
         couponApplied: product.couponApplied || false,
         couponAmount: product.couponAmount || 0,
-        materialCategory: product.materialCategory,
+        // Map category to materialCategory for orders table compatibility
+        materialCategory: product.materialCategory || product.category,
         materialSubcategory: product.materialSubcategory,
-        materialSize: product.materialSize,
+        materialSize: product.materialSize || product.size,
         applicationType: product.applicationType,
         depth: product.depth,
         deliveryAddress: product.deliveryAddress

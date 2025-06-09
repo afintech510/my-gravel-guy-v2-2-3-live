@@ -224,7 +224,6 @@ serve(async (req) => {
     itemIndices.forEach(index => {
       const item = {
         product_id: session.metadata[`item_${index}_product_id`] || '',
-        product_name: session.metadata[`item_${index}_product_name`] || 'Unknown Product',
         material_category: session.metadata[`item_${index}_material_category`] || null,
         quantity_tons: parseFloat(session.metadata[`item_${index}_quantity_tons`]) || 0,
         quantity_yards: session.metadata[`item_${index}_quantity_yards`] ? parseFloat(session.metadata[`item_${index}_quantity_yards`]) : null,
@@ -295,7 +294,6 @@ serve(async (req) => {
       stripe_session_id: sessionId,
       stripe_payment_intent_id: session.payment_intent?.id || null,
       product_id: item.product_id,
-      product_name: item.product_name,
       material_category: item.material_category,
       quantity_tons: item.quantity_tons,
       quantity_yards: item.quantity_yards,
@@ -513,7 +511,7 @@ const generateCustomerEmailTemplate = (orderData: any) => {
           <ul style="background: white; padding: 20px; border-radius: 8px;">
             ${orderData.items.map((item: any) => `
               <li style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e5e7eb;">
-                <strong>${item.product_name}</strong><br>
+                <strong>${item.material_category || 'Material'}</strong><br>
                 Quantity: ${item.quantity_tons} tons<br>
                 Price: $${item.total_price.toFixed(2)}
                 ${item.delivery_date ? `<br>Delivery Date: ${new Date(item.delivery_date).toLocaleDateString()}` : ''}
@@ -562,7 +560,7 @@ const generateInternalEmailTemplate = (orderData: any) => {
           <h3>Order Items with Delivery Details:</h3>
           ${orderData.items.map((item: any) => `
             <div style="background: white; padding: 20px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #dc2626;">
-              <h4 style="margin-top: 0; color: #dc2626;">${item.product_name}</h4>
+              <h4 style="margin-top: 0; color: #dc2626;">${item.material_category || 'Material'}</h4>
               <p><strong>Quantity:</strong> ${item.quantity_tons} tons</p>
               <p><strong>Price:</strong> $${item.total_price.toFixed(2)}</p>
               

@@ -101,14 +101,13 @@ serve(async (req) => {
         }
 
         // Enhanced metadata collection for proper database mapping
-        orderMetadata[`item_${i+1}_product_id`] = item.id || '';
-        orderMetadata[`item_${i+1}_product_name`] = cleanName;
-        orderMetadata[`item_${i+1}_material_category`] = item.category || item.materialCategory || '';
-        orderMetadata[`item_${i+1}_quantity_tons`] = item.quantity || item.tons || 0;
-        orderMetadata[`item_${i+1}_quantity_yards`] = item.yards || 0;
-        orderMetadata[`item_${i+1}_unit_price`] = item.price || 0;
-        orderMetadata[`item_${i+1}_total_price`] = (item.price * item.quantity) || 0;
-        orderMetadata[`item_${i+1}_material_size`] = item.size || item.materialSize || '';
+        orderMetadata[`item_${i+1}_product_id`] = String(item.id || '');
+        orderMetadata[`item_${i+1}_material_category`] = item.materialCategory || item.category || '';
+        orderMetadata[`item_${i+1}_quantity_tons`] = String(item.quantity || item.tons || 0);
+        orderMetadata[`item_${i+1}_quantity_yards`] = String(item.yards || 0);
+        orderMetadata[`item_${i+1}_unit_price`] = String(item.price || 0);
+        orderMetadata[`item_${i+1}_total_price`] = String((item.price * item.quantity) || 0);
+        orderMetadata[`item_${i+1}_material_size`] = item.materialSize || item.size || '';
 
         // Add delivery and contact metadata from item metadata
         if (item.metadata) {
@@ -117,11 +116,17 @@ serve(async (req) => {
           }
           
           if (item.metadata.deliveryAddress) {
-            const address = JSON.parse(item.metadata.deliveryAddress);
-            orderMetadata[`item_${i+1}_delivery_address_street`] = address.street || '';
-            orderMetadata[`item_${i+1}_delivery_address_city`] = address.city || '';
-            orderMetadata[`item_${i+1}_delivery_address_state`] = address.state || '';
-            orderMetadata[`item_${i+1}_delivery_address_zip`] = address.zip || '';
+            try {
+              const address = typeof item.metadata.deliveryAddress === 'string' ? 
+                JSON.parse(item.metadata.deliveryAddress) : item.metadata.deliveryAddress;
+              
+              orderMetadata[`item_${i+1}_delivery_address_street`] = address.street || '';
+              orderMetadata[`item_${i+1}_delivery_address_city`] = address.city || '';
+              orderMetadata[`item_${i+1}_delivery_address_state`] = address.state || '';
+              orderMetadata[`item_${i+1}_delivery_address_zip`] = address.zip || '';
+            } catch (addressError) {
+              console.warn(`Failed to parse delivery address for item ${i}:`, addressError);
+            }
           }
           
           if (item.metadata.contactPhone) {
@@ -187,7 +192,7 @@ serve(async (req) => {
       payment_intent_data: {
         metadata: orderMetadata
       },
-      // FIXED: Enable customer email collection
+      // Enable customer email collection
       customer_email: undefined, // Let Stripe prompt for email
       billing_address_collection: 'required',
       customer_creation: 'always',
@@ -225,36 +230,26 @@ serve(async (req) => {
       // Prepare order records for each cart item with correct field mapping
       const orderRecords = items.map((item, index) => {
         let deliveryAddress = null;
-        let contactInfo = null;
 
         if (item.metadata?.deliveryAddress) {
           try {
-            deliveryAddress = JSON.parse(item.metadata.deliveryAddress);
+            deliveryAddress = typeof item.metadata.deliveryAddress === 'string' ? 
+              JSON.parse(item.metadata.deliveryAddress) : item.metadata.deliveryAddress;
           } catch (e) {
             console.warn(`Failed to parse delivery address for item ${index}:`, e);
           }
-        }
-
-        // Extract contact info from metadata
-        if (item.metadata?.contactPhone || deliveryAddress) {
-          contactInfo = {
-            phone: item.metadata?.contactPhone,
-            name: item.metadata?.contactName || "Customer",
-            email: item.metadata?.contactEmail || "customer@example.com"
-          };
         }
 
         return {
           order_id: orderId,
           stripe_session_id: session.id,
           product_id: String(item.id || ''),
-          product_name: item.name,
-          material_category: item.category || item.materialCategory || null,
+          material_category: item.materialCategory || item.category || null,
           quantity_tons: item.quantity || item.tons || 0,
           quantity_yards: item.yards || null,
           unit_price: item.price,
           total_price: item.price * (item.quantity || item.tons || 0),
-          material_size: item.size || item.materialSize || null,
+          material_size: item.materialSize || item.size || null,
           delivery_date: item.metadata?.deliveryDate || null,
           delivery_address_street: deliveryAddress?.street || null,
           delivery_address_city: deliveryAddress?.city || null,
