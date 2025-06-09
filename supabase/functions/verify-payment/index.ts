@@ -33,11 +33,10 @@ serve(async (req) => {
   logger.info("=== VERIFY PAYMENT FUNCTION STARTED ===");
 
   try {
-    // Step 1: Enhanced environment validation
+    // Step 1: Enhanced environment validation - Fixed to use 'stripe' consistently
     logger.step(1, "Validating environment variables");
     
-    // Fix: Use multiple possible environment variable names for Stripe
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY") || Deno.env.get("stripe");
+    const stripeKey = Deno.env.get("stripe"); // Fixed: use 'stripe' as per other functions
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
@@ -52,7 +51,7 @@ serve(async (req) => {
     
     // Critical environment variables check
     const missingVars = [];
-    if (!stripeKey) missingVars.push("Stripe secret key");
+    if (!stripeKey) missingVars.push("stripe");
     if (!supabaseUrl) missingVars.push("SUPABASE_URL");
     if (!supabaseServiceKey) missingVars.push("SUPABASE_SERVICE_ROLE_KEY");
     
@@ -282,7 +281,7 @@ serve(async (req) => {
       });
     }
 
-    // Step 9: Create order records in database
+    // Step 9: Create order records in database - Fixed to match expected response format
     logger.step(9, "Creating order records in database");
     
     const orderRecords = orderItems.map(item => ({
@@ -343,7 +342,7 @@ serve(async (req) => {
       });
     }
 
-    // Step 10: Handle email notifications with robust error handling
+    // Step 10: Handle email notifications with robust error handling - Fixed email template functions
     logger.step(10, "Handling email notifications");
     
     let emailResults = {
@@ -365,7 +364,7 @@ serve(async (req) => {
           session_id: sessionId
         };
         
-        // Send customer confirmation email
+        // Send customer confirmation email with safe template generation
         logger.debug("Sending customer confirmation email");
         try {
           const customerEmailResult = await supabase.functions.invoke('send-email', {
@@ -414,14 +413,34 @@ serve(async (req) => {
       emailResults.emailError = error.message;
     }
 
-    // Step 11: Generate response matching frontend expectations
+    // Step 11: Generate response matching frontend expectations - Fixed response format
     logger.step(11, "Preparing success response");
+    
+    // Transform insertedOrders to match PaymentSuccess.tsx expectations
+    const transformedOrders = (insertedOrders || []).map(order => ({
+      id: order.id,
+      order_id: order.order_id,
+      product_name: order.material_category || order.product_id, // Map to expected field
+      quantity: order.quantity_tons,
+      total_price: order.total_price,
+      delivery_date: order.delivery_date,
+      delivery_address_street: order.delivery_address_street,
+      delivery_address_city: order.delivery_address_city,
+      delivery_address_state: order.delivery_address_state,
+      delivery_address_zip: order.delivery_address_zip,
+      contact_name: order.contact_name,
+      contact_email: order.contact_email,
+      contact_phone: order.contact_phone,
+      delivery_time_preference: order.delivery_time_preference,
+      delivery_instructions: order.delivery_instructions,
+      status: order.status
+    }));
     
     const response = {
       success: true,
       payment_status: session.payment_status,
       orderId: orderId,
-      orders: insertedOrders || [],
+      orders: transformedOrders, // Fixed: provide orders array as expected by PaymentSuccess.tsx
       customer_email: customerEmail,
       customer_name: customerName,
       session_id: sessionId,
@@ -462,20 +481,20 @@ serve(async (req) => {
   }
 });
 
-// Simplified and robust email templates
+// Fixed and simplified email templates with proper error handling
 const generateCustomerEmailTemplate = (orderData: any): string => {
   try {
-    const itemsList = orderData.items.map((item: any) => 
-      `<li>${item.material_category || 'Material'} - ${item.quantity_tons} tons - $${item.total_price.toFixed(2)}</li>`
-    ).join('');
+    const itemsList = orderData.items?.map((item: any) => 
+      `<li>${item.material_category || 'Material'} - ${item.quantity_tons} tons - $${(item.total_price || 0).toFixed(2)}</li>`
+    ).join('') || '<li>Order details processing</li>';
 
     return `
       <html>
       <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>Order Confirmation</h2>
         <p>Thank you for your order!</p>
-        <p><strong>Order ID:</strong> ${orderData.order_id}</p>
-        <p><strong>Total:</strong> $${orderData.total_amount.toFixed(2)}</p>
+        <p><strong>Order ID:</strong> ${orderData.order_id || 'Processing'}</p>
+        <p><strong>Total:</strong> $${(orderData.total_amount || 0).toFixed(2)}</p>
         <h3>Items:</h3>
         <ul>${itemsList}</ul>
         <p>We will contact you within 24 hours with delivery details.</p>
@@ -483,23 +502,23 @@ const generateCustomerEmailTemplate = (orderData: any): string => {
       </html>
     `;
   } catch (error) {
-    return `<h2>Order Confirmation</h2><p>Order ID: ${orderData.order_id}</p><p>Total: $${orderData.total_amount.toFixed(2)}</p>`;
+    return `<h2>Order Confirmation</h2><p>Order ID: ${orderData.order_id || 'Processing'}</p><p>Total: $${(orderData.total_amount || 0).toFixed(2)}</p>`;
   }
 };
 
 const generateInternalEmailTemplate = (orderData: any): string => {
   try {
-    const itemsList = orderData.items.map((item: any) => 
-      `<li>${item.material_category || 'Material'} - ${item.quantity_tons} tons - $${item.total_price.toFixed(2)}</li>`
-    ).join('');
+    const itemsList = orderData.items?.map((item: any) => 
+      `<li>${item.material_category || 'Material'} - ${item.quantity_tons} tons - $${(item.total_price || 0).toFixed(2)}</li>`
+    ).join('') || '<li>Order details processing</li>';
 
     return `
       <html>
       <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>New Order Received</h2>
-        <p><strong>Order ID:</strong> ${orderData.order_id}</p>
-        <p><strong>Customer:</strong> ${orderData.customer_name || 'N/A'} (${orderData.customer_email})</p>
-        <p><strong>Total:</strong> $${orderData.total_amount.toFixed(2)}</p>
+        <p><strong>Order ID:</strong> ${orderData.order_id || 'Processing'}</p>
+        <p><strong>Customer:</strong> ${orderData.customer_name || 'N/A'} (${orderData.customer_email || 'N/A'})</p>
+        <p><strong>Total:</strong> $${(orderData.total_amount || 0).toFixed(2)}</p>
         <h3>Items:</h3>
         <ul>${itemsList}</ul>
         <p>Contact customer within 24 hours to confirm delivery details.</p>
@@ -507,6 +526,6 @@ const generateInternalEmailTemplate = (orderData: any): string => {
       </html>
     `;
   } catch (error) {
-    return `<h2>New Order</h2><p>Order ID: ${orderData.order_id}</p><p>Customer: ${orderData.customer_email}</p>`;
+    return `<h2>New Order</h2><p>Order ID: ${orderData.order_id || 'Processing'}</p><p>Customer: ${orderData.customer_email || 'N/A'}</p>`;
   }
 };
