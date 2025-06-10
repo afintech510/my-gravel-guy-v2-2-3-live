@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
@@ -59,7 +60,7 @@ const Checkout = () => {
       // Generate test order ID
       const testOrderId = `TEST-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
-      // Prepare order records from cart items with only essential fields
+      // Prepare order records from cart items with correct field names matching the database schema
       const orderRecords = items.map((item, index) => {
         const deliveryAddress = item.deliveryAddress;
         
@@ -78,9 +79,8 @@ const Checkout = () => {
           delivery_address_zip: deliveryAddress?.zip || null,
           delivery_time_preference: item.deliveryTimePreference || null,
           delivery_instructions: item.deliveryInstructions || null,
-          contact_phone: item.contactPhone || item.contactInfo?.phone || null,
-          delivery_name: item.contactInfo?.name || null,
-          delivery_email: item.contactInfo?.email || null,
+          contact_name: item.contactInfo?.name || null,
+          contact_email: item.contactInfo?.email || null,
           status: 'test',
           notes: 'Test insertion from checkout page'
         };
