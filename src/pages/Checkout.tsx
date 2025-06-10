@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2, MapPinIcon, PhoneIcon, MailIcon, ClockIcon, FileTextIcon, UserIcon, CreditCard } from 'lucide-react';
+import { ArrowLeft, Loader2, MapPinIcon, PhoneIcon, MailIcon, ClockIcon, FileTextIcon, UserIcon, CreditCard, Database } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +12,7 @@ import CouponCode from '../components/cart/CouponCode';
 const Checkout = () => {
   const { items, total, discountTotal, clearCart } = useCart();
   const [isLoading, setIsLoading] = useState(false);
+  const [isTestingDB, setIsTestingDB] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -46,6 +47,83 @@ const Checkout = () => {
     if (item.specifications?.size) return `Size: ${item.specifications.size}`;
     if (item.materialSize) return `Size: ${item.materialSize}`;
     return null;
+  };
+
+  // Test database insertion function
+  const testDatabaseInsertion = async () => {
+    setIsTestingDB(true);
+    
+    try {
+      console.log('=== TESTING DATABASE INSERTION ===');
+      
+      // Generate test order ID
+      const testOrderId = `TEST-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Prepare order records from cart items
+      const orderRecords = items.map((item, index) => {
+        const deliveryAddress = item.deliveryAddress;
+        
+        return {
+          order_id: testOrderId,
+          stripe_session_id: `test_session_${testOrderId}_${index}`,
+          stripe_payment_intent_id: null,
+          product_id: item.id.toString(),
+          unit: 'tons',
+          quantity: item.tons,
+          unit_price: item.price,
+          total_price: item.price * item.tons,
+          delivery_date: item.deliveryDate ? item.deliveryDate.toISOString().split('T')[0] : null,
+          delivery_street: deliveryAddress?.street || null,
+          delivery_city: deliveryAddress?.city || null,
+          delivery_state: deliveryAddress?.state || null,
+          delivery_zip: deliveryAddress?.zip || null,
+          delivery_time_preference: item.deliveryTimePreference || null,
+          delivery_instructions: item.deliveryInstructions || null,
+          delivery_phone: item.contactPhone || item.contactInfo?.phone || null,
+          delivery_name: item.contactInfo?.name || null,
+          delivery_email: item.contactInfo?.email || null,
+          billing_name: item.contactInfo?.name || null,
+          billing_email: item.contactInfo?.email || null,
+          status: 'test',
+          zip_adjust: 0,
+          supplier_id: null,
+          supplier_charges: null,
+          notes: 'Test insertion from checkout page'
+        };
+      });
+
+      console.log('Order records to insert:', orderRecords);
+
+      // Insert into database
+      const { data, error } = await supabase
+        .from('orders')
+        .insert(orderRecords)
+        .select();
+
+      if (error) {
+        console.error('Database insertion error:', error);
+        throw error;
+      }
+
+      console.log('Successfully inserted test orders:', data);
+      
+      toast({
+        title: "Database Test Successful!",
+        description: `Inserted ${data?.length || 0} test order records with ID: ${testOrderId}`,
+        className: "border-green-500 border-2 shadow-[0_0_15px_rgba(20,255,106,0.5)]"
+      });
+
+    } catch (error) {
+      console.error('Database test failed:', error);
+      
+      toast({
+        variant: "destructive",
+        title: "Database Test Failed",
+        description: error instanceof Error ? error.message : "Failed to insert test records",
+      });
+    } finally {
+      setIsTestingDB(false);
+    }
   };
 
   // Transform cart items to a format suitable for Stripe
@@ -529,7 +607,7 @@ const Checkout = () => {
             <Button 
               onClick={handleCheckout}
               disabled={isLoading}
-              className="w-full"
+              className="w-full mb-4"
             >
               {isLoading ? (
                 <>
@@ -538,6 +616,26 @@ const Checkout = () => {
                 </>
               ) : (
                 'Continue to Payment'
+              )}
+            </Button>
+
+            {/* Test Database Insertion Button */}
+            <Button 
+              onClick={testDatabaseInsertion}
+              disabled={isTestingDB}
+              variant="outline"
+              className="w-full mb-4"
+            >
+              {isTestingDB ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Testing DB...
+                </>
+              ) : (
+                <>
+                  <Database className="mr-2 h-4 w-4" />
+                  Insert to DB (Test)
+                </>
               )}
             </Button>
             
@@ -552,3 +650,5 @@ const Checkout = () => {
 };
 
 export default Checkout;
+
+}
