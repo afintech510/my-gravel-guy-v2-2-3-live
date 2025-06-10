@@ -49,7 +49,7 @@ export interface ZipCodeData {
   timezone: string;
 }
 
-// Enhanced interface for cart items with all required fields for orders
+// Enhanced interface for cart items with all required fields for orders - updated to match schema
 export interface CartItemForOrders {
   id: string | number;
   name: string;
@@ -69,6 +69,33 @@ export interface CartItemForOrders {
     deliveryTimePreference?: string;
     deliveryInstructions?: string;
   };
+}
+
+// Schema-accurate order insertion interface
+export interface OrderInsertData {
+  order_id: string;
+  stripe_session_id: string;
+  stripe_payment_intent_id?: string;
+  product_id: string;
+  quantity_tons: number;
+  unit_price: number;
+  total_price: number;
+  material_size?: string;
+  delivery_date?: string;
+  delivery_address_street?: string;
+  delivery_address_city?: string;
+  delivery_address_state?: string;
+  delivery_address_zip?: string;
+  delivery_time_preference?: string;
+  delivery_instructions?: string;
+  contact_phone?: string;
+  contact_name?: string;
+  customer_email?: string;
+  status?: string;
+  material_category?: string;
+  quantity_yards?: number;
+  contact_email?: string;
+  customer_name?: string;
 }
 
 // Updated type definition for MaterialSize to be a string instead of specific literal types
