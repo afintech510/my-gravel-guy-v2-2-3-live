@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { storeCheckoutBackup } from '../utils/paymentUtils';
 import CouponCode from '../components/cart/CouponCode';
+import type { OrderInsertData } from '../services/productTypes';
 
 const Checkout = () => {
   const { items, total, discountTotal, clearCart } = useCart();
@@ -49,28 +50,43 @@ const Checkout = () => {
     return null;
   };
 
-  // Test database insertion function with absolute minimal data - only required fields
+  // Test database insertion function with schema-accurate data
   const testDatabaseInsertion = async () => {
     setIsTestingDB(true);
     
     try {
-      console.log('=== TESTING ULTRA MINIMAL DATABASE INSERTION ===');
+      console.log('=== TESTING SCHEMA-ACCURATE DATABASE INSERTION ===');
       
       // Generate test order ID
       const testOrderId = `TEST-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
-      // Use only the most basic required fields to bypass schema cache issues
-      const orderRecords = items.map((item, index) => ({
+      // Use schema-accurate fields that match the actual database structure
+      const orderRecords: OrderInsertData[] = items.map((item, index) => ({
         order_id: testOrderId,
         stripe_session_id: `test_session_${testOrderId}_${index}`,
         product_id: item.id.toString(),
-        // Try different field names that might work
+        quantity_tons: item.tons || 1, // Required field
         unit_price: item.price,
-        total_price: item.price * item.tons,
-        status: 'test'
+        total_price: item.price * (item.tons || 1),
+        status: 'test',
+        material_category: item.category,
+        material_size: item.size,
+        quantity_yards: item.yards,
+        contact_name: item.contactInfo?.name,
+        contact_phone: item.contactInfo?.phone,
+        contact_email: item.contactInfo?.email,
+        customer_name: item.contactInfo?.name,
+        customer_email: item.contactInfo?.email,
+        delivery_date: item.deliveryDate?.toISOString(),
+        delivery_address_street: item.deliveryAddress?.street,
+        delivery_address_city: item.deliveryAddress?.city,
+        delivery_address_state: item.deliveryAddress?.state,
+        delivery_address_zip: item.deliveryAddress?.zip,
+        delivery_time_preference: item.deliveryTimePreference,
+        delivery_instructions: item.deliveryInstructions
       }));
 
-      console.log('Ultra minimal order records to insert:', orderRecords);
+      console.log('Schema-accurate order records to insert:', orderRecords);
 
       // Insert into database
       const { data, error } = await supabase
@@ -80,53 +96,24 @@ const Checkout = () => {
 
       if (error) {
         console.error('Database insertion error:', error);
-        
-        // If that fails, try with even fewer fields
-        console.log('Trying with absolute minimum fields...');
-        const minimalRecords = items.map((item, index) => ({
-          order_id: testOrderId,
-          stripe_session_id: `test_session_${testOrderId}_${index}`,
-          product_id: item.id.toString()
-        }));
-
-        console.log('Absolute minimal records:', minimalRecords);
-
-        const { data: minData, error: minError } = await supabase
-          .from('orders')
-          .insert(minimalRecords)
-          .select();
-
-        if (minError) {
-          console.error('Even minimal insertion failed:', minError);
-          throw minError;
-        }
-
-        console.log('Successfully inserted absolute minimal orders:', minData);
-        
-        toast({
-          title: "Absolute Minimal DB Test Successful!",
-          description: `Inserted ${minData?.length || 0} minimal records with ID: ${testOrderId}`,
-          className: "border-yellow-500 border-2 shadow-[0_0_15px_rgba(255,255,0,0.5)]"
-        });
-
-        return;
+        throw error;
       }
 
-      console.log('Successfully inserted ultra minimal test orders:', data);
+      console.log('Successfully inserted schema-accurate test orders:', data);
       
       toast({
-        title: "Ultra Minimal Database Test Successful!",
-        description: `Inserted ${data?.length || 0} ultra minimal test records with ID: ${testOrderId}`,
+        title: "Schema-Accurate Database Test Successful!",
+        description: `Inserted ${data?.length || 0} test records with ID: ${testOrderId}`,
         className: "border-green-500 border-2 shadow-[0_0_15px_rgba(20,255,106,0.5)]"
       });
 
     } catch (error) {
-      console.error('Ultra minimal database test failed:', error);
+      console.error('Schema-accurate database test failed:', error);
       
       toast({
         variant: "destructive",
         title: "Database Test Failed",
-        description: error instanceof Error ? error.message : "Failed to insert even minimal test records",
+        description: error instanceof Error ? error.message : "Failed to insert test records",
       });
     } finally {
       setIsTestingDB(false);
@@ -626,7 +613,7 @@ const Checkout = () => {
               )}
             </Button>
 
-            {/* Test Database Insertion Button - Updated for ultra minimal testing */}
+            {/* Test Database Insertion Button - Updated for schema-accurate testing */}
             <Button 
               onClick={testDatabaseInsertion}
               disabled={isTestingDB}
@@ -636,12 +623,12 @@ const Checkout = () => {
               {isTestingDB ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Testing Ultra Minimal DB...
+                  Testing Schema-Accurate DB...
                 </>
               ) : (
                 <>
                   <Database className="mr-2 h-4 w-4" />
-                  Test Ultra Minimal DB Insert
+                  Test Schema-Accurate DB Insert
                 </>
               )}
             </Button>

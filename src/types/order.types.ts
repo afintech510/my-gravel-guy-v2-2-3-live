@@ -1,7 +1,7 @@
 
 import type { Database } from '@/integrations/supabase/types';
 
-// Base order row type from Supabase
+// Base order row type from Supabase - using the actual schema
 export type OrderRow = Database['public']['Tables']['orders']['Row'];
 export type OrderInsert = Database['public']['Tables']['orders']['Insert'];
 export type OrderUpdate = Database['public']['Tables']['orders']['Update'];
@@ -14,7 +14,8 @@ export type OrderStatus =
   | 'in_transit' 
   | 'delivered' 
   | 'cancelled'
-  | 'paid';
+  | 'paid'
+  | 'test'; // Added test status
 
 // Enhanced delivery address interface
 export interface DeliveryAddress {
@@ -24,11 +25,11 @@ export interface DeliveryAddress {
   zip: string;
 }
 
-// Individual order item interface for display purposes
+// Individual order item interface for display purposes - updated to match actual schema
 export interface OrderItem {
   id: string;
-  product_name: string;
-  quantity: number;
+  product_name: string; // This will be derived from product_id
+  quantity: number; // Maps to quantity_tons
   unit_price: number;
   delivery_date: string;
   delivery_address: DeliveryAddress;
@@ -77,11 +78,11 @@ export interface OrderServiceResponse {
   limit: number;
 }
 
-// Helper function to convert OrderRow to OrderItem
+// Helper function to convert OrderRow to OrderItem - updated for actual schema
 export function orderRowToOrderItem(row: OrderRow): OrderItem {
   return {
     id: row.id,
-    product_name: row.product_id || 'Unknown Product', // Use product_id as fallback since product_name doesn't exist
+    product_name: row.product_id || 'Unknown Product', // Use product_id as fallback since product_name doesn't exist in schema
     quantity: row.quantity_tons,
     unit_price: row.unit_price,
     delivery_date: row.delivery_date || row.created_at || new Date().toISOString(),
