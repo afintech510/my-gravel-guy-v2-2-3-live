@@ -59,7 +59,7 @@ const Checkout = () => {
       // Generate test order ID
       const testOrderId = `TEST-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
-      // Prepare order records from cart items
+      // Prepare order records from cart items with only essential fields
       const orderRecords = items.map((item, index) => {
         const deliveryAddress = item.deliveryAddress;
         
