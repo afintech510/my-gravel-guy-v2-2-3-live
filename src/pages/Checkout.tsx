@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
@@ -50,43 +49,29 @@ const Checkout = () => {
     return null;
   };
 
-  // Test database insertion function
+  // Test database insertion function with minimal data
   const testDatabaseInsertion = async () => {
     setIsTestingDB(true);
     
     try {
-      console.log('=== TESTING DATABASE INSERTION ===');
+      console.log('=== TESTING MINIMAL DATABASE INSERTION ===');
       
       // Generate test order ID
       const testOrderId = `TEST-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
-      // Prepare order records from cart items with correct field names matching the database schema
-      const orderRecords = items.map((item, index) => {
-        const deliveryAddress = item.deliveryAddress;
-        
-        return {
-          order_id: testOrderId,
-          stripe_session_id: `test_session_${testOrderId}_${index}`,
-          stripe_payment_intent_id: null,
-          product_id: item.id.toString(),
-          quantity_tons: item.tons,
-          unit_price: item.price,
-          total_price: item.price * item.tons,
-          delivery_date: item.deliveryDate ? item.deliveryDate.toISOString().split('T')[0] : null,
-          delivery_address_street: deliveryAddress?.street || null,
-          delivery_address_city: deliveryAddress?.city || null,
-          delivery_address_state: deliveryAddress?.state || null,
-          delivery_address_zip: deliveryAddress?.zip || null,
-          delivery_time_preference: item.deliveryTimePreference || null,
-          delivery_instructions: item.deliveryInstructions || null,
-          contact_name: item.contactInfo?.name || null,
-          contact_email: item.contactInfo?.email || null,
-          status: 'test',
-          notes: 'Test insertion from checkout page'
-        };
-      });
+      // Prepare minimal order records with only essential fields
+      const orderRecords = items.map((item, index) => ({
+        order_id: testOrderId,
+        stripe_session_id: `test_session_${testOrderId}_${index}`,
+        product_id: item.id.toString(),
+        quantity_tons: item.tons,
+        unit_price: item.price,
+        total_price: item.price * item.tons,
+        status: 'test',
+        notes: 'Minimal test insertion from checkout page'
+      }));
 
-      console.log('Order records to insert:', orderRecords);
+      console.log('Minimal order records to insert:', orderRecords);
 
       // Insert into database
       const { data, error } = await supabase
@@ -99,21 +84,21 @@ const Checkout = () => {
         throw error;
       }
 
-      console.log('Successfully inserted test orders:', data);
+      console.log('Successfully inserted minimal test orders:', data);
       
       toast({
-        title: "Database Test Successful!",
-        description: `Inserted ${data?.length || 0} test order records with ID: ${testOrderId}`,
+        title: "Minimal Database Test Successful!",
+        description: `Inserted ${data?.length || 0} minimal test records with ID: ${testOrderId}`,
         className: "border-green-500 border-2 shadow-[0_0_15px_rgba(20,255,106,0.5)]"
       });
 
     } catch (error) {
-      console.error('Database test failed:', error);
+      console.error('Minimal database test failed:', error);
       
       toast({
         variant: "destructive",
-        title: "Database Test Failed",
-        description: error instanceof Error ? error.message : "Failed to insert test records",
+        title: "Minimal Database Test Failed",
+        description: error instanceof Error ? error.message : "Failed to insert minimal test records",
       });
     } finally {
       setIsTestingDB(false);
@@ -613,7 +598,7 @@ const Checkout = () => {
               )}
             </Button>
 
-            {/* Test Database Insertion Button */}
+            {/* Test Database Insertion Button - Updated for minimal testing */}
             <Button 
               onClick={testDatabaseInsertion}
               disabled={isTestingDB}
@@ -623,12 +608,12 @@ const Checkout = () => {
               {isTestingDB ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Testing DB...
+                  Testing Minimal DB...
                 </>
               ) : (
                 <>
                   <Database className="mr-2 h-4 w-4" />
-                  Insert to DB (Test)
+                  Test Minimal DB Insert
                 </>
               )}
             </Button>
