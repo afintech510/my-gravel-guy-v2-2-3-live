@@ -79,10 +79,8 @@ const Checkout = () => {
           delivery_time_preference: item.deliveryTimePreference || null,
           delivery_instructions: item.deliveryInstructions || null,
           contact_phone: item.contactPhone || item.contactInfo?.phone || null,
-          contact_name: item.contactInfo?.name || null,
-          contact_email: item.contactInfo?.email || null,
-          customer_email: item.contactInfo?.email || null,
-          customer_name: item.contactInfo?.name || null,
+          delivery_name: item.contactInfo?.name || null,
+          delivery_email: item.contactInfo?.email || null,
           status: 'test',
           notes: 'Test insertion from checkout page'
         };
