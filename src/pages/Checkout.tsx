@@ -272,8 +272,10 @@ const Checkout = () => {
                 ${item.location_photo_url ? `
                   <div style="background: #f3f4f6; padding: 15px; border-radius: 6px; margin: 10px 0;">
                     <h5 style="margin-top: 0; color: #374151;">Location Photo:</h5>
-                    <p>📷 Photo uploaded by customer</p>
-                    <p style="font-size: 12px; color: #6b7280;">URL: ${item.location_photo_url}</p>
+                    <div style="text-align: center; margin: 10px 0;">
+                      <img src="${item.location_photo_url}" alt="Location Photo" style="max-width: 100%; height: auto; max-height: 300px; border-radius: 4px; border: 1px solid #d1d5db;" />
+                    </div>
+                    <p style="font-size: 12px; color: #6b7280; text-align: center;">Photo uploaded by customer</p>
                   </div>
                 ` : ''}
               </div>
@@ -627,11 +629,12 @@ const Checkout = () => {
               )}
             </Button>
 
+            {/* Hidden test button - keeping functionality but hiding from users */}
             <Button 
               onClick={testDatabaseInsertion}
               disabled={isTestingDB}
               variant="outline"
-              className="w-full mb-4"
+              className="w-full mb-4 hidden"
             >
               {isTestingDB ? (
                 <>
@@ -657,3 +660,5 @@ const Checkout = () => {
 };
 
 export default Checkout;
+
+</edits_to_apply>
