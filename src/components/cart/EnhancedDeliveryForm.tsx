@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -10,13 +9,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Upload, X, Calendar as CalendarIcon } from "lucide-react";
+import { Upload, X, Calendar as CalendarIcon, Loader2 } from "lucide-react";
 import { findZipCodeMatch } from "../../utils/zipCode";
 import { useToast } from "@/hooks/use-toast";
 import { CartItem } from "../../contexts/CartContext";
 import { cn } from "@/lib/utils";
 import { format, addHours } from "date-fns";
 import { useZipCode } from "@/contexts/ZipCodeContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const enhancedDeliverySchema = z.object({
   // Delivery date - required
@@ -48,6 +48,8 @@ interface EnhancedDeliveryFormProps {
 const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string | null>(null);
   const { toast } = useToast();
   const [isLoadingZipData, setIsLoadingZipData] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -68,12 +70,21 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
       state: item?.deliveryAddress?.state || '',
       zip: item?.deliveryAddress?.zip || '',
       deliveryTimePreference: item?.deliveryTimePreference || "anytime",
-      deliveryInstructions: item?.deliveryInstructions || ''
+      deliveryInstructions: item?.deliveryInstructions || '',
+      locationPhotoUrl: item?.locationPhotoUrl || ''
     }
   });
 
   // Watch for zip code changes to auto-populate city and state
   const watchedZip = form.watch('zip');
+
+  // Initialize photo preview if item already has a photo
+  useEffect(() => {
+    if (item?.locationPhotoUrl) {
+      setUploadedPhotoUrl(item.locationPhotoUrl);
+      setPhotoPreview(item.locationPhotoUrl);
+    }
+  }, [item?.locationPhotoUrl]);
 
   // Auto-populate city and state when zip changes AND update pricing context
   useEffect(() => {
@@ -122,29 +133,101 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
     }
   }, [watchedZip, form, toast, setZipCode]);
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setPhotoFile(file);
+      setIsUploadingPhoto(true);
       
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        // Generate unique filename
+        const timestamp = Date.now();
+        const randomString = Math.random().toString(36).substring(2, 9);
+        const fileExtension = file.name.split('.').pop() || 'jpg';
+        const fileName = `delivery-photo-${timestamp}-${randomString}.${fileExtension}`;
+        
+        console.log('Uploading photo to Supabase storage...', fileName);
+        
+        // Upload to Supabase storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('customer-uploads')
+          .upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+        
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          throw uploadError;
+        }
+        
+        console.log('Upload successful:', uploadData);
+        
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('customer-uploads')
+          .getPublicUrl(fileName);
+        
+        const publicUrl = urlData.publicUrl;
+        console.log('Public URL:', publicUrl);
+        
+        setUploadedPhotoUrl(publicUrl);
+        setPhotoPreview(publicUrl);
+        
+        toast({
+          title: "Photo uploaded successfully",
+          description: "Your delivery location photo has been uploaded.",
+        });
+        
+      } catch (error) {
+        console.error('Photo upload failed:', error);
+        
+        toast({
+          variant: "destructive",
+          title: "Upload failed",
+          description: error instanceof Error ? error.message : "Failed to upload photo. Please try again.",
+        });
+        
+        // Reset file input and states on error
+        setPhotoFile(null);
+        setPhotoPreview(null);
+        setUploadedPhotoUrl(null);
+        e.target.value = '';
+      } finally {
+        setIsUploadingPhoto(false);
+      }
     }
   };
 
   const handleRemovePhoto = () => {
     setPhotoFile(null);
     setPhotoPreview(null);
+    setUploadedPhotoUrl(null);
+    
+    // Clear the file input
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
   };
 
   const handleSubmitForm = (data: EnhancedDeliveryFormData) => {
+    // Don't allow submission if photo is still uploading
+    if (isUploadingPhoto) {
+      toast({
+        variant: "destructive",
+        title: "Please wait",
+        description: "Photo is still uploading. Please wait for it to complete.",
+      });
+      return;
+    }
+    
     const formData = {
       ...data,
-      locationPhotoUrl: photoPreview || undefined
+      locationPhotoUrl: uploadedPhotoUrl || undefined
     };
+    
+    console.log('Submitting form with photo URL:', uploadedPhotoUrl);
     onSubmit(formData);
   };
 
@@ -417,33 +500,63 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
                       size="icon"
                       className="absolute top-2 right-2 bg-white rounded-full"
                       onClick={handleRemovePhoto}
+                      disabled={isUploadingPhoto}
                     >
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
                 ) : (
                   <label className="flex flex-col items-center justify-center h-40 cursor-pointer">
-                    <Upload className="h-8 w-8 text-gray-400" />
-                    <span className="mt-2 text-sm text-gray-500 text-center">
-                      Upload a photo of the delivery location or the gravel you're expecting
-                    </span>
+                    {isUploadingPhoto ? (
+                      <>
+                        <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
+                        <span className="mt-2 text-sm text-gray-500 text-center">
+                          Uploading photo...
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-8 w-8 text-gray-400" />
+                        <span className="mt-2 text-sm text-gray-500 text-center">
+                          Upload a photo of the delivery location or the gravel you're expecting
+                        </span>
+                      </>
+                    )}
                     <input
                       type="file" 
                       className="hidden" 
                       accept="image/*" 
-                      onChange={handlePhotoChange} 
+                      onChange={handlePhotoChange}
+                      disabled={isUploadingPhoto}
                     />
                   </label>
                 )}
               </div>
+              {isUploadingPhoto && (
+                <p className="text-xs text-blue-600">
+                  Uploading to secure storage...
+                </p>
+              )}
               <p className="text-xs text-gray-500">
                 This helps our drivers find the exact location or understand your expectations
               </p>
             </div>
           </div>
           
-          <Button type="submit" className="w-full" size="lg">
-            Confirm Delivery Information & Proceed
+          <Button 
+            type="submit" 
+            className="w-full" 
+            size="lg"
+            disabled={isUploadingPhoto}
+          >
+            {isUploadingPhoto ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Uploading photo...
+              </>
+            ) : (
+              'Confirm Delivery Information & Proceed'
+            )}
           </Button>
         </form>
       </Form>
@@ -452,3 +565,5 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
 };
 
 export default EnhancedDeliveryForm;
+
+</edits_to_apply>
