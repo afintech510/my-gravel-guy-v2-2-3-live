@@ -273,7 +273,7 @@ const Checkout = () => {
                   <div style="background: #f3f4f6; padding: 15px; border-radius: 6px; margin: 10px 0;">
                     <h5 style="margin-top: 0; color: #374151;">Location Photo:</h5>
                     <div style="text-align: center; margin: 10px 0;">
-                      <img src="${item.location_photo_url}" alt="Location Photo" style="max-width: 100%; height: auto; max-height: 300px; border-radius: 4px; border: 1px solid #d1d5db;" />
+                      <img src="${item.location_photo_url}" alt="Customer Location Photo" style="max-width: 100%; height: auto; max-height: 300px; border-radius: 4px; border: 1px solid #d1d5db;" />
                     </div>
                     <p style="font-size: 12px; color: #6b7280; text-align: center;">Photo uploaded by customer</p>
                   </div>
@@ -660,5 +660,3 @@ const Checkout = () => {
 };
 
 export default Checkout;
-
-</edits_to_apply>
