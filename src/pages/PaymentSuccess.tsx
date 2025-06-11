@@ -70,6 +70,28 @@ const PaymentSuccess = () => {
       const checkoutInProgress = localStorage.getItem('checkout-in-progress');
       const checkoutOrderId = localStorage.getItem('checkout-order-id');
       
+      console.log('=== DETAILED BACKUP DATA ANALYSIS ===');
+      console.log('Raw backup data:', checkoutOrderBackup);
+      console.log('Backup exists:', !!checkoutOrderBackup);
+      console.log('Backup items count:', checkoutOrderBackup?.items?.length || 0);
+      
+      if (checkoutOrderBackup?.items?.[0]) {
+        const firstItem = checkoutOrderBackup.items[0];
+        console.log('First item complete structure:', firstItem);
+        console.log('First item keys:', Object.keys(firstItem));
+        console.log('First item metadata:', firstItem.metadata);
+        console.log('First item direct properties:', {
+          id: firstItem.id,
+          name: firstItem.name,
+          price: firstItem.price,
+          quantity: firstItem.quantity,
+          tons: firstItem.tons,
+          deliveryDate: firstItem.deliveryDate,
+          deliveryAddress: firstItem.deliveryAddress,
+          contactInfo: firstItem.contactInfo
+        });
+      }
+      
       console.log('LocalStorage Data:', {
         hasCheckoutOrderBackup: !!checkoutOrderBackup,
         checkoutInProgress,
@@ -190,17 +212,30 @@ const PaymentSuccess = () => {
             if (checkoutOrderBackup && !dbInsertComplete) {
               try {
                 console.log('=== PREPARING DATA FOR DATABASE INSERT ===');
-                console.log('Backup items structure:', checkoutOrderBackup.items.map(item => ({
-                  id: item.id,
-                  name: item.name,
-                  hasMetadata: !!item.metadata,
-                  metadataKeys: item.metadata ? Object.keys(item.metadata) : [],
-                  directProperties: Object.keys(item).filter(key => key !== 'metadata')
-                })));
+                
+                // Check if we should use cartItems or items from backup
+                const itemsToUse = checkoutOrderBackup.cartItems || checkoutOrderBackup.items;
+                console.log('Items source decision:', {
+                  hasCartItems: !!checkoutOrderBackup.cartItems,
+                  hasItems: !!checkoutOrderBackup.items,
+                  usingCartItems: !!checkoutOrderBackup.cartItems,
+                  itemsCount: itemsToUse?.length || 0
+                });
+                
+                if (itemsToUse?.[0]) {
+                  console.log('Sample item structure analysis:', {
+                    sampleItem: itemsToUse[0],
+                    itemKeys: Object.keys(itemsToUse[0]),
+                    hasMetadata: !!itemsToUse[0].metadata,
+                    hasDirectContactInfo: !!itemsToUse[0].contactInfo,
+                    hasDirectDeliveryAddress: !!itemsToUse[0].deliveryAddress,
+                    hasDirectDeliveryDate: !!itemsToUse[0].deliveryDate
+                  });
+                }
                 
                 const orderData = {
                   orderId: currentOrderId,
-                  items: checkoutOrderBackup.items, // Use the backup items directly
+                  items: itemsToUse, // Use cartItems if available, otherwise items
                   stripeSessionId: data.sessionId,
                   stripePaymentIntentId: data.paymentIntentId || paymentIntentId
                 };

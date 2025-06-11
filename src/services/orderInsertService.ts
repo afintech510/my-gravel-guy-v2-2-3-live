@@ -17,36 +17,142 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
   });
 
   try {
-    // Use direct cart item properties - same logic as the working checkout test button
+    // Process each item and handle both direct properties and metadata structure
     const orderRecords = orderData.items.map((item, index) => {
-      console.log('Processing cart item for DB insert:', {
+      console.log('=== PROCESSING CART ITEM FOR DB INSERT ===', {
         id: item.id,
         name: item.name,
-        hasContactInfo: !!item.metadata?.contactName,
-        hasDeliveryAddress: !!item.metadata?.deliveryAddress,
-        hasDeliveryDate: !!item.metadata?.deliveryDate,
-        itemStructure: Object.keys(item)
+        itemKeys: Object.keys(item),
+        hasMetadata: !!item.metadata,
+        metadataKeys: item.metadata ? Object.keys(item.metadata) : [],
+        hasDirectContactInfo: !!(item as any).contactInfo,
+        hasDirectDeliveryAddress: !!(item as any).deliveryAddress,
+        hasDirectDeliveryDate: !!(item as any).deliveryDate,
+        hasMetadataContactName: !!item.metadata?.contactName,
+        hasMetadataDeliveryAddress: !!item.metadata?.deliveryAddress,
+        hasMetadataDeliveryDate: !!item.metadata?.deliveryDate
       });
 
-      // Helper function to safely get delivery address properties from metadata
-      const getDeliveryAddressValue = (property: string) => {
-        if (!item.metadata?.deliveryAddress) return null;
+      // Function to get contact info - try both direct and metadata
+      const getContactInfo = () => {
+        // Try direct properties first (original cart structure)
+        const directContactInfo = (item as any).contactInfo;
+        if (directContactInfo) {
+          console.log('Using direct contact info:', directContactInfo);
+          return {
+            name: directContactInfo.name,
+            phone: directContactInfo.phone,
+            email: directContactInfo.email
+          };
+        }
         
-        if (typeof item.metadata.deliveryAddress === 'string') {
-          try {
-            const parsed = JSON.parse(item.metadata.deliveryAddress);
-            return parsed[property] || null;
-          } catch {
-            return null;
+        // Fallback to metadata
+        if (item.metadata) {
+          console.log('Using metadata contact info');
+          return {
+            name: item.metadata.contactName,
+            phone: item.metadata.contactPhone,
+            email: item.metadata.contactEmail
+          };
+        }
+        
+        console.log('No contact info found');
+        return { name: null, phone: null, email: null };
+      };
+
+      // Function to get delivery address - try both direct and metadata
+      const getDeliveryAddress = () => {
+        // Try direct properties first (original cart structure)
+        const directAddress = (item as any).deliveryAddress;
+        if (directAddress && typeof directAddress === 'object') {
+          console.log('Using direct delivery address:', directAddress);
+          return {
+            street: directAddress.street,
+            city: directAddress.city,
+            state: directAddress.state,
+            zip: directAddress.zip
+          };
+        }
+        
+        // Fallback to metadata
+        if (item.metadata?.deliveryAddress) {
+          console.log('Using metadata delivery address');
+          
+          if (typeof item.metadata.deliveryAddress === 'string') {
+            try {
+              const parsed = JSON.parse(item.metadata.deliveryAddress);
+              return {
+                street: parsed.street,
+                city: parsed.city,
+                state: parsed.state,
+                zip: parsed.zip
+              };
+            } catch {
+              console.log('Failed to parse delivery address string');
+              return { street: null, city: null, state: null, zip: null };
+            }
+          }
+          
+          if (typeof item.metadata.deliveryAddress === 'object') {
+            const addr = item.metadata.deliveryAddress as any;
+            return {
+              street: addr.street,
+              city: addr.city,
+              state: addr.state,
+              zip: addr.zip
+            };
           }
         }
         
-        if (typeof item.metadata.deliveryAddress === 'object' && item.metadata.deliveryAddress !== null) {
-          return (item.metadata.deliveryAddress as any)[property] || null;
+        console.log('No delivery address found');
+        return { street: null, city: null, state: null, zip: null };
+      };
+
+      // Function to get delivery date - try both direct and metadata
+      const getDeliveryDate = () => {
+        // Try direct properties first (original cart structure)
+        const directDate = (item as any).deliveryDate;
+        if (directDate) {
+          console.log('Using direct delivery date:', directDate);
+          return directDate instanceof Date ? directDate.toISOString() : directDate;
         }
         
+        // Fallback to metadata
+        if (item.metadata?.deliveryDate) {
+          console.log('Using metadata delivery date:', item.metadata.deliveryDate);
+          return item.metadata.deliveryDate;
+        }
+        
+        console.log('No delivery date found');
         return null;
       };
+
+      // Function to get quantity - try tons first, then quantity
+      const getQuantity = () => {
+        const directTons = (item as any).tons;
+        if (directTons !== undefined && directTons !== null) {
+          console.log('Using direct tons for quantity:', directTons);
+          return directTons;
+        }
+        
+        if (item.quantity !== undefined && item.quantity !== null) {
+          console.log('Using item quantity:', item.quantity);
+          return item.quantity;
+        }
+        
+        console.log('No quantity found, defaulting to 0');
+        return 0;
+      };
+
+      // Get all the data
+      const contactInfo = getContactInfo();
+      const deliveryAddress = getDeliveryAddress();
+      const deliveryDate = getDeliveryDate();
+      const quantity = getQuantity();
+      
+      // Get other properties
+      const deliveryTimePreference = (item as any).deliveryTimePreference || item.metadata?.deliveryTimePreference || null;
+      const deliveryInstructions = (item as any).deliveryInstructions || item.metadata?.deliveryInstructions || null;
 
       const record = {
         order_id: orderData.orderId,
@@ -55,21 +161,21 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
         product_id: item.id.toString(),
         unit: 'tons',
         unit_price: item.price,
-        total_price: item.price * (item.quantity || item.tons || 0),
-        quantity: item.quantity || item.tons || 0,
+        total_price: item.price * quantity,
+        quantity: quantity,
         status: 'confirmed',
-        delivery_name: item.metadata?.contactName || null,
-        delivery_phone: item.metadata?.contactPhone || null,
-        delivery_email: item.metadata?.contactEmail || null,
-        billing_name: item.metadata?.contactName || null,
-        billing_email: item.metadata?.contactEmail || null,
-        delivery_date: item.metadata?.deliveryDate || null,
-        delivery_street: getDeliveryAddressValue('street'),
-        delivery_city: getDeliveryAddressValue('city'),
-        delivery_state: getDeliveryAddressValue('state'),
-        delivery_zip: getDeliveryAddressValue('zip'),
-        delivery_time_preference: item.metadata?.deliveryTimePreference || null,
-        delivery_instructions: item.metadata?.deliveryInstructions || null
+        delivery_name: contactInfo.name,
+        delivery_phone: contactInfo.phone,
+        delivery_email: contactInfo.email,
+        billing_name: contactInfo.name,
+        billing_email: contactInfo.email,
+        delivery_date: deliveryDate,
+        delivery_street: deliveryAddress.street,
+        delivery_city: deliveryAddress.city,
+        delivery_state: deliveryAddress.state,
+        delivery_zip: deliveryAddress.zip,
+        delivery_time_preference: deliveryTimePreference,
+        delivery_instructions: deliveryInstructions
       };
 
       console.log('Generated order record:', record);
