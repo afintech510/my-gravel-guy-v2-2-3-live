@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { detectPaymentSuccess, clearCheckoutBackup, getCheckoutBackup } from '../utils/paymentUtils';
+import { insertOrderToDatabase } from '../services/orderInsertService';
 
 interface OrderItem {
   id: string;
@@ -40,6 +41,7 @@ const PaymentSuccess = () => {
   const [usedFallback, setUsedFallback] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [detailedError, setDetailedError] = useState<string | null>(null);
+  const [dbInsertComplete, setDbInsertComplete] = useState(false);
   
   const processPaymentSuccess = async (isRetry = false) => {
     console.log('=== PAYMENT SUCCESS PROCESSING START ===', { isRetry, retryCount });
@@ -103,7 +105,7 @@ const PaymentSuccess = () => {
           });
         }
         
-        // Primary: Try payment intent verification
+        // Primary: Try payment intent verification (without DB insert)
         if (paymentIntentId) {
           console.log('Processing with payment intent ID:', paymentIntentId.substring(0, 20) + '...');
           
@@ -111,14 +113,14 @@ const PaymentSuccess = () => {
             body: { 
               paymentIntentId,
               orderId: orderIdParam || checkoutOrderId,
-              backupData: checkoutOrderBackup
+              backupData: checkoutOrderBackup,
+              skipDbInsert: true // Tell edge function to skip DB insert
             }
           });
 
           console.log('Verify payment response (payment intent):', { 
             success: data?.success, 
-            hasOrders: !!data?.orders,
-            ordersCount: data?.orders?.length,
+            paymentVerified: data?.paymentVerified,
             error: error?.message 
           });
           verificationResult = { data, error };
@@ -131,14 +133,14 @@ const PaymentSuccess = () => {
             body: { 
               orderId: checkoutOrderId,
               fallbackMode: true,
-              backupData: checkoutOrderBackup
+              backupData: checkoutOrderBackup,
+              skipDbInsert: true // Tell edge function to skip DB insert
             }
           });
 
           console.log('Fallback verification response:', { 
             success: data?.success, 
-            hasOrders: !!data?.orders,
-            ordersCount: data?.orders?.length,
+            paymentVerified: data?.paymentVerified,
             error: error?.message 
           });
           verificationResult = { data, error };
@@ -168,39 +170,92 @@ const PaymentSuccess = () => {
                 variant: "destructive"
               });
             }
-          } else if (data?.success && data.orders && data.orders.length > 0) {
+          } else if (data?.success && data?.paymentVerified) {
             console.log('Payment verification successful:', {
-              orderId: data.orderId,
-              ordersCount: data.orders.length,
-              verificationMethod: data.verification_method
+              orderId: data.orderId || orderIdParam || checkoutOrderId,
+              verificationMethod: data.verification_method,
+              paymentIntentId: data.paymentIntentId
             });
             
-            setOrderItems(data.orders);
-            setOrderId(data.orderId || orderIdParam || checkoutOrderId);
+            const currentOrderId = data.orderId || orderIdParam || checkoutOrderId;
+            setOrderId(currentOrderId);
             setVerificationMethod(data.verification_method || 'stripe_verified');
             setUsedFallback(data.used_fallback || false);
             setProcessingError(null);
             setDetailedError(null);
             
-            if (data.used_fallback) {
-              toast({
-                title: "Order Processed Successfully",
-                description: "Your order has been recorded. Payment verification completed.",
-                variant: "default"
-              });
-            } else {
-              toast({
-                title: "Payment Successful",
-                description: "Thank you for your order! Your payment has been confirmed.",
-              });
+            // Now insert the order to database using our service
+            if (checkoutOrderBackup && !dbInsertComplete) {
+              try {
+                console.log('Inserting order to database...');
+                
+                const orderData = {
+                  orderId: currentOrderId,
+                  items: checkoutOrderBackup.items,
+                  stripeSessionId: data.sessionId,
+                  stripePaymentIntentId: data.paymentIntentId || paymentIntentId
+                };
+                
+                const insertedOrders = await insertOrderToDatabase(orderData);
+                
+                // Transform inserted orders to display format
+                const displayOrders = insertedOrders.map(order => ({
+                  id: order.id,
+                  order_id: order.order_id,
+                  product_name: order.product_id, // Use product_id as name for now
+                  quantity: order.quantity_tons,
+                  total_price: order.total_price,
+                  delivery_date: order.delivery_date,
+                  delivery_address_street: order.delivery_address_street,
+                  delivery_address_city: order.delivery_address_city,
+                  delivery_address_state: order.delivery_address_state,
+                  delivery_address_zip: order.delivery_address_zip,
+                  contact_name: order.contact_name,
+                  contact_email: order.contact_email,
+                  contact_phone: order.contact_phone,
+                  delivery_time_preference: order.delivery_time_preference,
+                  delivery_instructions: order.delivery_instructions,
+                  status: order.status
+                }));
+                
+                setOrderItems(displayOrders);
+                setDbInsertComplete(true);
+                
+                console.log('Database insert successful, order items set:', displayOrders.length);
+                
+                if (data.used_fallback) {
+                  toast({
+                    title: "Order Processed Successfully",
+                    description: "Your order has been recorded. Payment verification completed.",
+                    variant: "default"
+                  });
+                } else {
+                  toast({
+                    title: "Payment Successful",
+                    description: "Thank you for your order! Your payment has been confirmed.",
+                  });
+                }
+                
+              } catch (dbError) {
+                console.error('Database insert failed:', dbError);
+                setProcessingError(`Order confirmed but database insert failed: ${dbError.message}`);
+                setDetailedError(dbError.stack || 'No stack trace available');
+                
+                toast({
+                  title: "Database Error",
+                  description: "Your payment was successful, but we couldn't save the order details. Please contact support.",
+                  variant: "destructive"
+                });
+              }
             }
+            
           } else if (data?.success === false) {
             console.warn('Verification returned success: false', data);
             setProcessingError(data.error || 'Payment verification failed');
             setDetailedError(data.debug_info || 'No additional debug information');
           } else {
-            console.warn('No order data found in verification response', data);
-            setProcessingError('Order details not found, but payment may have been successful');
+            console.warn('No payment verification data found', data);
+            setProcessingError('Payment verification incomplete');
           }
         } else {
           throw new Error('No verification method available - missing payment intent and backup data');
