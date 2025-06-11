@@ -1,11 +1,10 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, Truck, Package, MapPin, Calendar, AlertCircle, RefreshCw, Shield, Clock, XCircle, Database, Mail } from "lucide-react";
 import { useCart } from '../contexts/CartContext';
 import { useToast } from "@/hooks/use-toast";
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { detectPaymentSuccess, clearCheckoutBackup, getCheckoutBackup } from '../utils/paymentUtils';
 import { insertOrderToDatabase, testDatabaseInsert } from '../services/orderInsertService';
@@ -33,6 +32,7 @@ interface OrderItem {
 const PaymentSuccess = () => {
   const { clearCart } = useCart();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [hasProcessedPayment, setHasProcessedPayment] = useState(false);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
@@ -215,15 +215,17 @@ const PaymentSuccess = () => {
             console.log('Verification error in fallback mode (likely testing):', error);
           } else if (error) {
             console.error('Payment verification error:', error);
-            const errorMessage = error.message || 'Payment verification failed';
-            setProcessingError(errorMessage);
-            setDetailedError(error.details || error.stack || 'No additional details available');
-            
-            toast({
-              title: "Payment Processing Issue",
-              description: "There was an issue processing your payment verification. Please contact support if this persists.",
-              variant: "destructive"
-            });
+            // Only show error for real payment scenarios with payment intent
+            if (paymentIntentId) {
+              setProcessingError(`Payment verification issue: ${error.message}`);
+              setDetailedError(error.details || error.stack || 'No additional details available');
+              
+              toast({
+                title: "Payment Processing Issue",
+                description: "There was an issue processing your payment verification. Please contact support if this persists.",
+                variant: "destructive"
+              });
+            }
           } else if (data?.success && data?.paymentVerified) {
             console.log('Payment verification successful');
             
@@ -239,13 +241,11 @@ const PaymentSuccess = () => {
               await handleDatabaseInsert(checkoutOrderBackup, currentOrderId, data);
             }
             
-          } else if (data?.success === false) {
+          } else if (data?.success === false && paymentIntentId) {
             console.warn('Verification returned success: false', data);
             // Only show error if we're in a real payment scenario
-            if (paymentIntentId) {
-              setProcessingError(data.error || 'Payment verification failed');
-              setDetailedError(data.debug_info || 'No additional debug information');
-            }
+            setProcessingError(data.error || 'Payment verification failed');
+            setDetailedError(data.debug_info || 'No additional debug information');
           } else {
             console.log('No payment verification data found, proceeding with fallback');
             // For testing/fallback scenarios, proceed anyway
@@ -673,6 +673,33 @@ const PaymentSuccess = () => {
     }
   };
 
+  // Navigation handlers with cart clearing
+  const handleContinueShopping = () => {
+    clearCart();
+    clearCheckoutBackup();
+    localStorage.removeItem('checkout-in-progress');
+    localStorage.removeItem('checkout-order-id');
+    toast({
+      title: "Cart Cleared",
+      description: "Your cart has been cleared. Happy shopping!",
+      variant: "default"
+    });
+    navigate('/products');
+  };
+
+  const handleReturnHome = () => {
+    clearCart();
+    clearCheckoutBackup();
+    localStorage.removeItem('checkout-in-progress');
+    localStorage.removeItem('checkout-order-id');
+    toast({
+      title: "Cart Cleared",
+      description: "Your cart has been cleared. Thank you for your order!",
+      variant: "default"
+    });
+    navigate('/');
+  };
+
   const VerificationStatusCard = () => {
     if (verificationMethod === 'fallback') {
       return (
@@ -969,6 +996,22 @@ const PaymentSuccess = () => {
         <EmailStatusCard />
         <ProcessingStatusCard />
 
+        {/* Navigation Buttons - moved above Order Details */}
+        <div className="mb-8 flex flex-col sm:flex-row justify-center gap-4">
+          <Button 
+            onClick={handleContinueShopping}
+            variant="default"
+          >
+            Continue Shopping
+          </Button>
+          <Button 
+            onClick={handleReturnHome}
+            variant="outline"
+          >
+            Return to Homepage
+          </Button>
+        </div>
+
         {/* Order Items Details */}
         {orderItems.length > 0 && (
           <Card className="mb-8">
@@ -1122,15 +1165,6 @@ const PaymentSuccess = () => {
               </div>
             </div>
           </div>
-        </div>
-        
-        <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
-          <Button asChild variant="default">
-            <a href="/products">Continue Shopping</a>
-          </Button>
-          <Button asChild variant="outline">
-            <a href="/">Return to Homepage</a>
-          </Button>
         </div>
       </div>
     </div>
