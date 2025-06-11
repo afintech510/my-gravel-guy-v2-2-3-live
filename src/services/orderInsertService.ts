@@ -17,59 +17,57 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
   });
 
   try {
-    // Prepare order records for each cart item with correct field mapping
-    const orderRecords = orderData.items.map((item, index) => {
-      let deliveryAddress = null;
+    // Use the exact same logic as the working checkout test button
+    const orderRecords = orderData.items.map((item, index) => ({
+      order_id: orderData.orderId,
+      stripe_session_id: orderData.stripeSessionId || `test_session_${orderData.orderId}_${index}`,
+      stripe_payment_intent_id: orderData.stripePaymentIntentId || null,
+      product_id: item.id.toString(),
+      unit: 'tons',
+      unit_price: item.price,
+      total_price: item.price * (item.quantity || item.tons || 0),
+      quantity: item.quantity || item.tons || 0,
+      status: 'confirmed',
+      delivery_name: item.metadata?.contactName,
+      delivery_phone: item.metadata?.contactPhone,
+      delivery_email: item.metadata?.contactEmail,
+      billing_name: item.metadata?.contactName,
+      billing_email: item.metadata?.contactEmail,
+      delivery_date: item.metadata?.deliveryDate,
+      delivery_street: item.metadata?.deliveryAddress ? 
+        (typeof item.metadata.deliveryAddress === 'string' ? 
+          JSON.parse(item.metadata.deliveryAddress).street : 
+          item.metadata.deliveryAddress.street) : null,
+      delivery_city: item.metadata?.deliveryAddress ? 
+        (typeof item.metadata.deliveryAddress === 'string' ? 
+          JSON.parse(item.metadata.deliveryAddress).city : 
+          item.metadata.deliveryAddress.city) : null,
+      delivery_state: item.metadata?.deliveryAddress ? 
+        (typeof item.metadata.deliveryAddress === 'string' ? 
+          JSON.parse(item.metadata.deliveryAddress).state : 
+          item.metadata.deliveryAddress.state) : null,
+      delivery_zip: item.metadata?.deliveryAddress ? 
+        (typeof item.metadata.deliveryAddress === 'string' ? 
+          JSON.parse(item.metadata.deliveryAddress).zip : 
+          item.metadata.deliveryAddress.zip) : null,
+      delivery_time_preference: item.metadata?.deliveryTimePreference,
+      delivery_instructions: item.metadata?.deliveryInstructions
+    }));
 
-      if (item.metadata?.deliveryAddress) {
-        try {
-          deliveryAddress = typeof item.metadata.deliveryAddress === 'string' ? 
-            JSON.parse(item.metadata.deliveryAddress) : item.metadata.deliveryAddress;
-        } catch (e) {
-          console.warn(`Failed to parse delivery address for item ${index}:`, e);
-        }
-      }
+    console.log('Schema-accurate order records to insert:', orderRecords);
 
-      return {
-        order_id: orderData.orderId,
-        stripe_session_id: orderData.stripeSessionId || null,
-        stripe_payment_intent_id: orderData.stripePaymentIntentId || null,
-        product_id: String(item.id || ''),
-        unit: 'tons', // Required field for the schema
-        unit_price: item.price,
-        total_price: item.price * (item.quantity || item.tons || 0),
-        quantity: item.quantity || item.tons || 0,
-        delivery_date: item.metadata?.deliveryDate || null,
-        delivery_street: deliveryAddress?.street || null,
-        delivery_city: deliveryAddress?.city || null,
-        delivery_state: deliveryAddress?.state || null,
-        delivery_zip: deliveryAddress?.zip || null,
-        delivery_name: item.metadata?.contactName || null,
-        delivery_phone: item.metadata?.contactPhone || null,
-        delivery_email: item.metadata?.contactEmail || null,
-        delivery_time_preference: item.metadata?.deliveryTimePreference || null,
-        delivery_instructions: item.metadata?.deliveryInstructions || null,
-        billing_name: item.metadata?.contactName || null,
-        billing_email: item.metadata?.contactEmail || null,
-        status: 'confirmed'
-      };
-    });
-
-    console.log('Inserting order records:', orderRecords);
-
-    // Insert order records into the database
-    const { data: orderInsertData, error: orderError } = await supabase
+    const { data, error } = await supabase
       .from('orders')
       .insert(orderRecords)
       .select();
 
-    if (orderError) {
-      console.error('Failed to create order records:', orderError);
-      throw new Error(`Database insert failed: ${orderError.message}`);
+    if (error) {
+      console.error('Failed to create order records:', error);
+      throw new Error(`Database insert failed: ${error.message}`);
     }
 
-    console.log('Successfully created order records:', orderInsertData);
-    return orderInsertData;
+    console.log('Successfully created order records:', data);
+    return data;
 
   } catch (error) {
     console.error('Error inserting order to database:', error);
