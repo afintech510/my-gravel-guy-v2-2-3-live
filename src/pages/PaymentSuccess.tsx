@@ -43,6 +43,7 @@ const PaymentSuccess = () => {
   const [detailedError, setDetailedError] = useState<string | null>(null);
   const [dbInsertComplete, setDbInsertComplete] = useState(false);
   const [testingDbInsert, setTestingDbInsert] = useState(false);
+  const [autoInsertAttempted, setAutoInsertAttempted] = useState(false);
   
   const processPaymentSuccess = async (isRetry = false) => {
     console.log('=== PAYMENT SUCCESS PROCESSING START ===', { isRetry, retryCount });
@@ -465,6 +466,62 @@ const PaymentSuccess = () => {
     }
   };
 
+  // Auto-trigger checkout-style database insert
+  useEffect(() => {
+    const attemptAutoInsert = async () => {
+      // Safety checks: only run once and when conditions are met
+      if (autoInsertAttempted) {
+        console.log('Auto-insert already attempted, skipping');
+        return;
+      }
+
+      // Check if page is loaded and payment processing is complete
+      if (isLoading) {
+        console.log('Still loading, skipping auto-insert');
+        return;
+      }
+
+      // Check if database insert is already complete
+      if (dbInsertComplete) {
+        console.log('Database insert already complete, skipping auto-insert');
+        return;
+      }
+
+      // Check if there's backup data available
+      const checkoutOrderBackup = getCheckoutBackup();
+      if (!checkoutOrderBackup?.items || checkoutOrderBackup.items.length === 0) {
+        console.log('No backup data available for auto-insert');
+        return;
+      }
+
+      // Check if payment was verified (no processing error)
+      if (processingError) {
+        console.log('Processing error present, skipping auto-insert:', processingError);
+        return;
+      }
+
+      // Check if we have an order ID (payment was processed)
+      if (!orderId) {
+        console.log('No order ID available, skipping auto-insert');
+        return;
+      }
+
+      console.log('All conditions met, attempting auto checkout-style insert');
+      setAutoInsertAttempted(true);
+      
+      try {
+        await handleCheckoutStyleDatabaseInsert();
+      } catch (error) {
+        console.error('Auto checkout-style insert failed:', error);
+      }
+    };
+
+    // Small delay to ensure all state updates are complete
+    const timer = setTimeout(attemptAutoInsert, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [isLoading, dbInsertComplete, processingError, orderId, autoInsertAttempted]);
+
   useEffect(() => {
     processPaymentSuccess();
   }, [clearCart, toast, searchParams, hasProcessedPayment]);
@@ -605,11 +662,12 @@ const PaymentSuccess = () => {
                   {testingDbInsert ? 'Testing...' : 'Test Schema-Accurate DB Insert'}
                 </Button>
                 
+                {/* Hidden button - will be auto-triggered */}
                 <Button 
                   onClick={handleCheckoutStyleDatabaseInsert} 
                   variant="outline" 
                   size="sm"
-                  className="flex items-center gap-2"
+                  className="hidden flex items-center gap-2"
                   disabled={testingDbInsert}
                 >
                   <Database className="h-4 w-4" />
@@ -675,11 +733,12 @@ const PaymentSuccess = () => {
                   {testingDbInsert ? 'Testing...' : 'Test Schema-Accurate DB Insert'}
                 </Button>
                 
+                {/* Hidden button - will be auto-triggered */}
                 <Button 
                   onClick={handleCheckoutStyleDatabaseInsert} 
                   variant="outline" 
                   size="sm"
-                  className="flex items-center gap-2"
+                  className="hidden flex items-center gap-2"
                   disabled={testingDbInsert}
                 >
                   <Database className="h-4 w-4" />
