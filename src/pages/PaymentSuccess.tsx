@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, Truck, Package, MapPin, Calendar, AlertCircle, RefreshCw, Shield, Clock } from "lucide-react";
+import { CheckCircle, Truck, Package, MapPin, Calendar, AlertCircle, RefreshCw, Shield, Clock, XCircle } from "lucide-react";
 import { useCart } from '../contexts/CartContext';
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from 'react-router-dom';
@@ -38,18 +38,26 @@ const PaymentSuccess = () => {
   const [processingError, setProcessingError] = useState<string | null>(null);
   const [verificationMethod, setVerificationMethod] = useState<'stripe_verified' | 'fallback' | null>(null);
   const [usedFallback, setUsedFallback] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [detailedError, setDetailedError] = useState<string | null>(null);
   
-  useEffect(() => {
-    const processPaymentSuccess = async () => {
-      console.log('=== PAYMENT SUCCESS PAGE DEBUG START ===');
-      
+  const processPaymentSuccess = async (isRetry = false) => {
+    console.log('=== PAYMENT SUCCESS PROCESSING START ===', { isRetry, retryCount });
+    
+    if (!isRetry) {
+      setIsLoading(true);
+      setProcessingError(null);
+      setDetailedError(null);
+    }
+    
+    try {
       // Extract URL parameters - prioritize payment_intent
       const paymentIntentId = searchParams.get('payment_intent') || searchParams.get('payment_intent_id');
       const orderIdParam = searchParams.get('order_id');
       const paymentSuccess = searchParams.get('success');
       
       console.log('URL Parameters:', {
-        paymentIntentId,
+        paymentIntentId: paymentIntentId ? paymentIntentId.substring(0, 20) + '...' : null,
         orderIdParam,
         paymentSuccess,
         hasProcessedPayment
@@ -63,7 +71,8 @@ const PaymentSuccess = () => {
       console.log('LocalStorage Data:', {
         hasCheckoutOrderBackup: !!checkoutOrderBackup,
         checkoutInProgress,
-        checkoutOrderId
+        checkoutOrderId,
+        backupItemsCount: checkoutOrderBackup?.items?.length || 0
       });
       
       // Determine if we should process the payment
@@ -75,107 +84,173 @@ const PaymentSuccess = () => {
       
       console.log('Should process payment:', shouldProcess);
       
-      if (shouldProcess) {
-        setHasProcessedPayment(true);
+      if (shouldProcess || isRetry) {
+        if (!isRetry) {
+          setHasProcessedPayment(true);
+        }
         
-        try {
-          let verificationResult = null;
-          
-          // Primary: Try payment intent verification
-          if (paymentIntentId) {
-            console.log('Processing with payment intent ID:', paymentIntentId);
-            
-            const { data, error } = await supabase.functions.invoke('verify-payment', {
-              body: { 
-                paymentIntentId,
-                orderId: orderIdParam || checkoutOrderId,
-                backupData: checkoutOrderBackup
-              }
-            });
-
-            console.log('Verify payment response (payment intent):', { data, error });
-            verificationResult = { data, error };
-          } 
-          // Fallback: Use backup data only
-          else if (checkoutOrderId && checkoutOrderBackup) {
-            console.log('Processing with backup data only:', checkoutOrderId);
-            
-            const { data, error } = await supabase.functions.invoke('verify-payment', {
-              body: { 
-                orderId: checkoutOrderId,
-                fallbackMode: true,
-                backupData: checkoutOrderBackup
-              }
-            });
-
-            console.log('Fallback verification response:', { data, error });
-            verificationResult = { data, error };
+        let verificationResult = null;
+        
+        // Validate backup data before proceeding
+        if (checkoutOrderBackup) {
+          if (!checkoutOrderBackup.items || !Array.isArray(checkoutOrderBackup.items) || checkoutOrderBackup.items.length === 0) {
+            throw new Error('Invalid backup data: missing or empty items array');
           }
+          console.log('Backup data validated:', {
+            itemsCount: checkoutOrderBackup.items.length,
+            orderId: checkoutOrderBackup.orderId,
+            total: checkoutOrderBackup.total
+          });
+        }
+        
+        // Primary: Try payment intent verification
+        if (paymentIntentId) {
+          console.log('Processing with payment intent ID:', paymentIntentId.substring(0, 20) + '...');
           
-          // Process verification result
-          if (verificationResult) {
-            const { data, error } = verificationResult;
+          const { data, error } = await supabase.functions.invoke('verify-payment', {
+            body: { 
+              paymentIntentId,
+              orderId: orderIdParam || checkoutOrderId,
+              backupData: checkoutOrderBackup
+            }
+          });
+
+          console.log('Verify payment response (payment intent):', { 
+            success: data?.success, 
+            hasOrders: !!data?.orders,
+            ordersCount: data?.orders?.length,
+            error: error?.message 
+          });
+          verificationResult = { data, error };
+        } 
+        // Fallback: Use backup data only
+        else if (checkoutOrderId && checkoutOrderBackup) {
+          console.log('Processing with backup data only:', checkoutOrderId);
+          
+          const { data, error } = await supabase.functions.invoke('verify-payment', {
+            body: { 
+              orderId: checkoutOrderId,
+              fallbackMode: true,
+              backupData: checkoutOrderBackup
+            }
+          });
+
+          console.log('Fallback verification response:', { 
+            success: data?.success, 
+            hasOrders: !!data?.orders,
+            ordersCount: data?.orders?.length,
+            error: error?.message 
+          });
+          verificationResult = { data, error };
+        }
+        
+        // Process verification result
+        if (verificationResult) {
+          const { data, error } = verificationResult;
+          
+          if (error) {
+            console.error('Payment verification error:', error);
+            const errorMessage = error.message || 'Payment verification failed';
+            setProcessingError(errorMessage);
+            setDetailedError(error.details || error.stack || 'No additional details available');
             
-            if (error) {
-              console.error('Payment verification error:', error);
-              setProcessingError(error.message || 'Payment verification failed');
-              
+            // Show appropriate toast based on error type
+            if (errorMessage.includes('503') || errorMessage.includes('Service Unavailable')) {
               toast({
-                title: "Payment Processed",
-                description: "Your payment was successful. Order details are being processed.",
+                title: "Service Temporarily Unavailable",
+                description: "Our payment processing is temporarily down. Please try again in a moment.",
+                variant: "destructive"
+              });
+            } else {
+              toast({
+                title: "Payment Processing Issue",
+                description: "There was an issue processing your payment verification. Please contact support if this persists.",
+                variant: "destructive"
+              });
+            }
+          } else if (data?.success && data.orders && data.orders.length > 0) {
+            console.log('Payment verification successful:', {
+              orderId: data.orderId,
+              ordersCount: data.orders.length,
+              verificationMethod: data.verification_method
+            });
+            
+            setOrderItems(data.orders);
+            setOrderId(data.orderId || orderIdParam || checkoutOrderId);
+            setVerificationMethod(data.verification_method || 'stripe_verified');
+            setUsedFallback(data.used_fallback || false);
+            setProcessingError(null);
+            setDetailedError(null);
+            
+            if (data.used_fallback) {
+              toast({
+                title: "Order Processed Successfully",
+                description: "Your order has been recorded. Payment verification completed.",
                 variant: "default"
               });
-            } else if (data?.orders && data.orders.length > 0) {
-              console.log('Payment verification successful:', data);
-              
-              setOrderItems(data.orders);
-              setOrderId(data.orderId || orderIdParam || checkoutOrderId);
-              setVerificationMethod(data.verification_method || 'stripe_verified');
-              setUsedFallback(data.used_fallback || false);
-              
-              if (data.used_fallback) {
-                toast({
-                  title: "Order Processed Successfully",
-                  description: "Your order has been recorded. Payment verification completed.",
-                  variant: "default"
-                });
-              } else {
-                toast({
-                  title: "Payment Successful",
-                  description: "Thank you for your order! Your payment has been confirmed.",
-                });
-              }
             } else {
-              console.warn('No order data found in verification response');
-              setProcessingError('Order details not found, but payment was successful');
+              toast({
+                title: "Payment Successful",
+                description: "Thank you for your order! Your payment has been confirmed.",
+              });
             }
+          } else if (data?.success === false) {
+            console.warn('Verification returned success: false', data);
+            setProcessingError(data.error || 'Payment verification failed');
+            setDetailedError(data.debug_info || 'No additional debug information');
+          } else {
+            console.warn('No order data found in verification response', data);
+            setProcessingError('Order details not found, but payment may have been successful');
           }
+        } else {
+          throw new Error('No verification method available - missing payment intent and backup data');
+        }
 
-          // Clear the cart and localStorage
+        // Clear the cart and localStorage only on success
+        if (!processingError && orderItems.length > 0) {
           clearCart();
           clearCheckoutBackup();
-          
-        } catch (error) {
-          console.error('Error processing payment success:', error);
-          setProcessingError(error instanceof Error ? error.message : 'Unknown error occurred');
-          
-          toast({
-            title: "Payment Processed",
-            description: "Your payment was successful. Order details are being processed.",
-            variant: "default"
-          });
-        } finally {
-          setIsLoading(false);
         }
+        
       } else {
-        setIsLoading(false);
+        console.log('Payment already processed or no trigger found');
       }
       
-      console.log('=== PAYMENT SUCCESS PAGE DEBUG END ===');
-    };
+    } catch (error) {
+      console.error('Error processing payment success:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setProcessingError(errorMessage);
+      setDetailedError(error instanceof Error ? error.stack || 'No stack trace available' : 'Unknown error type');
+      
+      toast({
+        title: "Processing Error",
+        description: "There was an error processing your payment. Please contact support.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+    
+    console.log('=== PAYMENT SUCCESS PROCESSING END ===');
+  };
 
+  useEffect(() => {
     processPaymentSuccess();
   }, [clearCart, toast, searchParams, hasProcessedPayment]);
+
+  const handleRetry = async () => {
+    if (retryCount >= 3) {
+      toast({
+        title: "Maximum Retries Reached",
+        description: "Please contact support for assistance with your order.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setRetryCount(prev => prev + 1);
+    await processPaymentSuccess(true);
+  };
 
   const formatDeliveryTimePreference = (preference: string | null) => {
     switch (preference) {
@@ -243,17 +318,41 @@ const PaymentSuccess = () => {
   };
 
   const ProcessingStatusCard = () => {
+    if (isLoading) {
+      return (
+        <Card className="mb-8 border-blue-200">
+          <CardContent className="pt-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <RefreshCw className="h-5 w-5 animate-spin text-blue-600" />
+              Processing Order
+            </h3>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
+                <div className="flex-1">
+                  <p className="font-medium">Verifying Payment</p>
+                  <p className="text-sm text-gray-600">
+                    Please wait while we process your order details...
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+    
     if (!isLoading && !processingError && orderItems.length === 0) {
       return (
         <Card className="mb-8 border-yellow-200">
           <CardContent className="pt-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              🔄 Order Processing
+              <AlertCircle className="h-5 w-5 text-yellow-600" />
+              Order Processing
             </h3>
             
             <div className="space-y-3">
               <div className="flex items-center gap-3 p-3 rounded-lg bg-yellow-50 border border-yellow-200">
-                <AlertCircle className="h-5 w-5 text-yellow-600" />
                 <div className="flex-1">
                   <p className="font-medium">Processing Order Details</p>
                   <p className="text-sm text-gray-600">
@@ -272,7 +371,8 @@ const PaymentSuccess = () => {
         <Card className="mb-8 border-red-200">
           <CardContent className="pt-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              ⚠️ Processing Issue
+              <XCircle className="h-5 w-5 text-red-600" />
+              Processing Issue
             </h3>
             
             <div className="space-y-3">
@@ -281,11 +381,33 @@ const PaymentSuccess = () => {
                 <div className="flex-1">
                   <p className="font-medium">Order Processing Delayed</p>
                   <p className="text-sm text-gray-600">
-                    There was an issue retrieving your order details, but your payment was successful.
+                    There was an issue retrieving your order details, but your payment was likely successful.
                   </p>
                   <p className="text-xs text-red-600 mt-1">{processingError}</p>
+                  {detailedError && (
+                    <details className="mt-2">
+                      <summary className="text-xs text-gray-500 cursor-pointer">Technical Details</summary>
+                      <pre className="text-xs text-gray-400 mt-1 whitespace-pre-wrap max-h-20 overflow-y-auto">
+                        {detailedError}
+                      </pre>
+                    </details>
+                  )}
                 </div>
               </div>
+              
+              {retryCount < 3 && (
+                <div className="flex justify-center pt-2">
+                  <Button 
+                    onClick={handleRetry} 
+                    variant="outline" 
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Retry Processing ({retryCount}/3)
+                  </Button>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -361,7 +483,6 @@ const PaymentSuccess = () => {
                       </div>
                     </div>
 
-                    {/* Delivery Information */}
                     {(item.delivery_address_street || item.delivery_date) && (
                       <div className="bg-gray-50 rounded-lg p-4">
                         <h4 className="font-medium mb-3 flex items-center gap-2">
@@ -498,3 +619,5 @@ const PaymentSuccess = () => {
 };
 
 export default PaymentSuccess;
+
+</edits_to_apply>
