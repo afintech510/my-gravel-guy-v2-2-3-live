@@ -21,19 +21,19 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
     const orderRecords = orderData.items.map((item, index) => {
       // Helper function to safely get delivery address properties
       const getDeliveryAddressValue = (property: string) => {
-        if (!item.deliveryAddress) return null;
+        if (!item.metadata?.deliveryAddress) return null;
         
-        if (typeof item.deliveryAddress === 'string') {
+        if (typeof item.metadata.deliveryAddress === 'string') {
           try {
-            const parsed = JSON.parse(item.deliveryAddress);
+            const parsed = JSON.parse(item.metadata.deliveryAddress);
             return parsed[property] || null;
           } catch {
             return null;
           }
         }
         
-        if (typeof item.deliveryAddress === 'object' && item.deliveryAddress !== null) {
-          return (item.deliveryAddress as any)[property] || null;
+        if (typeof item.metadata.deliveryAddress === 'object' && item.metadata.deliveryAddress !== null) {
+          return (item.metadata.deliveryAddress as any)[property] || null;
         }
         
         return null;
@@ -49,20 +49,18 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
         total_price: item.price * (item.quantity || item.tons || 0),
         quantity: item.quantity || item.tons || 0,
         status: 'confirmed',
-        delivery_name: item.contactInfo?.name || null,
-        delivery_phone: item.contactInfo?.phone || null,
-        delivery_email: item.contactInfo?.email || null,
-        billing_name: item.contactInfo?.name || null,
-        billing_email: item.contactInfo?.email || null,
-        delivery_date: item.deliveryDate instanceof Date ? 
-          item.deliveryDate.toISOString().split('T')[0] : 
-          (typeof item.deliveryDate === 'string' ? item.deliveryDate : null),
+        delivery_name: item.metadata?.contactName || null,
+        delivery_phone: item.metadata?.contactPhone || null,
+        delivery_email: item.metadata?.contactEmail || null,
+        billing_name: item.metadata?.contactName || null,
+        billing_email: item.metadata?.contactEmail || null,
+        delivery_date: item.metadata?.deliveryDate || null,
         delivery_street: getDeliveryAddressValue('street'),
         delivery_city: getDeliveryAddressValue('city'),
         delivery_state: getDeliveryAddressValue('state'),
         delivery_zip: getDeliveryAddressValue('zip'),
-        delivery_time_preference: item.deliveryTimePreference,
-        delivery_instructions: item.deliveryInstructions
+        delivery_time_preference: item.metadata?.deliveryTimePreference || null,
+        delivery_instructions: item.metadata?.deliveryInstructions || null
       };
     });
 
