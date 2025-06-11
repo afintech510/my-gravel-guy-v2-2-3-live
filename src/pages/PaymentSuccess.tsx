@@ -198,21 +198,21 @@ const PaymentSuccess = () => {
                 
                 const insertedOrders = await insertOrderToDatabase(orderData);
                 
-                // Transform inserted orders to display format
+                // Transform inserted orders to display format using correct field names
                 const displayOrders = insertedOrders.map(order => ({
                   id: order.id,
                   order_id: order.order_id,
                   product_name: order.product_id, // Use product_id as name for now
-                  quantity: order.quantity_tons,
+                  quantity: order.quantity,
                   total_price: order.total_price,
                   delivery_date: order.delivery_date,
-                  delivery_address_street: order.delivery_address_street,
-                  delivery_address_city: order.delivery_address_city,
-                  delivery_address_state: order.delivery_address_state,
-                  delivery_address_zip: order.delivery_address_zip,
-                  contact_name: order.contact_name,
-                  contact_email: order.contact_email,
-                  contact_phone: order.contact_phone,
+                  delivery_address_street: order.delivery_street,
+                  delivery_address_city: order.delivery_city,
+                  delivery_address_state: order.delivery_state,
+                  delivery_address_zip: order.delivery_zip,
+                  contact_name: order.delivery_name,
+                  contact_email: order.delivery_email,
+                  contact_phone: order.delivery_phone,
                   delivery_time_preference: order.delivery_time_preference,
                   delivery_instructions: order.delivery_instructions,
                   status: order.status
