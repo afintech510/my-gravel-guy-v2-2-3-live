@@ -466,61 +466,57 @@ const PaymentSuccess = () => {
     }
   };
 
-  // Auto-trigger checkout-style database insert
+  // Auto-trigger checkout-style database insert - simplified to match manual button behavior
   useEffect(() => {
     const attemptAutoInsert = async () => {
-      // Safety checks: only run once and when conditions are met
+      console.log('=== AUTO-INSERT ATTEMPT STARTED ===', {
+        autoInsertAttempted,
+        isLoading,
+        dbInsertComplete,
+        hasBackupData: !!getCheckoutBackup()?.items?.length
+      });
+
+      // Only check essential conditions like the manual button
       if (autoInsertAttempted) {
-        console.log('Auto-insert already attempted, skipping');
+        console.log('❌ Auto-insert already attempted, skipping');
         return;
       }
 
-      // Check if page is loaded and payment processing is complete
       if (isLoading) {
-        console.log('Still loading, skipping auto-insert');
+        console.log('❌ Still loading, skipping auto-insert');
         return;
       }
 
-      // Check if database insert is already complete
       if (dbInsertComplete) {
-        console.log('Database insert already complete, skipping auto-insert');
+        console.log('❌ Database insert already complete, skipping auto-insert');
         return;
       }
 
-      // Check if there's backup data available
+      // Check if there's backup data available (same check as manual button)
       const checkoutOrderBackup = getCheckoutBackup();
       if (!checkoutOrderBackup?.items || checkoutOrderBackup.items.length === 0) {
-        console.log('No backup data available for auto-insert');
+        console.log('❌ No backup data available for auto-insert');
         return;
       }
 
-      // Check if payment was verified (no processing error)
-      if (processingError) {
-        console.log('Processing error present, skipping auto-insert:', processingError);
-        return;
-      }
-
-      // Check if we have an order ID (payment was processed)
-      if (!orderId) {
-        console.log('No order ID available, skipping auto-insert');
-        return;
-      }
-
-      console.log('All conditions met, attempting auto checkout-style insert');
+      console.log('✅ All conditions met, attempting auto checkout-style insert');
+      console.log('Backup data found:', checkoutOrderBackup);
+      
       setAutoInsertAttempted(true);
       
       try {
         await handleCheckoutStyleDatabaseInsert();
+        console.log('✅ Auto checkout-style insert completed successfully');
       } catch (error) {
-        console.error('Auto checkout-style insert failed:', error);
+        console.error('❌ Auto checkout-style insert failed:', error);
       }
     };
 
-    // Small delay to ensure all state updates are complete
-    const timer = setTimeout(attemptAutoInsert, 1000);
+    // Increased delay to ensure all state updates are complete
+    const timer = setTimeout(attemptAutoInsert, 2500);
     
     return () => clearTimeout(timer);
-  }, [isLoading, dbInsertComplete, processingError, orderId, autoInsertAttempted]);
+  }, [isLoading, dbInsertComplete, autoInsertAttempted]);
 
   useEffect(() => {
     processPaymentSuccess();
@@ -667,7 +663,7 @@ const PaymentSuccess = () => {
                   onClick={handleCheckoutStyleDatabaseInsert} 
                   variant="outline" 
                   size="sm"
-                  className="hidden flex items-center gap-2"
+                  style={{ display: 'none' }}
                   disabled={testingDbInsert}
                 >
                   <Database className="h-4 w-4" />
@@ -738,7 +734,7 @@ const PaymentSuccess = () => {
                   onClick={handleCheckoutStyleDatabaseInsert} 
                   variant="outline" 
                   size="sm"
-                  className="hidden flex items-center gap-2"
+                  style={{ display: 'none' }}
                   disabled={testingDbInsert}
                 >
                   <Database className="h-4 w-4" />
@@ -956,3 +952,5 @@ const PaymentSuccess = () => {
 };
 
 export default PaymentSuccess;
+
+}
