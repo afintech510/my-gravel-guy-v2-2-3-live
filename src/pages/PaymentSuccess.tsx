@@ -619,5 +619,3 @@ const PaymentSuccess = () => {
 };
 
 export default PaymentSuccess;
-
-</edits_to_apply>
