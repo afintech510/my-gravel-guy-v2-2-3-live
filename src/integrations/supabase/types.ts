@@ -380,125 +380,102 @@ export type Database = {
         Row: {
           id: string
           order_id: string
-          stripe_session_id: string
+          stripe_session_id: string | null
           stripe_payment_intent_id: string | null
           product_id: string
-          quantity_tons: number
+          unit: string
           unit_price: number
           total_price: number
-          material_size: string | null
           delivery_date: string | null
-          delivery_address_street: string | null
-          delivery_address_city: string | null
-          delivery_address_state: string | null
-          delivery_address_zip: string | null
+          delivery_street: string | null
+          delivery_city: string | null
+          delivery_state: string | null
+          delivery_zip: string | null
           delivery_time_preference: string | null
           delivery_instructions: string | null
-          contact_phone: string | null
-          contact_name: string | null
-          customer_email: string | null
+          delivery_phone: string | null
+          delivery_name: string | null
+          delivery_email: string | null
           status: string | null
-          supplier: string | null
-          delivery_photo_urls: string[] | null
-          delivery_documents: string[] | null
+          attachment_files: string[] | null
           created_at: string | null
           updated_at: string | null
           delivered_at: string | null
           supplier_id: string | null
           supplier_charges: number | null
-          customer_photos: Json | null
-          delivery_photos: Json | null
-          documents: Json | null
           notes: string | null
-          estimated_delivery_window: string | null
-          actual_delivery_date: string | null
-          customer_name: string | null
-          material_category: string | null
-          quantity_yards: number | null
-          contact_email: string | null
+          billing_name: string | null
+          quantity: number | null
+          billing_email: string | null
+          zip_adjust: number | null
         }
         Insert: {
           id?: string
           order_id: string
-          stripe_session_id: string
+          stripe_session_id?: string | null
           stripe_payment_intent_id?: string | null
           product_id: string
-          quantity_tons: number
+          unit: string
           unit_price: number
           total_price: number
-          material_size?: string | null
           delivery_date?: string | null
-          delivery_address_street?: string | null
-          delivery_address_city?: string | null
-          delivery_address_state?: string | null
-          delivery_address_zip?: string | null
+          delivery_street?: string | null
+          delivery_city?: string | null
+          delivery_state?: string | null
+          delivery_zip?: string | null
           delivery_time_preference?: string | null
           delivery_instructions?: string | null
-          contact_phone?: string | null
-          contact_name?: string | null
-          customer_email?: string | null
+          delivery_phone?: string | null
+          delivery_name?: string | null
+          delivery_email?: string | null
           status?: string | null
-          supplier?: string | null
-          delivery_photo_urls?: string[] | null
-          delivery_documents?: string[] | null
+          attachment_files?: string[] | null
           created_at?: string | null
           updated_at?: string | null
           delivered_at?: string | null
           supplier_id?: string | null
           supplier_charges?: number | null
-          customer_photos?: Json | null
-          delivery_photos?: Json | null
-          documents?: Json | null
           notes?: string | null
-          estimated_delivery_window?: string | null
-          actual_delivery_date?: string | null
-          customer_name?: string | null
-          material_category?: string | null
-          quantity_yards?: number | null
-          contact_email?: string | null
+          billing_name?: string | null
+          quantity?: number | null
+          billing_email?: string | null
+          zip_adjust?: number | null
         }
         Update: {
           id?: string
           order_id?: string
-          stripe_session_id?: string
+          stripe_session_id?: string | null
           stripe_payment_intent_id?: string | null
           product_id?: string
-          quantity_tons?: number
+          unit?: string
           unit_price?: number
           total_price?: number
-          material_size?: string | null
           delivery_date?: string | null
-          delivery_address_street?: string | null
-          delivery_address_city?: string | null
-          delivery_address_state?: string | null
-          delivery_address_zip?: string | null
+          delivery_street?: string | null
+          delivery_city?: string | null
+          delivery_state?: string | null
+          delivery_zip?: string | null
           delivery_time_preference?: string | null
           delivery_instructions?: string | null
-          contact_phone?: string | null
-          contact_name?: string | null
-          customer_email?: string | null
+          delivery_phone?: string | null
+          delivery_name?: string | null
+          delivery_email?: string | null
           status?: string | null
-          supplier?: string | null
-          delivery_photo_urls?: string[] | null
-          delivery_documents?: string[] | null
+          attachment_files?: string[] | null
           created_at?: string | null
           updated_at?: string | null
           delivered_at?: string | null
           supplier_id?: string | null
           supplier_charges?: number | null
-          customer_photos?: Json | null
-          delivery_photos?: Json | null
-          documents?: Json | null
           notes?: string | null
-          estimated_delivery_window?: string | null
-          actual_delivery_date?: string | null
-          customer_name?: string | null
-          material_category?: string | null
-          quantity_yards?: number | null
-          contact_email?: string | null
+          billing_name?: string | null
+          quantity?: number | null
+          billing_email?: string | null
+          zip_adjust?: number | null
         }
         Relationships: []
       }
+
     }
     Views: {
       [_ in never]: never
