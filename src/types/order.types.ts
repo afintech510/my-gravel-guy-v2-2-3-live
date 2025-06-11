@@ -29,19 +29,16 @@ export interface DeliveryAddress {
 export interface OrderItem {
   id: string;
   product_name: string; // This will be derived from product_id
-  quantity: number; // Maps to quantity_tons
+  quantity: number; // Maps to quantity field in database
   unit_price: number;
   delivery_date: string;
   delivery_address: DeliveryAddress;
   status: OrderStatus;
-  material_category?: string;
-  material_size?: string;
-  quantity_tons: number;
-  quantity_yards?: number;
+  unit: string; // Added to match schema
   total_price: number;
-  contact_name?: string;
-  contact_phone?: string;
-  contact_email?: string;
+  delivery_name?: string;
+  delivery_phone?: string;
+  delivery_email?: string;
   delivery_time_preference?: string;
   delivery_instructions?: string;
 }
@@ -55,8 +52,8 @@ export interface GroupedOrder {
   stripe_session_id?: string;
   stripe_payment_intent_id?: string;
   updated_at?: string;
-  customer_name?: string;
-  customer_email?: string;
+  billing_name?: string;
+  billing_email?: string;
   items: OrderItem[];
 }
 
@@ -83,24 +80,21 @@ export function orderRowToOrderItem(row: OrderRow): OrderItem {
   return {
     id: row.id,
     product_name: row.product_id || 'Unknown Product', // Use product_id as fallback since product_name doesn't exist in schema
-    quantity: row.quantity_tons,
+    quantity: row.quantity || 1,
     unit_price: row.unit_price,
     delivery_date: row.delivery_date || row.created_at || new Date().toISOString(),
     delivery_address: {
-      street: row.delivery_address_street || '',
-      city: row.delivery_address_city || '',
-      state: row.delivery_address_state || '',
-      zip: row.delivery_address_zip || ''
+      street: row.delivery_street || '',
+      city: row.delivery_city || '',
+      state: row.delivery_state || '',
+      zip: row.delivery_zip || ''
     },
     status: (row.status as OrderStatus) || 'pending',
-    material_category: row.material_category || undefined,
-    material_size: row.material_size || undefined,
-    quantity_tons: row.quantity_tons,
-    quantity_yards: row.quantity_yards || undefined,
+    unit: row.unit,
     total_price: row.total_price,
-    contact_name: row.contact_name || undefined,
-    contact_phone: row.contact_phone || undefined,
-    contact_email: row.contact_email || undefined,
+    delivery_name: row.delivery_name || undefined,
+    delivery_phone: row.delivery_phone || undefined,
+    delivery_email: row.delivery_email || undefined,
     delivery_time_preference: row.delivery_time_preference || undefined,
     delivery_instructions: row.delivery_instructions || undefined
   };
@@ -122,8 +116,8 @@ export function groupOrderRows(orderRows: OrderRow[]): GroupedOrder[] {
         stripe_session_id: row.stripe_session_id,
         stripe_payment_intent_id: row.stripe_payment_intent_id || undefined,
         updated_at: row.updated_at || undefined,
-        customer_name: row.customer_name || undefined,
-        customer_email: row.customer_email || undefined,
+        billing_name: row.billing_name || undefined,
+        billing_email: row.billing_email || undefined,
         items: []
       });
     }
