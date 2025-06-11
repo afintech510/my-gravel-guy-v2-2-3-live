@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, Truck, Package, MapPin, Calendar, AlertCircle, RefreshCw, Shield, Clock, XCircle } from "lucide-react";
+import { CheckCircle, Truck, Package, MapPin, Calendar, AlertCircle, RefreshCw, Shield, Clock, XCircle, Database } from "lucide-react";
 import { useCart } from '../contexts/CartContext';
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { detectPaymentSuccess, clearCheckoutBackup, getCheckoutBackup } from '../utils/paymentUtils';
-import { insertOrderToDatabase } from '../services/orderInsertService';
+import { insertOrderToDatabase, testDatabaseInsert } from '../services/orderInsertService';
 
 interface OrderItem {
   id: string;
@@ -42,6 +42,7 @@ const PaymentSuccess = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [detailedError, setDetailedError] = useState<string | null>(null);
   const [dbInsertComplete, setDbInsertComplete] = useState(false);
+  const [testingDbInsert, setTestingDbInsert] = useState(false);
   
   const processPaymentSuccess = async (isRetry = false) => {
     console.log('=== PAYMENT SUCCESS PROCESSING START ===', { isRetry, retryCount });
@@ -70,35 +71,24 @@ const PaymentSuccess = () => {
       const checkoutInProgress = localStorage.getItem('checkout-in-progress');
       const checkoutOrderId = localStorage.getItem('checkout-order-id');
       
-      console.log('=== DETAILED BACKUP DATA ANALYSIS ===');
-      console.log('Raw backup data:', checkoutOrderBackup);
-      console.log('Backup exists:', !!checkoutOrderBackup);
-      console.log('Backup items count:', checkoutOrderBackup?.items?.length || 0);
+      console.log('=== BACKUP DATA STRUCTURE ANALYSIS ===');
+      console.log('Full backup data:', checkoutOrderBackup);
       
       if (checkoutOrderBackup?.items?.[0]) {
         const firstItem = checkoutOrderBackup.items[0];
-        console.log('First item complete structure:', firstItem);
-        console.log('First item keys:', Object.keys(firstItem));
-        console.log('First item metadata:', firstItem.metadata);
-        console.log('First item direct properties:', {
-          id: firstItem.id,
-          name: firstItem.name,
-          price: firstItem.price,
-          quantity: firstItem.quantity,
-          tons: firstItem.tons,
-          deliveryDate: firstItem.deliveryDate,
+        console.log('First backup item analysis:', {
+          fullItem: firstItem,
+          itemKeys: Object.keys(firstItem),
+          hasContactInfo: !!firstItem.contactInfo,
+          hasDeliveryAddress: !!firstItem.deliveryAddress,
+          hasDeliveryDate: !!firstItem.deliveryDate,
+          hasTons: !!firstItem.tons,
+          contactInfo: firstItem.contactInfo,
           deliveryAddress: firstItem.deliveryAddress,
-          contactInfo: firstItem.contactInfo
+          deliveryDate: firstItem.deliveryDate,
+          tons: firstItem.tons
         });
       }
-      
-      console.log('LocalStorage Data:', {
-        hasCheckoutOrderBackup: !!checkoutOrderBackup,
-        checkoutInProgress,
-        checkoutOrderId,
-        backupItemsCount: checkoutOrderBackup?.items?.length || 0,
-        backupDataStructure: checkoutOrderBackup?.items?.[0] ? Object.keys(checkoutOrderBackup.items[0]) : []
-      });
       
       // Determine if we should process the payment
       const shouldProcess = !hasProcessedPayment && (
@@ -121,12 +111,6 @@ const PaymentSuccess = () => {
           if (!checkoutOrderBackup.items || !Array.isArray(checkoutOrderBackup.items) || checkoutOrderBackup.items.length === 0) {
             throw new Error('Invalid backup data: missing or empty items array');
           }
-          console.log('Backup data validated:', {
-            itemsCount: checkoutOrderBackup.items.length,
-            orderId: checkoutOrderBackup.orderId,
-            total: checkoutOrderBackup.total,
-            firstItemStructure: checkoutOrderBackup.items[0] ? Object.keys(checkoutOrderBackup.items[0]) : []
-          });
         }
         
         // Primary: Try payment intent verification (without DB insert)
@@ -138,7 +122,7 @@ const PaymentSuccess = () => {
               paymentIntentId,
               orderId: orderIdParam || checkoutOrderId,
               backupData: checkoutOrderBackup,
-              skipDbInsert: true // Tell edge function to skip DB insert
+              skipDbInsert: true
             }
           });
 
@@ -158,7 +142,7 @@ const PaymentSuccess = () => {
               orderId: checkoutOrderId,
               fallbackMode: true,
               backupData: checkoutOrderBackup,
-              skipDbInsert: true // Tell edge function to skip DB insert
+              skipDbInsert: true
             }
           });
 
@@ -180,26 +164,13 @@ const PaymentSuccess = () => {
             setProcessingError(errorMessage);
             setDetailedError(error.details || error.stack || 'No additional details available');
             
-            // Show appropriate toast based on error type
-            if (errorMessage.includes('503') || errorMessage.includes('Service Unavailable')) {
-              toast({
-                title: "Service Temporarily Unavailable",
-                description: "Our payment processing is temporarily down. Please try again in a moment.",
-                variant: "destructive"
-              });
-            } else {
-              toast({
-                title: "Payment Processing Issue",
-                description: "There was an issue processing your payment verification. Please contact support if this persists.",
-                variant: "destructive"
-              });
-            }
-          } else if (data?.success && data?.paymentVerified) {
-            console.log('Payment verification successful:', {
-              orderId: data.orderId || orderIdParam || checkoutOrderId,
-              verificationMethod: data.verification_method,
-              paymentIntentId: data.paymentIntentId
+            toast({
+              title: "Payment Processing Issue",
+              description: "There was an issue processing your payment verification. Please contact support if this persists.",
+              variant: "destructive"
             });
+          } else if (data?.success && data?.paymentVerified) {
+            console.log('Payment verification successful');
             
             const currentOrderId = data.orderId || orderIdParam || checkoutOrderId;
             setOrderId(currentOrderId);
@@ -208,96 +179,9 @@ const PaymentSuccess = () => {
             setProcessingError(null);
             setDetailedError(null);
             
-            // Now insert the order to database using our service
+            // Now insert the order to database using our simplified service
             if (checkoutOrderBackup && !dbInsertComplete) {
-              try {
-                console.log('=== PREPARING DATA FOR DATABASE INSERT ===');
-                
-                // Check if we should use cartItems or items from backup
-                const itemsToUse = checkoutOrderBackup.cartItems || checkoutOrderBackup.items;
-                console.log('Items source decision:', {
-                  hasCartItems: !!checkoutOrderBackup.cartItems,
-                  hasItems: !!checkoutOrderBackup.items,
-                  usingCartItems: !!checkoutOrderBackup.cartItems,
-                  itemsCount: itemsToUse?.length || 0
-                });
-                
-                if (itemsToUse?.[0]) {
-                  console.log('Sample item structure analysis:', {
-                    sampleItem: itemsToUse[0],
-                    itemKeys: Object.keys(itemsToUse[0]),
-                    hasMetadata: !!itemsToUse[0].metadata,
-                    hasDirectContactInfo: !!itemsToUse[0].contactInfo,
-                    hasDirectDeliveryAddress: !!itemsToUse[0].deliveryAddress,
-                    hasDirectDeliveryDate: !!itemsToUse[0].deliveryDate
-                  });
-                }
-                
-                const orderData = {
-                  orderId: currentOrderId,
-                  items: itemsToUse, // Use cartItems if available, otherwise items
-                  stripeSessionId: data.sessionId,
-                  stripePaymentIntentId: data.paymentIntentId || paymentIntentId
-                };
-                
-                console.log('Order data being sent to insertOrderToDatabase:', {
-                  orderId: orderData.orderId,
-                  itemsCount: orderData.items.length,
-                  stripeSessionId: orderData.stripeSessionId,
-                  firstItemStructure: orderData.items[0] ? Object.keys(orderData.items[0]) : []
-                });
-                
-                const insertedOrders = await insertOrderToDatabase(orderData);
-                
-                // Transform inserted orders to display format using correct field names
-                const displayOrders = insertedOrders.map(order => ({
-                  id: order.id,
-                  order_id: order.order_id,
-                  product_name: order.product_id, // Use product_id as name for now
-                  quantity: order.quantity,
-                  total_price: order.total_price,
-                  delivery_date: order.delivery_date,
-                  delivery_address_street: order.delivery_street,
-                  delivery_address_city: order.delivery_city,
-                  delivery_address_state: order.delivery_state,
-                  delivery_address_zip: order.delivery_zip,
-                  contact_name: order.delivery_name,
-                  contact_email: order.delivery_email,
-                  contact_phone: order.delivery_phone,
-                  delivery_time_preference: order.delivery_time_preference,
-                  delivery_instructions: order.delivery_instructions,
-                  status: order.status
-                }));
-                
-                setOrderItems(displayOrders);
-                setDbInsertComplete(true);
-                
-                console.log('Database insert successful, order items set:', displayOrders.length);
-                
-                if (data.used_fallback) {
-                  toast({
-                    title: "Order Processed Successfully",
-                    description: "Your order has been recorded. Payment verification completed.",
-                    variant: "default"
-                  });
-                } else {
-                  toast({
-                    title: "Payment Successful",
-                    description: "Thank you for your order! Your payment has been confirmed.",
-                  });
-                }
-                
-              } catch (dbError) {
-                console.error('Database insert failed:', dbError);
-                setProcessingError(`Order confirmed but database insert failed: ${dbError.message}`);
-                setDetailedError(dbError.stack || 'No stack trace available');
-                
-                toast({
-                  title: "Database Error",
-                  description: "Your payment was successful, but we couldn't save the order details. Please contact support.",
-                  variant: "destructive"
-                });
-              }
+              await handleDatabaseInsert(checkoutOrderBackup, currentOrderId, data);
             }
             
           } else if (data?.success === false) {
@@ -336,8 +220,89 @@ const PaymentSuccess = () => {
     } finally {
       setIsLoading(false);
     }
-    
-    console.log('=== PAYMENT SUCCESS PROCESSING END ===');
+  };
+
+  const handleDatabaseInsert = async (checkoutOrderBackup: any, currentOrderId: string, verificationData: any) => {
+    try {
+      console.log('=== STARTING DATABASE INSERT ===');
+      
+      const orderData = {
+        orderId: currentOrderId,
+        items: checkoutOrderBackup.items, // Use items directly from backup
+        stripeSessionId: verificationData.sessionId,
+        stripePaymentIntentId: verificationData.paymentIntentId
+      };
+      
+      const insertedOrders = await insertOrderToDatabase(orderData);
+      
+      // Transform inserted orders to display format
+      const displayOrders = insertedOrders.map(order => ({
+        id: order.id,
+        order_id: order.order_id,
+        product_name: order.product_id,
+        quantity: order.quantity,
+        total_price: order.total_price,
+        delivery_date: order.delivery_date,
+        delivery_address_street: order.delivery_street,
+        delivery_address_city: order.delivery_city,
+        delivery_address_state: order.delivery_state,
+        delivery_address_zip: order.delivery_zip,
+        contact_name: order.delivery_name,
+        contact_email: order.delivery_email,
+        contact_phone: order.delivery_phone,
+        delivery_time_preference: order.delivery_time_preference,
+        delivery_instructions: order.delivery_instructions,
+        status: order.status
+      }));
+      
+      setOrderItems(displayOrders);
+      setDbInsertComplete(true);
+      
+      toast({
+        title: "Order Processed Successfully",
+        description: "Your order has been recorded successfully!",
+        variant: "default"
+      });
+      
+    } catch (dbError) {
+      console.error('Database insert failed:', dbError);
+      setProcessingError(`Order confirmed but database insert failed: ${dbError.message}`);
+      setDetailedError(dbError.stack || 'No stack trace available');
+      
+      toast({
+        title: "Database Error",
+        description: "Your payment was successful, but we couldn't save the order details. Please contact support.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleTestDatabaseInsert = async () => {
+    setTestingDbInsert(true);
+    try {
+      const result = await testDatabaseInsert();
+      if (result.success) {
+        toast({
+          title: "Test Insert Successful",
+          description: "Test order was successfully inserted into the database!",
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "Test Insert Failed",
+          description: `Test insert failed: ${result.error}`,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Test Insert Error",
+        description: "An error occurred during the test insert",
+        variant: "destructive"
+      });
+    } finally {
+      setTestingDbInsert(false);
+    }
   };
 
   useEffect(() => {
@@ -466,6 +431,20 @@ const PaymentSuccess = () => {
                   </p>
                 </div>
               </div>
+              
+              {/* Test Database Insert Button */}
+              <div className="flex justify-center pt-2">
+                <Button 
+                  onClick={handleTestDatabaseInsert} 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-2"
+                  disabled={testingDbInsert}
+                >
+                  <Database className="h-4 w-4" />
+                  {testingDbInsert ? 'Testing...' : 'Test Schema-Accurate DB Insert'}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -501,8 +480,8 @@ const PaymentSuccess = () => {
                 </div>
               </div>
               
-              {retryCount < 3 && (
-                <div className="flex justify-center pt-2">
+              <div className="flex justify-center gap-2 pt-2">
+                {retryCount < 3 && (
                   <Button 
                     onClick={handleRetry} 
                     variant="outline" 
@@ -512,8 +491,19 @@ const PaymentSuccess = () => {
                     <RefreshCw className="h-4 w-4" />
                     Retry Processing ({retryCount}/3)
                   </Button>
-                </div>
-              )}
+                )}
+                
+                <Button 
+                  onClick={handleTestDatabaseInsert} 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-2"
+                  disabled={testingDbInsert}
+                >
+                  <Database className="h-4 w-4" />
+                  {testingDbInsert ? 'Testing...' : 'Test Schema-Accurate DB Insert'}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -725,3 +715,5 @@ const PaymentSuccess = () => {
 };
 
 export default PaymentSuccess;
+
+</edits_to_apply>

@@ -17,142 +17,53 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
   });
 
   try {
-    // Process each item and handle both direct properties and metadata structure
+    // Validate input data
+    if (!orderData.items || orderData.items.length === 0) {
+      throw new Error('No items provided for database insert');
+    }
+
+    // Process each item - use direct properties from backup data
     const orderRecords = orderData.items.map((item, index) => {
       console.log('=== PROCESSING CART ITEM FOR DB INSERT ===', {
+        itemIndex: index,
         id: item.id,
         name: item.name,
+        price: item.price,
         itemKeys: Object.keys(item),
-        hasMetadata: !!item.metadata,
-        metadataKeys: item.metadata ? Object.keys(item.metadata) : [],
         hasDirectContactInfo: !!(item as any).contactInfo,
         hasDirectDeliveryAddress: !!(item as any).deliveryAddress,
         hasDirectDeliveryDate: !!(item as any).deliveryDate,
-        hasMetadataContactName: !!item.metadata?.contactName,
-        hasMetadataDeliveryAddress: !!item.metadata?.deliveryAddress,
-        hasMetadataDeliveryDate: !!item.metadata?.deliveryDate
+        hasDirectTons: !!(item as any).tons,
+        directContactInfo: (item as any).contactInfo,
+        directDeliveryAddress: (item as any).deliveryAddress,
+        directDeliveryDate: (item as any).deliveryDate,
+        directTons: (item as any).tons
       });
 
-      // Function to get contact info - try both direct and metadata
-      const getContactInfo = () => {
-        // Try direct properties first (original cart structure)
-        const directContactInfo = (item as any).contactInfo;
-        if (directContactInfo) {
-          console.log('Using direct contact info:', directContactInfo);
-          return {
-            name: directContactInfo.name,
-            phone: directContactInfo.phone,
-            email: directContactInfo.email
-          };
-        }
-        
-        // Fallback to metadata
-        if (item.metadata) {
-          console.log('Using metadata contact info');
-          return {
-            name: item.metadata.contactName,
-            phone: item.metadata.contactPhone,
-            email: item.metadata.contactEmail
-          };
-        }
-        
-        console.log('No contact info found');
-        return { name: null, phone: null, email: null };
-      };
+      // Get contact info directly from item properties
+      const contactInfo = (item as any).contactInfo || {};
+      const deliveryAddress = (item as any).deliveryAddress || {};
+      const deliveryDate = (item as any).deliveryDate;
+      const quantity = (item as any).tons || item.quantity || 1;
+      const deliveryTimePreference = (item as any).deliveryTimePreference;
+      const deliveryInstructions = (item as any).deliveryInstructions;
 
-      // Function to get delivery address - try both direct and metadata
-      const getDeliveryAddress = () => {
-        // Try direct properties first (original cart structure)
-        const directAddress = (item as any).deliveryAddress;
-        if (directAddress && typeof directAddress === 'object') {
-          console.log('Using direct delivery address:', directAddress);
-          return {
-            street: directAddress.street,
-            city: directAddress.city,
-            state: directAddress.state,
-            zip: directAddress.zip
-          };
-        }
-        
-        // Fallback to metadata
-        if (item.metadata?.deliveryAddress) {
-          console.log('Using metadata delivery address');
-          
-          if (typeof item.metadata.deliveryAddress === 'string') {
-            try {
-              const parsed = JSON.parse(item.metadata.deliveryAddress);
-              return {
-                street: parsed.street,
-                city: parsed.city,
-                state: parsed.state,
-                zip: parsed.zip
-              };
-            } catch {
-              console.log('Failed to parse delivery address string');
-              return { street: null, city: null, state: null, zip: null };
-            }
-          }
-          
-          if (typeof item.metadata.deliveryAddress === 'object') {
-            const addr = item.metadata.deliveryAddress as any;
-            return {
-              street: addr.street,
-              city: addr.city,
-              state: addr.state,
-              zip: addr.zip
-            };
-          }
-        }
-        
-        console.log('No delivery address found');
-        return { street: null, city: null, state: null, zip: null };
-      };
+      console.log('Extracted data for record:', {
+        contactInfo,
+        deliveryAddress,
+        deliveryDate,
+        quantity,
+        deliveryTimePreference,
+        deliveryInstructions
+      });
 
-      // Function to get delivery date - try both direct and metadata
-      const getDeliveryDate = () => {
-        // Try direct properties first (original cart structure)
-        const directDate = (item as any).deliveryDate;
-        if (directDate) {
-          console.log('Using direct delivery date:', directDate);
-          return directDate instanceof Date ? directDate.toISOString() : directDate;
-        }
-        
-        // Fallback to metadata
-        if (item.metadata?.deliveryDate) {
-          console.log('Using metadata delivery date:', item.metadata.deliveryDate);
-          return item.metadata.deliveryDate;
-        }
-        
-        console.log('No delivery date found');
-        return null;
-      };
-
-      // Function to get quantity - try tons first, then quantity
-      const getQuantity = () => {
-        const directTons = (item as any).tons;
-        if (directTons !== undefined && directTons !== null) {
-          console.log('Using direct tons for quantity:', directTons);
-          return directTons;
-        }
-        
-        if (item.quantity !== undefined && item.quantity !== null) {
-          console.log('Using item quantity:', item.quantity);
-          return item.quantity;
-        }
-        
-        console.log('No quantity found, defaulting to 0');
-        return 0;
-      };
-
-      // Get all the data
-      const contactInfo = getContactInfo();
-      const deliveryAddress = getDeliveryAddress();
-      const deliveryDate = getDeliveryDate();
-      const quantity = getQuantity();
-      
-      // Get other properties
-      const deliveryTimePreference = (item as any).deliveryTimePreference || item.metadata?.deliveryTimePreference || null;
-      const deliveryInstructions = (item as any).deliveryInstructions || item.metadata?.deliveryInstructions || null;
+      // Validate required fields
+      if (!contactInfo.name) {
+        console.warn('Missing contact name for item:', item.id);
+      }
+      if (!deliveryAddress.street) {
+        console.warn('Missing delivery address for item:', item.id);
+      }
 
       const record = {
         order_id: orderData.orderId,
@@ -160,37 +71,43 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
         stripe_payment_intent_id: orderData.stripePaymentIntentId || null,
         product_id: item.id.toString(),
         unit: 'tons',
-        unit_price: item.price,
-        total_price: item.price * quantity,
+        unit_price: item.price || 0,
+        total_price: (item.price || 0) * quantity,
         quantity: quantity,
         status: 'confirmed',
-        delivery_name: contactInfo.name,
-        delivery_phone: contactInfo.phone,
-        delivery_email: contactInfo.email,
-        billing_name: contactInfo.name,
-        billing_email: contactInfo.email,
-        delivery_date: deliveryDate,
-        delivery_street: deliveryAddress.street,
-        delivery_city: deliveryAddress.city,
-        delivery_state: deliveryAddress.state,
-        delivery_zip: deliveryAddress.zip,
-        delivery_time_preference: deliveryTimePreference,
-        delivery_instructions: deliveryInstructions
+        delivery_name: contactInfo.name || null,
+        delivery_phone: contactInfo.phone || null,
+        delivery_email: contactInfo.email || null,
+        billing_name: contactInfo.name || null,
+        billing_email: contactInfo.email || null,
+        delivery_date: deliveryDate || null,
+        delivery_street: deliveryAddress.street || null,
+        delivery_city: deliveryAddress.city || null,
+        delivery_state: deliveryAddress.state || null,
+        delivery_zip: deliveryAddress.zip || null,
+        delivery_time_preference: deliveryTimePreference || null,
+        delivery_instructions: deliveryInstructions || null
       };
 
-      console.log('Generated order record:', record);
+      console.log('Final order record to insert:', record);
       return record;
     });
 
-    console.log('Schema-accurate order records to insert:', orderRecords);
+    console.log('All order records prepared for insert:', orderRecords);
 
+    // Attempt database insert
     const { data, error } = await supabase
       .from('orders')
       .insert(orderRecords)
       .select();
 
     if (error) {
-      console.error('Failed to create order records:', error);
+      console.error('Database insert error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       throw new Error(`Database insert failed: ${error.message}`);
     }
 
@@ -198,7 +115,51 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
     return data;
 
   } catch (error) {
-    console.error('Error inserting order to database:', error);
+    console.error('Error in insertOrderToDatabase:', {
+      error: error.message,
+      stack: error.stack,
+      orderData: orderData
+    });
     throw error;
+  }
+};
+
+// Test function to insert sample data
+export const testDatabaseInsert = async () => {
+  console.log('=== TESTING DATABASE INSERT ===');
+  
+  const testOrderData = {
+    orderId: `TEST-${Date.now()}`,
+    items: [{
+      id: 'test-product-1',
+      name: 'Test Gravel',
+      price: 50,
+      quantity: 2,
+      tons: 2,
+      contactInfo: {
+        name: 'Test User',
+        phone: '555-1234',
+        email: 'test@example.com'
+      },
+      deliveryAddress: {
+        street: '123 Test St',
+        city: 'Test City',
+        state: 'TX',
+        zip: '12345'
+      },
+      deliveryDate: new Date().toISOString(),
+      deliveryTimePreference: 'morning',
+      deliveryInstructions: 'Test delivery instructions'
+    }],
+    stripeSessionId: 'test_session_123'
+  };
+
+  try {
+    const result = await insertOrderToDatabase(testOrderData);
+    console.log('Test insert successful:', result);
+    return { success: true, data: result };
+  } catch (error) {
+    console.error('Test insert failed:', error);
+    return { success: false, error: error.message };
   }
 };
