@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2, MapPinIcon, PhoneIcon, MailIcon, ClockIcon, FileTextIcon, UserIcon, CreditCard, Database } from 'lucide-react';
+import { ArrowLeft, Loader2, MapPinIcon, PhoneIcon, MailIcon, ClockIcon, FileTextIcon, UserIcon, CreditCard, Database, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { storeCheckoutBackup } from '../utils/paymentUtils';
+import { storeCheckoutBackup, createEnhancedBackup } from '../utils/paymentUtils';
 import CouponCode from '../components/cart/CouponCode';
 import type { OrderInsertData } from '../services/productTypes';
 
@@ -14,6 +14,7 @@ const Checkout = () => {
   const { items, total, discountTotal, clearCart } = useCart();
   const [isLoading, setIsLoading] = useState(false);
   const [isTestingDB, setIsTestingDB] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -43,7 +44,6 @@ const Checkout = () => {
 
   // Helper function to get material size info
   const getMaterialSizeInfo = (item: any) => {
-    // Check multiple possible sources for size information
     if (item.size) return `Size: ${item.size}`;
     if (item.specifications?.size) return `Size: ${item.specifications.size}`;
     if (item.materialSize) return `Size: ${item.materialSize}`;
@@ -53,19 +53,18 @@ const Checkout = () => {
   // Test database insertion function with schema-accurate data
   const testDatabaseInsertion = async () => {
     setIsTestingDB(true);
+    setCheckoutError(null);
     
     try {
       console.log('=== TESTING SCHEMA-ACCURATE DATABASE INSERTION ===');
       
-      // Generate test order ID
       const testOrderId = `TEST-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
-      // Use schema-accurate fields that match the actual database structure
       const orderRecords: OrderInsertData[] = items.map((item, index) => ({
         order_id: testOrderId,
         stripe_session_id: `test_session_${testOrderId}_${index}`,
         product_id: item.id.toString(),
-        unit: 'tons', // Required field
+        unit: 'tons',
         unit_price: item.price,
         total_price: item.price * (item.tons || 1),
         quantity: item.tons || 1,
@@ -86,7 +85,6 @@ const Checkout = () => {
 
       console.log('Schema-accurate order records to insert:', orderRecords);
 
-      // Insert into database
       const { data, error } = await supabase
         .from('orders')
         .insert(orderRecords)
@@ -121,13 +119,11 @@ const Checkout = () => {
   // Transform cart items to a format suitable for Stripe
   const formatCartItemsForStripe = () => {
     return items.map(item => {
-      // Calculate the actual price per ton after applying coupon discount
       const itemTotal = item.price * item.tons;
       const couponDiscount = item.couponApplied && item.couponAmount ? item.couponAmount : 0;
       const discountedTotal = itemTotal - couponDiscount;
       const discountedPricePerTon = discountedTotal / item.tons;
 
-      // Create metadata object for delivery details
       let metadata = {};
       
       if (item.deliveryAddress) {
@@ -144,7 +140,7 @@ const Checkout = () => {
         id: item.id,
         name: item.name,
         description: item.description?.substring(0, 100) || '',
-        price: Math.max(0.01, discountedPricePerTon), // Use discounted price, ensure minimum $0.01
+        price: Math.max(0.01, discountedPricePerTon),
         quantity: item.tons,
         image: item.image || item.images?.[0],
         metadata
@@ -291,12 +287,24 @@ const Checkout = () => {
 
   const handleCheckout = async () => {
     setIsLoading(true);
+    setCheckoutError(null);
     
     try {
-      // Format cart items for Stripe with discounted prices
-      const formattedItems = formatCartItemsForStripe();
+      // Validate cart items before proceeding
+      if (!items || items.length === 0) {
+        throw new Error('Cart is empty');
+      }
+
+      // Validate that all items have required delivery information
+      const itemsWithoutDelivery = items.filter(item => 
+        !item.deliveryAddress || !item.contactInfo || !item.deliveryDate
+      );
       
-      // Generate a unique order ID for tracking
+      if (itemsWithoutDelivery.length > 0) {
+        throw new Error('Some items are missing required delivery information. Please complete all delivery forms.');
+      }
+
+      const formattedItems = formatCartItemsForStripe();
       const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
       console.log('=== CHECKOUT DEBUG START ===');
@@ -308,20 +316,17 @@ const Checkout = () => {
       // Send checkout confirmation email first
       await sendCheckoutConfirmationEmail(orderId);
       
-      // Store order information in localStorage as backup
-      const orderBackup = {
-        orderId,
-        items: formattedItems,
-        total: discountTotal,
-        timestamp: Date.now(),
-        cartItems: items
-      };
+      // Create enhanced backup with better validation
+      const orderBackup = createEnhancedBackup(orderId, items, {
+        email: items[0]?.contactInfo?.email || 'guest@mygravelguy.com',
+        name: items[0]?.contactInfo?.name || 'Guest User'
+      });
       
       storeCheckoutBackup(orderBackup);
       
-      console.log('Order backup stored in localStorage:', orderBackup);
+      console.log('Enhanced order backup stored:', orderBackup);
       
-      // Call the create-payment Supabase Edge function
+      // Call the create-payment Supabase Edge function with better error handling
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: JSON.stringify({ 
           items: formattedItems,
@@ -330,21 +335,26 @@ const Checkout = () => {
       });
       
       if (error) {
-        throw new Error(`Payment error: ${error.message}`);
+        console.error('Create payment error:', error);
+        throw new Error(`Payment service error: ${error.message}`);
       }
       
       if (!data || !data.url) {
-        throw new Error('Invalid response from payment service');
+        console.error('Invalid payment response:', data);
+        throw new Error('Invalid response from payment service - no checkout URL received');
       }
       
       console.log('Payment URL received:', data.url);
       console.log('=== CHECKOUT DEBUG END ===');
       
-      // Redirect to Stripe checkout in the same tab (FIXED: was opening new window)
+      // Redirect to Stripe checkout
       window.location.href = data.url;
       
     } catch (error) {
       console.error('Checkout error:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setCheckoutError(errorMessage);
       
       // Clear the checkout progress flag on error
       localStorage.removeItem('checkout-in-progress');
@@ -352,7 +362,7 @@ const Checkout = () => {
       toast({
         variant: "destructive",
         title: "Checkout Error",
-        description: error instanceof Error ? error.message : "Failed to process checkout. Please try again.",
+        description: errorMessage,
       });
       
       setIsLoading(false);
@@ -370,6 +380,21 @@ const Checkout = () => {
       </Button>
       
       <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+
+      {/* Checkout Error Display */}
+      {checkoutError && (
+        <Card className="mb-8 border-red-200">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50 border border-red-200">
+              <AlertCircle className="h-5 w-5 text-red-600" />
+              <div className="flex-1">
+                <p className="font-medium text-red-800">Checkout Error</p>
+                <p className="text-sm text-red-600">{checkoutError}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
@@ -416,13 +441,11 @@ const Checkout = () => {
                       </div>
                     </div>
                     
-                    {/* Delivery Details Section */}
                     {(item.deliveryAddress || item.contactInfo || item.deliveryDate) && (
                       <div className="bg-gray-50 rounded-lg p-4 space-y-4">
                         <h4 className="font-medium text-gray-900 mb-3">Delivery Details</h4>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {/* Contact Information */}
                           {item.contactInfo && (
                             <div className="space-y-2">
                               <h5 className="font-medium text-gray-700 text-sm">Contact Information</h5>
@@ -443,7 +466,6 @@ const Checkout = () => {
                             </div>
                           )}
 
-                          {/* Delivery Address */}
                           {item.deliveryAddress && (
                             <div className="space-y-2">
                               <h5 className="font-medium text-gray-700 text-sm">Delivery Address</h5>
@@ -458,7 +480,6 @@ const Checkout = () => {
                           )}
                         </div>
 
-                        {/* Delivery Date and Preferences */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-200">
                           {item.deliveryDate && (
                             <div className="space-y-2">
@@ -482,7 +503,6 @@ const Checkout = () => {
                             </div>
                           )}
 
-                          {/* Special Instructions */}
                           {item.deliveryInstructions && (
                             <div className="space-y-2">
                               <h5 className="font-medium text-gray-700 text-sm">Special Instructions</h5>
@@ -494,7 +514,6 @@ const Checkout = () => {
                           )}
                         </div>
 
-                        {/* Location Photo */}
                         {item.locationPhotoUrl && (
                           <div className="pt-2 border-t border-gray-200">
                             <h5 className="font-medium text-gray-700 text-sm mb-2">Location Photo</h5>
@@ -560,14 +579,12 @@ const Checkout = () => {
           <div className="bg-gray-50 rounded-lg p-6 sticky top-24">
             <h2 className="text-xl font-semibold mb-4">Payment Summary</h2>
             
-            {/* Order summary details */}
             <div className="space-y-2 mb-4 pb-4 border-b">
               <div className="flex justify-between text-sm">
                 <span>Subtotal</span>
                 <span>${total.toFixed(2)}</span>
               </div>
               
-              {/* Show discount if applied */}
               {hasDiscounts && (
                 <div className="flex justify-between text-sm text-green-600">
                   <span>Discount</span>
@@ -591,7 +608,6 @@ const Checkout = () => {
               <span>${discountTotal.toFixed(2)}</span>
             </div>
 
-            {/* Coupon Code Component */}
             <div className="mb-6">
               <CouponCode />
             </div>
@@ -611,7 +627,6 @@ const Checkout = () => {
               )}
             </Button>
 
-            {/* Test Database Insertion Button - Updated for schema-accurate testing */}
             <Button 
               onClick={testDatabaseInsertion}
               disabled={isTestingDB}
