@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -228,7 +229,7 @@ const PaymentSuccess = () => {
       
       const orderData = {
         orderId: currentOrderId,
-        items: checkoutOrderBackup.items, // Use items directly from backup
+        items: checkoutOrderBackup.items,
         stripeSessionId: verificationData.sessionId,
         stripePaymentIntentId: verificationData.paymentIntentId
       };
@@ -715,5 +716,3 @@ const PaymentSuccess = () => {
 };
 
 export default PaymentSuccess;
-
-</edits_to_apply>
