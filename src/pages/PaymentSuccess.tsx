@@ -7,7 +7,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { detectPaymentSuccess, clearCheckoutBackup, getCheckoutBackup } from '../utils/paymentUtils';
-import { testDatabaseInsert } from '../services/orderInsertService';
 
 interface OrderItem {
   id: string;
@@ -42,7 +41,6 @@ const PaymentSuccess = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [detailedError, setDetailedError] = useState<string | null>(null);
   const [dbInsertComplete, setDbInsertComplete] = useState(false);
-  const [testingDbInsert, setTestingDbInsert] = useState(false);
   
   const processPaymentSuccess = async (isRetry = false) => {
     console.log('=== PAYMENT SUCCESS PROCESSING START ===', { isRetry, retryCount });
@@ -71,24 +69,13 @@ const PaymentSuccess = () => {
       const checkoutInProgress = localStorage.getItem('checkout-in-progress');
       const checkoutOrderId = localStorage.getItem('checkout-order-id');
       
-      console.log('=== BACKUP DATA STRUCTURE ANALYSIS ===');
-      console.log('Full backup data:', checkoutOrderBackup);
-      
-      if (checkoutOrderBackup?.items?.[0]) {
-        const firstItem = checkoutOrderBackup.items[0];
-        console.log('First backup item analysis:', {
-          fullItem: firstItem,
-          itemKeys: Object.keys(firstItem),
-          hasContactInfo: !!firstItem.contactInfo,
-          hasDeliveryAddress: !!firstItem.deliveryAddress,
-          hasDeliveryDate: !!firstItem.deliveryDate,
-          hasTons: !!firstItem.tons,
-          contactInfo: firstItem.contactInfo,
-          deliveryAddress: firstItem.deliveryAddress,
-          deliveryDate: firstItem.deliveryDate,
-          tons: firstItem.tons
-        });
-      }
+      console.log('=== BACKUP DATA CHECK ===', {
+        hasBackupData: !!checkoutOrderBackup,
+        backupItemsCount: checkoutOrderBackup?.items?.length || 0,
+        checkoutInProgress,
+        checkoutOrderId,
+        dbInsertComplete
+      });
       
       // Determine if we should process the payment
       const shouldProcess = !hasProcessedPayment && (
@@ -97,7 +84,11 @@ const PaymentSuccess = () => {
         (checkoutInProgress === 'true' && checkoutOrderId)
       );
       
-      console.log('Should process payment:', shouldProcess);
+      console.log('=== PROCESSING DECISION ===', {
+        shouldProcess,
+        hasProcessedPayment,
+        isRetry
+      });
       
       if (shouldProcess || isRetry) {
         if (!isRetry) {
@@ -170,7 +161,7 @@ const PaymentSuccess = () => {
               variant: "destructive"
             });
           } else if (data?.success && data?.paymentVerified) {
-            console.log('Payment verification successful');
+            console.log('=== PAYMENT VERIFICATION SUCCESSFUL ===');
             
             const currentOrderId = data.orderId || orderIdParam || checkoutOrderId;
             setOrderId(currentOrderId);
@@ -180,8 +171,20 @@ const PaymentSuccess = () => {
             setDetailedError(null);
             
             // Now insert the order to database using the working checkout-style method
+            console.log('=== CALLING handleDatabaseInsert ===', {
+              hasBackupData: !!checkoutOrderBackup,
+              currentOrderId,
+              dbInsertComplete
+            });
+            
             if (checkoutOrderBackup && !dbInsertComplete) {
               await handleDatabaseInsert(checkoutOrderBackup, currentOrderId);
+            } else {
+              console.log('=== SKIPPING DATABASE INSERT ===', {
+                reason: !checkoutOrderBackup ? 'No backup data' : 'Already completed',
+                hasBackupData: !!checkoutOrderBackup,
+                dbInsertComplete
+              });
             }
             
           } else if (data?.success === false) {
@@ -198,6 +201,7 @@ const PaymentSuccess = () => {
 
         // Clear the cart and localStorage only on success
         if (!processingError && orderItems.length > 0) {
+          console.log('=== CLEARING CART AND BACKUP ===');
           clearCart();
           clearCheckoutBackup();
         }
@@ -223,18 +227,31 @@ const PaymentSuccess = () => {
   };
 
   const handleDatabaseInsert = async (checkoutOrderBackup: any, currentOrderId: string) => {
+    console.log('=== STARTING handleDatabaseInsert ===', {
+      currentOrderId,
+      hasBackupData: !!checkoutOrderBackup,
+      backupItemsCount: checkoutOrderBackup?.items?.length || 0,
+      dbInsertComplete
+    });
+    
     try {
-      console.log('=== STARTING AUTOMATIC DATABASE INSERT ===');
-      
       if (!checkoutOrderBackup?.items || checkoutOrderBackup.items.length === 0) {
         throw new Error('No cart backup data found for database insert');
       }
       
+      console.log('=== PROCESSING BACKUP ITEMS FOR DATABASE ===');
+      
       // Process each item exactly like checkout does - accessing from metadata where available
       const orderRecords = checkoutOrderBackup.items.map((item: any, index: number) => {
-        console.log('=== PROCESSING ITEM FOR DATABASE INSERT ===', {
+        console.log(`=== PROCESSING ITEM ${index} FOR DATABASE INSERT ===`, {
           itemIndex: index,
-          item: item,
+          itemId: item.id,
+          itemName: item.name,
+          hasMetadata: !!item.metadata,
+          hasDirectContactInfo: !!item.contactInfo,
+          hasDirectDeliveryAddress: !!item.deliveryAddress,
+          hasDirectDeliveryDate: !!item.deliveryDate,
+          hasDirectTons: !!item.tons,
           metadata: item.metadata,
           directContactInfo: item.contactInfo,
           directDeliveryAddress: item.deliveryAddress,
@@ -296,7 +313,7 @@ const PaymentSuccess = () => {
           delivery_instructions: deliveryInstructions || null
         };
         
-        console.log('=== FINAL MAPPED RECORD ===', {
+        console.log(`=== FINAL RECORD FOR ITEM ${index} ===`, {
           originalItem: item,
           extractedContactInfo: contactInfo,
           extractedDeliveryAddress: deliveryAddress,
@@ -309,20 +326,33 @@ const PaymentSuccess = () => {
         return finalRecord;
       });
       
-      console.log('Order records for database insert:', orderRecords);
+      console.log('=== ALL ORDER RECORDS PREPARED ===', {
+        recordsCount: orderRecords.length,
+        orderRecords: orderRecords
+      });
       
       // Direct database insert
+      console.log('=== ATTEMPTING DATABASE INSERT ===');
       const { data, error } = await supabase
         .from('orders')
         .insert(orderRecords)
         .select();
       
       if (error) {
-        console.error('Database insert error:', error);
+        console.error('=== DATABASE INSERT ERROR ===', {
+          error: error,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         throw new Error(`Database insert failed: ${error.message}`);
       }
       
-      console.log('Database insert successful:', data);
+      console.log('=== DATABASE INSERT SUCCESSFUL ===', {
+        insertedRecords: data,
+        recordsCount: data?.length || 0
+      });
       
       // Transform to display format
       const displayOrders = data.map(order => ({
@@ -347,6 +377,10 @@ const PaymentSuccess = () => {
       setOrderItems(displayOrders);
       setDbInsertComplete(true);
       
+      console.log('=== DATABASE INSERT COMPLETE - UI UPDATED ===', {
+        displayOrdersCount: displayOrders.length
+      });
+      
       toast({
         title: "Order Processed Successfully",
         description: "Your order has been recorded successfully!",
@@ -354,7 +388,11 @@ const PaymentSuccess = () => {
       });
       
     } catch (dbError) {
-      console.error('Database insert failed:', dbError);
+      console.error('=== DATABASE INSERT FAILED ===', {
+        error: dbError,
+        message: dbError.message,
+        stack: dbError.stack
+      });
       setProcessingError(`Order confirmed but database insert failed: ${dbError.message}`);
       setDetailedError(dbError.stack || 'No stack trace available');
       
@@ -366,35 +404,8 @@ const PaymentSuccess = () => {
     }
   };
 
-  const handleTestDatabaseInsert = async () => {
-    setTestingDbInsert(true);
-    try {
-      const result = await testDatabaseInsert();
-      if (result.success) {
-        toast({
-          title: "Test Insert Successful",
-          description: "Test order was successfully inserted into the database!",
-          variant: "default"
-        });
-      } else {
-        toast({
-          title: "Test Insert Failed",
-          description: `Test insert failed: ${result.error}`,
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Test Insert Error",
-        description: "An error occurred during the test insert",
-        variant: "destructive"
-      });
-    } finally {
-      setTestingDbInsert(false);
-    }
-  };
-
   useEffect(() => {
+    console.log('=== PaymentSuccess useEffect TRIGGERED ===');
     processPaymentSuccess();
   }, [clearCart, toast, searchParams, hasProcessedPayment]);
 
@@ -520,20 +531,6 @@ const PaymentSuccess = () => {
                   </p>
                 </div>
               </div>
-              
-              {/* Only show test button for debugging */}
-              <div className="flex justify-center gap-2 pt-2">
-                <Button 
-                  onClick={handleTestDatabaseInsert} 
-                  variant="outline" 
-                  size="sm"
-                  className="flex items-center gap-2"
-                  disabled={testingDbInsert}
-                >
-                  <Database className="h-4 w-4" />
-                  {testingDbInsert ? 'Testing...' : 'Test Database Insert'}
-                </Button>
-              </div>
             </div>
           </CardContent>
         </Card>
@@ -581,17 +578,6 @@ const PaymentSuccess = () => {
                     Retry Processing ({retryCount}/3)
                   </Button>
                 )}
-                
-                <Button 
-                  onClick={handleTestDatabaseInsert} 
-                  variant="outline" 
-                  size="sm"
-                  className="flex items-center gap-2"
-                  disabled={testingDbInsert}
-                >
-                  <Database className="h-4 w-4" />
-                  {testingDbInsert ? 'Testing...' : 'Test Database Insert'}
-                </Button>
               </div>
             </div>
           </CardContent>
