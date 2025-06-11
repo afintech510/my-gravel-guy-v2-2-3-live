@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { detectPaymentSuccess, clearCheckoutBackup, getCheckoutBackup } from '../utils/paymentUtils';
-import { insertOrderToDatabase, testDatabaseInsert } from '../services/orderInsertService';
+import { testDatabaseInsert } from '../services/orderInsertService';
 
 interface OrderItem {
   id: string;
@@ -179,9 +179,9 @@ const PaymentSuccess = () => {
             setProcessingError(null);
             setDetailedError(null);
             
-            // Now insert the order to database using our simplified service
+            // Now insert the order to database using the working checkout-style method
             if (checkoutOrderBackup && !dbInsertComplete) {
-              await handleDatabaseInsert(checkoutOrderBackup, currentOrderId, data);
+              await handleDatabaseInsert(checkoutOrderBackup, currentOrderId);
             }
             
           } else if (data?.success === false) {
@@ -222,84 +222,17 @@ const PaymentSuccess = () => {
     }
   };
 
-  const handleDatabaseInsert = async (checkoutOrderBackup: any, currentOrderId: string, verificationData: any) => {
+  const handleDatabaseInsert = async (checkoutOrderBackup: any, currentOrderId: string) => {
     try {
-      console.log('=== STARTING DATABASE INSERT ===');
-      
-      const orderData = {
-        orderId: currentOrderId,
-        items: checkoutOrderBackup.items,
-        stripeSessionId: verificationData.sessionId,
-        stripePaymentIntentId: verificationData.paymentIntentId
-      };
-      
-      const insertedOrders = await insertOrderToDatabase(orderData);
-      
-      // Transform inserted orders to display format
-      const displayOrders = insertedOrders.map(order => ({
-        id: order.id,
-        order_id: order.order_id,
-        product_name: order.product_id,
-        quantity: order.quantity,
-        total_price: order.total_price,
-        delivery_date: order.delivery_date,
-        delivery_address_street: order.delivery_street,
-        delivery_address_city: order.delivery_city,
-        delivery_address_state: order.delivery_state,
-        delivery_address_zip: order.delivery_zip,
-        contact_name: order.delivery_name,
-        contact_email: order.delivery_email,
-        contact_phone: order.delivery_phone,
-        delivery_time_preference: order.delivery_time_preference,
-        delivery_instructions: order.delivery_instructions,
-        status: order.status
-      }));
-      
-      setOrderItems(displayOrders);
-      setDbInsertComplete(true);
-      
-      toast({
-        title: "Order Processed Successfully",
-        description: "Your order has been recorded successfully!",
-        variant: "default"
-      });
-      
-    } catch (dbError) {
-      console.error('Database insert failed:', dbError);
-      setProcessingError(`Order confirmed but database insert failed: ${dbError.message}`);
-      setDetailedError(dbError.stack || 'No stack trace available');
-      
-      toast({
-        title: "Database Error",
-        description: "Your payment was successful, but we couldn't save the order details. Please contact support.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleCheckoutStyleDatabaseInsert = async () => {
-    setTestingDbInsert(true);
-    try {
-      console.log('=== TESTING CHECKOUT-STYLE DATABASE INSERT ===');
-      
-      // Get backup data just like checkout does
-      const checkoutOrderBackup = getCheckoutBackup();
-      const checkoutOrderId = localStorage.getItem('checkout-order-id') || `TEST-CHECKOUT-${Date.now()}`;
-      
-      console.log('Backup data for checkout-style insert:', checkoutOrderBackup);
+      console.log('=== STARTING AUTOMATIC DATABASE INSERT ===');
       
       if (!checkoutOrderBackup?.items || checkoutOrderBackup.items.length === 0) {
-        toast({
-          title: "No Backup Data",
-          description: "No cart backup data found for testing",
-          variant: "destructive"
-        });
-        return;
+        throw new Error('No cart backup data found for database insert');
       }
       
       // Process each item exactly like checkout does - accessing from metadata where available
       const orderRecords = checkoutOrderBackup.items.map((item: any, index: number) => {
-        console.log('=== PROCESSING ITEM FOR CHECKOUT-STYLE INSERT ===', {
+        console.log('=== PROCESSING ITEM FOR DATABASE INSERT ===', {
           itemIndex: index,
           item: item,
           metadata: item.metadata,
@@ -342,7 +275,7 @@ const PaymentSuccess = () => {
         const quantity = item.tons || item.quantity || 1;
         
         const finalRecord = {
-          order_id: checkoutOrderId,
+          order_id: currentOrderId,
           product_id: item.id.toString(),
           unit: 'tons',
           unit_price: item.price || 0,
@@ -376,25 +309,20 @@ const PaymentSuccess = () => {
         return finalRecord;
       });
       
-      console.log('Order records for checkout-style insert:', orderRecords);
+      console.log('Order records for database insert:', orderRecords);
       
-      // Direct database insert like checkout does
+      // Direct database insert
       const { data, error } = await supabase
         .from('orders')
         .insert(orderRecords)
         .select();
       
       if (error) {
-        console.error('Checkout-style insert error:', error);
-        toast({
-          title: "Checkout-Style Insert Failed",
-          description: `Database error: ${error.message}`,
-          variant: "destructive"
-        });
-        return;
+        console.error('Database insert error:', error);
+        throw new Error(`Database insert failed: ${error.message}`);
       }
       
-      console.log('Checkout-style insert successful:', data);
+      console.log('Database insert successful:', data);
       
       // Transform to display format
       const displayOrders = data.map(order => ({
@@ -420,20 +348,21 @@ const PaymentSuccess = () => {
       setDbInsertComplete(true);
       
       toast({
-        title: "Checkout-Style Insert Successful",
-        description: "Order inserted using checkout method with metadata access!",
+        title: "Order Processed Successfully",
+        description: "Your order has been recorded successfully!",
         variant: "default"
       });
       
-    } catch (error) {
-      console.error('Checkout-style insert failed:', error);
+    } catch (dbError) {
+      console.error('Database insert failed:', dbError);
+      setProcessingError(`Order confirmed but database insert failed: ${dbError.message}`);
+      setDetailedError(dbError.stack || 'No stack trace available');
+      
       toast({
-        title: "Checkout-Style Insert Error",
-        description: `An error occurred: ${error.message}`,
+        title: "Database Error",
+        description: "Your payment was successful, but we couldn't save the order details. Please contact support.",
         variant: "destructive"
       });
-    } finally {
-      setTestingDbInsert(false);
     }
   };
 
@@ -561,7 +490,7 @@ const PaymentSuccess = () => {
             <div className="space-y-3">
               <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
                 <div className="flex-1">
-                  <p className="font-medium">Verifying Payment</p>
+                  <p className="font-medium">Verifying Payment & Saving Order</p>
                   <p className="text-sm text-gray-600">
                     Please wait while we process your order details...
                   </p>
@@ -592,7 +521,7 @@ const PaymentSuccess = () => {
                 </div>
               </div>
               
-              {/* Test Database Insert Buttons */}
+              {/* Only show test button for debugging */}
               <div className="flex justify-center gap-2 pt-2">
                 <Button 
                   onClick={handleTestDatabaseInsert} 
@@ -602,18 +531,7 @@ const PaymentSuccess = () => {
                   disabled={testingDbInsert}
                 >
                   <Database className="h-4 w-4" />
-                  {testingDbInsert ? 'Testing...' : 'Test Schema-Accurate DB Insert'}
-                </Button>
-                
-                <Button 
-                  onClick={handleCheckoutStyleDatabaseInsert} 
-                  variant="outline" 
-                  size="sm"
-                  className="flex items-center gap-2"
-                  disabled={testingDbInsert}
-                >
-                  <Database className="h-4 w-4" />
-                  {testingDbInsert ? 'Testing...' : 'Insert Using Checkout Method'}
+                  {testingDbInsert ? 'Testing...' : 'Test Database Insert'}
                 </Button>
               </div>
             </div>
@@ -672,18 +590,7 @@ const PaymentSuccess = () => {
                   disabled={testingDbInsert}
                 >
                   <Database className="h-4 w-4" />
-                  {testingDbInsert ? 'Testing...' : 'Test Schema-Accurate DB Insert'}
-                </Button>
-                
-                <Button 
-                  onClick={handleCheckoutStyleDatabaseInsert} 
-                  variant="outline" 
-                  size="sm"
-                  className="flex items-center gap-2"
-                  disabled={testingDbInsert}
-                >
-                  <Database className="h-4 w-4" />
-                  {testingDbInsert ? 'Testing...' : 'Insert Using Checkout Method'}
+                  {testingDbInsert ? 'Testing...' : 'Test Database Insert'}
                 </Button>
               </div>
             </div>
