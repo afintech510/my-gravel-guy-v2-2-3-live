@@ -184,17 +184,19 @@ const PaymentSuccess = () => {
             setProcessingError(null);
             setDetailedError(null);
             
-            // Now insert the order to database using our service
+            // Now insert the order to database using our service - use the EXACT same data structure as checkout
             if (checkoutOrderBackup && !dbInsertComplete) {
               try {
-                console.log('Inserting order to database...');
+                console.log('Inserting order to database with backup items...');
                 
                 const orderData = {
                   orderId: currentOrderId,
-                  items: checkoutOrderBackup.items,
+                  items: checkoutOrderBackup.items, // Use the backup items directly - they have the same structure as checkout
                   stripeSessionId: data.sessionId,
                   stripePaymentIntentId: data.paymentIntentId || paymentIntentId
                 };
+                
+                console.log('Order data being sent to insertOrderToDatabase:', orderData);
                 
                 const insertedOrders = await insertOrderToDatabase(orderData);
                 
