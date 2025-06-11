@@ -297,23 +297,51 @@ const PaymentSuccess = () => {
         return;
       }
       
-      // Process each item exactly like checkout does - direct property access
+      // Process each item exactly like checkout does - accessing from metadata where available
       const orderRecords = checkoutOrderBackup.items.map((item: any, index: number) => {
         console.log('=== PROCESSING ITEM FOR CHECKOUT-STYLE INSERT ===', {
           itemIndex: index,
           item: item,
-          contactInfo: item.contactInfo,
-          deliveryAddress: item.deliveryAddress,
-          deliveryDate: item.deliveryDate,
-          tons: item.tons
+          metadata: item.metadata,
+          directContactInfo: item.contactInfo,
+          directDeliveryAddress: item.deliveryAddress,
+          directDeliveryDate: item.deliveryDate,
+          directTons: item.tons
         });
         
-        const contactInfo = item.contactInfo || {};
-        const deliveryAddress = item.deliveryAddress || {};
-        const deliveryDate = item.deliveryDate;
+        // Access contact info from metadata first, then fallback to direct properties
+        const contactInfo = item.metadata?.contactName ? {
+          name: item.metadata.contactName,
+          phone: item.metadata.contactPhone,
+          email: item.metadata.contactEmail
+        } : (item.contactInfo || {});
+        
+        // Access delivery address from metadata first, then fallback to direct properties
+        let deliveryAddress = {};
+        if (item.metadata?.deliveryAddress) {
+          // Parse if it's a JSON string, otherwise use directly
+          try {
+            deliveryAddress = typeof item.metadata.deliveryAddress === 'string' 
+              ? JSON.parse(item.metadata.deliveryAddress) 
+              : item.metadata.deliveryAddress;
+          } catch (e) {
+            console.error('Error parsing deliveryAddress from metadata:', e);
+            deliveryAddress = item.deliveryAddress || {};
+          }
+        } else {
+          deliveryAddress = item.deliveryAddress || {};
+        }
+        
+        // Access delivery date from metadata first, then fallback to direct properties
+        const deliveryDate = item.metadata?.deliveryDate || item.deliveryDate;
+        
+        // Access delivery preferences from metadata first, then fallback to direct properties
+        const deliveryTimePreference = item.metadata?.deliveryTimePreference || item.deliveryTimePreference;
+        const deliveryInstructions = item.metadata?.deliveryInstructions || item.deliveryInstructions;
+        
         const quantity = item.tons || item.quantity || 1;
         
-        return {
+        const finalRecord = {
           order_id: checkoutOrderId,
           product_id: item.id.toString(),
           unit: 'tons',
@@ -331,9 +359,21 @@ const PaymentSuccess = () => {
           delivery_city: deliveryAddress.city || null,
           delivery_state: deliveryAddress.state || null,
           delivery_zip: deliveryAddress.zip || null,
-          delivery_time_preference: item.deliveryTimePreference || null,
-          delivery_instructions: item.deliveryInstructions || null
+          delivery_time_preference: deliveryTimePreference || null,
+          delivery_instructions: deliveryInstructions || null
         };
+        
+        console.log('=== FINAL MAPPED RECORD ===', {
+          originalItem: item,
+          extractedContactInfo: contactInfo,
+          extractedDeliveryAddress: deliveryAddress,
+          extractedDeliveryDate: deliveryDate,
+          extractedTimePreference: deliveryTimePreference,
+          extractedInstructions: deliveryInstructions,
+          finalRecord: finalRecord
+        });
+        
+        return finalRecord;
       });
       
       console.log('Order records for checkout-style insert:', orderRecords);
@@ -381,7 +421,7 @@ const PaymentSuccess = () => {
       
       toast({
         title: "Checkout-Style Insert Successful",
-        description: "Order inserted using checkout method!",
+        description: "Order inserted using checkout method with metadata access!",
         variant: "default"
       });
       
@@ -857,3 +897,5 @@ const PaymentSuccess = () => {
 };
 
 export default PaymentSuccess;
+
+}
