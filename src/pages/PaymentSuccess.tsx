@@ -74,7 +74,8 @@ const PaymentSuccess = () => {
         hasCheckoutOrderBackup: !!checkoutOrderBackup,
         checkoutInProgress,
         checkoutOrderId,
-        backupItemsCount: checkoutOrderBackup?.items?.length || 0
+        backupItemsCount: checkoutOrderBackup?.items?.length || 0,
+        backupDataStructure: checkoutOrderBackup?.items?.[0] ? Object.keys(checkoutOrderBackup.items[0]) : []
       });
       
       // Determine if we should process the payment
@@ -101,7 +102,8 @@ const PaymentSuccess = () => {
           console.log('Backup data validated:', {
             itemsCount: checkoutOrderBackup.items.length,
             orderId: checkoutOrderBackup.orderId,
-            total: checkoutOrderBackup.total
+            total: checkoutOrderBackup.total,
+            firstItemStructure: checkoutOrderBackup.items[0] ? Object.keys(checkoutOrderBackup.items[0]) : []
           });
         }
         
@@ -184,19 +186,31 @@ const PaymentSuccess = () => {
             setProcessingError(null);
             setDetailedError(null);
             
-            // Now insert the order to database using our service - use the EXACT same data structure as checkout
+            // Now insert the order to database using our service
             if (checkoutOrderBackup && !dbInsertComplete) {
               try {
-                console.log('Inserting order to database with backup items...');
+                console.log('=== PREPARING DATA FOR DATABASE INSERT ===');
+                console.log('Backup items structure:', checkoutOrderBackup.items.map(item => ({
+                  id: item.id,
+                  name: item.name,
+                  hasMetadata: !!item.metadata,
+                  metadataKeys: item.metadata ? Object.keys(item.metadata) : [],
+                  directProperties: Object.keys(item).filter(key => key !== 'metadata')
+                })));
                 
                 const orderData = {
                   orderId: currentOrderId,
-                  items: checkoutOrderBackup.items, // Use the backup items directly - they have the same structure as checkout
+                  items: checkoutOrderBackup.items, // Use the backup items directly
                   stripeSessionId: data.sessionId,
                   stripePaymentIntentId: data.paymentIntentId || paymentIntentId
                 };
                 
-                console.log('Order data being sent to insertOrderToDatabase:', orderData);
+                console.log('Order data being sent to insertOrderToDatabase:', {
+                  orderId: orderData.orderId,
+                  itemsCount: orderData.items.length,
+                  stripeSessionId: orderData.stripeSessionId,
+                  firstItemStructure: orderData.items[0] ? Object.keys(orderData.items[0]) : []
+                });
                 
                 const insertedOrders = await insertOrderToDatabase(orderData);
                 

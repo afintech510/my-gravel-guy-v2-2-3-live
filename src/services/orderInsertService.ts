@@ -17,9 +17,18 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
   });
 
   try {
-    // Use the exact same logic as the working checkout test button
+    // Use direct cart item properties - same logic as the working checkout test button
     const orderRecords = orderData.items.map((item, index) => {
-      // Helper function to safely get delivery address properties
+      console.log('Processing cart item for DB insert:', {
+        id: item.id,
+        name: item.name,
+        hasContactInfo: !!item.metadata?.contactName,
+        hasDeliveryAddress: !!item.metadata?.deliveryAddress,
+        hasDeliveryDate: !!item.metadata?.deliveryDate,
+        itemStructure: Object.keys(item)
+      });
+
+      // Helper function to safely get delivery address properties from metadata
       const getDeliveryAddressValue = (property: string) => {
         if (!item.metadata?.deliveryAddress) return null;
         
@@ -39,7 +48,7 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
         return null;
       };
 
-      return {
+      const record = {
         order_id: orderData.orderId,
         stripe_session_id: orderData.stripeSessionId || `test_session_${orderData.orderId}_${index}`,
         stripe_payment_intent_id: orderData.stripePaymentIntentId || null,
@@ -62,6 +71,9 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
         delivery_time_preference: item.metadata?.deliveryTimePreference || null,
         delivery_instructions: item.metadata?.deliveryInstructions || null
       };
+
+      console.log('Generated order record:', record);
+      return record;
     });
 
     console.log('Schema-accurate order records to insert:', orderRecords);
