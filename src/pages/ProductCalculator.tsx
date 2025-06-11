@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ProductFilterSelector from '@/components/product-calculator/ProductFilterSelector';
 import ProductDetails from '@/components/product-calculator/ProductDetails';
@@ -11,10 +10,7 @@ import { Product } from '@/services/productTypes';
 import { useCalculator } from '@/hooks/useCalculator';
 import { Helmet } from 'react-helmet-async';
 import { useZipCode } from '@/contexts/ZipCodeContext';
-import { 
-  calculateFinalPrice,
-  getPriceAdjustmentForZipCode 
-} from '@/services/products/pricingUtils';
+import { calculateFinalPrice, getPriceAdjustmentForZipCode } from '@/services/products/pricingUtils';
 import { useToast } from '@/components/ui/use-toast';
 import { getProducts } from '@/services/productService';
 
@@ -22,15 +18,24 @@ import { getProducts } from '@/services/productService';
 const getEffectivePricingQuantity = (calculatedTons: number): number => {
   return Math.max(3, calculatedTons);
 };
-
 export default function ProductCalculator() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [areas, setAreas] = useState<Array<{length: number, width: number}>>([{length: 10, width: 10}]);
+  const [areas, setAreas] = useState<Array<{
+    length: number;
+    width: number;
+  }>>([{
+    length: 10,
+    width: 10
+  }]);
   const [depth, setDepth] = useState<number>(2);
   const [extraPercentage, setExtraPercentage] = useState<number>(10);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const { zipCode } = useZipCode();
-  const { toast } = useToast();
+  const {
+    zipCode
+  } = useZipCode();
+  const {
+    toast
+  } = useToast();
   const [priceDetails, setPriceDetails] = useState<{
     basePrice: number;
     multiplier: number;
@@ -38,15 +43,9 @@ export default function ProductCalculator() {
     finalPrice: number;
     pricePerTon: number;
   } | null>(null);
-  
+
   // Calculate material needs based on inputs
-  const calculationResult = useCalculator(
-    areas, 
-    depth, 
-    extraPercentage, 
-    priceDetails?.pricePerTon || (selectedProduct?.price || 0),
-    selectedProduct?.tonYardRatio || 1.5
-  );
+  const calculationResult = useCalculator(areas, depth, extraPercentage, priceDetails?.pricePerTon || selectedProduct?.price || 0, selectedProduct?.tonYardRatio || 1.5);
 
   // Load all products on mount
   useEffect(() => {
@@ -60,7 +59,6 @@ export default function ProductCalculator() {
         console.error('ProductCalculator: Error loading products:', error);
       }
     };
-
     loadProducts();
   }, []);
 
@@ -71,17 +69,13 @@ export default function ProductCalculator() {
         try {
           // Enforce minimum 3-ton quantity for pricing calculations
           const effectiveTons = getEffectivePricingQuantity(calculationResult.totalTons);
-          
           console.log(`ProductCalculator: Calculating exponential price for product ${selectedProduct.name} (ID: ${selectedProduct.id})`);
           console.log(`ProductCalculator: Calculated tons: ${calculationResult.totalTons}, Effective pricing tons: ${effectiveTons}`);
-          
+
           // Calculate price using exponential pricing
-          const pricing = await calculateFinalPrice(
-            selectedProduct,
-            effectiveTons, // Use effective tons for pricing
-            zipCode || undefined
-          );
-          
+          const pricing = await calculateFinalPrice(selectedProduct, effectiveTons,
+          // Use effective tons for pricing
+          zipCode || undefined);
           setPriceDetails(pricing);
           console.log('ProductCalculator: Exponential price calculation:', pricing);
 
@@ -112,12 +106,9 @@ export default function ProductCalculator() {
         setPriceDetails(null);
       }
     };
-
     updatePriceDetails();
   }, [selectedProduct, zipCode, calculationResult.totalTons, toast]);
-
-  return (
-    <div className="container mx-auto px-4 py-8">
+  return <div className="container mx-auto px-4 py-8">
       <Helmet>
         <title>Material Calculator | Find the Right Amount for Your Project</title>
         <meta name="description" content="Calculate exactly how much material you need for your project with our easy-to-use calculator." />
@@ -131,15 +122,15 @@ export default function ProductCalculator() {
         <div className="mt-6 flex flex-col sm:flex-row gap-4 text-sm">
           <div className="flex items-center gap-2">
             <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-medium">1</span>
-            <span className="text-slate-600">Select Your Material - Choose a product</span>
+            <span className="text-slate-600 font-bold">Select Your Material - Choose a product</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-medium">2</span>
-            <span className="text-slate-600">Calculate Your Needs</span>
+            <span className="text-slate-600 font-bold">Calculate Your Needs</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-medium">3</span>
-            <span className="text-slate-600">Add to cart</span>
+            <span className="text-slate-600 font-bold">Add to cart</span>
           </div>
         </div>
       </div>
@@ -149,47 +140,28 @@ export default function ProductCalculator() {
         <div className="lg:col-span-7">
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
             <h2 className="text-xl font-semibold mb-6">Step 1: Select Your Material</h2>
-            <ProductFilterSelector 
-              onProductSelected={setSelectedProduct}
-              selectedProduct={selectedProduct}
-            />
+            <ProductFilterSelector onProductSelected={setSelectedProduct} selectedProduct={selectedProduct} />
           </div>
           
-          {selectedProduct && (
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+          {selectedProduct && <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
               <ProductDetails product={selectedProduct} />
-            </div>
-          )}
+            </div>}
         </div>
         
         {/* Right column - Calculator and actions */}
         <div className="lg:col-span-5">
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8 sticky top-24">
             <h2 className="text-xl font-semibold mb-4">Step 2: Calculate Your Needs</h2>
-            <AreaCalculator
-              areas={areas}
-              setAreas={setAreas}
-              depth={depth}
-              setDepth={setDepth}
-              extraPercentage={extraPercentage}
-              setExtraPercentage={setExtraPercentage}
-              calculationResult={calculationResult}
-            />
+            <AreaCalculator areas={areas} setAreas={setAreas} depth={depth} setDepth={setDepth} extraPercentage={extraPercentage} setExtraPercentage={setExtraPercentage} calculationResult={calculationResult} />
             
             <div className="mt-8 pt-6 border-t border-gray-200">
               <ZipCodeChecker />
             </div>
             
-            {selectedProduct && calculationResult.totalTons > 0 && (
-              <div className="mt-8 pt-6 border-t border-gray-200">
+            {selectedProduct && calculationResult.totalTons > 0 && <div className="mt-8 pt-6 border-t border-gray-200">
                 <h3 className="text-lg font-semibold mb-4">Step 3: Add to Cart</h3>
-                <AddToCartOptions 
-                  product={selectedProduct}
-                  calculatedTons={calculationResult.totalTons}
-                  priceDetails={priceDetails}
-                />
-              </div>
-            )}
+                <AddToCartOptions product={selectedProduct} calculatedTons={calculationResult.totalTons} priceDetails={priceDetails} />
+              </div>}
           </div>
         </div>
       </div>
@@ -198,6 +170,5 @@ export default function ProductCalculator() {
       <div className="bg-white rounded-lg shadow-sm p-6 w-full">
         <TrustBanner />
       </div>
-    </div>
-  );
+    </div>;
 }
