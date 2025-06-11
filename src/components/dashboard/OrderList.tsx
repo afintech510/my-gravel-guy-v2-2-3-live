@@ -185,7 +185,7 @@ export function OrderList() {
                           <div>
                             <h4 className="font-medium">{item.product_name}</h4>
                             <p className="text-sm text-gray-600">
-                              Quantity: {item.quantity_tons} tons × ${item.unit_price.toFixed(2)} = ${item.total_price.toFixed(2)}
+                              Quantity: {item.quantity} tons × ${item.unit_price.toFixed(2)} = ${item.total_price.toFixed(2)}
                             </p>
                           </div>
                           <Badge className={statusColors[item.status as keyof typeof statusColors]}>
