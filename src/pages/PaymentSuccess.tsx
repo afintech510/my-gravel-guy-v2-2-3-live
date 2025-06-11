@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -278,6 +277,126 @@ const PaymentSuccess = () => {
     }
   };
 
+  const handleCheckoutStyleDatabaseInsert = async () => {
+    setTestingDbInsert(true);
+    try {
+      console.log('=== TESTING CHECKOUT-STYLE DATABASE INSERT ===');
+      
+      // Get backup data just like checkout does
+      const checkoutOrderBackup = getCheckoutBackup();
+      const checkoutOrderId = localStorage.getItem('checkout-order-id') || `TEST-CHECKOUT-${Date.now()}`;
+      
+      console.log('Backup data for checkout-style insert:', checkoutOrderBackup);
+      
+      if (!checkoutOrderBackup?.items || checkoutOrderBackup.items.length === 0) {
+        toast({
+          title: "No Backup Data",
+          description: "No cart backup data found for testing",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Process each item exactly like checkout does - direct property access
+      const orderRecords = checkoutOrderBackup.items.map((item: any, index: number) => {
+        console.log('=== PROCESSING ITEM FOR CHECKOUT-STYLE INSERT ===', {
+          itemIndex: index,
+          item: item,
+          contactInfo: item.contactInfo,
+          deliveryAddress: item.deliveryAddress,
+          deliveryDate: item.deliveryDate,
+          tons: item.tons
+        });
+        
+        const contactInfo = item.contactInfo || {};
+        const deliveryAddress = item.deliveryAddress || {};
+        const deliveryDate = item.deliveryDate;
+        const quantity = item.tons || item.quantity || 1;
+        
+        return {
+          order_id: checkoutOrderId,
+          product_id: item.id.toString(),
+          unit: 'tons',
+          unit_price: item.price || 0,
+          total_price: (item.price || 0) * quantity,
+          quantity: quantity,
+          status: 'confirmed',
+          delivery_name: contactInfo.name || null,
+          delivery_phone: contactInfo.phone || null,
+          delivery_email: contactInfo.email || null,
+          billing_name: contactInfo.name || null,
+          billing_email: contactInfo.email || null,
+          delivery_date: deliveryDate || null,
+          delivery_street: deliveryAddress.street || null,
+          delivery_city: deliveryAddress.city || null,
+          delivery_state: deliveryAddress.state || null,
+          delivery_zip: deliveryAddress.zip || null,
+          delivery_time_preference: item.deliveryTimePreference || null,
+          delivery_instructions: item.deliveryInstructions || null
+        };
+      });
+      
+      console.log('Order records for checkout-style insert:', orderRecords);
+      
+      // Direct database insert like checkout does
+      const { data, error } = await supabase
+        .from('orders')
+        .insert(orderRecords)
+        .select();
+      
+      if (error) {
+        console.error('Checkout-style insert error:', error);
+        toast({
+          title: "Checkout-Style Insert Failed",
+          description: `Database error: ${error.message}`,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      console.log('Checkout-style insert successful:', data);
+      
+      // Transform to display format
+      const displayOrders = data.map(order => ({
+        id: order.id,
+        order_id: order.order_id,
+        product_name: order.product_id,
+        quantity: order.quantity,
+        total_price: order.total_price,
+        delivery_date: order.delivery_date,
+        delivery_address_street: order.delivery_street,
+        delivery_address_city: order.delivery_city,
+        delivery_address_state: order.delivery_state,
+        delivery_address_zip: order.delivery_zip,
+        contact_name: order.delivery_name,
+        contact_email: order.delivery_email,
+        contact_phone: order.delivery_phone,
+        delivery_time_preference: order.delivery_time_preference,
+        delivery_instructions: order.delivery_instructions,
+        status: order.status
+      }));
+      
+      setOrderItems(displayOrders);
+      setDbInsertComplete(true);
+      
+      toast({
+        title: "Checkout-Style Insert Successful",
+        description: "Order inserted using checkout method!",
+        variant: "default"
+      });
+      
+    } catch (error) {
+      console.error('Checkout-style insert failed:', error);
+      toast({
+        title: "Checkout-Style Insert Error",
+        description: `An error occurred: ${error.message}`,
+        variant: "destructive"
+      });
+    } finally {
+      setTestingDbInsert(false);
+    }
+  };
+
   const handleTestDatabaseInsert = async () => {
     setTestingDbInsert(true);
     try {
@@ -433,8 +552,8 @@ const PaymentSuccess = () => {
                 </div>
               </div>
               
-              {/* Test Database Insert Button */}
-              <div className="flex justify-center pt-2">
+              {/* Test Database Insert Buttons */}
+              <div className="flex justify-center gap-2 pt-2">
                 <Button 
                   onClick={handleTestDatabaseInsert} 
                   variant="outline" 
@@ -444,6 +563,17 @@ const PaymentSuccess = () => {
                 >
                   <Database className="h-4 w-4" />
                   {testingDbInsert ? 'Testing...' : 'Test Schema-Accurate DB Insert'}
+                </Button>
+                
+                <Button 
+                  onClick={handleCheckoutStyleDatabaseInsert} 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-2"
+                  disabled={testingDbInsert}
+                >
+                  <Database className="h-4 w-4" />
+                  {testingDbInsert ? 'Testing...' : 'Insert Using Checkout Method'}
                 </Button>
               </div>
             </div>
@@ -503,6 +633,17 @@ const PaymentSuccess = () => {
                 >
                   <Database className="h-4 w-4" />
                   {testingDbInsert ? 'Testing...' : 'Test Schema-Accurate DB Insert'}
+                </Button>
+                
+                <Button 
+                  onClick={handleCheckoutStyleDatabaseInsert} 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-2"
+                  disabled={testingDbInsert}
+                >
+                  <Database className="h-4 w-4" />
+                  {testingDbInsert ? 'Testing...' : 'Insert Using Checkout Method'}
                 </Button>
               </div>
             </div>
