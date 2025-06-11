@@ -317,7 +317,7 @@ const PaymentSuccess = () => {
         } : (item.contactInfo || {});
         
         // Access delivery address from metadata first, then fallback to direct properties
-        let deliveryAddress = {};
+        let deliveryAddress: { street?: string; city?: string; state?: string; zip?: string } = {};
         if (item.metadata?.deliveryAddress) {
           // Parse if it's a JSON string, otherwise use directly
           try {
