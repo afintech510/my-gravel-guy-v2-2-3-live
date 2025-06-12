@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { OrderService } from '@/services/orderService';
@@ -170,6 +169,7 @@ const OrdersTable = () => {
                           status={order.status}
                           orderId={order.order_id}
                           onStatusUpdate={handleStatusUpdate}
+                          readonly={true}
                         />
                       </TableCell>
                       <TableCell>

@@ -8,6 +8,7 @@ interface OrderStatusBadgeProps {
   status: OrderStatus;
   orderId: string;
   onStatusUpdate: (orderId: string, newStatus: string) => void;
+  readonly?: boolean; // New prop to disable editing
 }
 
 const getStatusColor = (status: OrderStatus) => {
@@ -43,7 +44,8 @@ const getStatusLabel = (status: OrderStatus) => {
 const OrderStatusBadge: React.FC<OrderStatusBadgeProps> = ({
   status,
   orderId,
-  onStatusUpdate
+  onStatusUpdate,
+  readonly = false
 }) => {
   const [isEditing, setIsEditing] = useState(false);
 
@@ -51,6 +53,15 @@ const OrderStatusBadge: React.FC<OrderStatusBadgeProps> = ({
     onStatusUpdate(orderId, newStatus);
     setIsEditing(false);
   };
+
+  // If readonly is true, don't allow editing
+  if (readonly || isEditing && readonly) {
+    return (
+      <Badge className={getStatusColor(status)}>
+        {getStatusLabel(status)}
+      </Badge>
+    );
+  }
 
   if (isEditing) {
     return (
@@ -78,8 +89,8 @@ const OrderStatusBadge: React.FC<OrderStatusBadgeProps> = ({
 
   return (
     <Badge 
-      className={`cursor-pointer ${getStatusColor(status)}`}
-      onClick={() => setIsEditing(true)}
+      className={`${readonly ? '' : 'cursor-pointer'} ${getStatusColor(status)}`}
+      onClick={readonly ? undefined : () => setIsEditing(true)}
     >
       {getStatusLabel(status)}
     </Badge>
