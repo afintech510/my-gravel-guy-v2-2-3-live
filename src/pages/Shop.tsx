@@ -74,7 +74,6 @@ const Shop = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="flex items-center gap-2 h-12 px-4">
-                <Filter className="h-4 w-4" />
                 Sort
                 {sortOrder.includes('Desc') ? (
                   <SortDesc className="h-4 w-4" />
