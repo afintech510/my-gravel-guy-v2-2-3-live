@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,6 +17,7 @@ import { GroupedOrder, OrderStatus } from '@/types/order.types';
 import { OrderService } from '@/services/orderService';
 import SupplierSelector from './SupplierSelector';
 import { format } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
 
 interface OrderDetailModalProps {
   order: GroupedOrder | null;
@@ -193,24 +195,25 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
         </div>
       `;
 
-      const response = await fetch('/supabase/functions/v1/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      console.log('Sending email via Supabase function...');
+      
+      const { data, error } = await supabase.functions.invoke('send-email', {
+        body: {
           to: order.billing_email || 'customer@example.com',
           subject: `Order Update - ${order.order_id}`,
           html: emailHtml,
           type: 'internal_notification',
           orderData: order
-        }),
+        }
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to send email');
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || 'Failed to send email');
       }
 
+      console.log('Email sent successfully:', data);
+      
       toast({
         title: "Email Sent",
         description: `Update email sent to ${order.billing_email || 'customer'}`,
@@ -220,7 +223,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
       console.error('Error sending email:', error);
       toast({
         title: "Email Failed",
-        description: "Failed to send update email",
+        description: error instanceof Error ? error.message : "Failed to send update email",
         variant: "destructive",
       });
     } finally {
