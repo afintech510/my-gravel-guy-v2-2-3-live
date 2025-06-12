@@ -1,4 +1,3 @@
-
 import type { Database } from '@/integrations/supabase/types';
 
 // Base order row type from Supabase - using the actual schema
@@ -41,6 +40,9 @@ export interface OrderItem {
   delivery_email?: string;
   delivery_time_preference?: string;
   delivery_instructions?: string;
+  notes?: string; // Added missing property
+  supplier_id?: string; // Added missing property
+  supplier_charges?: number; // Added missing property
 }
 
 // Grouped order interface for frontend display (multiple rows grouped by order_id)
@@ -96,7 +98,10 @@ export function orderRowToOrderItem(row: OrderRow): OrderItem {
     delivery_phone: row.delivery_phone || undefined,
     delivery_email: row.delivery_email || undefined,
     delivery_time_preference: row.delivery_time_preference || undefined,
-    delivery_instructions: row.delivery_instructions || undefined
+    delivery_instructions: row.delivery_instructions || undefined,
+    notes: row.notes || undefined, // Added missing property mapping
+    supplier_id: row.supplier_id || undefined, // Added missing property mapping
+    supplier_charges: row.supplier_charges || undefined // Added missing property mapping
   };
 }
 
