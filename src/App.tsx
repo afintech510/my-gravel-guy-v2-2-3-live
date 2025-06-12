@@ -41,6 +41,7 @@ import BlogPost from "./pages/BlogPost";
 import BlogCategory from "./pages/BlogCategory";
 import StripeTest from "./pages/StripeTest";
 import Reviews from "./pages/Reviews";
+import Dashboard from "./pages/Dashboard";
 import { Link } from "react-router-dom";
 
 const queryClient = new QueryClient();
@@ -94,6 +95,7 @@ function App() {
                       <Route path="/blog/category/:slug" element={<BlogCategory />} />
                       <Route path="/stripe-test" element={<StripeTest />} />
                       <Route path="/reviews" element={<Reviews />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                     <Footer />
