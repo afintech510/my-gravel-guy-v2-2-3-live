@@ -164,7 +164,7 @@ const ImageLightbox = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
-        className="max-w-[95vw] max-h-[95vh] w-auto h-auto p-0 bg-black/95 border-0"
+        className="w-[80vw] max-w-[80vw] h-[80vh] max-h-[80vh] p-0 bg-black/95 border-0"
         onPointerDownOutside={(e) => e.preventDefault()}
       >
         {/* Header with controls */}
@@ -215,7 +215,7 @@ const ImageLightbox = ({
         {/* Image container */}
         <div 
           ref={containerRef}
-          className="relative w-full h-full min-h-[60vh] flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing"
+          className="relative w-full h-full flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing"
           onWheel={handleWheel}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
