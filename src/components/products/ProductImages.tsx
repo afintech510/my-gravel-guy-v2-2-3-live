@@ -1,10 +1,8 @@
 
 import React, { useState } from 'react';
 import { Product } from '@/services/productTypes';
-import { ImageOff, ZoomIn } from 'lucide-react';
+import { ImageOff } from 'lucide-react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { Button } from '@/components/ui/button';
-import ImageLightbox from './ImageLightbox';
 
 // Default product image
 const DEFAULT_PRODUCT_IMAGE = '/lovable-uploads/85eef0fe-9a59-406e-ba6b-54e1aaf6f56b.png';
@@ -16,7 +14,6 @@ interface ProductImagesProps {
 const ProductImages = ({ product }: ProductImagesProps) => {
   const [selectedImage, setSelectedImage] = useState<number>(0);
   const [imageError, setImageError] = useState(false);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
   
   // Get product images directly from the product.images array
   const getProductImages = (): string[] => {
@@ -33,53 +30,25 @@ const ProductImages = ({ product }: ProductImagesProps) => {
   
   const images = getProductImages();
   console.log('ProductImages - Images to display:', images);
-
-  const openLightbox = () => {
-    setLightboxOpen(true);
-  };
-
-  const closeLightbox = () => {
-    setLightboxOpen(false);
-  };
-
-  const handleLightboxImageChange = (index: number) => {
-    setSelectedImage(index);
-    setImageError(false);
-  };
   
   return (
     <div className="space-y-3">
-      <div className="relative overflow-hidden rounded-lg border border-gray-200 group">
+      <div className="relative overflow-hidden rounded-lg border border-gray-200">
         <AspectRatio ratio={1} className="bg-gray-100">
           {imageError ? (
             <div className="w-full h-full flex items-center justify-center">
               <ImageOff className="h-12 w-12 text-gray-400" />
             </div>
           ) : (
-            <>
-              <img
-                src={images[selectedImage]}
-                alt={`${product?.name} - View ${selectedImage + 1}`}
-                className="object-cover w-full h-full cursor-pointer transition-transform duration-200 group-hover:scale-105"
-                onError={() => {
-                  console.log(`Image failed to load for ${product?.name}:`, images[selectedImage]);
-                  setImageError(true);
-                }}
-                onClick={openLightbox}
-              />
-              {/* Zoom overlay button */}
-              <Button
-                variant="secondary"
-                size="icon"
-                className="absolute top-3 right-3 bg-black/50 hover:bg-black/70 text-white border-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openLightbox();
-                }}
-              >
-                <ZoomIn className="h-4 w-4" />
-              </Button>
-            </>
+            <img
+              src={images[selectedImage]}
+              alt={`${product?.name} - View ${selectedImage + 1}`}
+              className="object-cover w-full h-full"
+              onError={() => {
+                console.log(`Image failed to load for ${product?.name}:`, images[selectedImage]);
+                setImageError(true);
+              }}
+            />
           )}
         </AspectRatio>
       </div>
@@ -110,16 +79,6 @@ const ProductImages = ({ product }: ProductImagesProps) => {
           ))}
         </div>
       )}
-
-      {/* Image Lightbox */}
-      <ImageLightbox
-        isOpen={lightboxOpen}
-        onClose={closeLightbox}
-        images={images}
-        currentIndex={selectedImage}
-        onImageChange={handleLightboxImageChange}
-        productName={product?.name || 'Product'}
-      />
     </div>
   );
 };
