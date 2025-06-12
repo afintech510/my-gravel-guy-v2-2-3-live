@@ -105,7 +105,7 @@ const ImageLightbox = ({
   const [touchStart, setTouchStart] = useState<{ x: number; y: number; scale: number } | null>(null);
   const [initialDistance, setInitialDistance] = useState(0);
 
-  const getTouchDistance = (touches: TouchList) => {
+  const getTouchDistance = (touches: React.TouchList) => {
     if (touches.length < 2) return 0;
     const touch1 = touches[0];
     const touch2 = touches[1];
