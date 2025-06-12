@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { generateCustomerConfirmationEmail, generateInternalNotificationEmail } from '@/utils/emailTemplates';
+import { OrderService } from './orderService';
 
 interface OrderData {
   order_id: string;
@@ -36,6 +37,32 @@ class EmailService {
       console.error('Error:', result.error);
     }
     console.log('=== END EMAIL LOG ===');
+  }
+
+  private async resolveOrderProductNames(orderData: OrderData): Promise<OrderData> {
+    try {
+      console.log('Resolving product names for email order data...');
+      
+      // Fetch the full order to get resolved product names
+      const resolvedOrder = await OrderService.fetchOrderById(orderData.order_id);
+      
+      if (resolvedOrder) {
+        // Use the resolved product names from the OrderService
+        return {
+          ...orderData,
+          items: resolvedOrder.items.map(item => ({
+            ...item,
+            product_name: item.product_name // Already resolved by OrderService
+          }))
+        };
+      } else {
+        console.warn('Could not fetch resolved order, using original data');
+        return orderData;
+      }
+    } catch (error) {
+      console.error('Error resolving product names for email:', error);
+      return orderData; // Return original data if resolution fails
+    }
   }
 
   private async sendEmailWithRetry(
@@ -112,14 +139,18 @@ class EmailService {
         throw new Error('Invalid customer email format');
       }
       
-      const emailHtml = generateCustomerConfirmationEmail(orderData);
+      // Resolve product names before generating email
+      const resolvedOrderData = await this.resolveOrderProductNames(orderData);
+      console.log('Resolved order data for customer email:', resolvedOrderData);
+      
+      const emailHtml = generateCustomerConfirmationEmail(resolvedOrderData);
       
       return await this.sendEmailWithRetry({
-        to: orderData.customer_email,
-        subject: `Order Confirmation - ${orderData.order_id} 📦`,
+        to: resolvedOrderData.customer_email,
+        subject: `Order Confirmation - ${resolvedOrderData.order_id} 📦`,
         html: emailHtml,
         type: 'customer_confirmation',
-        orderData
+        orderData: resolvedOrderData
       });
 
     } catch (error) {
@@ -152,14 +183,18 @@ class EmailService {
         throw new Error('Invalid sales email format');
       }
       
-      const emailHtml = generateInternalNotificationEmail(orderData);
+      // Resolve product names before generating email
+      const resolvedOrderData = await this.resolveOrderProductNames(orderData);
+      console.log('Resolved order data for internal email:', resolvedOrderData);
+      
+      const emailHtml = generateInternalNotificationEmail(resolvedOrderData);
       
       return await this.sendEmailWithRetry({
         to: salesEmail,
-        subject: `🚨 New Order: ${orderData.order_id} - ${orderData.total_amount.toFixed(2)}`,
+        subject: `🚨 New Order: ${resolvedOrderData.order_id} - ${resolvedOrderData.total_amount.toFixed(2)}`,
         html: emailHtml,
         type: 'internal_notification',
-        orderData
+        orderData: resolvedOrderData
       });
 
     } catch (error) {
@@ -184,10 +219,14 @@ class EmailService {
       console.log('=== SENDING BOTH EMAILS SERVICE DEBUG ===');
       console.log('Order data received:', JSON.stringify(orderData, null, 2));
       
+      // Resolve product names once for both emails
+      const resolvedOrderData = await this.resolveOrderProductNames(orderData);
+      console.log('Resolved order data for both emails:', resolvedOrderData);
+      
       // Send both emails in parallel
       const [customerResult, internalResult] = await Promise.allSettled([
-        this.sendOrderConfirmationEmail(orderData),
-        this.sendInternalNotificationEmail(orderData)
+        this.sendOrderConfirmationEmail(resolvedOrderData),
+        this.sendInternalNotificationEmail(resolvedOrderData)
       ]);
 
       const customerEmail = customerResult.status === 'fulfilled' 
@@ -196,7 +235,7 @@ class EmailService {
             success: false,
             error: customerResult.reason?.message || 'Promise rejected',
             emailType: 'customer_confirmation' as const,
-            recipient: orderData.customer_email,
+            recipient: resolvedOrderData.customer_email,
             timestamp: new Date().toISOString()
           };
 
