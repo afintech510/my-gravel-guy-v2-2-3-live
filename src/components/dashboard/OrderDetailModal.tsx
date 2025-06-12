@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,6 +14,7 @@ import { Lock, Unlock, Upload, Mail, Save, FileText, User, MapPin, DollarSign } 
 import { useToast } from '@/hooks/use-toast';
 import { GroupedOrder, OrderStatus } from '@/types/order.types';
 import { OrderService } from '@/services/orderService';
+import SupplierSelector from './SupplierSelector';
 import { format } from 'date-fns';
 
 interface OrderDetailModalProps {
@@ -34,19 +34,21 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [status, setStatus] = useState<OrderStatus>(order?.status || 'pending');
   const [internalNotes, setInternalNotes] = useState('');
-  const [supplierName, setSupplierName] = useState('');
+  const [selectedSupplierId, setSelectedSupplierId] = useState('');
   const [supplierCharges, setSupplierCharges] = useState('');
   const [emailNote, setEmailNote] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingNotes, setIsSavingNotes] = useState(false);
+  const [isSavingSupplier, setIsSavingSupplier] = useState(false);
 
   // Reset form when order changes
   React.useEffect(() => {
     if (order) {
       setStatus(order.status);
-      setInternalNotes('');
-      setSupplierName('');
-      setSupplierCharges('');
+      setInternalNotes(order.items[0]?.notes || '');
+      setSelectedSupplierId(order.items[0]?.supplier_id || '');
+      setSupplierCharges(order.items[0]?.supplier_charges?.toString() || '');
       setEmailNote('');
       setIsUnlocked(false);
     }
@@ -69,7 +71,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
       await OrderService.updateOrderStatus(order.order_id, status);
       onOrderUpdate();
       toast({
-        title: "Order Updated",
+        title: "Status Updated",
         description: "Order status has been updated successfully",
       });
     } catch (error) {
@@ -81,6 +83,76 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSaveNotes = async () => {
+    if (!isUnlocked) {
+      toast({
+        title: "Order Locked",
+        description: "Please unlock the order to make changes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsSavingNotes(true);
+      await OrderService.updateOrderNotes(order.order_id, internalNotes);
+      onOrderUpdate();
+      toast({
+        title: "Notes Saved",
+        description: "Internal notes have been saved successfully",
+      });
+    } catch (error) {
+      console.error('Error saving notes:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save notes",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingNotes(false);
+    }
+  };
+
+  const handleSaveSupplier = async () => {
+    if (!isUnlocked) {
+      toast({
+        title: "Order Locked",
+        description: "Please unlock the order to make changes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedSupplierId) {
+      toast({
+        title: "Supplier Required",
+        description: "Please select a supplier",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsSavingSupplier(true);
+      const charges = supplierCharges ? parseFloat(supplierCharges) : undefined;
+      await OrderService.updateOrderSupplier(order.order_id, selectedSupplierId, charges);
+      onOrderUpdate();
+      toast({
+        title: "Supplier Updated",
+        description: "Supplier information has been saved successfully",
+      });
+    } catch (error) {
+      console.error('Error saving supplier:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save supplier information",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingSupplier(false);
     }
   };
 
@@ -345,9 +417,9 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   disabled={!isUnlocked}
                   rows={4}
                 />
-                <Button disabled={!isUnlocked} className="w-full">
+                <Button onClick={handleSaveNotes} disabled={!isUnlocked || isSavingNotes} className="w-full">
                   <Save className="h-4 w-4 mr-2" />
-                  Save Notes
+                  {isSavingNotes ? 'Saving...' : 'Save Notes'}
                 </Button>
               </CardContent>
             </Card>
@@ -363,11 +435,10 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Supplier Name</Label>
-                  <Input
-                    placeholder="Enter supplier name"
-                    value={supplierName}
-                    onChange={(e) => setSupplierName(e.target.value)}
+                  <Label>Supplier</Label>
+                  <SupplierSelector
+                    value={selectedSupplierId}
+                    onValueChange={setSelectedSupplierId}
                     disabled={!isUnlocked}
                   />
                 </div>
@@ -381,9 +452,9 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                     disabled={!isUnlocked}
                   />
                 </div>
-                <Button disabled={!isUnlocked} className="w-full">
+                <Button onClick={handleSaveSupplier} disabled={!isUnlocked || isSavingSupplier} className="w-full">
                   <Save className="h-4 w-4 mr-2" />
-                  Save Supplier Info
+                  {isSavingSupplier ? 'Saving...' : 'Save Supplier Info'}
                 </Button>
               </CardContent>
             </Card>
