@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { 
   GroupedOrder, 
@@ -7,6 +6,7 @@ import type {
   OrderRow
 } from '@/types/order.types';
 import { groupOrderRows } from '@/types/order.types';
+import { SupplierService } from './supplierService';
 
 export class OrderService {
   /**
@@ -164,8 +164,16 @@ export class OrderService {
     try {
       console.log('Updating order supplier:', { orderId, supplierId, supplierCharges });
       
+      // Fetch the supplier name using the supplier ID
+      const suppliers = await SupplierService.fetchSuppliers();
+      const supplier = suppliers.find(s => s.id === supplierId);
+      
+      if (!supplier) {
+        throw new Error('Supplier not found');
+      }
+
       const updateData: any = {
-        supplier_id: supplierId,
+        supplier_id: supplier.name, // Save supplier name instead of ID
         updated_at: new Date().toISOString()
       };
 
