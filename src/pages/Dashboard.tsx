@@ -10,8 +10,8 @@ const Dashboard = () => {
 
   // TEMPORARY: Skip authentication for testing
   // Comment out these lines when ready to re-enable auth
- // const tempUser = { email: 'admin@mygravelguy.com' };
-  //const tempIsAdmin = true;
+  const tempUser = { email: 'admin@mygravelguy.com' };
+  const tempIsAdmin = true;
   
   // Loading state - show spinner while checking authentication
   if (loading) {
@@ -24,7 +24,7 @@ const Dashboard = () => {
 
   // TEMPORARY: Use temp user for testing
   // Uncomment these sections when ready to re-enable auth
-  
+  /*
   // No user - show login prompt
   if (!user) {
     return <LoginPrompt />;
@@ -56,7 +56,7 @@ const Dashboard = () => {
       </div>
     );
   }
-  
+  */
 
   // User authenticated and is admin - show dashboard
   return (
