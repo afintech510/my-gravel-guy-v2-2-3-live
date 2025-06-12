@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { 
   GroupedOrder, 
@@ -7,8 +8,43 @@ import type {
 } from '@/types/order.types';
 import { groupOrderRows } from '@/types/order.types';
 import { SupplierService } from './supplierService';
+import { getProductById } from '@/services/products/productQueries';
 
 export class OrderService {
+  /**
+   * Resolve product IDs to product names for order items
+   */
+  static async resolveProductNames(orders: GroupedOrder[]): Promise<GroupedOrder[]> {
+    const resolvedOrders = await Promise.all(
+      orders.map(async (order) => {
+        const resolvedItems = await Promise.all(
+          order.items.map(async (item) => {
+            try {
+              const product = await getProductById(item.product_name); // product_name actually contains product_id
+              return {
+                ...item,
+                product_name: product?.name || item.product_name || 'Unknown Product'
+              };
+            } catch (error) {
+              console.error('Error resolving product name for ID:', item.product_name, error);
+              return {
+                ...item,
+                product_name: item.product_name || 'Unknown Product'
+              };
+            }
+          })
+        );
+
+        return {
+          ...order,
+          items: resolvedItems
+        };
+      })
+    );
+
+    return resolvedOrders;
+  }
+
   /**
    * Fetch orders with optional filtering and pagination
    */
@@ -65,9 +101,12 @@ export class OrderService {
 
       // Transform the data using the helper function
       const groupedOrders = groupOrderRows(data as OrderRow[] || []);
+      
+      // Resolve product names
+      const ordersWithProductNames = await this.resolveProductNames(groupedOrders);
 
       return {
-        orders: groupedOrders,
+        orders: ordersWithProductNames,
         total: count || 0,
         page,
         limit
@@ -100,7 +139,8 @@ export class OrderService {
       }
 
       const groupedOrders = groupOrderRows(data as OrderRow[]);
-      return groupedOrders[0] || null;
+      const ordersWithProductNames = await this.resolveProductNames(groupedOrders);
+      return ordersWithProductNames[0] || null;
     } catch (error) {
       console.error('OrderService.fetchOrderById error:', error);
       throw error;
@@ -132,9 +172,6 @@ export class OrderService {
     }
   }
 
-  /**
-   * Update order notes
-   */
   static async updateOrderNotes(orderId: string, notes: string): Promise<void> {
     try {
       console.log('Updating order notes:', { orderId, notes });
@@ -157,9 +194,6 @@ export class OrderService {
     }
   }
 
-  /**
-   * Update order supplier information
-   */
   static async updateOrderSupplier(orderId: string, supplierId: string, supplierCharges?: number): Promise<void> {
     try {
       console.log('Updating order supplier:', { orderId, supplierId, supplierCharges });
