@@ -9,7 +9,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { detectPaymentSuccess, clearCheckoutBackup, getCheckoutBackup } from '../utils/paymentUtils';
 import { insertOrderToDatabase, testDatabaseInsert } from '../services/orderInsertService';
 import { sendBothOrderEmails } from '../services/emailService';
-import { useProductNames } from '@/hooks/useProductNames';
 
 interface OrderItem {
   id: string;
@@ -49,10 +48,6 @@ const PaymentSuccess = () => {
   const [autoInsertAttempted, setAutoInsertAttempted] = useState(false);
   const [emailsSent, setEmailsSent] = useState(false);
   const [emailStatus, setEmailStatus] = useState<{ customer: boolean; business: boolean } | null>(null);
-  
-  // Extract product IDs from order items to fetch product names
-  const productIds = orderItems.map(item => item.product_name); // product_name contains the product_id currently
-  const { productNames, loading: productNamesLoading } = useProductNames(productIds);
   
   // Transform database records to email format
   const transformOrderDataForEmail = (insertedOrders: any[], orderId: string) => {
@@ -1031,12 +1026,7 @@ const PaymentSuccess = () => {
                   <div key={item.id} className="border-b pb-6 last:border-b-0">
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <h3 className="font-medium text-lg">
-                          {productNamesLoading 
-                            ? 'Loading product name...' 
-                            : productNames[item.product_name] || item.product_name
-                          }
-                        </h3>
+                        <h3 className="font-medium text-lg">{item.product_name}</h3>
                         <p className="text-gray-600">Quantity: {item.quantity} tons</p>
                         <p className="text-lg font-semibold text-green-600">
                           ${item.total_price.toFixed(2)}
