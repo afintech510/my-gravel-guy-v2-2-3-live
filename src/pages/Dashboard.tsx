@@ -8,6 +8,11 @@ import LoginPrompt from '@/components/dashboard/LoginPrompt';
 const Dashboard = () => {
   const { user, loading, isAdmin, signOut } = useAuth();
 
+  // TEMPORARY: Skip authentication for testing
+  // Comment out these lines when ready to re-enable auth
+  const tempUser = { email: 'admin@mygravelguy.com' };
+  const tempIsAdmin = true;
+  
   // Loading state - show spinner while checking authentication
   if (loading) {
     return (
@@ -17,6 +22,9 @@ const Dashboard = () => {
     );
   }
 
+  // TEMPORARY: Use temp user for testing
+  // Uncomment these sections when ready to re-enable auth
+  /*
   // No user - show login prompt
   if (!user) {
     return <LoginPrompt />;
@@ -48,6 +56,7 @@ const Dashboard = () => {
       </div>
     );
   }
+  */
 
   // User authenticated and is admin - show dashboard
   return (
@@ -57,15 +66,12 @@ const Dashboard = () => {
           <div className="flex justify-between items-center py-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Manager Dashboard</h1>
-              <p className="text-gray-600">Welcome, {user.email}</p>
+              <p className="text-gray-600">Welcome, {tempUser.email} (TESTING MODE)</p>
             </div>
             <div className="flex items-center space-x-4">
-              <button
-                onClick={signOut}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                Sign Out
-              </button>
+              <span className="text-sm bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                AUTH DISABLED FOR TESTING
+              </span>
               <button
                 onClick={() => window.location.href = '/'}
                 className="text-gray-600 hover:text-gray-900"

@@ -16,6 +16,14 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // TEMPORARY: Skip actual auth for testing
+    // Comment out this section when ready to re-enable auth
+    setUser({ email: 'admin@mygravelguy.com' } as User);
+    setLoading(false);
+    return;
+
+    // REAL AUTH CODE - Uncomment when ready to re-enable
+    /*
     // Get initial session
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -34,6 +42,7 @@ export const useAuth = () => {
     );
 
     return () => subscription.unsubscribe();
+    */
   }, []);
 
   const signInWithGoogle = async () => {
