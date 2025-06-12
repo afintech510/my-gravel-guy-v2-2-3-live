@@ -2,13 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { OrderService } from '@/services/orderService';
-import { OrderFilters } from '@/types/order.types';
+import { OrderFilters, GroupedOrder } from '@/types/order.types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import OrderTableFilters from './OrderTableFilters';
 import OrderStatusBadge from './OrderStatusBadge';
+import OrderDetailModal from './OrderDetailModal';
 import { format } from 'date-fns';
 
 const OrdersTable = () => {
@@ -23,6 +24,8 @@ const OrdersTable = () => {
     from: undefined,
     to: undefined
   });
+  const [selectedOrder, setSelectedOrder] = useState<GroupedOrder | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const limit = 20;
 
@@ -48,6 +51,20 @@ const OrdersTable = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleRowClick = (order: GroupedOrder) => {
+    setSelectedOrder(order);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedOrder(null);
+  };
+
+  const handleOrderUpdate = () => {
+    refetch();
   };
 
   const formatAddress = (order: any) => {
@@ -140,11 +157,15 @@ const OrdersTable = () => {
                   </TableRow>
                 ) : (
                   orders.map((order) => (
-                    <TableRow key={order.order_id}>
+                    <TableRow 
+                      key={order.order_id}
+                      className="cursor-pointer hover:bg-gray-50"
+                      onClick={() => handleRowClick(order)}
+                    >
                       <TableCell className="font-mono text-sm">
                         {order.order_id}
                       </TableCell>
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         <OrderStatusBadge 
                           status={order.status}
                           orderId={order.order_id}
@@ -168,15 +189,13 @@ const OrdersTable = () => {
                       <TableCell className="font-semibold">
                         ${order.total_price.toFixed(2)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => {
-                            // TODO: Add view order details functionality
-                            console.log('View order:', order.order_id);
-                          }}
+                          onClick={() => handleRowClick(order)}
                         >
+                          <Eye className="h-4 w-4 mr-1" />
                           View
                         </Button>
                       </TableCell>
@@ -218,6 +237,14 @@ const OrdersTable = () => {
               </div>
             </div>
           )}
+
+          {/* Order Detail Modal */}
+          <OrderDetailModal
+            order={selectedOrder}
+            isOpen={isModalOpen}
+            onClose={handleCloseModal}
+            onOrderUpdate={handleOrderUpdate}
+          />
         </>
       )}
     </div>
