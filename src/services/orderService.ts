@@ -131,4 +131,60 @@ export class OrderService {
       throw error;
     }
   }
+
+  /**
+   * Update order notes
+   */
+  static async updateOrderNotes(orderId: string, notes: string): Promise<void> {
+    try {
+      console.log('Updating order notes:', { orderId, notes });
+      
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          notes,
+          updated_at: new Date().toISOString()
+        })
+        .eq('order_id', orderId);
+
+      if (error) {
+        console.error('Error updating order notes:', error);
+        throw new Error(`Failed to update order notes: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('OrderService.updateOrderNotes error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update order supplier information
+   */
+  static async updateOrderSupplier(orderId: string, supplierId: string, supplierCharges?: number): Promise<void> {
+    try {
+      console.log('Updating order supplier:', { orderId, supplierId, supplierCharges });
+      
+      const updateData: any = {
+        supplier_id: supplierId,
+        updated_at: new Date().toISOString()
+      };
+
+      if (supplierCharges !== undefined) {
+        updateData.supplier_charges = supplierCharges;
+      }
+
+      const { error } = await supabase
+        .from('orders')
+        .update(updateData)
+        .eq('order_id', orderId);
+
+      if (error) {
+        console.error('Error updating order supplier:', error);
+        throw new Error(`Failed to update order supplier: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('OrderService.updateOrderSupplier error:', error);
+      throw error;
+    }
+  }
 }
