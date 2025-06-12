@@ -9,10 +9,12 @@ import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useZipCode } from '@/contexts/ZipCodeContext';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, Package, Layers, Mountain, RockingChair, Building2, Shovel, Waves, Flower } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getPriceAdjustmentForZipCode } from '@/services/products/pricingUtils';
 import { calculateProductExponentialPrice } from '@/services/products/exponentialPricing';
+import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ProductPricing {
   productId: string;
@@ -20,6 +22,7 @@ interface ProductPricing {
 }
 
 const ShoppingModule = () => {
+  const isMobile = useIsMobile();
   const [selectedCategory, setSelectedCategory] = useState<string>('gravel');
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -39,40 +42,17 @@ const ShoppingModule = () => {
   } = useZipCode();
   const navigate = useNavigate();
 
-  // Material categories with icons
-  const categories = [{
-    id: 'all',
-    name: 'All Products',
-    icon: '📦'
-  }, {
-    id: 'gravel',
-    name: 'Gravel',
-    icon: '🪨'
-  }, {
-    id: 'rock',
-    name: 'Rock & Stone',
-    icon: '🗿'
-  }, {
-    id: 'crushed-gravel',
-    name: 'Crushed Gravel',
-    icon: '⚒️'
-  }, {
-    id: 'crushed-concrete',
-    name: 'Crushed Concrete',
-    icon: '🏗️'
-  }, {
-    id: 'dirt',
-    name: 'Soil & Dirt',
-    icon: '🌱'
-  }, {
-    id: 'sand',
-    name: 'Sand',
-    icon: '🏖️'
-  }, {
-    id: 'mulch',
-    name: 'Mulch',
-    icon: '🌿'
-  }];
+  // Material categories with Lucide icons (matching ShopProductFilterSelector)
+  const categories = [
+    { id: 'all', label: 'All Products', icon: <Package className="h-5 w-5" /> },
+    { id: 'gravel', label: 'Gravel', icon: <Layers className="h-5 w-5" /> },
+    { id: 'rock', label: 'Rock & Stone', icon: <Mountain className="h-5 w-5" /> },
+    { id: 'crushed-gravel', label: 'Crushed Gravel', icon: <RockingChair className="h-5 w-5" /> },
+    { id: 'crushed-concrete', label: 'Crushed Concrete', icon: <Building2 className="h-5 w-5" /> },
+    { id: 'soil-dirt', label: 'Soil & Dirt', icon: <Shovel className="h-5 w-5" /> },
+    { id: 'sand', label: 'Sand', icon: <Waves className="h-5 w-5" /> },
+    { id: 'mulch', label: 'Mulch', icon: <Flower className="h-5 w-5" /> },
+  ];
 
   // Load products and initialize pricing data
   useEffect(() => {
@@ -150,14 +130,44 @@ const ShoppingModule = () => {
     }
   }, [zipCode]);
 
-  // Filter products based on selected category
+  // Filter products based on selected category (matching ShopProductFilterSelector logic)
   useEffect(() => {
     if (selectedCategory === 'all') {
       setFilteredProducts(products);
     } else {
       const filtered = products.filter(product => {
-        const categoryMatch = product.category === selectedCategory || product.categories && product.categories.includes(selectedCategory) || product.name.toLowerCase().includes(selectedCategory);
-        return categoryMatch;
+        const productCategory = product.category?.toLowerCase() || '';
+        console.log(`Checking product: ${product.name}, category: ${productCategory}`);
+        
+        switch (selectedCategory) {
+          case 'gravel':
+            const isGravel = productCategory === 'gravel';
+            if (isGravel) console.log(`Product ${product.name} included as gravel`);
+            return isGravel;
+          
+          case 'rock':
+            const isRockOrStone = productCategory === 'rock' || productCategory === 'stone' || productCategory === 'rock-stone';
+            if (isRockOrStone) console.log(`Product ${product.name} included as rock or stone`);
+            return isRockOrStone;
+          
+          case 'crushed-gravel':
+            return productCategory === 'crushed-gravel' || productCategory.includes('crushed-gravel');
+          
+          case 'crushed-concrete':
+            return productCategory === 'crushed-concrete';
+          
+          case 'soil-dirt':
+            return productCategory === 'soil' || productCategory === 'dirt';
+          
+          case 'sand':
+            return productCategory === 'sand';
+          
+          case 'mulch':
+            return productCategory === 'mulch';
+          
+          default:
+            return false;
+        }
       });
       setFilteredProducts(filtered);
     }
@@ -260,15 +270,28 @@ const ShoppingModule = () => {
           <p className="text-gray-600">Select your material and add to cart for delivery</p>
         </div>
 
-        {/* Material Category Selector */}
+        {/* Material Category Selector - Updated with Lucide icons and primary styling */}
         <Card className="mb-6 md:mb-8">
           <CardContent className="p-4 md:p-6">
-            <h3 className="text-base md:text-lg font-semibold mb-4">FREE SHIPPING NATIONWIDE </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-2 md:gap-3">
-              {categories.map(category => <button key={category.id} onClick={() => setSelectedCategory(category.id)} className={`p-2 md:p-3 rounded-lg border text-xs md:text-sm font-medium transition-colors ${selectedCategory === category.id ? 'bg-green-500 text-white border-green-500' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}>
-                  <div className="text-base md:text-lg mb-1">{category.icon}</div>
-                  <div className="leading-tight">{category.name}</div>
-                </button>)}
+            <h3 className="text-base md:text-lg font-semibold mb-4">FREE SHIPPING NATIONWIDE</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 md:gap-3">
+              {categories.map(category => (
+                <button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  className={cn(
+                    "flex items-center justify-center p-3 border rounded-md transition-colors",
+                    selectedCategory === category.id
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
+                  )}
+                >
+                  {category.icon}
+                  <span className={cn("ml-2", isMobile ? "text-xs" : "text-sm")}>
+                    {category.label}
+                  </span>
+                </button>
+              ))}
             </div>
           </CardContent>
         </Card>
