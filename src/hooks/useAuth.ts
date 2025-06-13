@@ -8,7 +8,8 @@ const ADMIN_EMAILS = [
   'admin@mygravelguy.com',
   'manager@mygravelguy.com',
   'adam@easternbuilding.supply',
-  'techminded.xyz@gmail.com'
+  'techminded.xyz@gmail.com',
+  'ronnie@easternbuilding.supply',
   // Add more admin emails as needed
 ];
 
