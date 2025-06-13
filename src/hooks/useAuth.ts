@@ -16,18 +16,26 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // TEMPORARY: Skip actual auth for testing
-    // Comment out this section when ready to re-enable auth
-    /*
-    setUser({ email: 'admin@mygravelguy.com' } as User);
-    setLoading(false);
-    return;
-    */
-    // REAL AUTH CODE - Uncomment when ready to re-enable
+    // REAL AUTH CODE - Re-enabled for testing
     
     // Get initial session
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log('useAuth: Getting initial session...');
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('useAuth: Error getting session:', error);
+      }
+      
+      console.log('useAuth: Initial session:', session);
+      console.log('useAuth: Initial user:', session?.user);
+      
+      if (session?.user) {
+        console.log('useAuth: User email from session:', session.user.email);
+        console.log('useAuth: User object keys:', Object.keys(session.user));
+        console.log('useAuth: Full user object:', JSON.stringify(session.user, null, 2));
+      }
+      
       setUser(session?.user ?? null);
       setLoading(false);
     };
@@ -37,16 +45,24 @@ export const useAuth = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('useAuth: Auth state change event:', event);
+        console.log('useAuth: Auth state change session:', session);
+        
+        if (session?.user) {
+          console.log('useAuth: User email from auth change:', session.user.email);
+          console.log('useAuth: User object from auth change:', JSON.stringify(session.user, null, 2));
+        }
+        
         setUser(session?.user ?? null);
         setLoading(false);
       }
     );
 
     return () => subscription.unsubscribe();
-    
   }, []);
 
   const signInWithGoogle = async () => {
+    console.log('useAuth: Starting Google sign in...');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -61,6 +77,7 @@ export const useAuth = () => {
   };
 
   const signOut = async () => {
+    console.log('useAuth: Signing out...');
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('Error signing out:', error);
@@ -68,7 +85,32 @@ export const useAuth = () => {
     }
   };
 
-  const isAdmin = user?.email ? ADMIN_EMAILS.includes(user.email) : false;
+  // Enhanced admin check with debugging and email normalization
+  const checkIsAdmin = () => {
+    console.log('useAuth: Checking admin status...');
+    console.log('useAuth: Current user:', user);
+    console.log('useAuth: User email:', user?.email);
+    console.log('useAuth: Admin emails list:', ADMIN_EMAILS);
+    
+    if (!user?.email) {
+      console.log('useAuth: No user email found, not admin');
+      return false;
+    }
+    
+    // Normalize email for comparison (lowercase and trim)
+    const normalizedUserEmail = user.email.toLowerCase().trim();
+    const normalizedAdminEmails = ADMIN_EMAILS.map(email => email.toLowerCase().trim());
+    
+    console.log('useAuth: Normalized user email:', normalizedUserEmail);
+    console.log('useAuth: Normalized admin emails:', normalizedAdminEmails);
+    
+    const isAdmin = normalizedAdminEmails.includes(normalizedUserEmail);
+    console.log('useAuth: Is admin?', isAdmin);
+    
+    return isAdmin;
+  };
+
+  const isAdmin = checkIsAdmin();
 
   return {
     user,
