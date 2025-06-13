@@ -55,32 +55,6 @@ const Index = () => {
       
       {/* How It Works Section */}
       <HowItWorks />
-      
-      {/* Trust Banner - Scrolling format above calculator */}
-      <section className="py-6 px-4 bg-gray-50">
-        <div className="max-w-6xl mx-auto">
-          <TrustBanner 
-            title="Why Customers Trust Us" 
-            forceScrolling={true} 
-            badgeSize="compact"
-            className="bg-white rounded-lg shadow-sm"
-          />
-        </div>
-      </section>
- 
-
-      {/* Quiz Section */}
-      <section className="py-16 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4">Not Sure What Material You Need?</h2>
-          <p className="text-lg text-gray-600 mb-8">
-            Step through our project planner and get FREE personalized recommendations for your project.
-          </p>
-          <Link to="/product-calculator">
-            <Button size="lg">Build a Project Plan</Button>
-          </Link>
-        </div>
-      </section>
 
       {/* Trust Signals */}
       <section className="py-16 px-4">
