@@ -7,7 +7,8 @@ import type { User } from '@supabase/supabase-js';
 const ADMIN_EMAILS = [
   'admin@mygravelguy.com',
   'manager@mygravelguy.com',
-  'adam@easternbuilding.supply'
+  'adam@easternbuilding.supply',
+  'techminded.xyz@gmail.com'
   // Add more admin emails as needed
 ];
 
