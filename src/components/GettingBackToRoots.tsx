@@ -1,10 +1,7 @@
-
 import React from 'react';
 import { Sprout, Mountain, Hammer } from 'lucide-react';
-
 const GettingBackToRoots = () => {
-  return (
-    <section className="py-20 px-4 bg-gradient-to-br from-green-50 via-gray-50 to-stone-50 relative overflow-hidden">
+  return <section className="py-20 px-4 bg-gradient-to-br from-green-50 via-gray-50 to-stone-50 relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-10 left-10 w-32 h-32 rounded-full bg-primary/20"></div>
@@ -68,13 +65,11 @@ const GettingBackToRoots = () => {
 
         {/* Bottom accent */}
         <div className="text-center mt-8">
-          <div className="inline-block px-6 py-3 bg-primary/5 rounded-full border border-primary/20">
-            <span className="text-primary font-medium">One load at a time</span>
+          <div className="inline-block px-6 py-3 rounded-full border border-primary/20 bg-gray-900">
+            <span className="text-primary font-bold">One delivery at a time</span>
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default GettingBackToRoots;
