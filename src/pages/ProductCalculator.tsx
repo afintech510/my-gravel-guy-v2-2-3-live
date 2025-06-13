@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ProductFilterSelector from '@/components/product-calculator/ProductFilterSelector';
 import ProductDetails from '@/components/product-calculator/ProductDetails';
@@ -14,10 +15,6 @@ import { calculateFinalPrice, getPriceAdjustmentForZipCode } from '@/services/pr
 import { useToast } from '@/components/ui/use-toast';
 import { getProducts } from '@/services/productService';
 
-// Helper function to enforce minimum quantity for pricing
-const getEffectivePricingQuantity = (calculatedTons: number): number => {
-  return Math.max(3, calculatedTons);
-};
 export default function ProductCalculator() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [areas, setAreas] = useState<Array<{
@@ -67,30 +64,15 @@ export default function ProductCalculator() {
     const updatePriceDetails = async () => {
       if (selectedProduct && calculationResult.totalTons > 0) {
         try {
-          // Enforce minimum 3-ton quantity for pricing calculations
-          const effectiveTons = getEffectivePricingQuantity(calculationResult.totalTons);
-          console.log(`ProductCalculator: Calculating exponential price for product ${selectedProduct.name} (ID: ${selectedProduct.id})`);
-          console.log(`ProductCalculator: Calculated tons: ${calculationResult.totalTons}, Effective pricing tons: ${effectiveTons}`);
+          // Use actual calculated tons for pricing (no minimum enforcement)
+          console.log(`ProductCalculator: Calculating price for product ${selectedProduct.name} (ID: ${selectedProduct.id})`);
+          console.log(`ProductCalculator: Using actual calculated tons: ${calculationResult.totalTons}`);
 
-          // Calculate price using exponential pricing
-          const pricing = await calculateFinalPrice(selectedProduct, effectiveTons,
-          // Use effective tons for pricing
-          zipCode || undefined);
+          // Calculate price using actual tons
+          const pricing = await calculateFinalPrice(selectedProduct, calculationResult.totalTons, zipCode || undefined);
           setPriceDetails(pricing);
-          console.log('ProductCalculator: Exponential price calculation:', pricing);
+          console.log('ProductCalculator: Price calculation:', pricing);
 
-          /*
-          // Show volume pricing notification
-          if (pricing.multiplier !== 1) {
-            const changePercent = Math.abs((pricing.multiplier - 1) * 100).toFixed(0);
-            const direction = pricing.multiplier > 1 ? 'increase' : 'decrease';
-            toast({
-              title: `Volume pricing applied`,
-              description: `${effectiveTons.toFixed(1)} tons qualifies for a ${changePercent}% price ${direction}.`,
-              duration: 3000
-            });  
-          }
-          */
         } catch (error) {
           console.error('ProductCalculator: Error calculating price details:', error);
           // Fallback to base price if calculation fails
@@ -108,6 +90,7 @@ export default function ProductCalculator() {
     };
     updatePriceDetails();
   }, [selectedProduct, zipCode, calculationResult.totalTons, toast]);
+
   return <div className="container mx-auto px-4 py-8">
       <Helmet>
         <title>Material Calculator | Find the Right Amount for Your Project</title>
