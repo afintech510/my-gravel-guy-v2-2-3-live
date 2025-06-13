@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,10 +21,21 @@ const Reviews = () => {
   const [importing, setImporting] = useState(false);
   const { toast } = useToast();
   
+  // Debug logging
+  console.log('Reviews page render:', {
+    loading,
+    reviews: reviews.length,
+    total,
+    currentFilter,
+    averageRating
+  });
+  
   useEffect(() => {
     const loadInitialData = async () => {
+      console.log('Loading initial data...');
       setLoading(true);
       const { reviews: initialReviews, total: totalReviews } = await fetchReviews('all', 1, 10);
+      console.log('Initial data loaded:', { reviews: initialReviews.length, total: totalReviews });
       setReviews(initialReviews);
       setTotal(totalReviews);
       
@@ -48,6 +60,7 @@ const Reviews = () => {
   }, []);
   
   const handleFilterChange = (filter: ReviewFilter) => {
+    console.log('Filter change requested:', filter);
     setCurrentFilter(filter);
   };
   
@@ -203,12 +216,30 @@ const Reviews = () => {
                 <TabsTrigger value="1star">1 Star</TabsTrigger>
               </TabsList>
               
-              <TabsContent value={currentFilter}>
+              <TabsContent value="all">
                 <ReviewList 
-                  filter={currentFilter}
+                  filter="all"
                   initialReviews={currentFilter === 'all' ? reviews : undefined}
                   totalInitial={currentFilter === 'all' ? total : undefined}
                 />
+              </TabsContent>
+              <TabsContent value="verified">
+                <ReviewList filter="verified" />
+              </TabsContent>
+              <TabsContent value="5star">
+                <ReviewList filter="5star" />
+              </TabsContent>
+              <TabsContent value="4star">
+                <ReviewList filter="4star" />
+              </TabsContent>
+              <TabsContent value="3star">
+                <ReviewList filter="3star" />
+              </TabsContent>
+              <TabsContent value="2star">
+                <ReviewList filter="2star" />
+              </TabsContent>
+              <TabsContent value="1star">
+                <ReviewList filter="1star" />
               </TabsContent>
             </Tabs>
           </div>
