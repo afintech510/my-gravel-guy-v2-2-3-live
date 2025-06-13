@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import ZipCodeSearch from '../components/zip-code/ZipCodeSearch';
@@ -9,19 +10,23 @@ import { Button } from '@/components/ui/button';
 import { useZipCode } from '../contexts/ZipCodeContext';
 import TrustBanner from '../components/products/trust/TrustBanner';
 import GettingBackToRoots from '../components/GettingBackToRoots';
+import FAQModule from '../components/home/FAQModule';
 import { Store, Calculator, DollarSign } from 'lucide-react';
+
 const Index = () => {
-  const {
-    zipCode
-  } = useZipCode();
-  return <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      
+  const { zipCode } = useZipCode();
+  
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       {/* Hero Section */}
       <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">America’s First AI-Powered
-Gravel Network</h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">Connecting customers with trusted local suppliers in seconds—not days.</p>
+          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+            America's First AI-Powered Gravel Network
+          </h1>
+          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            Connecting customers with trusted local suppliers in seconds—not days.
+          </p>
           <div className="flex flex-col md:flex-row items-center justify-center gap-4">
             <Link to="/shop">
               <Button variant="outline" size="lg" className="bg-white hover:bg-primary hover:text-primary-foreground">
@@ -75,7 +80,10 @@ Gravel Network</h1>
       {/* Getting Back to Our Roots - New content section */}
       <GettingBackToRoots />
 
-      
-    </div>;
+      {/* FAQ Module */}
+      <FAQModule />
+    </div>
+  );
 };
+
 export default Index;
