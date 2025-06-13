@@ -15,7 +15,7 @@ const GettingBackToRoots = () => {
       <div className="max-w-5xl mx-auto relative">
         {/* Header with icon */}
         <div className="text-center mb-12"> 
-          <h2 className="text-4xl md:text-5xl font-bold mb-10 bg-gradient-to-r from-gray-900 via-stone-800 to-gray-700 bg-clip-text text-transparent leading-tight">
+          <h2 className="text-4xl md:text-5xl font-bold mb-10 bg-gradient-to-r from-gray-900 via-stone-800 to-gray-700 bg-clip-text text-transparent leading-normal py-2">
             🌱 Getting Back to Our Roots
           </h2>
           <div className="text-2xl md:text-3xl font-semibold text-stone-600 mb-8 leading-relaxed">
