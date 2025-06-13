@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,12 +14,10 @@ import { getPriceAdjustmentForZipCode } from '@/services/products/pricingUtils';
 import { calculateProductExponentialPrice } from '@/services/products/exponentialPricing';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
-
 interface ProductPricing {
   productId: string;
   zipAdjustment: number;
 }
-
 const ShoppingModule = () => {
   const isMobile = useIsMobile();
   const [selectedCategory, setSelectedCategory] = useState<string>('gravel');
@@ -43,16 +40,39 @@ const ShoppingModule = () => {
   const navigate = useNavigate();
 
   // Material categories with Lucide icons (matching ShopProductFilterSelector)
-  const categories = [
-    { id: 'all', label: 'All Products', icon: <Package className="h-5 w-5" /> },
-    { id: 'gravel', label: 'Gravel', icon: <Layers className="h-5 w-5" /> },
-    { id: 'rock', label: 'Rock & Stone', icon: <Mountain className="h-5 w-5" /> },
-    { id: 'crushed-gravel', label: 'Crushed Gravel', icon: <RockingChair className="h-5 w-5" /> },
-    { id: 'crushed-concrete', label: 'Crushed Concrete', icon: <Building2 className="h-5 w-5" /> },
-    { id: 'soil-dirt', label: 'Soil & Dirt', icon: <Shovel className="h-5 w-5" /> },
-    { id: 'sand', label: 'Sand', icon: <Waves className="h-5 w-5" /> },
-    { id: 'mulch', label: 'Mulch', icon: <Flower className="h-5 w-5" /> },
-  ];
+  const categories = [{
+    id: 'all',
+    label: 'All Products',
+    icon: <Package className="h-5 w-5" />
+  }, {
+    id: 'gravel',
+    label: 'Gravel',
+    icon: <Layers className="h-5 w-5" />
+  }, {
+    id: 'rock',
+    label: 'Rock & Stone',
+    icon: <Mountain className="h-5 w-5" />
+  }, {
+    id: 'crushed-gravel',
+    label: 'Crushed Gravel',
+    icon: <RockingChair className="h-5 w-5" />
+  }, {
+    id: 'crushed-concrete',
+    label: 'Crushed Concrete',
+    icon: <Building2 className="h-5 w-5" />
+  }, {
+    id: 'soil-dirt',
+    label: 'Soil & Dirt',
+    icon: <Shovel className="h-5 w-5" />
+  }, {
+    id: 'sand',
+    label: 'Sand',
+    icon: <Waves className="h-5 w-5" />
+  }, {
+    id: 'mulch',
+    label: 'Mulch',
+    icon: <Flower className="h-5 w-5" />
+  }];
 
   // Load products and initialize pricing data
   useEffect(() => {
@@ -96,7 +116,6 @@ const ShoppingModule = () => {
           zipAdjustment
         };
       });
-      
       setProductPricing(pricingLookup);
       console.log('Pricing data preloaded for', Object.keys(pricingLookup).length, 'products');
     } catch (error) {
@@ -138,33 +157,25 @@ const ShoppingModule = () => {
       const filtered = products.filter(product => {
         const productCategory = product.category?.toLowerCase() || '';
         console.log(`Checking product: ${product.name}, category: ${productCategory}`);
-        
         switch (selectedCategory) {
           case 'gravel':
             const isGravel = productCategory === 'gravel';
             if (isGravel) console.log(`Product ${product.name} included as gravel`);
             return isGravel;
-          
           case 'rock':
             const isRockOrStone = productCategory === 'rock' || productCategory === 'stone' || productCategory === 'rock-stone';
             if (isRockOrStone) console.log(`Product ${product.name} included as rock or stone`);
             return isRockOrStone;
-          
           case 'crushed-gravel':
             return productCategory === 'crushed-gravel' || productCategory.includes('crushed-gravel');
-          
           case 'crushed-concrete':
             return productCategory === 'crushed-concrete';
-          
           case 'soil-dirt':
             return productCategory === 'soil' || productCategory === 'dirt';
-          
           case 'sand':
             return productCategory === 'sand';
-          
           case 'mulch':
             return productCategory === 'mulch';
-          
           default:
             return false;
         }
@@ -177,15 +188,14 @@ const ShoppingModule = () => {
   const calculateFinalPrice = (product: Product, tons: number): number => {
     const productId = product.id.toString();
     const pricing = productPricing[productId];
-    
+
     // Calculate exponential price
     const exponentialResult = calculateProductExponentialPrice(product, tons);
-    
+
     // Apply ZIP code adjustment if available
     const zipAdjustment = pricing?.zipAdjustment || 1;
     const pricePerTon = exponentialResult.pricePerTon * zipAdjustment;
     const totalPrice = pricePerTon * tons;
-    
     return Math.round(totalPrice * 100) / 100;
   };
 
@@ -193,29 +203,30 @@ const ShoppingModule = () => {
   const calculatePricePerTon = (product: Product, tons: number): number => {
     const productId = product.id.toString();
     const pricing = productPricing[productId];
-    
+
     // Calculate exponential price
     const exponentialResult = calculateProductExponentialPrice(product, tons);
-    
+
     // Apply ZIP code adjustment if available
     const zipAdjustment = pricing?.zipAdjustment || 1;
     const pricePerTon = exponentialResult.pricePerTon * zipAdjustment;
-    
     return Math.round(pricePerTon * 100) / 100;
   };
-
   const updateQuantity = (productId: string, change: number) => {
     if (syncTons) {
       // Update master quantity and sync all products
       const newMasterQuantity = Math.max(3, masterQuantity + change);
       setMasterQuantity(newMasterQuantity);
-      
+
       // Update all product quantities to match master quantity
       const updatedQuantities: Record<string, number> = {};
       filteredProducts.forEach(product => {
         updatedQuantities[product.id.toString()] = newMasterQuantity;
       });
-      setQuantities(prev => ({ ...prev, ...updatedQuantities }));
+      setQuantities(prev => ({
+        ...prev,
+        ...updatedQuantities
+      }));
     } else {
       // Update individual product quantity
       setQuantities(prev => ({
@@ -224,7 +235,6 @@ const ShoppingModule = () => {
       }));
     }
   };
-
   const handleSyncToggle = (checked: boolean) => {
     setSyncTons(checked);
     if (checked) {
@@ -233,10 +243,12 @@ const ShoppingModule = () => {
       filteredProducts.forEach(product => {
         updatedQuantities[product.id.toString()] = masterQuantity;
       });
-      setQuantities(prev => ({ ...prev, ...updatedQuantities }));
+      setQuantities(prev => ({
+        ...prev,
+        ...updatedQuantities
+      }));
     }
   };
-
   const handleAddToCart = (product: Product) => {
     const quantity = quantities[product.id.toString()] || 5;
     addToCart({
@@ -247,11 +259,9 @@ const ShoppingModule = () => {
     // Navigate to cart page for delivery info completion
     navigate('/cart');
   };
-
   const getProductImage = (product: Product) => {
     return product.images?.[0] || product.image || '/lovable-uploads/85eef0fe-9a59-406e-ba6b-54e1aaf6f56b.png';
   };
-
   if (loading) {
     return <div className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
@@ -262,12 +272,11 @@ const ShoppingModule = () => {
         </div>
       </div>;
   }
-
   return <div className="py-8 md:py-16 px-4 bg-white">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-6 md:mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4">Shop Materials</h2>
-          <p className="text-gray-600">Select your material and add to cart for delivery</p>
+          <h2 className="text-2xl md:text-3xl font-bold mb-4 mx-[15px]">Quick Price Compare</h2>
+          
         </div>
 
         {/* Material Category Selector - Updated with Lucide icons and primary styling */}
@@ -275,23 +284,12 @@ const ShoppingModule = () => {
           <CardContent className="p-4 md:p-6">
             <h3 className="text-base md:text-lg font-semibold mb-4">FREE SHIPPING NATIONWIDE</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 md:gap-3">
-              {categories.map(category => (
-                <button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={cn(
-                    "flex items-center justify-center p-3 border rounded-md transition-colors",
-                    selectedCategory === category.id
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
-                  )}
-                >
+              {categories.map(category => <button key={category.id} onClick={() => setSelectedCategory(category.id)} className={cn("flex items-center justify-center p-3 border rounded-md transition-colors", selectedCategory === category.id ? "bg-primary text-primary-foreground border-primary" : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200")}>
                   {category.icon}
                   <span className={cn("ml-2", isMobile ? "text-xs" : "text-sm")}>
                     {category.label}
                   </span>
-                </button>
-              ))}
+                </button>)}
             </div>
           </CardContent>
         </Card>
@@ -302,15 +300,8 @@ const ShoppingModule = () => {
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-base md:text-lg font-semibold">Available Materials</h3>
               <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="sync-tons" 
-                  checked={syncTons}
-                  onCheckedChange={handleSyncToggle}
-                />
-                <label 
-                  htmlFor="sync-tons" 
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
+                <Checkbox id="sync-tons" checked={syncTons} onCheckedChange={handleSyncToggle} />
+                <label htmlFor="sync-tons" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                   Sync Tons
                 </label>
               </div>
@@ -365,9 +356,7 @@ const ShoppingModule = () => {
                         <div className="flex-1">
                           <h4 className="font-semibold">{product.name}</h4>
                           {product.size && <p className="text-sm text-gray-500">{product.size}</p>}
-                           {product.description && (
-                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">{product.description}</p>
-                          )}
+                           {product.description && <p className="text-sm text-gray-600 mt-1 line-clamp-2">{product.description}</p>}
                           <Link to={`/products/${product.slug}`} className="text-sm text-blue-600 hover:text-blue-800">
                             More Details...
                           </Link>
@@ -403,5 +392,4 @@ const ShoppingModule = () => {
       </div>
     </div>;
 };
-
 export default ShoppingModule;
