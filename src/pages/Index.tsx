@@ -9,6 +9,7 @@ import TestQueryButton from '../components/TestQueryButton';
 import { Button } from '@/components/ui/button';
 import { useZipCode } from '../contexts/ZipCodeContext';
 import TrustBanner from '../components/products/trust/TrustBanner';
+import GettingBackToRoots from '../components/GettingBackToRoots';
 import { Store, Calculator, DollarSign } from 'lucide-react';
 
 const Index = () => {
@@ -102,6 +103,8 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Getting Back to Our Roots - New content section */}
+      <GettingBackToRoots />
 
       
     </div>
