@@ -44,7 +44,8 @@ const Footer = () => {
     { label: 'Gravel Guy Calculator', href: '/product-calculator', icon: <Calculator className="h-4 w-4" /> },
     { label: 'Reviews', href: '/reviews', icon: <Star className="h-4 w-4" /> },
     { label: 'Request Quote', href: '/contact', icon: <Quote className="h-4 w-4" /> },
-    { label: 'Delivery Map', href: '/delivery-map', icon: <Map className="h-4 w-4" /> },
+    { label: 'Recent Deliveries', href: '/delivery-map', icon: <Map className="h-4 w-4" /> },
+    { label: 'Shop Bulk Materials', href: '/bulk-landscape-materials', icon: <ShoppingCart className="h-4 w-4" /> },
   ];
 
   return (
