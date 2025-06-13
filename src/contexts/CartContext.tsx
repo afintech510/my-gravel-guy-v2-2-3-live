@@ -4,7 +4,6 @@ import { useToast } from '@/hooks/use-toast';
 import { ToastAction } from '@/components/ui/toast';
 import { Undo } from 'lucide-react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { clearCheckoutData } from '../utils/localStorageUtils';
 
 export interface DeliveryAddress {
   street: string;
@@ -213,10 +212,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Modified to store the removed item and display toast with undo action
   const clearCart = useCallback(() => {
-    console.log('Clearing cart and all checkout data...');
     setItems([]);
     setLastRemovedItem(null);
-    clearCheckoutData(); // Clear all checkout-related localStorage data
   }, [setItems, setLastRemovedItem]);
 
   // Helper function to check if delivery info is complete for an item
@@ -248,7 +245,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       removeFromCart, 
       updateDeliveryDetails,
       updateQuantity,
-      updateItemPrice,
+      updateItemPrice, // Add the new function to context
       clearCart, 
       total,
       discountTotal,
