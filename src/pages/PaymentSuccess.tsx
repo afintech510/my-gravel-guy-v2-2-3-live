@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,10 +9,9 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   clearCheckoutData, 
   markOrderAsProcessed, 
-  isOrderProcessed,
-  getCheckoutBackup 
+  isOrderProcessed
 } from '../utils/localStorageUtils';
-import { getCheckoutBackup as getPaymentBackup } from '../utils/paymentUtils';
+import { getCheckoutBackup } from '../utils/paymentUtils';
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
@@ -43,7 +41,7 @@ const PaymentSuccess = () => {
         
         // If no order ID in URL, try to get it from backup data
         if (!orderIdToCheck) {
-          const backupData = getPaymentBackup();
+          const backupData = getCheckoutBackup();
           if (backupData?.orderId) {
             orderIdToCheck = backupData.orderId;
             console.log('Using order ID from backup:', orderIdToCheck);
@@ -69,7 +67,7 @@ const PaymentSuccess = () => {
           console.log('Verifying payment with backend...');
           
           // Get backup data for verification
-          const backupData = getPaymentBackup();
+          const backupData = getCheckoutBackup();
           
           // Call verify-payment function with skipDbInsert flag to prevent duplicate DB entries
           const { data: verificationResult, error: verifyError } = await supabase.functions.invoke('verify-payment', {
@@ -119,7 +117,7 @@ const PaymentSuccess = () => {
           
         } else {
           // No payment details found, but check for backup data
-          const backupData = getPaymentBackup();
+          const backupData = getCheckoutBackup();
           if (backupData?.orderId) {
             console.log('No payment verification needed, using backup data for display');
             
