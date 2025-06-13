@@ -102,159 +102,196 @@ export default function BulkProductCard({
   return (
     <Card 
       className={cn(
-        "h-fit transition-all duration-200 cursor-pointer",
-        isSelected ? "shadow-lg ring-2 ring-primary" : "hover:shadow-md"
+        "transition-all duration-200 cursor-pointer",
+        isSelected ? "shadow-lg ring-2 ring-primary" : "hover:shadow-md",
+        // Fixed height for collapsed cards
+        !isSelected && "h-80"
       )}
       onClick={handleCardClick}
     >
-      <CardContent className="p-4">
-        {/* Product Image and Basic Info */}
-        <div className="flex flex-col gap-4 mb-4">
-          {/* Larger Product Image */}
-          {product.image && (
-            <div className="w-full aspect-square bg-gray-100 rounded-lg flex-shrink-0">
-              <img 
-                src={product.image} 
-                alt={product.name} 
-                className="w-full h-full object-cover rounded-lg"
-              />
-            </div>
-          )}
-          
-          <div className="flex-1">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                {/* Product name */}
-                <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-gray-100">
-                  {product.name}
-                </h3>
-                {/* Starting price */}
-                <p className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-                  Starting at ${(displayStartingPrice * 3).toFixed(0)} for 3 tons delivered
-                </p>
+      <CardContent className="p-4 h-full flex flex-col">
+        {/* Collapsed View Content */}
+        {!isSelected && (
+          <>
+            {/* Product Image - Fixed aspect ratio */}
+            {product.image && (
+              <div className="w-full aspect-square bg-gray-100 rounded-lg mb-4 overflow-hidden flex-shrink-0">
+                <img 
+                  src={product.image} 
+                  alt={product.name} 
+                  className="w-full h-full object-cover"
+                />
               </div>
-              {/* Expand/Collapse Indicator */}
-              <div className="flex items-center ml-2 text-gray-600 dark:text-gray-400">
-                {isSelected ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
+            )}
+            
+            {/* Product Info - Pinned to bottom */}
+            <div className="flex-1 flex flex-col justify-end">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  {/* Product name */}
+                  <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-gray-100 line-clamp-2">
+                    {product.name}
+                  </h3>
+                  {/* Starting price */}
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Starting at ${(displayStartingPrice * 3).toFixed(0)} for 3 tons delivered
+                  </p>
+                </div>
+                {/* Expand Indicator */}
+                <div className="flex items-center ml-2 text-gray-600 dark:text-gray-400 flex-shrink-0">
                   <ChevronDown className="h-4 w-4" />
-                )}
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </>
+        )}
 
-        {/* Expanded Content */}
+        {/* Expanded View Content */}
         {isSelected && (
-          <div className="space-y-4 border-t pt-4 mt-4" onClick={(e) => e.stopPropagation()}>
-            {/* Product Description in expanded view only */}
-            <div className="text-sm text-gray-700 dark:text-gray-300">
-              {product.description}
-              <Link 
-                to={`/products/${product.slug}`}
-                className="ml-1 inline-flex items-center text-primary hover:underline"
-                onClick={(e) => e.stopPropagation()}
-              >
-                More Details...
-              </Link>
-            </div>
-
-            {/* Quantity Selector with Total Price */}
-            <div className="flex items-start justify-between">
-              <div>
-                <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-                  Quantity
-                </label>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleQuantityChange(-1)}
-                    disabled={quantity <= 3}
-                  >
-                    -
-                  </Button>
-                  <div className="px-4 py-2 border rounded text-center min-w-[80px]">
-                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{quantity} tons</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">≡ {cubicYards.toFixed(1)} cu. yds.</div>
+          <>
+            {/* Product Image and Basic Info */}
+            <div className="flex flex-col gap-4 mb-4">
+              {/* Larger Product Image */}
+              {product.image && (
+                <div className="w-full aspect-square bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
+                  <img 
+                    src={product.image} 
+                    alt={product.name} 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              
+              <div className="flex-1">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    {/* Product name */}
+                    <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-gray-100">
+                      {product.name}
+                    </h3>
+                    {/* Starting price */}
+                    <p className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                      Starting at ${(displayStartingPrice * 3).toFixed(0)} for 3 tons delivered
+                    </p>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleQuantityChange(1)}
-                  >
-                    +
-                  </Button>
-                </div> 
-              </div>
-
-              {/* Total Price and Free Delivery */}
-              <div className="text-right">
-                <div className="mb-1">
-                  <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                    ${(displayPrice * quantity).toFixed(2)}
-                  </span>
-                  <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">Total</span>
-                </div>
-                <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">
-                  FREE Delivery
+                  {/* Collapse Indicator */}
+                  <div className="flex items-center ml-2 text-gray-600 dark:text-gray-400">
+                    <ChevronUp className="h-4 w-4" />
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Product Specifications */}
-            {product.specifications && (
-              <div>
-                <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Specifications</h4>
-                <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                  {product.specifications.size && (
-                    <p>Size: {product.specifications.size}</p>
-                  )}
-                  {product.specifications.color && (
-                    <p>Color: {product.specifications.color}</p>
-                  )}
-                  {product.specifications.coverage && (
-                    <p>Coverage: {product.specifications.coverage}</p>
-                  )}
+            {/* Expanded Content */}
+            <div className="space-y-4 border-t pt-4 mt-4" onClick={(e) => e.stopPropagation()}>
+              {/* Product Description in expanded view only */}
+              <div className="text-sm text-gray-700 dark:text-gray-300">
+                {product.description}
+                <Link 
+                  to={`/products/${product.slug}`}
+                  className="ml-1 inline-flex items-center text-primary hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  More Details...
+                </Link>
+              </div>
+
+              {/* Quantity Selector with Total Price */}
+              <div className="flex items-start justify-between">
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                    Quantity
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleQuantityChange(-1)}
+                      disabled={quantity <= 3}
+                    >
+                      -
+                    </Button>
+                    <div className="px-4 py-2 border rounded text-center min-w-[80px]">
+                      <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{quantity} tons</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">≡ {cubicYards.toFixed(1)} cu. yds.</div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleQuantityChange(1)}
+                    >
+                      +
+                    </Button>
+                  </div> 
+                </div>
+
+                {/* Total Price and Free Delivery */}
+                <div className="text-right">
+                  <div className="mb-1">
+                    <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                      ${(displayPrice * quantity).toFixed(2)}
+                    </span>
+                    <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">Total</span>
+                  </div>
+                  <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">
+                    FREE Delivery
+                  </div>
                 </div>
               </div>
-            )}
 
-            {/* Uses */}
-            {product.uses && product.uses.length > 0 && (
-              <div>
-                <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Common Uses</h4>
-                <div className="flex flex-wrap gap-1">
-                  {product.uses.slice(0, 3).map((use, index) => (
-                    <Badge key={index} variant="outline" className="text-xs">
-                      {use}
-                    </Badge>
-                  ))}
+              {/* Product Specifications */}
+              {product.specifications && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Specifications</h4>
+                  <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                    {product.specifications.size && (
+                      <p>Size: {product.specifications.size}</p>
+                    )}
+                    {product.specifications.color && (
+                      <p>Color: {product.specifications.color}</p>
+                    )}
+                    {product.specifications.coverage && (
+                      <p>Coverage: {product.specifications.coverage}</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Action Buttons */}
-            <div className="flex gap-2 pt-2">
-              <Button
-                onClick={handleAddToCart}
-                className="flex-1"
-                size="sm"
-              >
-                <ShoppingCart className="mr-2 h-4 w-4" />
-                Add to Cart
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleViewDetails}
-                size="sm"
-                className="flex-shrink-0"
-              >
-                <ExternalLink className="h-4 w-4" />
-              </Button>
+              {/* Uses */}
+              {product.uses && product.uses.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Common Uses</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {product.uses.slice(0, 3).map((use, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {use}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 pt-2">
+                <Button
+                  onClick={handleAddToCart}
+                  className="flex-1"
+                  size="sm"
+                >
+                  <ShoppingCart className="mr-2 h-4 w-4" />
+                  Add to Cart
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleViewDetails}
+                  size="sm"
+                  className="flex-shrink-0"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-          </div>
+          </>
         )}
       </CardContent>
     </Card>
