@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -6,24 +5,25 @@ import { Trash2, CalendarIcon, InfoIcon, Plus, Minus, MapPinIcon, PhoneIcon, Mai
 import { CartItem } from '../../contexts/CartContext';
 import { useCart } from '../../contexts/CartContext';
 import DeliveryForm from './DeliveryForm';
-
 interface CartItemCardProps {
   item: CartItem;
   onRemove: (productId: string | number) => void;
   onUpdateDelivery: (productId: string | number, details: Partial<CartItem>) => void;
   autoExpandDelivery?: boolean;
 }
-
-const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = false }: CartItemCardProps) => {
+const CartItemCard = ({
+  item,
+  onRemove,
+  onUpdateDelivery,
+  autoExpandDelivery = false
+}: CartItemCardProps) => {
   const [isDeliveryFormOpen, setIsDeliveryFormOpen] = useState(false);
-  const { updateQuantity } = useCart();
-  
+  const {
+    updateQuantity
+  } = useCart();
+
   // Check if delivery info is complete
-  const isDeliveryComplete = item.deliveryDate && 
-                           item.deliveryAddress?.street && 
-                           item.contactInfo?.name && 
-                           item.contactInfo?.phone && 
-                           item.contactInfo?.email;
+  const isDeliveryComplete = item.deliveryDate && item.deliveryAddress?.street && item.contactInfo?.name && item.contactInfo?.phone && item.contactInfo?.email;
 
   // Auto-expand only if delivery info is incomplete AND autoExpandDelivery is true
   // Once delivery info is complete, don't auto-expand even if autoExpandDelivery is true
@@ -32,14 +32,14 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
       setIsDeliveryFormOpen(true);
     }
   }, [autoExpandDelivery, isDeliveryComplete]);
-  
+
   // Format date to display in a readable format
   const formatDate = (date?: Date) => {
     if (!date) return 'Not selected';
     return new Date(date).toLocaleDateString('en-US', {
       weekday: 'long',
       month: 'short',
-      day: 'numeric',
+      day: 'numeric'
     });
   };
 
@@ -49,42 +49,34 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
 
   // Calculate and display yards if available
   const yards = item.tons / (item.tonYardRatio ? parseFloat(String(item.tonYardRatio)) : 1.5);
-  
+
   // Determine what material details to show
   const showMaterialInfo = () => {
     let infoText = [];
-    
+
     // Add category and subcategory if available
     if (item.materialCategory) {
       infoText.push(`${item.materialCategory.charAt(0).toUpperCase() + item.materialCategory.slice(1)}`);
     }
-    
     if (item.materialSubcategory) {
       // Convert kebab-case to Title Case
-      const formattedSubcategory = item.materialSubcategory
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
+      const formattedSubcategory = item.materialSubcategory.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
       infoText.push(formattedSubcategory);
     }
-    
+
     // Add size information if available
     if (item.size || item.specifications?.size) {
       const sizeInfo = item.size || item.specifications?.size;
       infoText.push(`Size: ${sizeInfo}`);
     }
-    
     if (item.materialSize) {
       infoText.push(`Size: ${item.materialSize}`);
     }
-    
     if (item.depth) {
       infoText.push(`Depth: ${item.depth} inches`);
     }
-    
     return infoText.length > 0 ? infoText.join(' • ') : null;
   };
-
   const materialDetails = showMaterialInfo();
 
   // Handle quantity changes
@@ -107,10 +99,8 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
         return 'Not specified';
     }
   };
-
-  return (
-    <Card className="overflow-hidden border rounded-lg">
-      <div className="p-4 sm:p-6">
+  return <Card className="overflow-hidden border rounded-lg">
+      <div className="p-4 sm:p-6 rounded-none">
         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4">
           {/* Product Info */}
           <div className="space-y-2">
@@ -118,19 +108,15 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
               <h3 className="font-semibold text-lg">{item.name}</h3>
             </div>
             
-            {materialDetails && (
-              <p className="text-sm text-muted-foreground">{materialDetails}</p>
-            )}
+            {materialDetails && <p className="text-sm text-muted-foreground">{materialDetails}</p>}
             
             <div className="flex flex-wrap gap-4 text-sm">
               <div>
                 <span className="text-muted-foreground">Quantity: </span>
                 <span className="font-medium">{item.tons} tons</span>
-                {yards > 0 && (
-                  <span className="text-muted-foreground ml-1">
+                {yards > 0 && <span className="text-muted-foreground ml-1">
                     ({yards.toFixed(1)} cu. yds.)
-                  </span>
-                )}
+                  </span>}
               </div>
               
               <div>
@@ -141,25 +127,20 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
             
             {/* Display delivery status and date */}
             <div className="flex items-center gap-2 text-sm">
-              {isDeliveryComplete ? (
-                <div className="flex items-center text-green-600">
+              {isDeliveryComplete ? <div className="flex items-center text-green-600">
                   <CalendarIcon className="h-4 w-4 mr-1" />
                   <span>Delivery: {formatDate(item.deliveryDate)}</span>
                   <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
                     Confirmed
                   </span>
-                </div>
-              ) : (
-                <div className="flex items-center text-amber-600">
+                </div> : <div className="flex items-center text-amber-600">
                   <InfoIcon className="h-4 w-4 mr-1" />
                   <span>Delivery info required</span>
-                </div>
-              )}
+                </div>}
             </div>
 
             {/* Show saved delivery information when complete */}
-            {isDeliveryComplete && (
-              <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2 text-sm">
+            {isDeliveryComplete && <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2 text-sm">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {/* Contact Information */}
                   <div className="space-y-2">
@@ -191,24 +172,17 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
                 </div>
 
                 {/* Optional delivery preferences */}
-                {(item.deliveryTimePreference || item.deliveryInstructions) && (
-                  <div className="pt-2 border-t border-gray-200 space-y-2">
-                    {item.deliveryTimePreference && (
-                      <div className="flex items-center gap-2 text-gray-600">
+                {(item.deliveryTimePreference || item.deliveryInstructions) && <div className="pt-2 border-t border-gray-200 space-y-2">
+                    {item.deliveryTimePreference && <div className="flex items-center gap-2 text-gray-600">
                         <ClockIcon className="h-3 w-3" />
                         <span>Preferred time: {formatDeliveryTimePreference(item.deliveryTimePreference)}</span>
-                      </div>
-                    )}
-                    {item.deliveryInstructions && (
-                      <div className="flex items-start gap-2 text-gray-600">
+                      </div>}
+                    {item.deliveryInstructions && <div className="flex items-start gap-2 text-gray-600">
                         <FileTextIcon className="h-3 w-3 mt-0.5 flex-shrink-0" />
                         <span>{item.deliveryInstructions}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+                      </div>}
+                  </div>}
+              </div>}
           </div>
 
           {/* Price and Quantity Controls */}
@@ -217,30 +191,18 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
             <div className="flex items-center gap-3">
               {/* Quantity adjustment buttons */}
               <div className="flex items-center bg-gray-100 rounded-lg p-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleQuantityChange(item.tons - 1)}
-                  disabled={item.tons <= 1}
-                  className="h-8 w-8 p-0 hover:bg-gray-200"
-                >
+                <Button variant="ghost" size="sm" onClick={() => handleQuantityChange(item.tons - 1)} disabled={item.tons <= 1} className="h-8 w-8 p-0 hover:bg-gray-200">
                   <Minus className="h-4 w-4" />
                 </Button>
                 <span className="mx-3 text-sm font-medium">{item.tons}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleQuantityChange(item.tons + 1)}
-                  className="h-8 w-8 p-0 hover:bg-gray-200"
-                >
+                <Button variant="ghost" size="sm" onClick={() => handleQuantityChange(item.tons + 1)} className="h-8 w-8 p-0 hover:bg-gray-200">
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
 
               {/* Price display */}
               <div className="text-right">
-                {item.couponApplied && item.couponAmount && (
-                  <>
+                {item.couponApplied && item.couponAmount && <>
                     <div className="text-sm text-muted-foreground line-through">
                       ${itemTotal.toFixed(2)}
                     </div>
@@ -248,8 +210,7 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
                       <InfoIcon className="h-3 w-3" />
                       <span>${item.couponAmount.toFixed(2)} discount applied</span>
                     </div>
-                  </>
-                )}
+                  </>}
                 <div className="text-lg font-bold">
                   ${discountedTotal.toFixed(2)}
                 </div>
@@ -257,65 +218,46 @@ const CartItemCard = ({ item, onRemove, onUpdateDelivery, autoExpandDelivery = f
             </div>
 
             {/* Edit delivery info button - only show if delivery is complete */}
-            {isDeliveryComplete && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsDeliveryFormOpen(!isDeliveryFormOpen)}
-                className="mt-2"
-              >
+            {isDeliveryComplete && <Button variant="outline" size="sm" onClick={() => setIsDeliveryFormOpen(!isDeliveryFormOpen)} className="mt-2">
                 {isDeliveryFormOpen ? 'Hide Form' : 'Edit Delivery Info'}
-              </Button>
-            )}
+              </Button>}
           </div>
         </div>
         
         {/* Enhanced Delivery Form - only show if incomplete or being edited */}
-        {(!isDeliveryComplete || isDeliveryFormOpen) && (
-          <div className="mt-4 pt-4 border-t">
-            <DeliveryForm
-              item={item}
-              onSubmit={(details) => {
-                onUpdateDelivery(item.id, {
-                  deliveryDate: details.deliveryDate,
-                  deliveryAddress: {
-                    street: details.street,
-                    city: details.city,
-                    state: details.state,
-                    zip: details.zip
-                  },
-                  contactInfo: {
-                    name: details.name,
-                    email: details.email,
-                    phone: details.phone,
-                    zipCode: details.zip
-                  },
-                  deliveryTimePreference: details.deliveryTimePreference,
-                  deliveryInstructions: details.deliveryInstructions,
-                  locationPhotoUrl: details.locationPhotoUrl
-                });
-                // Close form after saving
-                setIsDeliveryFormOpen(false);
-              }}
-            />
-          </div>
-        )}
+        {(!isDeliveryComplete || isDeliveryFormOpen) && <div className="mt-4 pt-4 border-t">
+            <DeliveryForm item={item} onSubmit={details => {
+          onUpdateDelivery(item.id, {
+            deliveryDate: details.deliveryDate,
+            deliveryAddress: {
+              street: details.street,
+              city: details.city,
+              state: details.state,
+              zip: details.zip
+            },
+            contactInfo: {
+              name: details.name,
+              email: details.email,
+              phone: details.phone,
+              zipCode: details.zip
+            },
+            deliveryTimePreference: details.deliveryTimePreference,
+            deliveryInstructions: details.deliveryInstructions,
+            locationPhotoUrl: details.locationPhotoUrl
+          });
+          // Close form after saving
+          setIsDeliveryFormOpen(false);
+        }} />
+          </div>}
 
         {/* Remove button - moved to bottom center */}
         <div className="flex justify-center mt-4 pt-4 border-t">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="text-red-500 hover:text-red-700 hover:bg-red-50" 
-            onClick={() => onRemove(item.id)}
-          >
+          <Button variant="outline" size="sm" className="text-red-500 hover:text-red-700 hover:bg-red-50" onClick={() => onRemove(item.id)}>
             <Trash2 className="h-4 w-4 mr-2" />
             Remove Item
           </Button>
         </div>
       </div>
-    </Card>
-  );
+    </Card>;
 };
-
 export default CartItemCard;

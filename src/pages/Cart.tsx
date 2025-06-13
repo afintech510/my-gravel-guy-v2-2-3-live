@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
@@ -9,26 +8,26 @@ import CouponCode from '../components/cart/CouponCode';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
 const Cart = () => {
-  const { items, total, discountTotal, removeFromCart, updateDeliveryDetails } = useCart();
+  const {
+    items,
+    total,
+    discountTotal,
+    removeFromCart,
+    updateDeliveryDetails
+  } = useCart();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
-  
+
   // Check if any discounts have been applied
   const hasDiscounts = total !== discountTotal;
   const totalDiscount = total - discountTotal;
 
   // Check if all items have complete delivery info
-  const allItemsComplete = items.every(item => 
-    item.deliveryDate && 
-    item.deliveryAddress?.street && 
-    item.contactInfo?.name && 
-    item.contactInfo?.phone && 
-    item.contactInfo?.email
-  );
-
+  const allItemsComplete = items.every(item => item.deliveryDate && item.deliveryAddress?.street && item.contactInfo?.name && item.contactInfo?.phone && item.contactInfo?.email);
   useEffect(() => {
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
@@ -47,19 +46,11 @@ const Cart = () => {
 
     // Check if this update makes all items complete
     // We need to simulate the updated state since React state updates are async
-    const updatedItems = items.map(item => 
-      item.id === productId 
-        ? { ...item, ...details }
-        : item
-    );
-    
-    const allWillBeComplete = updatedItems.every(item => 
-      item.deliveryDate && 
-      item.deliveryAddress?.street && 
-      item.contactInfo?.name && 
-      item.contactInfo?.phone && 
-      item.contactInfo?.email
-    );
+    const updatedItems = items.map(item => item.id === productId ? {
+      ...item,
+      ...details
+    } : item);
+    const allWillBeComplete = updatedItems.every(item => item.deliveryDate && item.deliveryAddress?.street && item.contactInfo?.name && item.contactInfo?.phone && item.contactInfo?.email);
 
     // Auto-navigate to checkout if all items are now complete
     if (allWillBeComplete) {
@@ -74,19 +65,16 @@ const Cart = () => {
     try {
       console.log('=== CART CONFIRMATION EMAIL DEBUG ===');
       console.log('Sending cart confirmation email...');
-      
+
       // Get the email from the first item's contact info (from the form)
       const customerEmail = items[0]?.contactInfo?.email;
       const customerName = items[0]?.contactInfo?.name || 'Cart Customer';
-      
       console.log('Cart confirmation customer email from form:', customerEmail);
       console.log('Cart confirmation customer name from form:', customerName);
-      
       if (!customerEmail) {
         console.error('No customer email found in cart form data');
         return;
       }
-      
       const orderData = {
         order_id: `CART-${Date.now()}`,
         items: items.map(item => ({
@@ -104,10 +92,11 @@ const Cart = () => {
         customer_email: customerEmail,
         customer_name: customerName
       };
-
       console.log('Cart confirmation order data:', orderData);
-
-      const { data, error } = await supabase.functions.invoke('send-email', {
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('send-email', {
         body: {
           to: 'order.support@mygravelguy.com',
           subject: 'Confirmed in Cart - Cart Information Completed',
@@ -116,7 +105,6 @@ const Cart = () => {
           orderData
         }
       });
-
       if (error) {
         console.error('Cart confirmation email error:', error);
       } else {
@@ -178,18 +166,13 @@ const Cart = () => {
                   <div style="background: #f0f9ff; padding: 15px; border-radius: 6px; margin: 10px 0;">
                     <h5 style="margin-top: 0; color: #1e40af;">Delivery Schedule:</h5>
                     <p><strong>Date:</strong> ${new Date(item.delivery_date).toLocaleDateString('en-US', {
-                      weekday: 'long',
-                      month: 'short', 
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}</p>
+      weekday: 'long',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    })}</p>
                     ${item.delivery_time_preference ? `
-                      <p><strong>Time Preference:</strong> ${
-                        item.delivery_time_preference === 'anytime' ? 'Anytime (7am-5pm)' :
-                        item.delivery_time_preference === 'morning' ? 'Morning (7am-12pm)' :
-                        item.delivery_time_preference === 'afternoon' ? 'Afternoon (12pm-5pm)' :
-                        'Not specified'
-                      }</p>
+                      <p><strong>Time Preference:</strong> ${item.delivery_time_preference === 'anytime' ? 'Anytime (7am-5pm)' : item.delivery_time_preference === 'morning' ? 'Morning (7am-12pm)' : item.delivery_time_preference === 'afternoon' ? 'Afternoon (12pm-5pm)' : 'Not specified'}</p>
                     ` : ''}
                   </div>
                 ` : ''}
@@ -216,16 +199,13 @@ const Cart = () => {
       </html>
     `;
   };
-
   const handleProceedToCheckout = async () => {
     if (!allItemsComplete) return;
-    
     setIsProcessingCheckout(true);
-    
     try {
       // Send cart confirmation email using form data
       await sendCartConfirmationEmail();
-      
+
       // Navigate to checkout
       navigate('/checkout');
     } catch (error) {
@@ -233,16 +213,14 @@ const Cart = () => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to process checkout. Please try again.",
+        description: "Failed to process checkout. Please try again."
       });
     } finally {
       setIsProcessingCheckout(false);
     }
   };
-
   if (items.length === 0) {
-    return (
-      <div className="py-16 px-4 max-w-6xl mx-auto">
+    return <div className="py-16 px-4 max-w-6xl mx-auto">
         <div className="text-center space-y-6 py-12">
           <div className="bg-gray-100 p-6 rounded-full w-20 h-20 mx-auto flex items-center justify-center">
             <ShoppingCart className="w-10 h-10 text-gray-500" />
@@ -256,28 +234,18 @@ const Cart = () => {
             Browse Products
           </Button>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="py-8 px-4 max-w-6xl mx-auto">
+  return <div className="py-8 px-4 max-w-6xl mx-auto">
       {/* Add the pricing updater component */}
       <CartPricingUpdater />
       
-      <h1 className="text-3xl font-bold mb-8">Your Cart</h1>
+      <h1 className="text-3xl font-bold mb-8">Confirm Delivery Details</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
-          {items.map((item, index) => (
-            <CartItemCard
-              key={`${item.id}-${index}`}
-              item={item}
-              onRemove={removeFromCart}
-              onUpdateDelivery={handleDeliveryUpdate}
-              autoExpandDelivery={true} // Auto-expand for better UX
-            />
-          ))}
+          {items.map((item, index) => <CartItemCard key={`${item.id}-${index}`} item={item} onRemove={removeFromCart} onUpdateDelivery={handleDeliveryUpdate} autoExpandDelivery={true} // Auto-expand for better UX
+        />)}
         </div>
         
         <div className="lg:col-span-1">
@@ -292,12 +260,10 @@ const Cart = () => {
               </div>
               
               {/* Show discount if applied */}
-              {hasDiscounts && (
-                <div className="flex justify-between text-sm text-green-600">
+              {hasDiscounts && <div className="flex justify-between text-sm text-green-600">
                   <span>Discount</span>
                   <span>-${totalDiscount.toFixed(2)}</span>
-                </div>
-              )}
+                </div>}
               
               <div className="flex justify-between text-sm">
                 <span>Delivery</span>
@@ -316,32 +282,22 @@ const Cart = () => {
             </div>
 
             {/* Delivery completion status */}
-            {!allItemsComplete && (
-              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+            {!allItemsComplete && <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
                 <p className="text-sm text-amber-800">
                   Complete delivery information for all items to proceed automatically to checkout.
                 </p>
-              </div>
-            )}
+              </div>}
             
-            <Button 
-              onClick={handleProceedToCheckout}
-              disabled={!allItemsComplete || isProcessingCheckout}
-              className="w-full h-auto py-3 px-4 text-sm leading-tight"
-            >
-              {isProcessingCheckout ? (
-                <>
+            <Button onClick={handleProceedToCheckout} disabled={!allItemsComplete || isProcessingCheckout} className="w-full h-auto py-3 px-4 text-sm leading-tight">
+              {isProcessingCheckout ? <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin flex-shrink-0" />
                   <span className="text-center">Processing...</span>
-                </>
-              ) : (
-                <div className="flex items-center justify-center w-full">
+                </> : <div className="flex items-center justify-center w-full">
                   <span className="text-center flex-1">
                     {allItemsComplete ? 'Confirm Delivery & Proceed' : 'Complete Delivery Info'}
                   </span>
                   <ArrowRight className="ml-2 h-4 w-4 flex-shrink-0" />
-                </div>
-              )}
+                </div>}
             </Button>
 
             {/* Coupon Code Component */}
@@ -349,8 +305,6 @@ const Cart = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Cart;
