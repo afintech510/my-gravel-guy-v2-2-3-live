@@ -108,12 +108,12 @@ const MaterialCalculator = () => {
     const selectedProductObj = products.find(p => p.id.toString() === selectedProduct);
     if (selectedProductObj && calculations.totalTons > 0) {
       try {
-        const effectiveTons = getEffectivePricingQuantity(calculations.totalTons);
-        console.log(`MaterialCalculator: Calculating actual price for ${effectiveTons} tons`);
+        // Use actual calculated tons for pricing (no minimum enforcement here)
+        console.log(`MaterialCalculator: Calculating actual price for ${calculations.totalTons} tons`);
         
         const priceDetails = await calculateFinalPrice(
           selectedProductObj,
-          effectiveTons,
+          calculations.totalTons, // Use actual tons, not enforced minimum
           zip || zipCode || undefined
         );
         
@@ -147,7 +147,7 @@ const MaterialCalculator = () => {
     if (zipCode && selectedProduct) {
       updateActualPricing();
     }
-  }, [selectedProduct, zipCode, products]);
+  }, [selectedProduct, zipCode, products, calculations.totalTons]); // Added calculations.totalTons dependency
 
   // Reset manual tons when areas or depth change to recalculate based on dimensions
   useEffect(() => {
@@ -194,11 +194,6 @@ const MaterialCalculator = () => {
         couponApplied: true,
         couponAmount: 50
       });
-      
-     /* toast({
-        title: "Added to Cart",
-        description: `${Math.floor(calculations.totalTons)} tons of ${product.name} added to your cart with a $50 discount applied.`,
-      }); */
     }
   };
 

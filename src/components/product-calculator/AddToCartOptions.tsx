@@ -9,6 +9,7 @@ import { calculateFinalPrice } from '@/services/products/pricingUtils';
 import PriceDetailsDisplay from './PriceDetailsDisplay';
 import QuantityAdjuster from './QuantityAdjuster';
 import CartOptionCard from './CartOptionCard';
+import { AlertTriangle } from 'lucide-react';
 
 interface AddToCartOptionsProps {
   product: Product;
@@ -34,6 +35,9 @@ export default function AddToCartOptions({
   
   // State for adjustable quantity with minimum of 3 tons
   const [adjustedTons, setAdjustedTons] = useState(() => Math.max(3, Math.round(calculatedTons)));
+  
+  // Check if calculated tons is under minimum
+  const isUnderMinimum = calculatedTons < 3;
   
   // Update adjusted tons when calculated tons changes
   useEffect(() => {
@@ -73,11 +77,6 @@ export default function AddToCartOptions({
         yards: tons / (product.tonYardRatio || 1.5)
       });
       
-      /*toast({
-        title: "Added to cart",
-        description: `${tons} tons of ${product.name} has been added to your cart.`,
-      });*/
-
       // Navigate to cart page for delivery info completion
       navigate('/cart');
     } catch (error) {
@@ -98,6 +97,23 @@ export default function AddToCartOptions({
 
   return (
     <div>
+      {/* Show warning if calculated tons is under minimum */}
+      {isUnderMinimum && (
+        <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <h4 className="font-medium text-amber-800 mb-1">Minimum Order Required</h4>
+              <p className="text-sm text-amber-700 mb-2">
+                Your calculated amount is {calculatedTons.toFixed(2)} tons, but our minimum order is 3 tons.
+              </p>
+              <p className="text-sm text-amber-600">
+                The options below start at 3 tons. You can adjust the quantity or consider a smaller project area.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
      
       <QuantityAdjuster
         adjustedTons={adjustedTons}
