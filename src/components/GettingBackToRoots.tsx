@@ -14,11 +14,8 @@ const GettingBackToRoots = () => {
       
       <div className="max-w-5xl mx-auto relative">
         {/* Header with icon */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-6">
-            <Sprout className="h-8 w-8 text-primary" />
-          </div>
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-stone-800 to-gray-700 bg-clip-text text-transparent leading-tight">
+        <div className="text-center mb-12"> 
+          <h2 className="text-4xl md:text-5xl font-bold mb-10 bg-gradient-to-r from-gray-900 via-stone-800 to-gray-700 bg-clip-text text-transparent leading-tight">
             🌱 Getting Back to Our Roots
           </h2>
           <div className="text-2xl md:text-3xl font-semibold text-stone-600 mb-8 leading-relaxed">
