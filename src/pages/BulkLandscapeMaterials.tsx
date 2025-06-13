@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import ShopProductFilterSelector from '../components/shop/ShopProductFilterSelector';
 import BulkProductGrid from '../components/bulk/BulkProductGrid';
 import ShopTrustBlocks from '../components/shop/ShopTrustBlocks';
@@ -24,6 +25,7 @@ const BulkLandscapeMaterials = () => {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [sortOrder, setSortOrder] = useState('nameAsc');
+  const [syncTons, setSyncTons] = useState(false);
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -55,7 +57,7 @@ const BulkLandscapeMaterials = () => {
             />
           </div>
 
-          {/* Search Bar, Sort Button, and Materials Header - Same row */}
+          {/* Search Bar, Sort Button, Sync Checkbox, and Materials Header - Same row */}
           <div className="mb-6 flex gap-4 items-center">
 
            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
@@ -97,6 +99,18 @@ const BulkLandscapeMaterials = () => {
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Sync Tons Checkbox */}
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="sync-tons"
+                checked={syncTons}
+                onCheckedChange={(checked) => setSyncTons(checked as boolean)}
+              />
+              <label htmlFor="sync-tons" className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                Sync Tons
+              </label>
+            </div>
           </div>
 
           {/* Product Grid */}
@@ -105,6 +119,7 @@ const BulkLandscapeMaterials = () => {
               products={filteredProducts}
               loading={isLoading}
               searchTerm={searchTerm}
+              syncTons={syncTons}
             />
           </div>
         </div>
