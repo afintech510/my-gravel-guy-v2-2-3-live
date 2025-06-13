@@ -219,8 +219,8 @@ const Reviews = () => {
               <TabsContent value="all">
                 <ReviewList 
                   filter="all"
-                  initialReviews={currentFilter === 'all' ? reviews : undefined}
-                  totalInitial={currentFilter === 'all' ? total : undefined}
+                  initialReviews={!loading && currentFilter === 'all' ? reviews : undefined}
+                  totalInitial={!loading && currentFilter === 'all' ? total : undefined}
                 />
               </TabsContent>
               <TabsContent value="verified">
