@@ -88,7 +88,7 @@ export default function BulkProductCard({ product, isSelected = false, onSelect 
   return (
     <Card 
       className={cn(
-        "h-fit transition-all duration-200 cursor-pointer bg-[#1a1a1a] border-gray-700",
+        "h-fit transition-all duration-200 cursor-pointer",
         isSelected ? "shadow-lg ring-2 ring-primary" : "hover:shadow-md"
       )}
       onClick={handleCardClick}
@@ -98,7 +98,7 @@ export default function BulkProductCard({ product, isSelected = false, onSelect 
         <div className="flex flex-col gap-4 mb-4">
           {/* Larger Product Image */}
           {product.image && (
-            <div className="w-full aspect-square bg-gray-800 rounded-lg flex-shrink-0">
+            <div className="w-full aspect-square bg-gray-100 rounded-lg flex-shrink-0">
               <img 
                 src={product.image} 
                 alt={product.name} 
@@ -110,17 +110,17 @@ export default function BulkProductCard({ product, isSelected = false, onSelect 
           <div className="flex-1">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                {/* Product name in neon green */}
-                <h3 className="font-semibold text-lg mb-2" style={{ color: '#14FF6A' }}>
+                {/* Product name */}
+                <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-gray-100">
                   {product.name}
                 </h3>
-                {/* Starting price in same green */}
-                <p className="text-sm font-medium mb-2" style={{ color: '#14FF6A' }}>
+                {/* Starting price */}
+                <p className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                   Starting at ${(displayStartingPrice * 3).toFixed(0)} for 3 tons delivered
                 </p>
               </div>
               {/* Expand/Collapse Indicator */}
-              <div className="flex items-center ml-2" style={{ color: '#14FF6A' }}>
+              <div className="flex items-center ml-2 text-gray-600 dark:text-gray-400">
                 {isSelected ? (
                   <ChevronUp className="h-4 w-4" />
                 ) : (
@@ -133,14 +133,13 @@ export default function BulkProductCard({ product, isSelected = false, onSelect 
 
         {/* Expanded Content */}
         {isSelected && (
-          <div className="space-y-4 border-t border-gray-600 pt-4 mt-4" onClick={(e) => e.stopPropagation()}>
+          <div className="space-y-4 border-t pt-4 mt-4" onClick={(e) => e.stopPropagation()}>
             {/* Product Description in expanded view only */}
-            <div className="text-sm text-white">
+            <div className="text-sm text-gray-700 dark:text-gray-300">
               {product.description}
               <Link 
                 to={`/products/${product.slug}`}
-                className="ml-1 inline-flex items-center"
-                style={{ color: '#14FF6A' }}
+                className="ml-1 inline-flex items-center text-primary hover:underline"
                 onClick={(e) => e.stopPropagation()}
               >
                 More Details...
@@ -150,7 +149,7 @@ export default function BulkProductCard({ product, isSelected = false, onSelect 
             {/* Quantity Selector with Total Price */}
             <div className="flex items-start justify-between">
               <div>
-                <label className="block text-sm font-medium text-white mb-2">
+                <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                   Quantity
                 </label>
                 <div className="flex items-center gap-2">
@@ -159,19 +158,17 @@ export default function BulkProductCard({ product, isSelected = false, onSelect 
                     size="sm"
                     onClick={() => setSelectedTons(Math.max(3, selectedTons - 1))}
                     disabled={selectedTons <= 3}
-                    className="border-gray-600 text-white hover:bg-gray-700"
                   >
                     -
                   </Button>
-                  <div className="px-4 py-2 border border-gray-600 rounded text-center min-w-[80px] bg-gray-800">
-                    <div className="text-sm font-medium text-white">{selectedTons} tons</div>
-                    <div className="text-xs text-gray-400">≡ {cubicYards.toFixed(1)} cu. yds.</div>
+                  <div className="px-4 py-2 border rounded text-center min-w-[80px]">
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{selectedTons} tons</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">≡ {cubicYards.toFixed(1)} cu. yds.</div>
                   </div>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setSelectedTons(selectedTons + 1)}
-                    className="border-gray-600 text-white hover:bg-gray-700"
                   >
                     +
                   </Button>
@@ -181,12 +178,12 @@ export default function BulkProductCard({ product, isSelected = false, onSelect 
               {/* Total Price and Free Delivery */}
               <div className="text-right">
                 <div className="mb-1">
-                  <span className="text-2xl font-bold" style={{ color: '#14FF6A' }}>
+                  <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                     ${(displayPrice * selectedTons).toFixed(2)}
                   </span>
-                  <span className="ml-2 text-sm text-gray-400">Total</span>
+                  <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">Total</span>
                 </div>
-                <div className="text-sm text-white font-medium">
+                <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">
                   FREE Delivery
                 </div>
               </div>
@@ -195,8 +192,8 @@ export default function BulkProductCard({ product, isSelected = false, onSelect 
             {/* Product Specifications */}
             {product.specifications && (
               <div>
-                <h4 className="text-sm font-medium text-white mb-2">Specifications</h4>
-                <div className="text-xs text-gray-300 space-y-1">
+                <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Specifications</h4>
+                <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
                   {product.specifications.size && (
                     <p>Size: {product.specifications.size}</p>
                   )}
@@ -213,10 +210,10 @@ export default function BulkProductCard({ product, isSelected = false, onSelect 
             {/* Uses */}
             {product.uses && product.uses.length > 0 && (
               <div>
-                <h4 className="text-sm font-medium text-white mb-2">Common Uses</h4>
+                <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Common Uses</h4>
                 <div className="flex flex-wrap gap-1">
                   {product.uses.slice(0, 3).map((use, index) => (
-                    <Badge key={index} variant="outline" className="text-xs border-gray-600 text-gray-300">
+                    <Badge key={index} variant="outline" className="text-xs">
                       {use}
                     </Badge>
                   ))}
@@ -228,8 +225,7 @@ export default function BulkProductCard({ product, isSelected = false, onSelect 
             <div className="flex gap-2 pt-2">
               <Button
                 onClick={handleAddToCart}
-                className="flex-1 text-black"
-                style={{ backgroundColor: '#14FF6A' }}
+                className="flex-1"
                 size="sm"
               >
                 <ShoppingCart className="mr-2 h-4 w-4" />
@@ -239,7 +235,7 @@ export default function BulkProductCard({ product, isSelected = false, onSelect 
                 variant="outline"
                 onClick={handleViewDetails}
                 size="sm"
-                className="flex-shrink-0 border-gray-600 text-white hover:bg-gray-700"
+                className="flex-shrink-0"
               >
                 <ExternalLink className="h-4 w-4" />
               </Button>
