@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -64,6 +65,16 @@ const MaterialCalculator = () => {
       consent: false,
     },
   });
+
+  const selectedProductObj = products.find(p => p.id.toString() === selectedProduct);
+  
+  // Use actual price per ton if available, otherwise fall back to adjusted price
+  const selectedProductPrice = actualPricePerTon > 0 ? actualPricePerTon : 
+    (selectedProductObj ? applyZipCodeAdjustment(selectedProductObj.price, priceAdjustment) : 0);
+    
+  const tonYardRatio = selectedProductObj?.tonYardRatio ? parseFloat(String(selectedProductObj.tonYardRatio)) : 1.5;
+  
+  const calculations = useCalculator(areas, depth, extraPercentage, selectedProductPrice, tonYardRatio, manualTons);
 
   // Set the ZIP code in the form when it's available from context
   useEffect(() => {
@@ -153,16 +164,6 @@ const MaterialCalculator = () => {
   useEffect(() => {
     setManualTons(undefined);
   }, [areas, depth, extraPercentage]);
-
-  const selectedProductObj = products.find(p => p.id.toString() === selectedProduct);
-  
-  // Use actual price per ton if available, otherwise fall back to adjusted price
-  const selectedProductPrice = actualPricePerTon > 0 ? actualPricePerTon : 
-    (selectedProductObj ? applyZipCodeAdjustment(selectedProductObj.price, priceAdjustment) : 0);
-    
-  const tonYardRatio = selectedProductObj?.tonYardRatio ? parseFloat(String(selectedProductObj.tonYardRatio)) : 1.5;
-  
-  const calculations = useCalculator(areas, depth, extraPercentage, selectedProductPrice, tonYardRatio, manualTons);
 
   const handleTonsChange = (newTons: number) => {
     // Ensure we're always using integer values
