@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import StarRating from '@/components/reviews/StarRating';
 import ReviewList from '@/components/reviews/ReviewList';
 import ReviewForm from '@/components/reviews/ReviewForm';
+import DeliveryMap from '@/components/DeliveryMap';
 import { fetchReviews } from '@/services/reviewService';
 import { ReviewFilter, CustomerReview } from '@/types/review.types';
 
@@ -181,6 +182,21 @@ const Reviews = () => {
               </TabsContent>
             </Tabs>
           </div>
+        </div>
+        
+        {/* Recent Delivery Locations Map */}
+        <div className="mt-16">
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold mb-2">Recent Delivery Locations</h2>
+            <p className="text-gray-600">
+              View our recent successful deliveries across the United States. Each marker represents
+              a location where we've delivered gravel, sand, or dirt.
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              Data sourced from our delivery database in real-time.
+            </p>
+          </div>
+          <DeliveryMap />
         </div>
       </div>
     </div>
