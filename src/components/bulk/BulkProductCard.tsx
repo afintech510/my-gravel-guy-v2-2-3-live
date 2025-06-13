@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Product } from '@/services/productTypes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,10 +18,17 @@ interface BulkProductCardProps {
   product: Product;
   isSelected?: boolean;
   onSelect?: () => void;
+  quantity?: number;
+  onQuantityChange?: (newQuantity: number) => void;
 }
 
-export default function BulkProductCard({ product, isSelected = false, onSelect }: BulkProductCardProps) {
-  const [selectedTons, setSelectedTons] = useState(5);
+export default function BulkProductCard({ 
+  product, 
+  isSelected = false, 
+  onSelect,
+  quantity = 5,
+  onQuantityChange
+}: BulkProductCardProps) {
   const { addToCart } = useCart();
   const { zipCode } = useZipCode();
   const { toast } = useToast();
@@ -32,7 +39,7 @@ export default function BulkProductCard({ product, isSelected = false, onSelect 
   const { adjustedPrice, priceDetails } = useProduct(
     product.slug, 
     zipCode, 
-    selectedTons
+    quantity
   );
 
   // Get the starting price for 3 tons to display under product name
@@ -51,7 +58,14 @@ export default function BulkProductCard({ product, isSelected = false, onSelect 
     return tons / tonYardRatio;
   };
 
-  const cubicYards = calculateCubicYards(selectedTons);
+  const cubicYards = calculateCubicYards(quantity);
+
+  const handleQuantityChange = (change: number) => {
+    const newQuantity = Math.max(3, quantity + change);
+    if (onQuantityChange) {
+      onQuantityChange(newQuantity);
+    }
+  };
 
   const handleAddToCart = () => {
     const deliveryDate = new Date();
@@ -59,7 +73,7 @@ export default function BulkProductCard({ product, isSelected = false, onSelect 
 
     addToCart({
       ...product,
-      tons: selectedTons,
+      tons: quantity,
       deliveryDate,
       price: displayPrice
     });
@@ -156,19 +170,19 @@ export default function BulkProductCard({ product, isSelected = false, onSelect 
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setSelectedTons(Math.max(3, selectedTons - 1))}
-                    disabled={selectedTons <= 3}
+                    onClick={() => handleQuantityChange(-1)}
+                    disabled={quantity <= 3}
                   >
                     -
                   </Button>
                   <div className="px-4 py-2 border rounded text-center min-w-[80px]">
-                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{selectedTons} tons</div>
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{quantity} tons</div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">≡ {cubicYards.toFixed(1)} cu. yds.</div>
                   </div>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setSelectedTons(selectedTons + 1)}
+                    onClick={() => handleQuantityChange(1)}
                   >
                     +
                   </Button>
@@ -179,7 +193,7 @@ export default function BulkProductCard({ product, isSelected = false, onSelect 
               <div className="text-right">
                 <div className="mb-1">
                   <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                    ${(displayPrice * selectedTons).toFixed(2)}
+                    ${(displayPrice * quantity).toFixed(2)}
                   </span>
                   <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">Total</span>
                 </div>
