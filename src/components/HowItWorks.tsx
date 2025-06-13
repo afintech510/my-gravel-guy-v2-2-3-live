@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MapPin, Package, Truck } from 'lucide-react';
+import { MapPin, Package, Truck, Handshake } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -45,6 +45,25 @@ const HowItWorks = () => {
               </CardContent>
             </Card>
           ))}
+        </div>
+        
+        {/* New White Glove Service Section */}
+        <div className="mt-12 p-8 bg-green-50 border border-green-100 rounded-lg">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+            <div className="flex-shrink-0">
+              <div className="p-3 rounded-full bg-primary/10 flex items-center justify-center">
+                <Handshake className="h-8 w-8 text-primary" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold mb-3 text-gray-900">
+                White Glove Service — We Communicate Every Step of the Way
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                MGG Team will confirm all details before delivery to make sure you get exactly what you expect. We have material application experts available to review your project requirements & tonnage — FREE. Many times our experts can save you money by recommending lower-cost materials available in your region.
+              </p>
+            </div>
+          </div>
         </div>
         
         <div className="mt-12 text-center">
