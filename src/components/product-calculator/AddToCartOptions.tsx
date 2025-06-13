@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Product } from '@/services/productTypes';
 import { useCart } from '@/contexts/CartContext';
@@ -10,6 +9,7 @@ import PriceDetailsDisplay from './PriceDetailsDisplay';
 import QuantityAdjuster from './QuantityAdjuster';
 import CartOptionCard from './CartOptionCard';
 import { AlertTriangle } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface AddToCartOptionsProps {
   product: Product;
@@ -32,6 +32,7 @@ export default function AddToCartOptions({
   const { zipCode, zipCodeData } = useZipCode();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   // State for adjustable quantity with minimum of 3 tons
   const [adjustedTons, setAdjustedTons] = useState(() => Math.max(3, Math.round(calculatedTons)));
@@ -105,6 +106,13 @@ export default function AddToCartOptions({
       
       // Navigate to cart page for delivery info completion
       navigate('/cart');
+      
+      // Scroll to top on mobile after navigation
+      if (isMobile) {
+        setTimeout(() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 100);
+      }
     } catch (error) {
       console.error("Error adding to cart:", error);
       toast({

@@ -14,10 +14,12 @@ import { getPriceAdjustmentForZipCode } from '@/services/products/pricingUtils';
 import { calculateProductExponentialPrice } from '@/services/products/exponentialPricing';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+
 interface ProductPricing {
   productId: string;
   zipAdjustment: number;
 }
+
 const ShoppingModule = () => {
   const isMobile = useIsMobile();
   const [selectedCategory, setSelectedCategory] = useState<string>('gravel');
@@ -258,6 +260,13 @@ const ShoppingModule = () => {
 
     // Navigate to cart page for delivery info completion
     navigate('/cart');
+    
+    // Scroll to top on mobile after navigation
+    if (isMobile) {
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 100);
+    }
   };
   const getProductImage = (product: Product) => {
     return product.images?.[0] || product.image || '/lovable-uploads/85eef0fe-9a59-406e-ba6b-54e1aaf6f56b.png';
@@ -392,4 +401,5 @@ const ShoppingModule = () => {
       </div>
     </div>;
 };
+
 export default ShoppingModule;

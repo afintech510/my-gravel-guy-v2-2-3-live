@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronUp, ShoppingCart, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ShopProductCardProps {
   product: Product;
@@ -25,6 +26,7 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
   const { zipCode } = useZipCode();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   // Use the useProduct hook for real-time pricing
   const { adjustedPrice, priceDetails } = useProduct(
@@ -64,6 +66,13 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
     
     // Navigate to cart immediately after adding product
     navigate('/cart');
+    
+    // Scroll to top on mobile after navigation
+    if (isMobile) {
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 100);
+    }
   };
 
   const handleViewDetails = () => {
