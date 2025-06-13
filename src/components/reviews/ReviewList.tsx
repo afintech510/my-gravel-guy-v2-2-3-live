@@ -35,31 +35,76 @@ const ReviewList: React.FC<ReviewListProps> = ({
   const [currentFilter, setCurrentFilter] = useState<ReviewFilter>(filter);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalReviews, setTotalReviews] = useState(totalInitial || 0);
-  const [isLoading, setIsLoading] = useState(!initialReviews);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Debug logging
+  console.log('ReviewList render:', {
+    filter,
+    currentFilter,
+    initialReviews: initialReviews?.length,
+    reviews: reviews.length,
+    totalInitial,
+    totalReviews,
+    isLoading
+  });
   
   const totalPages = Math.ceil(totalReviews / perPage);
   
-  const loadReviews = async () => {
+  const loadReviews = async (filterToUse: ReviewFilter, pageToUse: number) => {
+    console.log('LoadReviews called:', { filterToUse, pageToUse });
     setIsLoading(true);
-    const { reviews: loadedReviews, total } = await fetchReviews(currentFilter, currentPage, perPage);
+    const { reviews: loadedReviews, total } = await fetchReviews(filterToUse, pageToUse, perPage);
+    console.log('LoadReviews result:', { loadedReviews: loadedReviews.length, total });
     setReviews(loadedReviews);
     setTotalReviews(total);
     setIsLoading(false);
   };
   
+  // Handle filter changes from props
   useEffect(() => {
-    if (!initialReviews || currentFilter !== filter || currentPage !== 1) {
-      loadReviews();
-    }
-  }, [currentFilter, currentPage]);
-  
-  // Update filter from props if it changes
-  useEffect(() => {
+    console.log('Filter effect triggered:', { filter, currentFilter });
     if (filter !== currentFilter) {
       setCurrentFilter(filter);
       setCurrentPage(1);
+      
+      // If we have initial reviews for this filter, use them
+      if (filter === 'all' && initialReviews && initialReviews.length > 0) {
+        console.log('Using initial reviews for all filter');
+        setReviews(initialReviews);
+        setTotalReviews(totalInitial || 0);
+      } else {
+        // Load reviews for the new filter
+        console.log('Loading reviews for filter:', filter);
+        loadReviews(filter, 1);
+      }
     }
-  }, [filter]);
+  }, [filter, initialReviews, totalInitial]);
+  
+  // Handle page changes
+  useEffect(() => {
+    console.log('Page effect triggered:', { currentFilter, currentPage });
+    // Only load if we're not on page 1 or if we don't have initial data
+    if (currentPage > 1 || (currentFilter !== 'all' || !initialReviews)) {
+      if (currentPage > 1 || currentFilter !== filter) {
+        console.log('Loading reviews for page change');
+        loadReviews(currentFilter, currentPage);
+      }
+    }
+  }, [currentPage]);
+  
+  // Initialize with initial reviews if available
+  useEffect(() => {
+    console.log('Initial setup effect:', { initialReviews: initialReviews?.length, filter });
+    if (initialReviews && initialReviews.length > 0 && filter === 'all') {
+      console.log('Setting up initial reviews');
+      setReviews(initialReviews);
+      setTotalReviews(totalInitial || 0);
+      setIsLoading(false);
+    } else if (!initialReviews && filter === currentFilter) {
+      console.log('No initial reviews, loading for current filter');
+      loadReviews(currentFilter, currentPage);
+    }
+  }, []); // Only run on mount
   
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
