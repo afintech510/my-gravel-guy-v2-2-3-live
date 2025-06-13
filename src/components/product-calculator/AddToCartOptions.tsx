@@ -36,6 +36,9 @@ export default function AddToCartOptions({
   // State for adjustable quantity with minimum of 3 tons
   const [adjustedTons, setAdjustedTons] = useState(() => Math.max(3, Math.round(calculatedTons)));
   
+  // State for option prices
+  const [optionPrices, setOptionPrices] = useState<{ [key: string]: number }>({});
+  
   // Check if calculated tons is under minimum
   const isUnderMinimum = calculatedTons < 3;
   
@@ -51,6 +54,29 @@ export default function AddToCartOptions({
     { tons: adjustedTons, label: 'Recommended' },
     { tons: adjustedTons + 1, label: 'Extra Buffer' }
   ];
+
+  // Calculate prices for each option
+  useEffect(() => {
+    const calculateOptionPrices = async () => {
+      const prices: { [key: string]: number } = {};
+      
+      for (const option of options) {
+        try {
+          console.log(`AddToCartOptions: Calculating price for ${option.tons} tons of ${product.name}`);
+          const pricing = await calculateFinalPrice(product, option.tons, zipCode || undefined);
+          prices[option.label] = pricing.pricePerTon * option.tons;
+          console.log(`AddToCartOptions: ${option.label} (${option.tons} tons) = $${prices[option.label].toFixed(2)}`);
+        } catch (error) {
+          console.error(`Error calculating price for ${option.label}:`, error);
+          prices[option.label] = product.price * option.tons;
+        }
+      }
+      
+      setOptionPrices(prices);
+    };
+
+    calculateOptionPrices();
+  }, [product, zipCode, adjustedTons]); // Recalculate when these change
 
   // Handle increment/decrement with 3 ton minimum
   const handleIncrement = () => {
@@ -124,10 +150,8 @@ export default function AddToCartOptions({
       
       <div className="space-y-3">
         {options.map((option) => {
-          // Calculate price for each option based on priceDetails
-          const price = priceDetails 
-            ? priceDetails.pricePerTon * option.tons 
-            : product.price * option.tons;
+          // Use the pre-calculated price for this option
+          const price = optionPrices[option.label] || (product.price * option.tons);
           
           return (
             <CartOptionCard
