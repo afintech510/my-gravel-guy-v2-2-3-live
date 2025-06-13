@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ZipCodeSearch from '../components/zip-code/ZipCodeSearch';
 import { CheckCircle, Truck, DollarSign, HeadphonesIcon, MapPin, Users, MessageCircle } from 'lucide-react';
@@ -150,7 +149,7 @@ const About = () => {
             <p className="text-xl mb-4 text-gray-200">
               – The My Gravel Guy Team
             </p>
-            <div className="flex justify-center items-center gap-2 text-primary-foreground">
+            <div className="flex justify-center items-center gap-2 text-primary">
               <Users className="h-5 w-5" />
               <span className="font-medium">Real people, real support</span>
             </div>
