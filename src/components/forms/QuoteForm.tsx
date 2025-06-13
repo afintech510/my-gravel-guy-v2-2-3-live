@@ -63,7 +63,7 @@ const QuoteForm = () => {
               <FormItem>
                 <FormLabel>Full Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="John Doe" {...field} />
+                  <Input placeholder="Barney Rubble" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -77,7 +77,7 @@ const QuoteForm = () => {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="john@example.com" {...field} />
+                  <Input type="email" placeholder="rubble@mygravelguy.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -91,7 +91,7 @@ const QuoteForm = () => {
               <FormItem>
                 <FormLabel>Phone Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="(555) 123-4567" {...field} />
+                  <Input placeholder="555-123-4567" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -105,7 +105,7 @@ const QuoteForm = () => {
               <FormItem>
                 <FormLabel>Delivery ZIP Code</FormLabel>
                 <FormControl>
-                  <Input placeholder="12345" maxLength={5} {...field} />
+                  <Input placeholder="90210" maxLength={5} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
