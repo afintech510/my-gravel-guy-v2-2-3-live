@@ -17,6 +17,7 @@ import Footer from "./components/Footer";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
 import Shop from "./pages/Shop";
+import BulkLandscapeMaterials from "./pages/BulkLandscapeMaterials";
 import ProductDetail from "./pages/ProductDetail";
 import LocationPage from "./pages/LocationPage";
 import LocationsIndex from "./pages/LocationsIndex";
@@ -72,6 +73,7 @@ function App() {
                       <Route path="/" element={<Index />} />
                       <Route path="/products" element={<Products />} />
                       <Route path="/shop" element={<Shop />} />
+                      <Route path="/bulk-landscape-materials" element={<BulkLandscapeMaterials />} />
                       <Route path="/products/:slug" element={<ProductDetail />} />
                       <Route path="/locations" element={<LocationsIndex />} />
                       <Route path="/locations/:slug" element={<LocationPage />} />
