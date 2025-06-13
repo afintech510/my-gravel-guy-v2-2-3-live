@@ -4,7 +4,6 @@ import { Product } from '@/services/productTypes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { useCart } from '@/contexts/CartContext';
 import { useZipCode } from '@/contexts/ZipCodeContext';
 import { useProduct } from '@/hooks/useProduct';
@@ -103,36 +102,30 @@ export default function BulkProductCard({
   return (
     <Card 
       className={cn(
-        "transition-all duration-200 cursor-pointer",
-        isSelected ? "shadow-lg ring-2 ring-primary" : "hover:shadow-md",
-        !isSelected && "h-80" // Fixed height for collapsed cards
+        "h-fit transition-all duration-200 cursor-pointer",
+        isSelected ? "shadow-lg ring-2 ring-primary" : "hover:shadow-md"
       )}
       onClick={handleCardClick}
     >
-      <CardContent className="p-4 h-full flex flex-col">
-        {/* Product Image and Basic Info - Fixed height section */}
-        <div className={cn(
-          "flex flex-col gap-4 mb-4",
-          !isSelected && "flex-1" // Take up remaining space when collapsed
-        )}>
-          {/* Product Image with 1:1 Aspect Ratio */}
+      <CardContent className="p-4">
+        {/* Product Image and Basic Info */}
+        <div className="flex flex-col gap-4 mb-4">
+          {/* Larger Product Image */}
           {product.image && (
-            <div className="w-full">
-              <AspectRatio ratio={1} className="bg-gray-100 rounded-lg overflow-hidden">
-                <img 
-                  src={product.image} 
-                  alt={product.name} 
-                  className="w-full h-full object-cover"
-                />
-              </AspectRatio>
+            <div className="w-full aspect-square bg-gray-100 rounded-lg flex-shrink-0">
+              <img 
+                src={product.image} 
+                alt={product.name} 
+                className="w-full h-full object-cover rounded-lg"
+              />
             </div>
           )}
           
-          <div className="flex-1 flex flex-col justify-between">
+          <div className="flex-1">
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 {/* Product name */}
-                <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-gray-100 line-clamp-2">
+                <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-gray-100">
                   {product.name}
                 </h3>
                 {/* Starting price */}
@@ -141,7 +134,7 @@ export default function BulkProductCard({
                 </p>
               </div>
               {/* Expand/Collapse Indicator */}
-              <div className="flex items-center ml-2 text-gray-600 dark:text-gray-400 flex-shrink-0">
+              <div className="flex items-center ml-2 text-gray-600 dark:text-gray-400">
                 {isSelected ? (
                   <ChevronUp className="h-4 w-4" />
                 ) : (
