@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -9,6 +8,7 @@ import AmountSelector from './AmountSelector';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/contexts/CartContext';
 import { Minus, Plus } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ProductActionsProps {
   product: Product;
@@ -33,6 +33,7 @@ const ProductActions = ({
   const { toast } = useToast();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const isMobile = useIsMobile();
   const [deliveryDate, setDeliveryDate] = React.useState<Date>();
   
   const totalPrice = adjustedPrice * selectedTons;
@@ -79,6 +80,13 @@ const ProductActions = ({
 
     // Navigate to cart page for delivery info completion
     navigate('/cart');
+    
+    // Scroll to top on mobile after navigation
+    if (isMobile) {
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 100);
+    }
   };
 
   // Determine if volume discount is applied
