@@ -57,7 +57,7 @@ const Dashboard = () => {
     );
   }
   
-/*
+
   // User authenticated and is admin - show dashboard
   return (
     <div className="min-h-screen bg-gray-50">
@@ -88,7 +88,7 @@ const Dashboard = () => {
       </div>
     </div>
   );
-  */
+  
 };
 
 export default Dashboard;
