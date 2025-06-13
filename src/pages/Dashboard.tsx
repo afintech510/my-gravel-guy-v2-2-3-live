@@ -66,7 +66,7 @@ const Dashboard = () => {
           <div className="flex justify-between items-center py-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Manager Dashboard</h1>
-              <p className="text-gray-600">Welcome, {tempUser.email} (TESTING MODE)</p>
+              <p className="text-gray-600">Welcome, {user.email} (TESTING MODE)</p>
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
