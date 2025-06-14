@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { detectPaymentSuccess, clearCheckoutBackup, getCheckoutBackup } from '../utils/paymentUtils';
 import { insertOrderToDatabase, testDatabaseInsert } from '../services/orderInsertService';
 import { sendBothOrderEmails } from '../services/emailService';
+import { useProductNameResolver } from '../hooks/useProductNameResolver';
 
 interface OrderItem {
   id: string;
@@ -48,6 +49,10 @@ const PaymentSuccess = () => {
   const [autoInsertAttempted, setAutoInsertAttempted] = useState(false);
   const [emailsSent, setEmailsSent] = useState(false);
   const [emailStatus, setEmailStatus] = useState<{ customer: boolean; business: boolean } | null>(null);
+  
+  // Extract product IDs from order items for name resolution
+  const productIds = orderItems.map(item => item.product_name); // product_name currently contains ID
+  const { resolveProductName, isLoading: isResolvingNames } = useProductNameResolver(productIds);
   
   // Transform database records to email format
   const transformOrderDataForEmail = (insertedOrders: any[], orderId: string) => {
@@ -995,18 +1000,18 @@ const PaymentSuccess = () => {
         </Card>
 
         <VerificationStatusCard />
-        {/*      <EmailStatusCard /> */}
         <ProcessingStatusCard />
 
-        
-
-        {/* Order Items Details */}
+        {/* Order Items Details - Updated to show resolved product names */}
         {orderItems.length > 0 && (
           <Card className="mb-8">
             <CardContent className="pt-6">
               <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                 <Package className="h-5 w-5" />
                 Order Details
+                {isResolvingNames && (
+                  <RefreshCw className="h-4 w-4 animate-spin text-blue-600 ml-2" />
+                )}
               </h2>
               
               <div className="space-y-6">
@@ -1014,7 +1019,9 @@ const PaymentSuccess = () => {
                   <div key={item.id} className="border-b pb-6 last:border-b-0">
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <h3 className="font-medium text-lg">{item.product_name}</h3>
+                        <h3 className="font-medium text-lg">
+                          {resolveProductName(item.product_name)}
+                        </h3>
                         <p className="text-gray-600">Quantity: {item.quantity} tons</p>
                         <p className="text-lg font-semibold text-green-600">
                           ${item.total_price.toFixed(2)}
