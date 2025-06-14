@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -7,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { format, addHours } from "date-fns";
 import { useZipCode } from "@/contexts/ZipCodeContext";
 import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
 
 const enhancedDeliverySchema = z.object({
   // Delivery date - required
@@ -36,7 +37,10 @@ const enhancedDeliverySchema = z.object({
   // Optional fields
   deliveryTimePreference: z.enum(["anytime", "morning", "afternoon"]).optional(),
   deliveryInstructions: z.string().optional(),
-  locationPhotoUrl: z.string().optional()
+  locationPhotoUrl: z.string().optional(),
+  // Communication consent fields
+  smsConsent: z.boolean().default(false),
+  emailConsent: z.boolean().default(false),
 });
 
 export type EnhancedDeliveryFormData = z.infer<typeof enhancedDeliverySchema>;
@@ -72,7 +76,9 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
       zip: item?.deliveryAddress?.zip || '',
       deliveryTimePreference: item?.deliveryTimePreference || "anytime",
       deliveryInstructions: item?.deliveryInstructions || '',
-      locationPhotoUrl: item?.locationPhotoUrl || ''
+      locationPhotoUrl: item?.locationPhotoUrl || '',
+      smsConsent: false,
+      emailConsent: false,
     }
   });
 
@@ -229,6 +235,7 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
     };
     
     console.log('Submitting form with photo URL:', uploadedPhotoUrl);
+    console.log('Communication consents:', { sms: data.smsConsent, email: data.emailConsent });
     onSubmit(formData);
   };
 
@@ -540,6 +547,67 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
               )}
               <p className="text-xs text-gray-500">
                 This helps our drivers find the exact location or understand your expectations
+              </p>
+            </div>
+          </div>
+
+          {/* Communication Consent Section */}
+          <div className="space-y-4">
+            <h4 className="font-medium text-base">Communication Preferences</h4>
+            <div className="p-4 bg-gray-50 rounded-lg border space-y-4">
+              <p className="text-sm text-gray-600">
+                Please let us know how you'd like to receive delivery updates and order information.
+              </p>
+              
+              <div className="space-y-3">
+                <FormField
+                  control={form.control}
+                  name="emailConsent"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="text-sm font-normal">
+                          I consent to receive email communications about my order, delivery confirmations, and important updates.
+                        </FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="smsConsent"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="text-sm font-normal">
+                          I consent to receive SMS/text messages for delivery updates and driver coordination. 
+                          Message & data rates may apply. Reply STOP to opt out.
+                        </FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <p className="text-xs text-gray-500">
+                Learn more about our communication practices on our{" "}
+                <Link to="/sms-consent" className="text-blue-600 hover:underline">
+                  SMS Consent page
+                </Link>
+                . You can opt out of communications at any time.
               </p>
             </div>
           </div>

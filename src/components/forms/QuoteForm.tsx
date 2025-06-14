@@ -15,7 +15,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -29,6 +31,8 @@ const formSchema = z.object({
     required_error: "Please select a timeline",
   }),
   details: z.string().optional(),
+  smsConsent: z.boolean().default(false),
+  emailConsent: z.boolean().default(false),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -40,6 +44,8 @@ const QuoteForm = () => {
     defaultValues: {
       projectType: "residential",
       timeline: "asap",
+      smsConsent: false,
+      emailConsent: false,
     },
   });
 
@@ -216,6 +222,65 @@ const QuoteForm = () => {
             </FormItem>
           )}
         />
+
+        {/* Communication Consent Section */}
+        <div className="space-y-4 p-4 bg-gray-50 rounded-lg border">
+          <h4 className="font-semibold text-gray-900">Communication Preferences</h4>
+          <p className="text-sm text-gray-600">
+            Please indicate how you'd like us to communicate with you about your quote and delivery.
+          </p>
+          
+          <div className="space-y-3">
+            <FormField
+              control={form.control}
+              name="emailConsent"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="text-sm font-normal">
+                      I consent to receive email communications about my quote, order confirmations, and important updates.
+                    </FormLabel>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="smsConsent"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="text-sm font-normal">
+                      I consent to receive SMS/text messages for delivery updates and order coordination. 
+                      Message & data rates may apply. Reply STOP to opt out.
+                    </FormLabel>
+                  </div>
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <p className="text-xs text-gray-500">
+            Learn more about our communication practices on our{" "}
+            <Link to="/sms-consent" className="text-blue-600 hover:underline">
+              SMS Consent page
+            </Link>
+            . You can opt out of communications at any time.
+          </p>
+        </div>
 
         <Button type="submit" className="w-full">
           Request Quote
