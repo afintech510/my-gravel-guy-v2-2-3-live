@@ -752,66 +752,68 @@ const PaymentSuccess = () => {
     return null;
   };
 
-  const EmailStatusCard = () => {
-    if (emailsSent && emailStatus) {
-      return (
-        <Card className="mb-8 border-blue-200">
-          <CardContent className="pt-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Mail className="h-5 w-5 text-blue-600" />
-              Email Notifications
-            </h3>
-            
-            <div className="space-y-3">
-              <div className={`flex items-center gap-3 p-3 rounded-lg border ${
-                emailStatus.customer 
-                  ? 'bg-green-50 border-green-200' 
-                  : 'bg-red-50 border-red-200'
-              }`}>
-                {emailStatus.customer ? (
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-red-600" />
-                )}
-                <div>
-                  <p className="font-medium">Customer Confirmation Email</p>
-                  <p className="text-sm text-gray-600">
-                    {emailStatus.customer 
-                      ? 'Successfully sent to customer' 
-                      : 'Failed to send to customer'
-                    }
-                  </p>
-                </div>
-              </div>
+  /*
+    const EmailStatusCard = () => {
+      if (emailsSent && emailStatus) {
+        return (
+          <Card className="mb-8 border-blue-200">
+            <CardContent className="pt-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Mail className="h-5 w-5 text-blue-600" />
+                Email Notifications
+              </h3>
               
-              <div className={`flex items-center gap-3 p-3 rounded-lg border ${
-                emailStatus.business 
-                  ? 'bg-green-50 border-green-200' 
-                  : 'bg-red-50 border-red-200'
-              }`}>
-                {emailStatus.business ? (
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-red-600" />
-                )}
-                <div>
-                  <p className="font-medium">Business Notification Email</p>
-                  <p className="text-sm text-gray-600">
-                    {emailStatus.business 
-                      ? 'Successfully sent to order.support@mygravelguy.com' 
-                      : 'Failed to send business notification'
-                    }
-                  </p>
+              <div className="space-y-3">
+                <div className={`flex items-center gap-3 p-3 rounded-lg border ${
+                  emailStatus.customer 
+                    ? 'bg-green-50 border-green-200' 
+                    : 'bg-red-50 border-red-200'
+                }`}>
+                  {emailStatus.customer ? (
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  ) : (
+                    <XCircle className="h-5 w-5 text-red-600" />
+                  )}
+                  <div>
+                    <p className="font-medium">Customer Confirmation Email</p>
+                    <p className="text-sm text-gray-600">
+                      {emailStatus.customer 
+                        ? 'Successfully sent to customer' 
+                        : 'Failed to send to customer'
+                      }
+                    </p>
+                  </div>
+                </div>
+                
+                <div className={`flex items-center gap-3 p-3 rounded-lg border ${
+                  emailStatus.business 
+                    ? 'bg-green-50 border-green-200' 
+                    : 'bg-red-50 border-red-200'
+                }`}>
+                  {emailStatus.business ? (
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  ) : (
+                    <XCircle className="h-5 w-5 text-red-600" />
+                  )}
+                  <div>
+                    <p className="font-medium">Business Notification Email</p>
+                    <p className="text-sm text-gray-600">
+                      {emailStatus.business 
+                        ? 'Successfully sent to order.support@mygravelguy.com' 
+                        : 'Failed to send business notification'
+                      }
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      );
-    }
-    
-    return null;
-  };
+            </CardContent>
+          </Card>
+        );
+      }
+      
+      return null;
+    };
+  */
 
   const ProcessingStatusCard = () => {
     if (isLoading) {
