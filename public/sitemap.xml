@@ -52,27 +52,6 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
-  
-  <url>
-    <loc>https://mygravelguy.com/calculator</loc>
-    <lastmod>2025-06-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  
-  <url>
-    <loc>https://mygravelguy.com/calculator-shop</loc>
-    <lastmod>2025-06-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  
-  <url>
-    <loc>https://mygravelguy.com/quiz</loc>
-    <lastmod>2025-06-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
 
   <!-- Locations -->
   <url>
