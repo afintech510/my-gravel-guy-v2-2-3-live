@@ -1,4 +1,3 @@
-
 interface CheckoutBackup {
   orderId: string;
   items: any[];
@@ -76,8 +75,11 @@ export const getStoredOrderId = (): string | null => {
   return localStorage.getItem('checkout-order-id');
 };
 
+/** Generates an orderId like MGG-123456789 (MGG-, then 9 digits UTC timestamp + random last digit) */
 export const generateOrderId = (): string => {
-  return `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const timestamp = Date.now().toString().slice(-9); // last 9 digits of ms ts
+  const randDigit = Math.floor(Math.random() * 10); // random 0-9 digit for more uniqueness
+  return `MGG-${timestamp}${randDigit}`;
 };
 
 export const detectPaymentSuccess = (): { 
