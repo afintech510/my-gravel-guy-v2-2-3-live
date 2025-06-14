@@ -8,7 +8,7 @@ interface UseFlashingTitleOptions {
 }
 
 export const useFlashingTitle = ({
-  flashText = '🚛FREE Delivery Nationwide!',
+  flashText = 'FREE Delivery Nationwide!',
   interval = 2000,
   enabled = true
 }: UseFlashingTitleOptions = {}) => {
