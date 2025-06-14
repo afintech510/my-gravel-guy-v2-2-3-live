@@ -35,6 +35,14 @@ export interface OrderItemData {
   };
 }
 
+// New interface for processing state management
+export interface ProcessingState {
+  orderId: string;
+  stage: 'payment_detected' | 'verification_started' | 'db_insert_started' | 'db_insert_completed' | 'email_started' | 'email_completed' | 'processing_complete';
+  timestamp: number;
+  error?: string;
+}
+
 export const storeCheckoutBackup = (data: CheckoutBackup) => {
   try {
     localStorage.setItem('checkout-order-backup', JSON.stringify(data));
@@ -66,6 +74,45 @@ export const clearCheckoutBackup = () => {
   } catch (error) {
     console.error('Failed to clear checkout backup:', error);
   }
+};
+
+// New processing state management functions
+export const setProcessingState = (state: ProcessingState) => {
+  try {
+    localStorage.setItem('processing-state', JSON.stringify(state));
+    console.log('Processing state updated:', state.stage);
+  } catch (error) {
+    console.error('Failed to set processing state:', error);
+  }
+};
+
+export const getProcessingState = (): ProcessingState | null => {
+  try {
+    const state = localStorage.getItem('processing-state');
+    return state ? JSON.parse(state) : null;
+  } catch (error) {
+    console.error('Failed to get processing state:', error);
+    return null;
+  }
+};
+
+export const clearProcessingState = () => {
+  try {
+    localStorage.removeItem('processing-state');
+    console.log('Processing state cleared');
+  } catch (error) {
+    console.error('Failed to clear processing state:', error);
+  }
+};
+
+export const isProcessingComplete = (orderId: string): boolean => {
+  const state = getProcessingState();
+  return state?.orderId === orderId && state?.stage === 'processing_complete';
+};
+
+export const isProcessingInProgress = (orderId: string): boolean => {
+  const state = getProcessingState();
+  return state?.orderId === orderId && state?.stage !== 'processing_complete';
 };
 
 export const isCheckoutInProgress = (): boolean => {
@@ -158,4 +205,42 @@ export const createEnhancedBackup = (orderId: string, cartItems: any[], customer
       name: 'Guest User'
     }
   };
+};
+
+// Enhanced session cleanup that preserves order history
+export const completeOrderProcessing = (orderId: string) => {
+  try {
+    // Mark processing as complete
+    setProcessingState({
+      orderId,
+      stage: 'processing_complete',
+      timestamp: Date.now()
+    });
+
+    // Store order completion in history for reference
+    const completedOrders = JSON.parse(localStorage.getItem('completed-orders') || '[]');
+    completedOrders.push({
+      orderId,
+      completedAt: Date.now()
+    });
+    localStorage.setItem('completed-orders', JSON.stringify(completedOrders));
+
+    // Clear checkout session data
+    clearCheckoutBackup();
+
+    console.log('Order processing completed and session data cleared:', orderId);
+  } catch (error) {
+    console.error('Failed to complete order processing:', error);
+  }
+};
+
+// Function to check if order was already completed
+export const wasOrderCompleted = (orderId: string): boolean => {
+  try {
+    const completedOrders = JSON.parse(localStorage.getItem('completed-orders') || '[]');
+    return completedOrders.some((order: any) => order.orderId === orderId);
+  } catch (error) {
+    console.error('Failed to check completed orders:', error);
+    return false;
+  }
 };
