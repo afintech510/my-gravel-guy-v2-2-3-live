@@ -1,37 +1,43 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { ChatDrawer } from '@/components/chat/ChatDrawer';
 import QuoteForm from '@/components/forms/QuoteForm';
-
 const Contact = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     message: ''
   });
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const {
+      name,
+      value
+    } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // In a real app, this would send the form data to a server
     console.log('Form submitted:', formData);
     toast({
       title: "Message sent!",
-      description: "We'll get back to you as soon as possible.",
+      description: "We'll get back to you as soon as possible."
     });
-    setFormData({ name: '', email: '', message: '' });
+    setFormData({
+      name: '',
+      email: '',
+      message: ''
+    });
   };
-
-  return (
-    <div className="min-h-screen bg-white">
+  return <div className="min-h-screen bg-white">
       <div className="py-20 px-4 bg-gray-50">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">Get a Quote</h1>
@@ -62,7 +68,7 @@ const Contact = () => {
                 </div>
                 
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Hours EST</h3>
+                  <h3 className="text-lg font-semibold mb-2">Hours (Eastern Daylight Time)</h3>
                   <p className="text-gray-600">Monday - Friday: 8am - 5pm</p>
                   <p className="text-gray-600">Saturday: 8am - 1pm</p>
                 </div>
@@ -86,8 +92,6 @@ const Contact = () => {
         </div>
       </section>
       <ChatDrawer />
-    </div>
-  );
+    </div>;
 };
-
 export default Contact;
