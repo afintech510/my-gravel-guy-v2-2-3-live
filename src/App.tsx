@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -43,6 +42,7 @@ import BlogCategory from "./pages/BlogCategory";
 import StripeTest from "./pages/StripeTest";
 import Reviews from "./pages/Reviews";
 import Dashboard from "./pages/Dashboard";
+import Sitemap from "./pages/Sitemap";
 import { Link } from "react-router-dom";
 
 const queryClient = new QueryClient();
@@ -98,6 +98,7 @@ function App() {
                       <Route path="/stripe-test" element={<StripeTest />} />
                       <Route path="/reviews" element={<Reviews />} />
                       <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/sitemap" element={<Sitemap />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                     <Footer />
