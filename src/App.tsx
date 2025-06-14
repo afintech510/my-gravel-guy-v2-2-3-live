@@ -9,6 +9,7 @@ import { ThemeProvider } from "next-themes";
 import { CartProvider } from "./contexts/CartContext";
 import { ZipCodeProvider } from "./contexts/ZipCodeContext";
 import { BlogProvider } from "./contexts/BlogContext";
+import { useFlashingTitle } from "./hooks/useFlashingTitle";
 import ScrollToTop from "./components/ScrollToTop";
 import RouteTracker from "./components/analytics/RouteTracker";
 import TopBanner from "./components/TopBanner";
@@ -50,6 +51,13 @@ import { Link } from "react-router-dom";
 const queryClient = new QueryClient();
 
 function App() {
+  // Enable flashing title globally across all pages
+  useFlashingTitle({
+    flashText: '🚛 FREE Delivery Nationwide',
+    interval: 2000,
+    enabled: true
+  });
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
