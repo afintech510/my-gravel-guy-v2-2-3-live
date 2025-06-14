@@ -210,20 +210,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   }, [setItems]);
 
-  // Enhanced clearCart function that also clears processing state if needed
+  // Modified to store the removed item and display toast with undo action
   const clearCart = useCallback(() => {
-    console.log('Clearing cart and cleaning up session data');
     setItems([]);
     setLastRemovedItem(null);
-    
-    // Also clear any remaining checkout session data
-    try {
-      localStorage.removeItem('checkout-order-backup');
-      localStorage.removeItem('checkout-in-progress');
-      localStorage.removeItem('checkout-order-id');
-    } catch (error) {
-      console.error('Error clearing checkout session data:', error);
-    }
   }, [setItems, setLastRemovedItem]);
 
   // Helper function to check if delivery info is complete for an item
