@@ -35,14 +35,14 @@ export const useProductNameResolver = (
         try {
           const product = await getProductById(item.productId);
           return [
-            item.productId,
+            String(item.productId), // Convert to string for consistent key typing
             product?.name ||
               item.fallbackName || // fallback from order row
-              item.productId?.toString() // fallback: stringified ID
+              String(item.productId) // fallback: stringified ID
           ];
         } catch (err) {
           return [
-            item.productId,
+            String(item.productId), // Convert to string for consistent key typing
             item.fallbackName || "Unresolved Product"
           ];
         }
