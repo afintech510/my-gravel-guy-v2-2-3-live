@@ -46,6 +46,7 @@ import Reviews from "./pages/Reviews";
 import Dashboard from "./pages/Dashboard";
 import Sitemap from "./pages/Sitemap";
 import SitemapXML from "./pages/SitemapXML";
+import SMSConsent from "./pages/SMSConsent";
 import { Link } from "react-router-dom";
 
 const queryClient = new QueryClient();
@@ -110,6 +111,7 @@ function App() {
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/sitemap" element={<Sitemap />} />
                       <Route path="/sitemap.xml" element={<SitemapXML />} />
+                      <Route path="/sms-consent" element={<SMSConsent />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                     <Footer />
