@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -43,6 +44,7 @@ import StripeTest from "./pages/StripeTest";
 import Reviews from "./pages/Reviews";
 import Dashboard from "./pages/Dashboard";
 import Sitemap from "./pages/Sitemap";
+import SitemapXML from "./pages/SitemapXML";
 import { Link } from "react-router-dom";
 
 const queryClient = new QueryClient();
@@ -99,6 +101,7 @@ function App() {
                       <Route path="/reviews" element={<Reviews />} />
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/sitemap" element={<Sitemap />} />
+                      <Route path="/sitemap.xml" element={<SitemapXML />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                     <Footer />
