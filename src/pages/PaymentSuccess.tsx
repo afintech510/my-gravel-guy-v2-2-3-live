@@ -996,21 +996,7 @@ const PaymentSuccess = () => {
         <EmailStatusCard />
         <ProcessingStatusCard />
 
-        {/* Navigation Buttons - moved above Order Details */}
-        <div className="mb-8 flex flex-col sm:flex-row justify-center gap-4">
-          <Button 
-            onClick={handleContinueShopping}
-            variant="default"
-          >
-            Continue Shopping
-          </Button>
-          <Button 
-            onClick={handleReturnHome}
-            variant="outline"
-          >
-            Return to Homepage
-          </Button>
-        </div>
+        
 
         {/* Order Items Details */}
         {orderItems.length > 0 && (
@@ -1162,9 +1148,26 @@ const PaymentSuccess = () => {
                 <Button variant="outline" asChild>
                   <a href="/contact">Contact Support</a>
                 </Button>
-              </div>
+                </div>
             </div>
           </div>
+
+          {/* Navigation Buttons - moved above Order Details */}
+        <div className="mb-8 flex flex-col sm:flex-row justify-center gap-4">
+          <Button 
+            onClick={handleContinueShopping}
+            variant="default"
+          >
+            Continue Shopping
+          </Button>
+          <Button 
+            onClick={handleReturnHome}
+            variant="outline"
+          >
+            Return to Homepage
+          </Button>
+        </div>
+          
         </div>
       </div>
     </div>
