@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -36,19 +37,7 @@ serve(async (req) => {
       );
     }
     
-    const { items, orderId } = parsedData;
-    
-    // Validate orderId
-    if (!orderId || typeof orderId !== 'string' || !/^MGG-\d{10}$/.test(orderId)) {
-      console.error('Missing or invalid orderId in request:', orderId);
-      return new Response(
-        JSON.stringify({ error: "Missing or invalid orderId (should be MGG-##########)" }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400,
-        }
-      );
-    }
+    const { items } = parsedData;
     
     // Access Stripe secret key and validate it exists
     const stripeKey = Deno.env.get("stripe");
@@ -79,7 +68,12 @@ serve(async (req) => {
       );
     }
 
-    // In all metadata, logs, and db operations, use the supplied orderId variable
+    // Generate a unique order ID for this entire order
+    const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    console.log('Generated order ID:', orderId);
+
+    // Validate and transform each item with detailed error logging
+    const validatedLineItems = [];
     let orderMetadata = { order_id: orderId };
     
     for (let i = 0; i < items.length; i++) {

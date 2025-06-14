@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { storeCheckoutBackup, createEnhancedBackup, generateOrderId } from '../utils/paymentUtils';
+import { storeCheckoutBackup, createEnhancedBackup } from '../utils/paymentUtils';
 import CouponCode from '../components/cart/CouponCode';
 import type { OrderInsertData } from '../services/productTypes';
 
@@ -287,9 +287,6 @@ const Checkout = () => {
     `;
   };
 
-  // Remove previous ad-hoc orderId generation. Instead, generate once and memoize.
-  const [orderId] = useState(() => generateOrderId());
-
   const handleCheckout = async () => {
     setIsLoading(true);
     setCheckoutError(null);
@@ -310,8 +307,8 @@ const Checkout = () => {
       }
 
       const formattedItems = formatCartItemsForStripe();
-      // orderId is now stable from useState
-
+      const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
       console.log('=== CHECKOUT DEBUG START ===');
       console.log('Order ID generated:', orderId);
       console.log('Formatted items with discounts:', formattedItems);
@@ -331,11 +328,11 @@ const Checkout = () => {
       
       console.log('Enhanced order backup stored:', orderBackup);
       
-      // Call the create-payment Supabase Edge function, pass orderId
+      // Call the create-payment Supabase Edge function with better error handling
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: JSON.stringify({ 
           items: formattedItems,
-          orderId // uses the generated MGG-#########
+          orderId: orderId
         })
       });
       
