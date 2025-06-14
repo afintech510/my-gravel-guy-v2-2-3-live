@@ -860,7 +860,31 @@ const PaymentSuccess = () => {
                 </div>
               </div>
               
-              
+              {/* Test Database Insert Buttons */}
+              <div className="flex justify-center gap-2 pt-2">
+                <Button 
+                  onClick={handleTestDatabaseInsert} 
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-2"
+                  disabled={testingDbInsert}
+                >
+                  <Database className="h-4 w-4" />
+                  {testingDbInsert ? 'Testing...' : 'Test Schema-Accurate DB Insert'}
+                </Button>
+                
+                {/* Hidden button - will be auto-triggered */}
+                <Button 
+                  onClick={handleCheckoutStyleDatabaseInsert} 
+                  variant="outline" 
+                  size="sm"
+                  style={{ display: 'none' }}
+                  disabled={testingDbInsert}
+                >
+                  <Database className="h-4 w-4" />
+                  {testingDbInsert ? 'Testing...' : 'Insert Using Checkout Method'}
+                </Button>
+              </div>
               
             </div>
           </CardContent>
