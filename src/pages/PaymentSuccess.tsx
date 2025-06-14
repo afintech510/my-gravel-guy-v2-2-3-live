@@ -9,7 +9,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { detectPaymentSuccess, clearCheckoutBackup, getCheckoutBackup } from '../utils/paymentUtils';
 import { insertOrderToDatabase, testDatabaseInsert } from '../services/orderInsertService';
 import { sendBothOrderEmails } from '../services/emailService';
-import { useProductNameResolver } from "@/hooks/useProductNameResolver";
 
 interface OrderItem {
   id: string;
@@ -965,19 +964,6 @@ const PaymentSuccess = () => {
     return null;
   };
 
-  // Compute product resolution targets whenever orderItems update
-  const productIdsForResolution = orderItems?.map(item => ({
-    productId: item.product_name, // product_name holds the ID in our schema
-    fallbackName: typeof item.product_name === "string" ? item.product_name : undefined
-  }));
-
-  // Use the name resolver hook
-  const {
-    names: resolvedProductNames,
-    loading: resolvingProducts,
-    error: nameResolutionError
-  } = useProductNameResolver(productIdsForResolution);
-
   return (
     <div className="min-h-screen bg-white py-16 px-4">
       <div className="max-w-4xl mx-auto">
@@ -1012,6 +998,8 @@ const PaymentSuccess = () => {
         {/*      <EmailStatusCard /> */}
         <ProcessingStatusCard />
 
+        
+
         {/* Order Items Details */}
         {orderItems.length > 0 && (
           <Card className="mb-8">
@@ -1021,34 +1009,12 @@ const PaymentSuccess = () => {
                 Order Details
               </h2>
               
-              {/* Add a loading state for name resolving */}
-              {resolvingProducts && (
-                <div className="mb-4 text-blue-600 flex gap-2 items-center text-sm">
-                  <span className="animate-spin mr-2">
-                    <RefreshCw className="h-4 w-4" />
-                  </span>
-                  Resolving product names...
-                </div>
-              )}
-              {/* Add error state for name resolving */}
-              {nameResolutionError && (
-                <div className="mb-4 text-red-600 flex gap-2 items-center text-sm">
-                  <XCircle className="h-4 w-4" />
-                  {nameResolutionError}
-                </div>
-              )}
-
               <div className="space-y-6">
                 {orderItems.map((item, index) => (
                   <div key={item.id} className="border-b pb-6 last:border-b-0">
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        {/* Swap item.product_name for resolved name, fallback if not ready */}
-                        <h3 className="font-medium text-lg">
-                          {resolvedProductNames?.[item.product_name] ||
-                            item.product_name ||
-                            <span className="text-gray-400 italic">Unresolved Product</span>}
-                        </h3>
+                        <h3 className="font-medium text-lg">{item.product_name}</h3>
                         <p className="text-gray-600">Quantity: {item.quantity} tons</p>
                         <p className="text-lg font-semibold text-green-600">
                           ${item.total_price.toFixed(2)}
@@ -1066,6 +1032,7 @@ const PaymentSuccess = () => {
                         </span>
                       </div>
                     </div>
+
                     {(item.delivery_address_street || item.delivery_date) && (
                       <div className="bg-gray-50 rounded-lg p-4">
                         <h4 className="font-medium mb-3 flex items-center gap-2">
