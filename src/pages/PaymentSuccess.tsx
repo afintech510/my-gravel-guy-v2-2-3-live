@@ -10,6 +10,14 @@ import { detectPaymentSuccess, clearCheckoutBackup, getCheckoutBackup } from '..
 import { insertOrderToDatabase, testDatabaseInsert } from '../services/orderInsertService';
 import { sendBothOrderEmails } from '../services/emailService';
 import { useProductNameResolver } from '../hooks/useProductNameResolver';
+import { 
+  isProcessingComplete, 
+  markProcessingComplete, 
+  clearProcessingState,
+  storeOrderDisplayData,
+  getOrderDisplayData,
+  OrderDisplayData
+} from '../utils/processingStateUtils';
 
 interface OrderItem {
   id: string;
@@ -53,6 +61,29 @@ const PaymentSuccess = () => {
   // Extract product IDs from order items for name resolution
   const productIds = orderItems.map(item => item.product_name); // product_name currently contains ID
   const { resolveProductName, isLoading: isResolvingNames } = useProductNameResolver(productIds);
+  
+  // Check for existing order display data on component mount
+  useEffect(() => {
+    const existingOrderData = getOrderDisplayData();
+    if (existingOrderData) {
+      console.log('Found existing order display data:', existingOrderData);
+      setOrderId(existingOrderData.orderId);
+      setOrderItems(existingOrderData.orderItems);
+      setVerificationMethod(existingOrderData.verificationMethod as 'stripe_verified' | 'fallback');
+      setUsedFallback(existingOrderData.usedFallback);
+      setEmailsSent(existingOrderData.emailsSent);
+      setEmailStatus(existingOrderData.emailStatus);
+      setDbInsertComplete(true);
+      setHasProcessedPayment(true);
+      setIsLoading(false);
+      
+      toast({
+        title: "Order Already Processed",
+        description: "Your order details have been loaded from previous processing.",
+        variant: "default"
+      });
+    }
+  }, [toast]);
   
   // Transform database records to email format
   const transformOrderDataForEmail = (insertedOrders: any[], orderId: string) => {
@@ -126,6 +157,16 @@ const PaymentSuccess = () => {
       const checkoutOrderBackup = getCheckoutBackup();
       const checkoutInProgress = localStorage.getItem('checkout-in-progress');
       const checkoutOrderId = localStorage.getItem('checkout-order-id');
+      
+      // Determine the current order ID early
+      const currentOrderId = orderIdParam || checkoutOrderId;
+      
+      // CHECK FOR PROCESSING COMPLETE - PREVENT DUPLICATES
+      if (currentOrderId && isProcessingComplete(currentOrderId)) {
+        console.log('Order already processed completely, skipping:', currentOrderId);
+        setIsLoading(false);
+        return;
+      }
       
       console.log('=== BACKUP DATA STRUCTURE ANALYSIS ===');
       console.log('Full backup data:', checkoutOrderBackup);
@@ -329,6 +370,10 @@ const PaymentSuccess = () => {
       setOrderItems(displayOrders);
       setDbInsertComplete(true);
       
+      // CLEAR SESSION DATA IMMEDIATELY AFTER SUCCESSFUL DATABASE INSERT
+      console.log('Database insert successful, clearing checkout backup...');
+      clearCheckoutBackup();
+      
       toast({
         title: "Order Processed Successfully",
         description: "Your order has been recorded successfully!",
@@ -343,11 +388,13 @@ const PaymentSuccess = () => {
       setProcessingError(`Order confirmed but database insert failed: ${dbError.message}`);
       setDetailedError(dbError.stack || 'No stack trace available');
       
+      // DON'T CLEAR SESSION DATA ON DATABASE FAILURE (allow retry)
       toast({
         title: "Database Error",
         description: "Your payment was successful, but we couldn't save the order details. Please contact support.",
         variant: "destructive"
       });
+      throw dbError; // Re-throw to prevent email sending
     }
   };
 
@@ -371,14 +418,36 @@ const PaymentSuccess = () => {
         business: emailResults.internalEmail.success
       });
       
+      // CLEAR CART IMMEDIATELY AFTER EMAIL ATTEMPT (successful or not)
+      console.log('Email sending completed, clearing cart...');
+      clearCart();
+      
+      // STORE ORDER DISPLAY DATA FOR FUTURE REFRESHES
+      const orderDisplayData: OrderDisplayData = {
+        orderId,
+        orderItems: orderItems,
+        verificationMethod: verificationMethod || 'fallback',
+        usedFallback,
+        emailsSent: true,
+        emailStatus: {
+          customer: emailResults.customerEmail.success,
+          business: emailResults.internalEmail.success
+        },
+        timestamp: Date.now()
+      };
+      storeOrderDisplayData(orderDisplayData);
+      
+      // MARK PROCESSING AS COMPLETE TO PREVENT RE-PROCESSING
+      markProcessingComplete(orderId);
+      
       if (emailResults.overallSuccess) {
         toast({
-          title: "Emails Sent Successfully",
-          description: "Order confirmation emails have been sent!",
+          title: "Order Complete!",
+          description: "Order processed and confirmation emails sent successfully!",
           variant: "default"
         });
       } else {
-        let errorMessage = "Some emails failed to send: ";
+        let errorMessage = "Order processed, but some emails failed: ";
         if (!emailResults.customerEmail.success) {
           errorMessage += "customer confirmation ";
         }
@@ -387,7 +456,7 @@ const PaymentSuccess = () => {
         }
         
         toast({
-          title: "Email Sending Issue",
+          title: "Order Processed (Email Issue)",
           description: errorMessage + "Please contact support if needed.",
           variant: "destructive"
         });
@@ -396,8 +465,24 @@ const PaymentSuccess = () => {
     } catch (emailError) {
       console.error('Email sending failed:', emailError);
       
+      // STILL CLEAR CART AND MARK COMPLETE EVEN IF EMAILS FAIL
+      console.log('Email failed, but still clearing cart and marking complete...');
+      clearCart();
+      
+      const orderDisplayData: OrderDisplayData = {
+        orderId,
+        orderItems: orderItems,
+        verificationMethod: verificationMethod || 'fallback',
+        usedFallback,
+        emailsSent: false,
+        emailStatus: null,
+        timestamp: Date.now()
+      };
+      storeOrderDisplayData(orderDisplayData);
+      markProcessingComplete(orderId);
+      
       toast({
-        title: "Email Error",
+        title: "Order Processed (Email Error)",
         description: "Order processed successfully, but emails couldn't be sent. Please contact support.",
         variant: "destructive"
       });
@@ -648,7 +733,10 @@ const PaymentSuccess = () => {
   }, [isLoading, dbInsertComplete, autoInsertAttempted]);
 
   useEffect(() => {
-    processPaymentSuccess();
+    // Only process if we don't have existing order data
+    if (!getOrderDisplayData()) {
+      processPaymentSuccess();
+    }
   }, [clearCart, toast, searchParams, hasProcessedPayment]);
 
   const handleRetry = async () => {
@@ -678,15 +766,16 @@ const PaymentSuccess = () => {
     }
   };
 
-  // Navigation handlers with cart clearing
+  // Navigation handlers with enhanced cart clearing
   const handleContinueShopping = () => {
     clearCart();
     clearCheckoutBackup();
+    clearProcessingState();
     localStorage.removeItem('checkout-in-progress');
     localStorage.removeItem('checkout-order-id');
     toast({
-      title: "Cart Cleared",
-      description: "Your cart has been cleared. Happy shopping!",
+      title: "Ready for New Order",
+      description: "All session data cleared. Happy shopping!",
       variant: "default"
     });
     navigate('/products');
@@ -695,11 +784,12 @@ const PaymentSuccess = () => {
   const handleReturnHome = () => {
     clearCart();
     clearCheckoutBackup();
+    clearProcessingState();
     localStorage.removeItem('checkout-in-progress');
     localStorage.removeItem('checkout-order-id');
     toast({
-      title: "Cart Cleared",
-      description: "Your cart has been cleared. Thank you for your order!",
+      title: "Session Cleared",
+      description: "Thank you for your order!",
       variant: "default"
     });
     navigate('/');
@@ -756,69 +846,6 @@ const PaymentSuccess = () => {
     
     return null;
   };
-
-  /*
-    const EmailStatusCard = () => {
-      if (emailsSent && emailStatus) {
-        return (
-          <Card className="mb-8 border-blue-200">
-            <CardContent className="pt-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Mail className="h-5 w-5 text-blue-600" />
-                Email Notifications
-              </h3>
-              
-              <div className="space-y-3">
-                <div className={`flex items-center gap-3 p-3 rounded-lg border ${
-                  emailStatus.customer 
-                    ? 'bg-green-50 border-green-200' 
-                    : 'bg-red-50 border-red-200'
-                }`}>
-                  {emailStatus.customer ? (
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                  ) : (
-                    <XCircle className="h-5 w-5 text-red-600" />
-                  )}
-                  <div>
-                    <p className="font-medium">Customer Confirmation Email</p>
-                    <p className="text-sm text-gray-600">
-                      {emailStatus.customer 
-                        ? 'Successfully sent to customer' 
-                        : 'Failed to send to customer'
-                      }
-                    </p>
-                  </div>
-                </div>
-                
-                <div className={`flex items-center gap-3 p-3 rounded-lg border ${
-                  emailStatus.business 
-                    ? 'bg-green-50 border-green-200' 
-                    : 'bg-red-50 border-red-200'
-                }`}>
-                  {emailStatus.business ? (
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                  ) : (
-                    <XCircle className="h-5 w-5 text-red-600" />
-                  )}
-                  <div>
-                    <p className="font-medium">Business Notification Email</p>
-                    <p className="text-sm text-gray-600">
-                      {emailStatus.business 
-                        ? 'Successfully sent to order.support@mygravelguy.com' 
-                        : 'Failed to send business notification'
-                      }
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
-      }
-      
-      return null;
-    };
-  */
 
   const ProcessingStatusCard = () => {
     if (isLoading) {
