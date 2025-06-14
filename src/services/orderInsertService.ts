@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { OrderItemData } from '../utils/paymentUtils';
 
@@ -19,19 +20,6 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
     // Validate input data
     if (!orderData.items || orderData.items.length === 0) {
       throw new Error('No items provided for database insert');
-    }
-
-    // Check if orders for this orderId/session already exist
-    const { data: existingOrders, error: fetchError } = await supabase
-      .from('orders')
-      .select('id')
-      .eq('order_id', orderData.orderId)
-      .limit(1);
-
-    if (existingOrders && existingOrders.length > 0) {
-      console.warn('Duplicate insert attempt detected for orderId:', orderData.orderId);
-      // Return empty to indicate order already inserted (or optionally throw)
-      return [];
     }
 
     // Process each item - use direct properties from backup data
