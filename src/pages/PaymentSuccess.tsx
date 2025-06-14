@@ -995,7 +995,7 @@ const PaymentSuccess = () => {
         </Card>
 
         <VerificationStatusCard />
-        <EmailStatusCard />
+        {/*      <EmailStatusCard /> */}
         <ProcessingStatusCard />
 
         
