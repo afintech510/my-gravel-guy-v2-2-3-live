@@ -38,9 +38,11 @@ const enhancedDeliverySchema = z.object({
   deliveryTimePreference: z.enum(["anytime", "morning", "afternoon"]).optional(),
   deliveryInstructions: z.string().optional(),
   locationPhotoUrl: z.string().optional(),
-  // Communication consent fields
+  // Communication consent fields - email consent is now required
   smsConsent: z.boolean().default(false),
-  emailConsent: z.boolean().default(false),
+  emailConsent: z.boolean().refine(val => val === true, {
+    message: "Email consent is required to process your order and send delivery confirmations"
+  }),
 });
 
 export type EnhancedDeliveryFormData = z.infer<typeof enhancedDeliverySchema>;
@@ -573,9 +575,13 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
                       </FormControl>
                       <div className="space-y-1 leading-none">
                         <FormLabel className="text-sm font-normal">
-                          I consent to receive email communications about my order, delivery confirmations, and important updates.
+                          I consent to receive email communications about my order, delivery confirmations, and important updates. *
                         </FormLabel>
+                        <p className="text-xs text-muted-foreground">
+                          Required for order processing and delivery notifications
+                        </p>
                       </div>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
