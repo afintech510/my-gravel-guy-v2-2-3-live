@@ -1010,8 +1010,8 @@ const PaymentSuccess = () => {
 {/*
         <VerificationStatusCard />
         {/*      <EmailStatusCard /> 
-        <ProcessingStatusCard />
-*/}
+*/}        <ProcessingStatusCard />
+
         {/* Order Items Details */}
         {orderItems.length > 0 && (
           <Card className="mb-8">
