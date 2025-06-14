@@ -9,76 +9,6 @@ export interface OrderInsertData {
   stripePaymentIntentId?: string;
 }
 
-const extractDeliveryDetails = (item: any) => {
-  console.log('=== EXTRACTING DELIVERY DETAILS ===', {
-    itemId: item.id,
-    hasDirectContactInfo: !!(item as any).contactInfo,
-    hasDirectDeliveryAddress: !!(item as any).deliveryAddress,
-    hasDirectDeliveryDate: !!(item as any).deliveryDate,
-    hasMetadata: !!item.metadata,
-    metadataKeys: item.metadata ? Object.keys(item.metadata) : []
-  });
-
-  // Helper function to safely parse JSON strings
-  const safeJsonParse = (str: string) => {
-    try {
-      return JSON.parse(str);
-    } catch {
-      return null;
-    }
-  };
-
-  // Extract contact info - check direct properties first, then metadata
-  let contactInfo = (item as any).contactInfo;
-  if (!contactInfo && item.metadata) {
-    contactInfo = {
-      name: item.metadata.contactName,
-      phone: item.metadata.contactPhone,
-      email: item.metadata.contactEmail
-    };
-  }
-
-  // Extract delivery address - check direct properties first, then metadata
-  let deliveryAddress = (item as any).deliveryAddress;
-  if (!deliveryAddress && item.metadata?.deliveryAddress) {
-    // Try to parse if it's a JSON string
-    if (typeof item.metadata.deliveryAddress === 'string') {
-      deliveryAddress = safeJsonParse(item.metadata.deliveryAddress);
-    } else {
-      deliveryAddress = item.metadata.deliveryAddress;
-    }
-  }
-
-  // Extract delivery date - check direct properties first, then metadata
-  let deliveryDate = (item as any).deliveryDate;
-  if (!deliveryDate && item.metadata?.deliveryDate) {
-    deliveryDate = item.metadata.deliveryDate;
-  }
-
-  // Extract other delivery details
-  const deliveryTimePreference = (item as any).deliveryTimePreference || item.metadata?.deliveryTimePreference;
-  const deliveryInstructions = (item as any).deliveryInstructions || item.metadata?.deliveryInstructions;
-  const quantity = (item as any).tons || item.quantity || 1;
-
-  console.log('Extracted delivery details:', {
-    contactInfo,
-    deliveryAddress,
-    deliveryDate,
-    deliveryTimePreference,
-    deliveryInstructions,
-    quantity
-  });
-
-  return {
-    contactInfo: contactInfo || {},
-    deliveryAddress: deliveryAddress || {},
-    deliveryDate,
-    deliveryTimePreference,
-    deliveryInstructions,
-    quantity
-  };
-};
-
 export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
   console.log('=== INSERTING ORDER TO DATABASE ===', {
     orderId: orderData.orderId,
@@ -92,23 +22,40 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
       throw new Error('No items provided for database insert');
     }
 
-    // Process each item with enhanced delivery details extraction
+    // Process each item - use direct properties from backup data
     const orderRecords = orderData.items.map((item, index) => {
       console.log('=== PROCESSING CART ITEM FOR DB INSERT ===', {
         itemIndex: index,
         id: item.id,
         name: item.name,
-        price: item.price
+        price: item.price,
+        itemKeys: Object.keys(item),
+        hasDirectContactInfo: !!(item as any).contactInfo,
+        hasDirectDeliveryAddress: !!(item as any).deliveryAddress,
+        hasDirectDeliveryDate: !!(item as any).deliveryDate,
+        hasDirectTons: !!(item as any).tons,
+        directContactInfo: (item as any).contactInfo,
+        directDeliveryAddress: (item as any).deliveryAddress,
+        directDeliveryDate: (item as any).deliveryDate,
+        directTons: (item as any).tons
       });
 
-      const {
+      // Get contact info directly from item properties
+      const contactInfo = (item as any).contactInfo || {};
+      const deliveryAddress = (item as any).deliveryAddress || {};
+      const deliveryDate = (item as any).deliveryDate;
+      const quantity = (item as any).tons || item.quantity || 1;
+      const deliveryTimePreference = (item as any).deliveryTimePreference;
+      const deliveryInstructions = (item as any).deliveryInstructions;
+
+      console.log('Extracted data for record:', {
         contactInfo,
         deliveryAddress,
         deliveryDate,
+        quantity,
         deliveryTimePreference,
-        deliveryInstructions,
-        quantity
-      } = extractDeliveryDetails(item);
+        deliveryInstructions
+      });
 
       // Validate required fields
       if (!contactInfo.name) {
