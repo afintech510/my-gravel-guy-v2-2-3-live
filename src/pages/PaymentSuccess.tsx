@@ -114,18 +114,24 @@ const PaymentSuccess = () => {
 
   const processPaymentSuccess = async (isRetry = false) => {
     console.log('=== PAYMENT SUCCESS PROCESSING START ===', { isRetry, retryCount });
-    
+
+    // Move all variables here so they are not redeclared
+    const paymentIntentId = searchParams.get('payment_intent') || searchParams.get('payment_intent_id');
+    const orderIdParam = searchParams.get('order_id');
+    const paymentSuccess = searchParams.get('success');
+    const checkoutOrderBackup = getCheckoutBackup();
+    const checkoutInProgress = localStorage.getItem('checkout-in-progress');
+    const checkoutOrderId = localStorage.getItem('checkout-order-id');
+    let processingKey = paymentIntentId || orderIdParam || (checkoutOrderBackup?.orderId ?? null);
+
     if (!isRetry) {
       setIsLoading(true);
       setProcessingError(null);
       setDetailedError(null);
     }
-    
+
     try {
       // Ensure at least one param present for uniqueness
-      const paymentIntentId = searchParams.get('payment_intent') || searchParams.get('payment_intent_id');
-      const orderIdParam = searchParams.get('order_id');
-      const processingKey = paymentIntentId || orderIdParam || (checkoutOrderBackup?.orderId ?? null);
       if (!processingKey) {
         setProcessingError('Missing order/payment identifier in URL. Unable to process your order.');
         setIsLoading(false);
@@ -146,26 +152,16 @@ const PaymentSuccess = () => {
         return;
       }
 
-      // Extract URL parameters - prioritize payment_intent
-      const paymentIntentId = searchParams.get('payment_intent') || searchParams.get('payment_intent_id');
-      const orderIdParam = searchParams.get('order_id');
-      const paymentSuccess = searchParams.get('success');
-      
       console.log('URL Parameters:', {
         paymentIntentId: paymentIntentId ? paymentIntentId.substring(0, 20) + '...' : null,
         orderIdParam,
         paymentSuccess,
         hasProcessedPayment
       });
-      
-      // Check localStorage for backup order information
-      const checkoutOrderBackup = getCheckoutBackup();
-      const checkoutInProgress = localStorage.getItem('checkout-in-progress');
-      const checkoutOrderId = localStorage.getItem('checkout-order-id');
-      
+
       console.log('=== BACKUP DATA STRUCTURE ANALYSIS ===');
       console.log('Full backup data:', checkoutOrderBackup);
-      
+
       if (checkoutOrderBackup?.items?.[0]) {
         const firstItem = checkoutOrderBackup.items[0];
         console.log('First backup item analysis:', {
@@ -181,34 +177,34 @@ const PaymentSuccess = () => {
           tons: firstItem.tons
         });
       }
-      
+
       // Determine if we should process the payment
       const shouldProcess = !hasProcessedPayment && (
         paymentIntentId || 
         paymentSuccess === 'true' || 
         (checkoutInProgress === 'true' && checkoutOrderId)
       );
-      
+
       console.log('Should process payment:', shouldProcess);
-      
+
       if (shouldProcess || isRetry) {
         if (!isRetry) {
           setHasProcessedPayment(true);
         }
-        
+
         let verificationResult = null;
-        
+
         // Validate backup data before proceeding
         if (checkoutOrderBackup) {
           if (!checkoutOrderBackup.items || !Array.isArray(checkoutOrderBackup.items) || checkoutOrderBackup.items.length === 0) {
             throw new Error('Invalid backup data: missing or empty items array');
           }
         }
-        
+
         // Primary: Try payment intent verification (without DB insert)
         if (paymentIntentId) {
           console.log('Processing with payment intent ID:', paymentIntentId.substring(0, 20) + '...');
-          
+
           const { data, error } = await supabase.functions.invoke('verify-payment', {
             body: { 
               paymentIntentId,
@@ -228,7 +224,7 @@ const PaymentSuccess = () => {
         // Fallback: Use backup data only
         else if (checkoutOrderId && checkoutOrderBackup) {
           console.log('Processing with backup data only:', checkoutOrderId);
-          
+
           const { data, error } = await supabase.functions.invoke('verify-payment', {
             body: { 
               orderId: checkoutOrderId,
@@ -245,11 +241,11 @@ const PaymentSuccess = () => {
           });
           verificationResult = { data, error };
         }
-        
+
         // Process verification result - only show errors for actual failures, not sandbox/testing scenarios
         if (verificationResult) {
           const { data, error } = verificationResult;
-          
+
           if (error && !paymentIntentId) {
             // Only show verification errors if we have a payment intent (real payment)
             // For fallback/testing scenarios, don't show verification errors
@@ -260,7 +256,7 @@ const PaymentSuccess = () => {
             if (paymentIntentId) {
               setProcessingError(`Payment verification issue: ${error.message}`);
               setDetailedError(error.details || error.stack || 'No additional details available');
-              
+
               toast({
                 title: "Payment Processing Issue",
                 description: "There was an issue processing your payment verification. Please contact support if this persists.",
@@ -269,19 +265,19 @@ const PaymentSuccess = () => {
             }
           } else if (data?.success && data?.paymentVerified) {
             console.log('Payment verification successful');
-            
+
             const currentOrderId = data.orderId || orderIdParam || checkoutOrderId;
             setOrderId(currentOrderId);
             setVerificationMethod(data.verification_method || 'stripe_verified');
             setUsedFallback(data.used_fallback || false);
             setProcessingError(null);
             setDetailedError(null);
-            
+
             // Now insert the order to database using our simplified service
             if (checkoutOrderBackup && !dbInsertComplete) {
               await handleDatabaseInsert(checkoutOrderBackup, currentOrderId, data);
             }
-            
+
           } else if (data?.success === false && paymentIntentId) {
             console.warn('Verification returned success: false', data);
             // Only show error if we're in a real payment scenario
@@ -294,7 +290,7 @@ const PaymentSuccess = () => {
             setOrderId(currentOrderId);
             setVerificationMethod('fallback');
             setUsedFallback(true);
-            
+
             if (checkoutOrderBackup && !dbInsertComplete) {
               await handleDatabaseInsert(checkoutOrderBackup, currentOrderId, {});
             }
@@ -308,17 +304,17 @@ const PaymentSuccess = () => {
           clearCart();
           clearCheckoutBackup();
         }
-        
+
       } else {
         console.log('Payment already processed or no trigger found');
       }
-      
+
     } catch (error) {
       console.error('Error processing payment success:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       setProcessingError(errorMessage);
       setDetailedError(error instanceof Error ? error.stack || 'No stack trace available' : 'Unknown error type');
-      
+
       toast({
         title: "Processing Error",
         description: "There was an error processing your payment. Please contact support.",
@@ -337,16 +333,16 @@ const PaymentSuccess = () => {
     }
     try {
       console.log('=== STARTING DATABASE INSERT ===');
-      
+
       const orderData = {
         orderId: currentOrderId,
         items: checkoutOrderBackup.items,
         stripeSessionId: verificationData.sessionId,
         stripePaymentIntentId: verificationData.paymentIntentId
       };
-      
+
       const insertedOrders = await insertOrderToDatabase(orderData);
-      
+
       // Transform inserted orders to display format
       const displayOrders = insertedOrders.map(order => ({
         id: order.id,
@@ -366,10 +362,10 @@ const PaymentSuccess = () => {
         delivery_instructions: order.delivery_instructions,
         status: order.status
       }));
-      
+
       setOrderItems(displayOrders);
       setDbInsertComplete(true);
-      
+
       toast({
         title: "Order Processed Successfully",
         description: "Your order has been recorded successfully!",
@@ -388,7 +384,7 @@ const PaymentSuccess = () => {
       console.error('Database insert failed:', dbError);
       setProcessingError(`Order confirmed but database insert failed: ${dbError.message}`);
       setDetailedError(dbError.stack || 'No stack trace available');
-      
+
       toast({
         title: "Database Error",
         description: "Your payment was successful, but we couldn't save the order details. Please contact support.",
@@ -400,23 +396,23 @@ const PaymentSuccess = () => {
   const handleEmailSending = async (insertedOrders: any[], orderId: string) => {
     try {
       console.log('=== STARTING EMAIL SENDING ===');
-      
+
       // Transform order data for email format
       const orderDataForEmail = transformOrderDataForEmail(insertedOrders, orderId);
-      
+
       console.log('Order data transformed for email:', orderDataForEmail);
-      
+
       // Send both customer and business emails
       const emailResults = await sendBothOrderEmails(orderDataForEmail);
-      
+
       console.log('Email sending results:', emailResults);
-      
+
       setEmailsSent(true);
       setEmailStatus({
         customer: emailResults.customerEmail.success,
         business: emailResults.internalEmail.success
       });
-      
+
       if (emailResults.overallSuccess) {
         toast({
           title: "Emails Sent Successfully",
@@ -431,17 +427,17 @@ const PaymentSuccess = () => {
         if (!emailResults.internalEmail.success) {
           errorMessage += "business notification ";
         }
-        
+
         toast({
           title: "Email Sending Issue",
           description: errorMessage + "Please contact support if needed.",
           variant: "destructive"
         });
       }
-      
+
     } catch (emailError) {
       console.error('Email sending failed:', emailError);
-      
+
       toast({
         title: "Email Error",
         description: "Order processed successfully, but emails couldn't be sent. Please contact support.",
@@ -454,13 +450,13 @@ const PaymentSuccess = () => {
     setTestingDbInsert(true);
     try {
       console.log('=== TESTING CHECKOUT-STYLE DATABASE INSERT ===');
-      
+
       // Get backup data just like checkout does
       const checkoutOrderBackup = getCheckoutBackup();
       const checkoutOrderId = localStorage.getItem('checkout-order-id') || `TEST-CHECKOUT-${Date.now()}`;
-      
+
       console.log('Backup data for checkout-style insert:', checkoutOrderBackup);
-      
+
       if (!checkoutOrderBackup?.items || checkoutOrderBackup.items.length === 0) {
         toast({
           title: "No Backup Data",
@@ -469,7 +465,7 @@ const PaymentSuccess = () => {
         });
         return;
       }
-      
+
       // Process each item exactly like checkout does - accessing from metadata where available
       const orderRecords = checkoutOrderBackup.items.map((item: any, index: number) => {
         console.log('=== PROCESSING ITEM FOR CHECKOUT-STYLE INSERT ===', {
@@ -481,14 +477,14 @@ const PaymentSuccess = () => {
           directDeliveryDate: item.deliveryDate,
           directTons: item.tons
         });
-        
+
         // Access contact info from metadata first, then fallback to direct properties
         const contactInfo = item.metadata?.contactName ? {
           name: item.metadata.contactName,
           phone: item.metadata.contactPhone,
           email: item.metadata.contactEmail
         } : (item.contactInfo || {});
-        
+
         // Access delivery address from metadata first, then fallback to direct properties
         let deliveryAddress: { street?: string; city?: string; state?: string; zip?: string } = {};
         if (item.metadata?.deliveryAddress) {
@@ -504,16 +500,16 @@ const PaymentSuccess = () => {
         } else {
           deliveryAddress = item.deliveryAddress || {};
         }
-        
+
         // Access delivery date from metadata first, then fallback to direct properties
         const deliveryDate = item.metadata?.deliveryDate || item.deliveryDate;
-        
+
         // Access delivery preferences from metadata first, then fallback to direct properties
         const deliveryTimePreference = item.metadata?.deliveryTimePreference || item.deliveryTimePreference;
         const deliveryInstructions = item.metadata?.deliveryInstructions || item.deliveryInstructions;
-        
+
         const quantity = item.tons || item.quantity || 1;
-        
+
         const finalRecord = {
           order_id: checkoutOrderId,
           product_id: item.id.toString(),
@@ -535,7 +531,7 @@ const PaymentSuccess = () => {
           delivery_time_preference: deliveryTimePreference || null,
           delivery_instructions: deliveryInstructions || null
         };
-        
+
         console.log('=== FINAL MAPPED RECORD ===', {
           originalItem: item,
           extractedContactInfo: contactInfo,
@@ -545,18 +541,18 @@ const PaymentSuccess = () => {
           extractedInstructions: deliveryInstructions,
           finalRecord: finalRecord
         });
-        
+
         return finalRecord;
       });
-      
+
       console.log('Order records for checkout-style insert:', orderRecords);
-      
+
       // Direct database insert like checkout does
       const { data, error } = await supabase
         .from('orders')
         .insert(orderRecords)
         .select();
-      
+
       if (error) {
         console.error('Checkout-style insert error:', error);
         toast({
@@ -566,9 +562,9 @@ const PaymentSuccess = () => {
         });
         return;
       }
-      
+
       console.log('Checkout-style insert successful:', data);
-      
+
       // Transform to display format
       const displayOrders = data.map(order => ({
         id: order.id,
@@ -588,10 +584,10 @@ const PaymentSuccess = () => {
         delivery_instructions: order.delivery_instructions,
         status: order.status
       }));
-      
+
       setOrderItems(displayOrders);
       setDbInsertComplete(true);
-      
+
       toast({
         title: "Checkout-Style Insert Successful",
         description: "Order inserted using checkout method with metadata access!",
@@ -599,12 +595,12 @@ const PaymentSuccess = () => {
       });
 
       // Proceed with emails only if not already sent
-      if (!getEmailSentFlag(currentOrderId)) {
+      if (!getEmailSentFlag(checkoutOrderId)) {
         await handleEmailSending(data, checkoutOrderId);
       }
 
       // Also clear any short-term lock now that insert is done
-      clearOrderProcessingLock(currentOrderId);
+      clearOrderProcessingLock(checkoutOrderId);
 
     } catch (error) {
       console.error('Checkout-style insert failed:', error);
@@ -681,9 +677,9 @@ const PaymentSuccess = () => {
 
       console.log('✅ All conditions met, attempting auto checkout-style insert');
       console.log('Backup data found:', checkoutOrderBackup);
-      
+
       setAutoInsertAttempted(true);
-      
+
       try {
         await handleCheckoutStyleDatabaseInsert();
         console.log('✅ Auto checkout-style insert completed successfully');
@@ -694,7 +690,7 @@ const PaymentSuccess = () => {
 
     // Increased delay to ensure all state updates are complete
     const timer = setTimeout(attemptAutoInsert, 2500);
-    
+
     return () => clearTimeout(timer);
   }, [isLoading, dbInsertComplete, autoInsertAttempted]);
 
@@ -711,7 +707,7 @@ const PaymentSuccess = () => {
       });
       return;
     }
-    
+
     setRetryCount(prev => prev + 1);
     await processPaymentSuccess(true);
   };
@@ -777,7 +773,7 @@ const PaymentSuccess = () => {
               <Clock className="h-5 w-5 text-amber-600" />
               Payment Processing Method
             </h3>
-            
+
             <div className="space-y-3">
               <div className="flex items-center gap-3 p-3 rounded-lg bg-amber-50 border border-amber-200">
                 <AlertCircle className="h-5 w-5 text-amber-600" />
@@ -800,7 +796,7 @@ const PaymentSuccess = () => {
               <Shield className="h-5 w-5 text-green-600" />
               Payment Verification
             </h3>
-            
+
             <div className="space-y-3">
               <div className="flex items-center gap-3 p-3 rounded-lg bg-green-50 border border-green-200">
                 <CheckCircle className="h-5 w-5 text-green-600" />
@@ -816,7 +812,7 @@ const PaymentSuccess = () => {
         </Card>
       );
     }
-    
+
     return null;
   };
 
@@ -830,7 +826,7 @@ const PaymentSuccess = () => {
                 <Mail className="h-5 w-5 text-blue-600" />
                 Email Notifications
               </h3>
-              
+
               <div className="space-y-3">
                 <div className={`flex items-center gap-3 p-3 rounded-lg border ${
                   emailStatus.customer 
@@ -852,7 +848,7 @@ const PaymentSuccess = () => {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className={`flex items-center gap-3 p-3 rounded-lg border ${
                   emailStatus.business 
                     ? 'bg-green-50 border-green-200' 
@@ -878,7 +874,7 @@ const PaymentSuccess = () => {
           </Card>
         );
       }
-      
+
       return null;
     };
   */
@@ -892,7 +888,7 @@ const PaymentSuccess = () => {
               <RefreshCw className="h-5 w-5 animate-spin text-blue-600" />
               Processing Order
             </h3>
-            
+
             <div className="space-y-3">
               <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
                 <div className="flex-1">
@@ -907,7 +903,7 @@ const PaymentSuccess = () => {
         </Card>
       );
     }
-    
+
     if (!isLoading && !processingError && orderItems.length === 0) {
       return (
         <Card className="mb-8 border-yellow-200">
@@ -916,7 +912,7 @@ const PaymentSuccess = () => {
               <AlertCircle className="h-5 w-5 text-yellow-600" />
               Order Processing
             </h3>
-            
+
             <div className="space-y-3">
               <div className="flex items-center gap-3 p-3 rounded-lg bg-yellow-50 border border-yellow-200">
                 <div className="flex-1">
@@ -926,7 +922,7 @@ const PaymentSuccess = () => {
                   </p>
                 </div>
               </div>
-              
+
               {/* Test Database Insert Buttons */}
               <div className="flex justify-center gap-2 pt-2">
                 <Button 
@@ -939,7 +935,7 @@ const PaymentSuccess = () => {
                   <Database className="h-4 w-4" />
                   {testingDbInsert ? 'Testing...' : 'Test Schema-Accurate DB Insert'}
                 </Button>
-                
+
                 {/* Hidden button - will be auto-triggered */}
                 <Button 
                   onClick={handleCheckoutStyleDatabaseInsert} 
@@ -957,7 +953,7 @@ const PaymentSuccess = () => {
         </Card>
       );
     }
-    
+
     if (processingError) {
       return (
         <Card className="mb-8 border-red-200">
@@ -966,7 +962,7 @@ const PaymentSuccess = () => {
               <XCircle className="h-5 w-5 text-red-600" />
               Processing Issue
             </h3>
-            
+
             <div className="space-y-3">
               <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50 border border-red-200">
                 <AlertCircle className="h-5 w-5 text-red-600" />
@@ -986,7 +982,7 @@ const PaymentSuccess = () => {
                   )}
                 </div>
               </div>
-              
+
               <div className="flex justify-center gap-2 pt-2">
                 {retryCount < 3 && (
                   <Button 
@@ -999,7 +995,7 @@ const PaymentSuccess = () => {
                     Retry Processing ({retryCount}/3)
                   </Button>
                 )}
-                
+
                 <Button 
                   onClick={handleTestDatabaseInsert} 
                   variant="outline" 
@@ -1010,7 +1006,7 @@ const PaymentSuccess = () => {
                   <Database className="h-4 w-4" />
                   {testingDbInsert ? 'Testing...' : 'Test Schema-Accurate DB Insert'}
                 </Button>
-                
+
                 {/* Hidden button - will be auto-triggered */}
                 <Button 
                   onClick={handleCheckoutStyleDatabaseInsert} 
@@ -1028,7 +1024,7 @@ const PaymentSuccess = () => {
         </Card>
       );
     }
-    
+
     return null;
   };
 
@@ -1076,7 +1072,7 @@ const PaymentSuccess = () => {
                   <RefreshCw className="h-4 w-4 animate-spin text-blue-600 ml-2" />
                 )}
               </h2>
-              
+
               <div className="space-y-6">
                 {orderItems.map((item, index) => (
                   <div key={item.id} className="border-b pb-6 last:border-b-0">
@@ -1109,7 +1105,7 @@ const PaymentSuccess = () => {
                           <Truck className="h-4 w-4" />
                           Delivery Information
                         </h4>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {item.delivery_address_street && (
                             <div>
@@ -1161,7 +1157,7 @@ const PaymentSuccess = () => {
             </CardContent>
           </Card>
         )}
-        
+
         <div className="space-y-8">
           <div>
             <h2 className="text-xl font-semibold mb-4">What Happens Next?</h2>
@@ -1175,7 +1171,7 @@ const PaymentSuccess = () => {
                   We've received your order and are preparing your delivery. You'll receive a confirmation email soon.
                 </p>
               </div>
-              
+
               <div className="bg-white p-5 rounded-lg border">
                 <div className="flex items-center mb-3">
                   <span className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold mr-2">2</span>
@@ -1185,7 +1181,7 @@ const PaymentSuccess = () => {
                   Our team will prepare your materials and schedule the delivery for your selected date.
                 </p>
               </div>
-              
+
               <div className="bg-white p-5 rounded-lg border">
                 <div className="flex items-center mb-3">
                   <span className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold mr-2">3</span>
@@ -1197,7 +1193,7 @@ const PaymentSuccess = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
             <div className="flex items-center gap-3 mb-4">
               <Truck className="h-5 w-5 text-blue-600" />
@@ -1239,7 +1235,7 @@ const PaymentSuccess = () => {
             Return to Homepage
           </Button>
         </div>
-          
+
         </div>
       </div>
     </div>
