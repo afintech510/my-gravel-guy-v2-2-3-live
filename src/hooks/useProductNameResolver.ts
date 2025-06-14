@@ -37,7 +37,6 @@ export const useProductNameResolver = (
           return [
             item.productId,
             product?.name ||
-              product?.title ||
               item.fallbackName || // fallback from order row
               item.productId?.toString() // fallback: stringified ID
           ];
