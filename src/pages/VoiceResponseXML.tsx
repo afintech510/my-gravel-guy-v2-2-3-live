@@ -18,9 +18,9 @@ const VoiceResponseXML = () => {
 
   const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-<Say voice="woman">Thanks for the call. Configure your number's voice U R L to change this message.</Say>
+<Say voice="woman">Thank you for calling my gravel guy dot com. </Say>
 <Pause length="1"/>
-<Say voice="woman">Let us know if we can help you in any way during your development.</Say>
+<Say voice="woman"> we are america's first A I powered gravel distribution network.</Say>
 </Response>`;
 
   return (
