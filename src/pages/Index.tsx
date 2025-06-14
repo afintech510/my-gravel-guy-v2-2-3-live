@@ -18,7 +18,7 @@ const Index = () => {
   
   // Enable flashing title effect on homepage
   useFlashingTitle({
-    flashText: '🚛 FREE Delivery Nationwide!',
+    flashText: '🚛 FREE Delivery Nationwide',
     interval: 2000,
     enabled: true
   });
