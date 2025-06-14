@@ -10,6 +10,11 @@ import { detectPaymentSuccess, clearCheckoutBackup, getCheckoutBackup } from '..
 import { insertOrderToDatabase, testDatabaseInsert } from '../services/orderInsertService';
 import { sendBothOrderEmails } from '../services/emailService';
 import { useProductNameResolver } from '../hooks/useProductNameResolver';
+import { 
+  getOrderProcessFlag, setOrderProcessFlag, clearOrderProcessFlag,
+  getEmailSentFlag, setEmailSentFlag, clearEmailSentFlag,
+  acquireOrderProcessingLock, clearOrderProcessingLock
+} from '../utils/sessionOrderUtils';
 
 interface OrderItem {
   id: string;
@@ -100,6 +105,13 @@ const PaymentSuccess = () => {
     };
   };
 
+  // Add a unique processing key based on orderId or paymentIntentId
+  const getCurrentProcessingKey = () => {
+    const paymentIntentId = searchParams.get('payment_intent') || searchParams.get('payment_intent_id');
+    const orderIdParam = searchParams.get('order_id');
+    return paymentIntentId || orderIdParam || (orderItems[0]?.order_id ?? null);
+  };
+
   const processPaymentSuccess = async (isRetry = false) => {
     console.log('=== PAYMENT SUCCESS PROCESSING START ===', { isRetry, retryCount });
     
@@ -110,6 +122,30 @@ const PaymentSuccess = () => {
     }
     
     try {
+      // Ensure at least one param present for uniqueness
+      const paymentIntentId = searchParams.get('payment_intent') || searchParams.get('payment_intent_id');
+      const orderIdParam = searchParams.get('order_id');
+      const processingKey = paymentIntentId || orderIdParam || (checkoutOrderBackup?.orderId ?? null);
+      if (!processingKey) {
+        setProcessingError('Missing order/payment identifier in URL. Unable to process your order.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Session-based duplicate prevention: use lock and flags
+      if (!isRetry && getOrderProcessFlag(processingKey)) {
+        // Already processed
+        setIsLoading(false);
+        setProcessingError('Order already processed.');
+        return;
+      }
+      // Prevent re-entry by racing reloads/multi-clicks
+      if (!acquireOrderProcessingLock(processingKey)) {
+        setIsLoading(false);
+        setProcessingError('Order is already being processed. Please wait a moment and reload if needed.');
+        return;
+      }
+
       // Extract URL parameters - prioritize payment_intent
       const paymentIntentId = searchParams.get('payment_intent') || searchParams.get('payment_intent_id');
       const orderIdParam = searchParams.get('order_id');
@@ -294,6 +330,11 @@ const PaymentSuccess = () => {
   };
 
   const handleDatabaseInsert = async (checkoutOrderBackup: any, currentOrderId: string, verificationData: any) => {
+    // Block repeated insert via flag
+    if (getOrderProcessFlag(currentOrderId)) {
+      setProcessingError('Order already processed and inserted into the database.');
+      return;
+    }
     try {
       console.log('=== STARTING DATABASE INSERT ===');
       
@@ -335,9 +376,14 @@ const PaymentSuccess = () => {
         variant: "default"
       });
 
-      // Send emails after successful database insert
-      await handleEmailSending(insertedOrders, currentOrderId);
-      
+      // Proceed with emails only if not already sent
+      if (!getEmailSentFlag(currentOrderId)) {
+        await handleEmailSending(insertedOrders, currentOrderId);
+      }
+
+      // Also clear any short-term lock now that insert is done
+      clearOrderProcessingLock(currentOrderId);
+
     } catch (dbError) {
       console.error('Database insert failed:', dbError);
       setProcessingError(`Order confirmed but database insert failed: ${dbError.message}`);
@@ -552,9 +598,14 @@ const PaymentSuccess = () => {
         variant: "default"
       });
 
-      // Send emails after successful database insert
-      await handleEmailSending(data, checkoutOrderId);
-      
+      // Proceed with emails only if not already sent
+      if (!getEmailSentFlag(currentOrderId)) {
+        await handleEmailSending(data, checkoutOrderId);
+      }
+
+      // Also clear any short-term lock now that insert is done
+      clearOrderProcessingLock(currentOrderId);
+
     } catch (error) {
       console.error('Checkout-style insert failed:', error);
       toast({
@@ -680,6 +731,12 @@ const PaymentSuccess = () => {
 
   // Navigation handlers with cart clearing
   const handleContinueShopping = () => {
+    const key = getCurrentProcessingKey();
+    if (key) {
+      clearOrderProcessFlag(key);
+      clearOrderProcessingLock(key);
+      clearEmailSentFlag(key);
+    }
     clearCart();
     clearCheckoutBackup();
     localStorage.removeItem('checkout-in-progress');
@@ -693,6 +750,12 @@ const PaymentSuccess = () => {
   };
 
   const handleReturnHome = () => {
+    const key = getCurrentProcessingKey();
+    if (key) {
+      clearOrderProcessFlag(key);
+      clearOrderProcessingLock(key);
+      clearEmailSentFlag(key);
+    }
     clearCart();
     clearCheckoutBackup();
     localStorage.removeItem('checkout-in-progress');
