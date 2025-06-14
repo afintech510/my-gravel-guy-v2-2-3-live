@@ -46,6 +46,7 @@ import Reviews from "./pages/Reviews";
 import Dashboard from "./pages/Dashboard";
 import Sitemap from "./pages/Sitemap";
 import SitemapXML from "./pages/SitemapXML";
+import VoiceResponseXML from "./pages/VoiceResponseXML";
 import SMSConsent from "./pages/SMSConsent";
 import { Link } from "react-router-dom";
 
@@ -111,6 +112,7 @@ function App() {
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/sitemap" element={<Sitemap />} />
                       <Route path="/sitemap.xml" element={<SitemapXML />} />
+                      <Route path="/voice-response.xml" element={<VoiceResponseXML />} />
                       <Route path="/sms-consent" element={<SMSConsent />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
