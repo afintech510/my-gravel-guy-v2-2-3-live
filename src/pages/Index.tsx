@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import ZipCodeSearch from '../components/zip-code/ZipCodeSearch';
@@ -8,6 +7,7 @@ import HowItWorks from '../components/HowItWorks';
 import TestQueryButton from '../components/TestQueryButton';
 import { Button } from '@/components/ui/button';
 import { useZipCode } from '../contexts/ZipCodeContext';
+import { useFlashingTitle } from '../hooks/useFlashingTitle';
 import TrustBanner from '../components/products/trust/TrustBanner';
 import GettingBackToRoots from '../components/GettingBackToRoots';
 import FAQModule from '../components/home/FAQModule';
@@ -15,6 +15,13 @@ import { Store, Calculator, DollarSign } from 'lucide-react';
 
 const Index = () => {
   const { zipCode } = useZipCode();
+  
+  // Enable flashing title effect on homepage
+  useFlashingTitle({
+    flashText: 'FREE DELIVERY',
+    interval: 2000,
+    enabled: true
+  });
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
