@@ -73,10 +73,7 @@ const Sitemap = () => {
 
   const toolsPages = [
     { label: 'Product Calculator', href: '/product-calculator', description: 'Calculate materials needed for your project' },
-    { label: 'Material Calculator', href: '/calculator', description: 'Advanced material calculation tool' },
-    { label: 'Calculator Shop', href: '/calculator-shop', description: 'Shop while calculating your needs' },
-    { label: 'Project Planning Quiz', href: '/quiz', description: 'Get personalized material recommendations' },
-  ];
+   ];
 
   const locationPages = [
     { label: 'All Locations', href: '/locations', description: 'Find service areas and locations' },
