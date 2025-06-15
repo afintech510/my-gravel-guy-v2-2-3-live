@@ -75,7 +75,7 @@ const FAQModule = () => {
       answer: "We deliver to most locations across the United States. Enter your ZIP code on our website to check if we service your area."
     },
     {
-      question: "Will the material arrive in a Hello Gravel dump truck?",
+      question: "Will the material arrive in a My Gravel Guy dump truck?",
       answer: "Materials are delivered by our network of trusted local suppliers using their own delivery vehicles, which may vary by location."
     },
     {
