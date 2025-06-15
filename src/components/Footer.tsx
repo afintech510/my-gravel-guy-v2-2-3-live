@@ -28,9 +28,10 @@ const Footer = () => {
     { label: 'Privacy Policy', href: '/privacy', icon: <FileText className="h-4 w-4" /> },
     { label: 'Terms of Service', href: '/terms', icon: <FileText className="h-4 w-4" /> },
     { label: 'Refund Policy', href: '/refund', icon: <FileText className="h-4 w-4" /> },
+    { label: 'SMS Consent', href: '/sms-consent', icon: <FileText className="h-4 w-4" /> },
     { label: 'Sitemap', href: '/sitemap', icon: <Globe className="h-4 w-4" /> },
   ];
-
+  
   const helpLinks = [
     { label: 'FAQ', href: '/faq', icon: <HelpCircle className="h-4 w-4" /> },
     { label: 'Blog', href: '/blog', icon: <BookOpen className="h-4 w-4" /> },
