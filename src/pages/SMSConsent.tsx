@@ -18,8 +18,8 @@ const SMSConsent = () => {
             </p>
           </div>
 
-          {/* SMS Test Section */}
-          <SMSTestSection />
+          {/* SMS Test Section 
+              <SMSTestSection />  */}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
             {/* Consent Information */}
