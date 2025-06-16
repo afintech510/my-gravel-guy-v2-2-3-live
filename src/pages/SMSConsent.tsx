@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, MessageSquare, Phone, Mail, Shield } from 'lucide-react';
+import SMSTestSection from '@/components/sms/SMSTestSection';
 
 const SMSConsent = () => {
   return (
@@ -16,6 +17,9 @@ const SMSConsent = () => {
               Transparent communication practices and your consent preferences
             </p>
           </div>
+
+          {/* SMS Test Section */}
+          <SMSTestSection />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
             {/* Consent Information */}
