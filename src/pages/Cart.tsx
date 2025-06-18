@@ -226,7 +226,7 @@ const Cart = () => {
     setIsProcessingCheckout(true);
     
     try {
-      console.log('=== FRICTIONLESS CHECKOUT PROCESS START ===');
+      console.log('=== ENHANCED FRICTIONLESS CHECKOUT PROCESS START ===');
       
       // Get user info from the first cart item (they should all have the same contact info)
       const firstItem = items[0];
@@ -238,7 +238,7 @@ const Cart = () => {
       
       console.log('Auto-authenticating user:', authData.email);
       
-      // Auto-authenticate the user
+      // Enhanced auto-authentication with better session handling
       const authResult = await AutoAuthService.ensureAuthenticated(authData);
       
       if (!authResult.success) {
@@ -246,6 +246,14 @@ const Cart = () => {
       }
       
       console.log('User authenticated successfully:', authResult.user?.email);
+      
+      // Verify authentication state before proceeding
+      const authState = await AutoAuthService.verifyAuthenticationState();
+      console.log('Authentication state verified:', authState);
+      
+      if (!authState.isAuthenticated) {
+        throw new Error('Authentication verification failed - session not properly established');
+      }
       
       if (authResult.isNewAccount) {
         toast({
@@ -260,11 +268,14 @@ const Cart = () => {
       // Send cart confirmation email using form data
       await sendCartConfirmationEmail();
 
+      // Add a small delay to ensure session is fully propagated
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       // Navigate to checkout
       navigate('/checkout');
       
     } catch (error) {
-      console.error('Error processing frictionless checkout:', error);
+      console.error('Error processing enhanced frictionless checkout:', error);
       
       toast({
         variant: "destructive",
