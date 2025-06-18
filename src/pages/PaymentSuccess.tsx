@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,6 +29,7 @@ interface OrderItem {
   delivery_time_preference: string | null;
   delivery_instructions: string | null;
   status: string;
+  locationPhotoUrl?: string | null; // Added missing property
 }
 
 const PaymentSuccess = () => {
