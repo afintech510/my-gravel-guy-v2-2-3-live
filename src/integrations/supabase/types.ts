@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -8,130 +7,77 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          operationName?: string
+          query?: string
+          variables?: Json
+          extensions?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
-      admin_users: {
+      
+      price_tiers: {
         Row: {
-          id: string
-          user_id: string
-          email: string
-          role: 'super_admin' | 'admin' | 'manager' | 'viewer'
-          permissions: Json
-          is_active: boolean
-          created_at: string
-          updated_at: string
-          created_by: string | null
-          last_login_at: string | null
+          id: string;
+          product_id: string[];
+          min_tons: number;
+          max_tons: number;
+          multiplier: number;
+          created_at: string;
         }
         Insert: {
-          id?: string
-          user_id: string
-          email: string
-          role: 'super_admin' | 'admin' | 'manager' | 'viewer'
-          permissions?: Json
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-          created_by?: string | null
-          last_login_at?: string | null
+          id?: string;
+          product_id: string[];
+          min_tons: number;
+          max_tons?: number;
+          multiplier: number;
+          created_at?: string;
         }
         Update: {
-          id?: string
-          user_id?: string
-          email?: string
-          role?: 'super_admin' | 'admin' | 'manager' | 'viewer'
-          permissions?: Json
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-          created_by?: string | null
-          last_login_at?: string | null
+          id?: string;
+          product_id?: string[];
+          min_tons?: number;
+          max_tons?: number;
+          multiplier?: number;
+          created_at?: string;
         }
-        Relationships: [
-          {
-            foreignKeyName: "admin_users_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "admin_users_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
+        Relationships: []
       }
-      audit_logs: {
-        Row: {
-          id: string
-          admin_user_id: string | null
-          user_email: string | null
-          action: string
-          resource_type: string
-          resource_id: string | null
-          old_values: Json | null
-          new_values: Json | null
-          ip_address: string | null
-          user_agent: string | null
-          session_id: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          admin_user_id?: string | null
-          user_email?: string | null
-          action: string
-          resource_type: string
-          resource_id?: string | null
-          old_values?: Json | null
-          new_values?: Json | null
-          ip_address?: string | null
-          user_agent?: string | null
-          session_id?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          admin_user_id?: string | null
-          user_email?: string | null
-          action?: string
-          resource_type?: string
-          resource_id?: string | null
-          old_values?: Json | null
-          new_values?: Json | null
-          ip_address?: string | null
-          user_agent?: string | null
-          session_id?: string | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "audit_logs_admin_user_id_fkey"
-            columns: ["admin_user_id"]
-            isOneToOne: false
-            referencedRelation: "admin_users"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
+
       blog_categories: {
         Row: {
-          created_at: string
+          created_at: string | null
           id: string
           name: string
           slug: string
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           id?: string
           name: string
           slug: string
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           id?: string
           name?: string
           slug?: string
@@ -140,51 +86,48 @@ export type Database = {
       }
       blog_posts: {
         Row: {
-          author: string
+          author: string | null
           category_id: string | null
           content: string
-          created_at: string
-          excerpt: string | null
+          created_at: string | null
+          excerpt: string
           featured_image: string | null
           id: string
+          is_featured: boolean | null
           meta_description: string | null
+          meta_title: string | null
           published_at: string | null
-          read_time: number | null
-          seo_keywords: string[] | null
           slug: string
-          status: string
           title: string
         }
         Insert: {
-          author: string
+          author?: string | null
           category_id?: string | null
           content: string
-          created_at?: string
-          excerpt?: string | null
+          created_at?: string | null
+          excerpt: string
           featured_image?: string | null
           id?: string
+          is_featured?: boolean | null
           meta_description?: string | null
+          meta_title?: string | null
           published_at?: string | null
-          read_time?: number | null
-          seo_keywords?: string[] | null
           slug: string
-          status?: string
           title: string
         }
         Update: {
-          author?: string
+          author?: string | null
           category_id?: string | null
           content?: string
-          created_at?: string
-          excerpt?: string | null
+          created_at?: string | null
+          excerpt?: string
           featured_image?: string | null
           id?: string
+          is_featured?: boolean | null
           meta_description?: string | null
+          meta_title?: string | null
           published_at?: string | null
-          read_time?: number | null
-          seo_keywords?: string[] | null
           slug?: string
-          status?: string
           title?: string
         }
         Relationships: [
@@ -199,31 +142,46 @@ export type Database = {
       }
       customer_reviews: {
         Row: {
-          created_at: string
-          customer_email: string | null
-          customer_name: string
+          admin_response: string | null
+          admin_response_date: string | null
+          content: string
+          created_at: string | null
+          helpful_votes: number | null
           id: string
           product_id: string | null
+          product_name: string | null
           rating: number
-          review_text: string | null
+          title: string
+          user_name: string
+          verified_purchase: boolean | null
         }
         Insert: {
-          created_at?: string
-          customer_email?: string | null
-          customer_name: string
+          admin_response?: string | null
+          admin_response_date?: string | null
+          content: string
+          created_at?: string | null
+          helpful_votes?: number | null
           id?: string
           product_id?: string | null
+          product_name?: string | null
           rating: number
-          review_text?: string | null
+          title: string
+          user_name: string
+          verified_purchase?: boolean | null
         }
         Update: {
-          created_at?: string
-          customer_email?: string | null
-          customer_name?: string
+          admin_response?: string | null
+          admin_response_date?: string | null
+          content?: string
+          created_at?: string | null
+          helpful_votes?: number | null
           id?: string
           product_id?: string | null
+          product_name?: string | null
           rating?: number
-          review_text?: string | null
+          title?: string
+          user_name?: string
+          verified_purchase?: boolean | null
         }
         Relationships: [
           {
@@ -238,60 +196,183 @@ export type Database = {
       delivery_locations: {
         Row: {
           city: string
-          created_at: string
+          created_at: string | null
+          description: string | null
           id: string
-          is_active: boolean
+          lat: number
+          lng: number
+          product_name: string | null
+          region: string | null
+          slug: string | null
           state: string
-          zip_code: string
+          title: string | null
         }
         Insert: {
           city: string
-          created_at?: string
+          created_at?: string | null
+          description?: string | null
           id?: string
-          is_active?: boolean
+          lat: number
+          lng: number
+          product_name?: string | null
+          region?: string | null
+          slug?: string | null
           state: string
-          zip_code: string
+          title?: string | null
         }
         Update: {
           city?: string
-          created_at?: string
+          created_at?: string | null
+          description?: string | null
           id?: string
-          is_active?: boolean
+          lat?: number
+          lng?: number
+          product_name?: string | null
+          region?: string | null
+          slug?: string | null
           state?: string
-          zip_code?: string
+          title?: string | null
         }
         Relationships: []
       }
       location_search: {
         Row: {
-          city: string
-          county: string
-          created_at: string
+          city: string | null
+          created_at: string | null
           id: string
-          lat: number
-          lng: number
-          state: string
-          zip_code: string
+          ip_address: string | null
+          search_text: string
+          state: string | null
+          user_agent: string | null
+          zipcode: string | null
         }
         Insert: {
-          city: string
-          county: string
-          created_at?: string
+          city?: string | null
+          created_at?: string | null
           id?: string
-          lat: number
-          lng: number
-          state: string
-          zip_code: string
+          ip_address?: string | null
+          search_text: string
+          state?: string | null
+          user_agent?: string | null
+          zipcode?: string | null
         }
         Update: {
-          city?: string
-          county?: string
-          created_at?: string
+          city?: string | null
+          created_at?: string | null
           id?: string
-          lat?: number
-          lng?: number
-          state?: string
-          zip_code?: string
+          ip_address?: string | null
+          search_text?: string
+          state?: string | null
+          user_agent?: string | null
+          zipcode?: string | null
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          application: string | null
+          category: string | null
+          color: string | null
+          created_at: string | null
+          description: string | null
+          efficiency: string | null
+          id: string
+          image: string | null
+          metadata: string | null
+          name: string
+          price: number
+          size: string | null
+          ton_yard_ratio: string | null
+          zip_code_ratio: string | null
+        }
+        Insert: {
+          application?: string | null
+          category?: string | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          efficiency?: string | null
+          id?: string
+          image?: string | null
+          metadata?: string | null
+          name: string
+          price: number
+          size?: string | null
+          ton_yard_ratio?: string | null
+          zip_code_ratio?: string | null
+        }
+        Update: {
+          application?: string | null
+          category?: string | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          efficiency?: string | null
+          id?: string
+          image?: string | null
+          metadata?: string | null
+          name?: string
+          price?: number
+          size?: string | null
+          ton_yard_ratio?: string | null
+          zip_code_ratio?: string | null
+        }
+        Relationships: []
+      }
+      service_zip_codes: {
+        Row: {
+          city: string | null
+          county_fips: string | null
+          county_fips_all: string | null
+          county_name: string | null
+          county_names_all: string | null
+          created_at: string | null
+          density: number | null
+          id: string
+          lat: number | null
+          lng: number | null
+          population: number | null
+          price_adjustment: number | null
+          state_id: string | null
+          state_name: string | null
+          timezone: string | null
+          zip: string
+        }
+        Insert: {
+          city?: string | null
+          county_fips?: string | null
+          county_fips_all?: string | null
+          county_name?: string | null
+          county_names_all?: string | null
+          created_at?: string | null
+          density?: number | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          population?: number | null
+          price_adjustment?: number | null
+          state_id?: string | null
+          state_name?: string | null
+          timezone?: string | null
+          zip: string
+        }
+        Update: {
+          city?: string | null
+          county_fips?: string | null
+          county_fips_all?: string | null
+          county_name?: string | null
+          county_names_all?: string | null
+          created_at?: string | null
+          density?: number | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          population?: number | null
+          price_adjustment?: number | null
+          state_id?: string | null
+          state_name?: string | null
+          timezone?: string | null
+          zip?: string
         }
         Relationships: []
       }
@@ -299,213 +380,108 @@ export type Database = {
         Row: {
           id: string
           order_id: string
-          stripe_session_id: string
-          stripe_payment_intent_id: string
+          stripe_session_id: string | null
+          stripe_payment_intent_id: string | null
           product_id: string
           unit: string
           unit_price: number
           total_price: number
-          delivery_date: string
-          delivery_address: string
-          delivery_city: string
-          delivery_state: string
-          delivery_zip: string
-          customer_name: string
-          customer_email: string
-          customer_phone: string
-          instructions: string | null
-          status: string
-          created_at: string
-          updated_at: string
+          delivery_date: string | null
+          delivery_street: string | null
+          delivery_city: string | null
+          delivery_state: string | null
+          delivery_zip: string | null
+          delivery_time_preference: string | null
+          delivery_instructions: string | null
+          delivery_phone: string | null
+          delivery_name: string | null
+          delivery_email: string | null
+          status: string | null
+          attachment_files: string[] | null
+          created_at: string | null
+          updated_at: string | null
+          delivered_at: string | null
           supplier_id: string | null
-          supplier_name: string | null
-          supplier_price: number | null
-          supplier_confirmed: boolean
-          supplier_notes: string | null
-          tons: number
-          zip_adjust: number
+          supplier_charges: number | null
+          notes: string | null
+          billing_name: string | null
+          quantity: number | null
+          billing_email: string | null
+          zip_adjust: number | null
         }
         Insert: {
           id?: string
           order_id: string
-          stripe_session_id: string
-          stripe_payment_intent_id: string
+          stripe_session_id?: string | null
+          stripe_payment_intent_id?: string | null
           product_id: string
           unit: string
           unit_price: number
           total_price: number
-          delivery_date: string
-          delivery_address: string
-          delivery_city: string
-          delivery_state: string
-          delivery_zip: string
-          customer_name: string
-          customer_email: string
-          customer_phone: string
-          instructions?: string | null
-          status?: string
-          created_at?: string
-          updated_at?: string
+          delivery_date?: string | null
+          delivery_street?: string | null
+          delivery_city?: string | null
+          delivery_state?: string | null
+          delivery_zip?: string | null
+          delivery_time_preference?: string | null
+          delivery_instructions?: string | null
+          delivery_phone?: string | null
+          delivery_name?: string | null
+          delivery_email?: string | null
+          status?: string | null
+          attachment_files?: string[] | null
+          created_at?: string | null
+          updated_at?: string | null
+          delivered_at?: string | null
           supplier_id?: string | null
-          supplier_name?: string | null
-          supplier_price?: number | null
-          supplier_confirmed?: boolean
-          supplier_notes?: string | null
-          tons: number
-          zip_adjust: number
+          supplier_charges?: number | null
+          notes?: string | null
+          billing_name?: string | null
+          quantity?: number | null
+          billing_email?: string | null
+          zip_adjust?: number | null
         }
         Update: {
           id?: string
           order_id?: string
-          stripe_session_id?: string
-          stripe_payment_intent_id?: string
+          stripe_session_id?: string | null
+          stripe_payment_intent_id?: string | null
           product_id?: string
           unit?: string
           unit_price?: number
           total_price?: number
-          delivery_date?: string
-          delivery_address?: string
-          delivery_city?: string
-          delivery_state?: string
-          delivery_zip?: string
-          customer_name?: string
-          customer_email?: string
-          customer_phone?: string
-          instructions?: string | null
-          status?: string
-          created_at?: string
-          updated_at?: string
+          delivery_date?: string | null
+          delivery_street?: string | null
+          delivery_city?: string | null
+          delivery_state?: string | null
+          delivery_zip?: string | null
+          delivery_time_preference?: string | null
+          delivery_instructions?: string | null
+          delivery_phone?: string | null
+          delivery_name?: string | null
+          delivery_email?: string | null
+          status?: string | null
+          attachment_files?: string[] | null
+          created_at?: string | null
+          updated_at?: string | null
+          delivered_at?: string | null
           supplier_id?: string | null
-          supplier_name?: string | null
-          supplier_price?: number | null
-          supplier_confirmed?: boolean
-          supplier_notes?: string | null
-          tons?: number
-          zip_adjust?: number
+          supplier_charges?: number | null
+          notes?: string | null
+          billing_name?: string | null
+          quantity?: number | null
+          billing_email?: string | null
+          zip_adjust?: number | null
         }
         Relationships: []
       }
-      price_tiers: {
-        Row: {
-          created_at: string
-          id: string
-          max_tons: number
-          min_tons: number
-          multiplier: number
-          product_id: string[]
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          max_tons?: number
-          min_tons: number
-          multiplier: number
-          product_id: string[]
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          max_tons?: number
-          min_tons?: number
-          multiplier?: number
-          product_id?: string[]
-        }
-        Relationships: []
-      }
-      products: {
-        Row: {
-          category: string
-          created_at: string
-          description: string | null
-          id: string
-          image_url: string | null
-          name: string
-          price_per_ton: number
-          slug: string
-        }
-        Insert: {
-          category: string
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          name: string
-          price_per_ton: number
-          slug: string
-        }
-        Update: {
-          category?: string
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          name?: string
-          price_per_ton?: number
-          slug?: string
-        }
-        Relationships: []
-      }
-      service_zip_codes: {
-        Row: {
-          city: string
-          created_at: string
-          id: string
-          is_active: boolean
-          price_adjustment: number
-          state: string
-          zip_code: string
-        }
-        Insert: {
-          city: string
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          price_adjustment?: number
-          state: string
-          zip_code: string
-        }
-        Update: {
-          city?: string
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          price_adjustment?: number
-          state?: string
-          zip_code?: string
-        }
-        Relationships: []
-      }
+
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      get_current_admin_user: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          id: string
-          email: string
-          role: string
-          permissions: Json
-          last_login_at: string | null
-        }[]
-      }
-      is_admin_with_role: {
-        Args: {
-          required_role?: string
-        }
-        Returns: boolean
-      }
-      log_admin_action: {
-        Args: {
-          p_action: string
-          p_resource_type: string
-          p_resource_id?: string
-          p_old_values?: Json
-          p_new_values?: Json
-        }
-        Returns: string
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
@@ -516,27 +492,29 @@ export type Database = {
   }
 }
 
-type PublicSchema = Database[Extract<keyof Database, "public">]
+type DefaultSchema = Database[Extract<keyof Database, "public">]
 
 export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
-        PublicSchema["Views"])
-    ? (PublicSchema["Tables"] &
-        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -544,20 +522,22 @@ export type Tables<
     : never
 
 export type TablesInsert<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -565,20 +545,22 @@ export type TablesInsert<
     : never
 
 export type TablesUpdate<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -586,21 +568,23 @@ export type TablesUpdate<
     : never
 
 export type Enums<
-  PublicEnumNameOrOptions extends
-    | keyof PublicSchema["Enums"]
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
-    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof PublicSchema["CompositeTypes"]
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof Database },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof Database
@@ -609,6 +593,15 @@ export type CompositeTypes<
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
   ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
-    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+
+export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
+  public: {
+    Enums: {},
+  },
+} as const

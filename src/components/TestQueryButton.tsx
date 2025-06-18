@@ -26,7 +26,7 @@ const TestQueryButton = () => {
       const { data, error } = await supabase
         .from('service_zip_codes')
         .select('id')
-        .limit(1);
+        .limit(10);
       
       if (error) {
         throw new Error(`Connection error: ${error.message}`);
@@ -57,7 +57,7 @@ const TestQueryButton = () => {
     setCount(null);
     
     try {
-      console.log('Running test query for locations...');
+      console.log('Running test query for Virginia locations...');
       
       // First check if we have any data at all
       const { count: totalCount, error: countError } = await supabase
@@ -70,34 +70,43 @@ const TestQueryButton = () => {
         throw new Error(`Count error: ${countError.message}`);
       }
       
-      // Query for sample data - use correct field names from schema
-      const { data, error, count: resultCount } = await supabase
+      // First try with state_name
+      let { data, error, count: resultCount } = await supabase
         .from('service_zip_codes')
-        .select('city, state, zip_code', { count: 'exact' })
+        .select('city, state_id, zip', { count: 'exact' })
+        .eq('state_name', 'Virginia')
         .limit(10);
       
-      console.log('Query results:', data);
+      console.log('Virginia query with state_name results:', data);
+      
+      // If no results and no error, try with state_id instead
+      if ((!data || data.length === 0) && !error) {
+        console.log('Trying with state_id instead...');
+        const result = await supabase
+          .from('service_zip_codes')
+          .select('city, state_id, zip', { count: 'exact' })
+          .eq('state_id', 'VA')
+          .limit(10);
+          
+        data = result.data;
+        error = result.error;
+        resultCount = result.count;
+        console.log('Virginia query with state_id results:', data);
+      }
       
       if (error) {
         throw new Error(`Query error: ${error.message}`);
       }
       
-      // Convert to expected format
-      const formattedResults: LocationResult[] = (data || []).map(item => ({
-        city: item.city || 'Unknown',
-        state_id: item.state || 'Unknown',
-        zip: item.zip_code || 'Unknown'
-      }));
-      
-      setResults(formattedResults);
+      setResults(data || []);
       setCount(resultCount);
       
-      const message = formattedResults.length > 0
-        ? `Found ${resultCount} locations (showing first ${formattedResults.length})`
-        : "No locations found. Database may be empty.";
+      const message = data && data.length > 0
+        ? `Found ${resultCount} locations in Virginia (showing first ${data.length})`
+        : "No locations found in Virginia. Database may be empty or state values may not match 'Virginia' or 'VA'";
       
       toast({
-        title: formattedResults.length > 0 ? "Query Successful" : "No Results",
+        title: data && data.length > 0 ? "Query Successful" : "No Results",
         description: message,
       });
       
@@ -146,7 +155,7 @@ const TestQueryButton = () => {
             disabled={loading}
             className="flex-none"
           >
-            {loading ? 'Running Query...' : 'Query Locations'}
+            {loading ? 'Running Query...' : 'Query Virginia Locations'}
           </Button>
           
           <Button 
@@ -173,7 +182,7 @@ const TestQueryButton = () => {
       
       {count !== null && (
         <div className="mb-2 text-sm text-gray-500">
-          Found {count} locations (showing first {results.length})
+          Found {count} locations in Virginia (showing first {results.length})
         </div>
       )}
       

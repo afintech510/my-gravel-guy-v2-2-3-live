@@ -50,39 +50,40 @@ const Checkout = () => {
     return null;
   };
 
-  // Test database insertion function with correct schema field names
+  // Test database insertion function with schema-accurate data
   const testDatabaseInsertion = async () => {
     setIsTestingDB(true);
     setCheckoutError(null);
     
     try {
-      console.log('=== TESTING DATABASE INSERTION WITH CORRECT SCHEMA ===');
+      console.log('=== TESTING SCHEMA-ACCURATE DATABASE INSERTION ===');
       
       const testOrderId = `TEST-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
       const orderRecords: OrderInsertData[] = items.map((item, index) => ({
         order_id: testOrderId,
         stripe_session_id: `test_session_${testOrderId}_${index}`,
-        stripe_payment_intent_id: `test_intent_${testOrderId}`,
         product_id: item.id.toString(),
         unit: 'tons',
         unit_price: item.price,
         total_price: item.price * (item.tons || 1),
-        delivery_date: item.deliveryDate?.toISOString() || new Date().toISOString(),
-        delivery_address: item.deliveryAddress?.street || 'Test Address',
-        delivery_city: item.deliveryAddress?.city || 'Test City',
-        delivery_state: item.deliveryAddress?.state || 'TX',
-        delivery_zip: item.deliveryAddress?.zip || '12345',
-        customer_name: item.contactInfo?.name || 'Test Customer',
-        customer_email: item.contactInfo?.email || 'test@example.com',
-        customer_phone: item.contactInfo?.phone || '555-1234',
-        instructions: item.deliveryInstructions || null,
+        quantity: item.tons || 1,
         status: 'test',
-        tons: item.tons || 1,
-        zip_adjust: 0
+        delivery_name: item.contactInfo?.name,
+        delivery_phone: item.contactInfo?.phone,
+        delivery_email: item.contactInfo?.email,
+        billing_name: item.contactInfo?.name,
+        billing_email: item.contactInfo?.email,
+        delivery_date: item.deliveryDate?.toISOString(),
+        delivery_street: item.deliveryAddress?.street,
+        delivery_city: item.deliveryAddress?.city,
+        delivery_state: item.deliveryAddress?.state,
+        delivery_zip: item.deliveryAddress?.zip,
+        delivery_time_preference: item.deliveryTimePreference,
+        delivery_instructions: item.deliveryInstructions
       }));
 
-      console.log('Order records with correct schema:', orderRecords);
+      console.log('Schema-accurate order records to insert:', orderRecords);
 
       const { data, error } = await supabase
         .from('orders')
@@ -94,16 +95,16 @@ const Checkout = () => {
         throw error;
       }
 
-      console.log('Successfully inserted test orders:', data);
+      console.log('Successfully inserted schema-accurate test orders:', data);
       
       toast({
-        title: "Database Test Successful!",
+        title: "Schema-Accurate Database Test Successful!",
         description: `Inserted ${data?.length || 0} test records with ID: ${testOrderId}`,
         className: "border-green-500 border-2 shadow-[0_0_15px_rgba(20,255,106,0.5)]"
       });
 
     } catch (error) {
-      console.error('Database test failed:', error);
+      console.error('Schema-accurate database test failed:', error);
       
       toast({
         variant: "destructive",
@@ -638,12 +639,12 @@ const Checkout = () => {
               {isTestingDB ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Testing DB...
+                  Testing Schema-Accurate DB...
                 </>
               ) : (
                 <>
                   <Database className="mr-2 h-4 w-4" />
-                  Test DB Insert
+                  Test Schema-Accurate DB Insert
                 </>
               )}
             </Button>
