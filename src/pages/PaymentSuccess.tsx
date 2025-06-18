@@ -1000,7 +1000,7 @@ const PaymentSuccess = () => {
         </Card>
 
         <VerificationStatusCard />
-        <ProcessingStatusCard />
+        {/*    <ProcessingStatusCard /> /*}
 
         {/* Order Items Details - Updated to show resolved product names */}
         {orderItems.length > 0 && (
