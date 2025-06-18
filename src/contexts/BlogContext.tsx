@@ -19,7 +19,9 @@ interface BlogPost {
   category_id: string;
   published_at: string;
   author: string | null;
+  meta_title: string | null;
   meta_description: string | null;
+  is_featured: boolean;
   categoryName?: string; // Added for convenience when joining with categories
 }
 
@@ -79,7 +81,7 @@ export const BlogProvider = ({ children }: { children: React.ReactNode }) => {
         if (categoriesError) throw new Error(categoriesError.message);
         setCategories(categoriesData || []);
 
-        // Fetch all posts with category information - using only existing fields
+        // Fetch all posts with category information
         const { data: postsData, error: postsError } = await supabase
           .from('blog_posts')
           .select(`
@@ -90,26 +92,16 @@ export const BlogProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (postsError) throw new Error(postsError.message);
 
-        // Format posts with category name and ensure all required fields
-        const formattedPosts: BlogPost[] = postsData?.map(post => ({
-          id: post.id,
-          title: post.title,
-          slug: post.slug,
-          excerpt: post.excerpt,
-          content: post.content,
-          featured_image: post.featured_image,
-          category_id: post.category_id,
-          published_at: post.published_at,
-          author: post.author,
-          meta_description: post.meta_description,
+        // Format posts with category name for easier access
+        const formattedPosts = postsData?.map(post => ({
+          ...post,
           categoryName: post.blog_categories?.name
         })) || [];
 
         setPosts(formattedPosts);
 
-        // Since is_featured doesn't exist in schema, we'll use published_at to determine featured posts
-        // Get the 3 most recent posts as featured
-        const featured = formattedPosts.slice(0, 3);
+        // Set featured posts
+        const featured = formattedPosts.filter(post => post.is_featured);
         setFeaturedPosts(featured);
 
         setIsLoading(false);
@@ -144,16 +136,7 @@ export const BlogProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (data) {
         return {
-          id: data.id,
-          title: data.title,
-          slug: data.slug,
-          excerpt: data.excerpt,
-          content: data.content,
-          featured_image: data.featured_image,
-          category_id: data.category_id,
-          published_at: data.published_at,
-          author: data.author,
-          meta_description: data.meta_description,
+          ...data,
           categoryName: data.blog_categories?.name
         };
       }
@@ -185,16 +168,7 @@ export const BlogProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) throw error;
       
       return data?.map(post => ({
-        id: post.id,
-        title: post.title,
-        slug: post.slug,
-        excerpt: post.excerpt,
-        content: post.content,
-        featured_image: post.featured_image,
-        category_id: post.category_id,
-        published_at: post.published_at,
-        author: post.author,
-        meta_description: post.meta_description,
+        ...post,
         categoryName: post.blog_categories?.name
       })) || [];
     } catch (err) {

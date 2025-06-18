@@ -1,11 +1,10 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { toast } from '@/components/ui/sonner';
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from '@/integrations/supabase/client';
-import { DeliveryLocation, convertToDeliveryLocation } from '@/types/location.types';
+import { DeliveryLocation } from '@/types/location.types';
 
 const MAPBOX_TOKEN = 'pk.eyJ1IjoiZWFzdGVybmxtNTEiLCJhIjoiY205eXpwaXN5MW1kazJrbXc1emF2eHk2ZSJ9.DHFlpCAMAaVuL7jU4m9ugQ';
 
@@ -27,33 +26,19 @@ const DeliveryMap = () => {
         setLoading(true);
         console.log("Fetching delivery locations from Supabase");
         
-        // First try delivery_locations table
-        let { data, error } = await supabase
+        const { data, error } = await supabase
           .from('delivery_locations')
           .select('*');
           
-        // If delivery_locations doesn't exist or is empty, try service_zip_codes
-        if (error || !data || data.length === 0) {
-          console.log("Trying service_zip_codes table instead");
-          const { data: zipData, error: zipError } = await supabase
-            .from('service_zip_codes')
-            .select('*')
-            .limit(50); // Limit for performance
-            
-          if (zipError) {
-            console.error("Error fetching from service_zip_codes:", zipError);
-            setError("Failed to load delivery locations");
-            toast.error("Failed to load delivery locations");
-            return;
-          }
-          
-          // Convert zip code data to delivery locations
-          const convertedLocations = zipData?.map(convertToDeliveryLocation) || [];
-          setLocations(convertedLocations);
-        } else {
-          console.log(`Fetched ${data.length} delivery locations from Supabase`);
-          setLocations(data as DeliveryLocation[]);
+        if (error) {
+          console.error("Error fetching delivery locations:", error);
+          setError("Failed to load delivery locations");
+          toast.error("Failed to load delivery locations");
+          return;
         }
+        
+        console.log(`Fetched ${data.length} delivery locations from Supabase`);
+        setLocations(data as DeliveryLocation[]);
       } catch (err) {
         console.error("Unexpected error fetching locations:", err);
         setError("An unexpected error occurred");
@@ -148,8 +133,7 @@ const DeliveryMap = () => {
     
     // Add markers for each location
     locations.forEach((location) => {
-      // Skip locations without valid coordinates
-      if (!location.lat || !location.lng || location.lat === 0 || location.lng === 0) {
+      if (!location.lat || !location.lng) {
         console.warn("Skip location with invalid coordinates:", location);
         return;
       }

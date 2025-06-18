@@ -8,9 +8,18 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { History, Search, Filter } from 'lucide-react';
-import type { Tables } from '@/integrations/supabase/types';
 
-type AuditLog = Tables<'audit_logs'>;
+interface AuditLog {
+  id: string;
+  user_email: string;
+  action: string;
+  resource_type: string;
+  resource_id?: string;
+  old_values?: any;
+  new_values?: any;
+  ip_address?: string;
+  created_at: string;
+}
 
 const AuditLogViewer = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -41,7 +50,7 @@ const AuditLogViewer = () => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+      return data as AuditLog[];
     }
   });
 

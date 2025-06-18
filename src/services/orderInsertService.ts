@@ -22,7 +22,7 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
       throw new Error('No items provided for database insert');
     }
 
-    // Process each item - use direct properties from backup data and match database schema
+    // Process each item - use direct properties from backup data
     const orderRecords = orderData.items.map((item, index) => {
       console.log('=== PROCESSING CART ITEM FOR DB INSERT ===', {
         itemIndex: index,
@@ -65,27 +65,28 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
         console.warn('Missing delivery address for item:', item.id);
       }
 
-      // Record structure to match the original database schema field names
       const record = {
         order_id: orderData.orderId,
         stripe_session_id: orderData.stripeSessionId || `test_session_${orderData.orderId}_${index}`,
-        stripe_payment_intent_id: orderData.stripePaymentIntentId || `test_intent_${orderData.orderId}`,
+        stripe_payment_intent_id: orderData.stripePaymentIntentId || null,
         product_id: item.id.toString(),
         unit: 'tons',
         unit_price: item.price || 0,
         total_price: (item.price || 0) * quantity,
-        delivery_date: deliveryDate || new Date().toISOString(),
-        delivery_address: deliveryAddress.street || 'Unknown Address', // Using original field name
+        quantity: quantity,
+        status: 'confirmed',
+        delivery_name: contactInfo.name || null,
+        delivery_phone: contactInfo.phone || null,
+        delivery_email: contactInfo.email || null,
+        billing_name: contactInfo.name || null,
+        billing_email: contactInfo.email || null,
+        delivery_date: deliveryDate || null,
+        delivery_street: deliveryAddress.street || null,
         delivery_city: deliveryAddress.city || null,
         delivery_state: deliveryAddress.state || null,
         delivery_zip: deliveryAddress.zip || null,
-        customer_name: contactInfo.name || null, // Using original field name
-        customer_email: contactInfo.email || null, // Using original field name
-        customer_phone: contactInfo.phone || null, // Using original field name
-        instructions: deliveryInstructions || null,
-        status: 'confirmed',
-        tons: quantity, // Using original field name
-        zip_adjust: 0 // Using original field name
+        delivery_time_preference: deliveryTimePreference || null,
+        delivery_instructions: deliveryInstructions || null
       };
 
       console.log('Final order record to insert:', record);
@@ -123,7 +124,7 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
   }
 };
 
-// Test function to insert sample data - using original field names
+// Test function to insert sample data
 export const testDatabaseInsert = async () => {
   console.log('=== TESTING DATABASE INSERT ===');
   
