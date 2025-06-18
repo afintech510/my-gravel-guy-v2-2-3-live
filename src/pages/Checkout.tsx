@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
@@ -154,6 +155,21 @@ const Checkout = () => {
       console.log('=== CHECKOUT CONFIRMATION EMAIL DEBUG ===');
       console.log('Sending checkout confirmation email...');
       
+      // Get the current user session to ensure we're authenticated
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error('Authentication required for email sending');
+      }
+      
+      if (!session) {
+        console.error('No active session found');
+        throw new Error('User must be logged in to send emails');
+      }
+      
+      console.log('User session verified for email sending');
+      
       const orderData = {
         order_id: orderId,
         items: items.map(item => ({
@@ -174,6 +190,7 @@ const Checkout = () => {
 
       console.log('Checkout confirmation order data:', orderData);
 
+      // Call the Edge Function with proper authentication headers
       const { data, error } = await supabase.functions.invoke('send-email', {
         body: {
           to: 'order.support@mygravelguy.com',
@@ -306,6 +323,21 @@ const Checkout = () => {
         throw new Error('Some items are missing required delivery information. Please complete all delivery forms.');
       }
 
+      // Check authentication before proceeding
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error('Authentication error. Please try logging in again.');
+      }
+      
+      if (!session) {
+        console.error('No active session found');
+        throw new Error('You must be logged in to complete checkout. Please log in and try again.');
+      }
+
+      console.log('User session verified for checkout');
+
       const formattedItems = formatCartItemsForStripe();
       const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
@@ -314,6 +346,7 @@ const Checkout = () => {
       console.log('Formatted items with discounts:', formattedItems);
       console.log('Original total:', total);
       console.log('Discounted total:', discountTotal);
+      console.log('User authenticated:', session.user.email);
       
       // Send checkout confirmation email first
       await sendCheckoutConfirmationEmail(orderId);
@@ -328,7 +361,7 @@ const Checkout = () => {
       
       console.log('Enhanced order backup stored:', orderBackup);
       
-      // Call the create-payment Supabase Edge function with better error handling
+      // Call the create-payment Supabase Edge function with authentication
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: JSON.stringify({ 
           items: formattedItems,
