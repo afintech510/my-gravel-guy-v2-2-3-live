@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ZipCodeSearch from '../components/zip-code/ZipCodeSearch';
 import { CheckCircle, Truck, DollarSign, HeadphonesIcon, MapPin, Users, MessageCircle } from 'lucide-react';
@@ -61,6 +62,11 @@ const About = () => {
               <div className="mt-8 p-6 bg-primary/10 rounded-lg border-l-4 border-primary">
                 <p className="text-gray-700 font-medium">
                   We're not a traditional supply yard. We're a modern online platform that connects customers with trusted, local landscape material suppliers across the USA.
+                </p>
+              </div>
+              <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-800">
+                  <strong>Business Information:</strong> MyGravelGuy.com is a service provided by Eastern Building Supply Inc.
                 </p>
               </div>
             </div>

@@ -14,6 +14,12 @@ const TermsOfService = () => {
         <div className="prose max-w-none">
           <p className="text-lg mb-4">Last updated: April 2025</p>
           
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-6">
+            <p className="text-blue-800 font-medium">
+              <strong>Business Entity:</strong> MyGravelGuy.com is a service provided by Eastern Building Supply Inc.
+            </p>
+          </div>
+          
           <p className="mb-6">Welcome to My Gravel Guy! These Terms of Service govern your use of our website and services.</p>
           
           <section className="mb-8">

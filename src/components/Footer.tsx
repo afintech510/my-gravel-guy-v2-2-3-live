@@ -59,8 +59,11 @@ const Footer = () => {
           <FooterSection title="Legal" links={legalLinks} />
         </div>
         <Separator className="my-8" />
-        <div className="text-center text-sm text-muted-foreground">
+        <div className="text-center text-sm text-muted-foreground space-y-2">
           <p>© {new Date().getFullYear()} My Gravel Guy. All rights reserved.</p>
+          <p className="text-xs">
+            MyGravelGuy.com is a service provided by Eastern Building Supply Inc.
+          </p>
         </div>
       </div>
     </footer>
