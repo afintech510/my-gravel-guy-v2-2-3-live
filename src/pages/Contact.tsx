@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { ChatDrawer } from '@/components/chat/ChatDrawer';
 import QuoteForm from '@/components/forms/QuoteForm';
+
 const Contact = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -37,7 +38,8 @@ const Contact = () => {
       message: ''
     });
   };
-  return <div className="min-h-screen bg-white">
+  return (
+    <div className="min-h-screen bg-white">
       <div className="py-20 px-4 bg-gray-50">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">Get a Quote</h1>
@@ -57,6 +59,12 @@ const Contact = () => {
             <div>
               <h2 className="text-3xl font-bold mb-6">Contact Information</h2>
               <div className="space-y-6">
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <p className="text-blue-800 font-medium text-sm">
+                    <strong>Business Entity:</strong> MyGravelGuy.com is a service provided by Eastern Building Supply Inc.
+                  </p>
+                </div>
+                
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Email</h3>
                   <p className="text-gray-600">support@mygravelguy.com</p>
@@ -92,6 +100,8 @@ const Contact = () => {
         </div>
       </section>
       <ChatDrawer />
-    </div>;
+    </div>
+  );
 };
+
 export default Contact;
