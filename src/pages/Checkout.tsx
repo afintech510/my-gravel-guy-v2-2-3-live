@@ -83,7 +83,7 @@ const Checkout = () => {
     });
   };
 
-  // Send checkout confirmation email to internal team with enhanced delivery details
+  // Send checkout confirmation email to internal team
   const sendCheckoutConfirmationEmail = async (orderId: string) => {
     try {
       console.log('=== CHECKOUT CONFIRMATION EMAIL DEBUG ===');
@@ -109,7 +109,6 @@ const Checkout = () => {
 
       console.log('Checkout confirmation order data:', orderData);
 
-      // Call the Edge Function without authentication headers (guest checkout)
       const { data, error } = await supabase.functions.invoke('send-email', {
         body: {
           to: 'order.support@mygravelguy.com',
@@ -130,7 +129,7 @@ const Checkout = () => {
     }
   };
 
-  // Generate enhanced email template for checkout confirmation with full delivery details
+  // Generate enhanced email template for checkout confirmation
   const generateCheckoutConfirmationEmail = (orderData: any) => {
     return `
       <!DOCTYPE html>
@@ -248,10 +247,8 @@ const Checkout = () => {
       const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
       console.log('Order ID generated:', orderId);
-      console.log('Formatted items with discounts:', formattedItems);
-      console.log('Original total:', total);
-      console.log('Discounted total:', discountTotal);
-      console.log('Processing as guest checkout');
+      console.log('Formatted items:', formattedItems.length);
+      console.log('Customer info from first item:', items[0]?.contactInfo);
       
       // Send checkout confirmation email first (non-blocking)
       await sendCheckoutConfirmationEmail(orderId);
@@ -266,17 +263,17 @@ const Checkout = () => {
       
       console.log('Enhanced order backup stored:', orderBackup);
       
-      // Call the create-payment Supabase Edge function without authentication
+      // Call the create-payment function with properly formatted data
       const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: JSON.stringify({ 
+        body: { 
           items: formattedItems,
           orderId: orderId,
           customerInfo: {
-            email: items[0]?.contactInfo?.email,
-            name: items[0]?.contactInfo?.name,
-            phone: items[0]?.contactInfo?.phone
+            email: items[0]?.contactInfo?.email || 'guest@mygravelguy.com',
+            name: items[0]?.contactInfo?.name || 'Guest User',
+            phone: items[0]?.contactInfo?.phone || ''
           }
-        })
+        }
       });
       
       if (error) {
