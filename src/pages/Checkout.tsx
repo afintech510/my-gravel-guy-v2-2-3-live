@@ -50,13 +50,13 @@ const Checkout = () => {
     return null;
   };
 
-  // Test database insertion function with schema-accurate data
+  // Test database insertion function with correct schema field names
   const testDatabaseInsertion = async () => {
     setIsTestingDB(true);
     setCheckoutError(null);
     
     try {
-      console.log('=== TESTING SCHEMA-ACCURATE DATABASE INSERTION ===');
+      console.log('=== TESTING DATABASE INSERTION WITH CORRECT SCHEMA ===');
       
       const testOrderId = `TEST-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
@@ -82,7 +82,7 @@ const Checkout = () => {
         zip_adjust: 0
       }));
 
-      console.log('Schema-accurate order records to insert:', orderRecords);
+      console.log('Order records with correct schema:', orderRecords);
 
       const { data, error } = await supabase
         .from('orders')
@@ -94,16 +94,16 @@ const Checkout = () => {
         throw error;
       }
 
-      console.log('Successfully inserted schema-accurate test orders:', data);
+      console.log('Successfully inserted test orders:', data);
       
       toast({
-        title: "Schema-Accurate Database Test Successful!",
+        title: "Database Test Successful!",
         description: `Inserted ${data?.length || 0} test records with ID: ${testOrderId}`,
         className: "border-green-500 border-2 shadow-[0_0_15px_rgba(20,255,106,0.5)]"
       });
 
     } catch (error) {
-      console.error('Schema-accurate database test failed:', error);
+      console.error('Database test failed:', error);
       
       toast({
         variant: "destructive",
@@ -638,12 +638,12 @@ const Checkout = () => {
               {isTestingDB ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Testing Schema-Accurate DB...
+                  Testing DB...
                 </>
               ) : (
                 <>
                   <Database className="mr-2 h-4 w-4" />
-                  Test Schema-Accurate DB Insert
+                  Test DB Insert
                 </>
               )}
             </Button>
