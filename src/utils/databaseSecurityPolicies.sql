@@ -1,4 +1,5 @@
 
+
 -- =====================================================
 -- PHASE 1: CRITICAL DATABASE SECURITY IMPLEMENTATION
 -- Row Level Security (RLS) Policies for All Tables
@@ -300,8 +301,7 @@ CREATE POLICY "price_tiers_admin_delete" ON public.price_tiers
 SELECT 
   schemaname,
   tablename,
-  rowsecurity as rls_enabled,
-  hasoids
+  rowsecurity as rls_enabled
 FROM pg_tables 
 WHERE schemaname = 'public' 
   AND tablename IN (
