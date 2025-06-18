@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, ArrowRight, Loader2 } from 'lucide-react';
+import { ShoppingCart, ArrowRight } from 'lucide-react';
 import CartItemCard from '../components/cart/CartItemCard';
 import { CartPricingUpdater } from '../components/cart/CartPricingUpdater';
 import CouponCode from '../components/cart/CouponCode';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { AutoAuthService } from '../services/autoAuthService';
 
 const Cart = () => {
   const {
@@ -20,7 +19,6 @@ const Cart = () => {
   } = useCart();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
 
   // Check if any discounts have been applied
   const hasDiscounts = total !== discountTotal;
@@ -223,67 +221,23 @@ const Cart = () => {
   const handleProceedToCheckout = async () => {
     if (!allItemsComplete) return;
     
-    setIsProcessingCheckout(true);
-    
     try {
-      console.log('=== ENHANCED FRICTIONLESS CHECKOUT PROCESS START ===');
-      
-      // Get user info from the first cart item (they should all have the same contact info)
-      const firstItem = items[0];
-      const authData = {
-        email: firstItem.contactInfo!.email,
-        phone: firstItem.contactInfo!.phone,
-        name: firstItem.contactInfo!.name
-      };
-      
-      console.log('Auto-authenticating user:', authData.email);
-      
-      // Enhanced auto-authentication with better session handling
-      const authResult = await AutoAuthService.ensureAuthenticated(authData);
-      
-      if (!authResult.success) {
-        throw new Error(authResult.error || 'Authentication failed');
-      }
-      
-      console.log('User authenticated successfully:', authResult.user?.email);
-      
-      // Verify authentication state before proceeding
-      const authState = await AutoAuthService.verifyAuthenticationState();
-      console.log('Authentication state verified:', authState);
-      
-      if (!authState.isAuthenticated) {
-        throw new Error('Authentication verification failed - session not properly established');
-      }
-      
-      if (authResult.isNewAccount) {
-        toast({
-          title: "Account Created!",
-          description: "We've created an account for you to track your order.",
-          className: "border-green-500 border-2 shadow-[0_0_15px_rgba(20,255,106,0.5)]"
-        });
-      } else {
-        console.log('User signed in with existing account');
-      }
+      console.log('=== GUEST CHECKOUT PROCESS START ===');
       
       // Send cart confirmation email using form data
       await sendCartConfirmationEmail();
 
-      // Add a small delay to ensure session is fully propagated
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Navigate to checkout
+      // Navigate to checkout (no authentication required)
       navigate('/checkout');
       
     } catch (error) {
-      console.error('Error processing enhanced frictionless checkout:', error);
+      console.error('Error processing guest checkout:', error);
       
       toast({
         variant: "destructive",
         title: "Checkout Error",
         description: error instanceof Error ? error.message : "Failed to process checkout. Please try again."
       });
-    } finally {
-      setIsProcessingCheckout(false);
     }
   };
 
@@ -366,29 +320,22 @@ const Cart = () => {
             {!allItemsComplete && (
               <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
                 <p className="text-sm text-amber-800">
-                  Complete delivery information for all items to proceed automatically to checkout.
+                  Complete delivery information for all items to proceed to checkout.
                 </p>
               </div>
             )}
             
             <Button 
               onClick={handleProceedToCheckout} 
-              disabled={!allItemsComplete || isProcessingCheckout} 
+              disabled={!allItemsComplete} 
               className="w-full h-auto py-3 px-4 text-sm leading-tight"
             >
-              {isProcessingCheckout ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin flex-shrink-0" />
-                  <span className="text-center">Creating Account & Processing...</span>
-                </>
-              ) : (
-                <div className="flex items-center justify-center w-full">
-                  <span className="text-center flex-1">
-                    {allItemsComplete ? 'Confirm Delivery & Proceed' : 'Complete Delivery Info'}
-                  </span>
-                  <ArrowRight className="ml-2 h-4 w-4 flex-shrink-0" />
-                </div>
-              )}
+              <div className="flex items-center justify-center w-full">
+                <span className="text-center flex-1">
+                  {allItemsComplete ? 'Continue to Checkout' : 'Complete Delivery Info'}
+                </span>
+                <ArrowRight className="ml-2 h-4 w-4 flex-shrink-0" />
+              </div>
             </Button>
 
             {/* Coupon Code Component */}
