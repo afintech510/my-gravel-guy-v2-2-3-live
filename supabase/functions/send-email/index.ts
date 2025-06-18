@@ -49,21 +49,28 @@ serve(async (req) => {
   }
 
   try {
+    console.log('=== EMAIL FUNCTION START ===');
+    
     const { to, subject, html, type, orderData }: EmailRequest = await req.json();
     
-    console.log('=== EMAIL FUNCTION DEBUG ===');
     console.log('Email type:', type);
     console.log('Recipient (to):', to);
-    console.log('Recipient type:', typeof to);
     console.log('Subject:', subject);
     console.log('From address will be: team@mygravelguy.com');
     
     if (orderData) {
       console.log('Order customer email:', orderData.customer_email);
+      console.log('Order ID:', orderData.order_id);
     }
     
     if (!to || !subject || !html) {
       throw new Error("Missing required email fields: to, subject, or html");
+    }
+
+    // Validate email address format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(to)) {
+      throw new Error("Invalid email address format");
     }
 
     // Get Resend API key from environment variables
@@ -95,7 +102,7 @@ serve(async (req) => {
       html: html,
     };
     
-    console.log('Resend payload:', JSON.stringify(emailPayload, null, 2));
+    console.log('Email payload prepared for Resend API');
 
     // Send email using Resend API
     const response = await fetch("https://api.resend.com/emails", {
@@ -109,13 +116,14 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error("Resend API error:", errorData);
+      console.error("Resend API error:", response.status, errorData);
       throw new Error(`Failed to send email: ${response.status} ${errorData}`);
     }
 
     const result = await response.json();
-    console.log("Email sent successfully:", result);
+    console.log("Email sent successfully");
     console.log("Email ID:", result.id);
+    console.log('=== EMAIL FUNCTION SUCCESS ===');
 
     return new Response(
       JSON.stringify({ 
@@ -137,10 +145,11 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("Email sending error:", error);
+    console.log('=== EMAIL FUNCTION ERROR ===');
     
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: error.message || "Failed to send email",
         success: false
       }),
       {
