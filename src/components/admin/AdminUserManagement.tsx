@@ -11,16 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Users, UserPlus, Edit, Trash2, Shield } from 'lucide-react';
+import { Users, UserPlus, Edit, Trash2 } from 'lucide-react';
+import type { Tables } from '@/integrations/supabase/types';
 
-interface AdminUser {
-  id: string;
-  email: string;
-  role: 'super_admin' | 'admin' | 'manager' | 'viewer';
-  is_active: boolean;
-  created_at: string;
-  last_login_at?: string;
-}
+type AdminUser = Tables<'admin_users'>;
 
 const AdminUserManagement = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -42,26 +36,22 @@ const AdminUserManagement = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as AdminUser[];
+      return data;
     }
   });
 
   // Add admin user mutation
   const addUserMutation = useMutation({
     mutationFn: async (userData: { email: string; role: string }) => {
-      // First, check if user exists in auth.users
-      const { data: authUser } = await supabase.auth.admin.getUserByEmail(userData.email);
-      
-      if (!authUser.user) {
-        throw new Error('User must be registered first. Please ask them to sign up.');
-      }
-
+      // For now, we'll create the admin user directly and let them sign up later
+      // This is a simplified approach - in production you might want to invite users first
       const { data, error } = await supabase
         .from('admin_users')
         .insert([{
-          user_id: authUser.user.id,
+          // We'll use a placeholder user_id for now - this should be updated when they actually sign up
+          user_id: '00000000-0000-0000-0000-000000000000',
           email: userData.email,
-          role: userData.role,
+          role: userData.role as 'super_admin' | 'admin' | 'manager' | 'viewer',
           is_active: true
         }])
         .select()
@@ -69,7 +59,7 @@ const AdminUserManagement = () => {
 
       if (error) throw error;
 
-      // Log the action
+      // Log the action using the RPC function
       await supabase.rpc('log_admin_action', {
         p_action: 'CREATE_ADMIN_USER',
         p_resource_type: 'admin_users',
@@ -115,7 +105,7 @@ const AdminUserManagement = () => {
 
       if (error) throw error;
 
-      // Log the action
+      // Log the action using the RPC function
       await supabase.rpc('log_admin_action', {
         p_action: 'UPDATE_ADMIN_USER',
         p_resource_type: 'admin_users',
@@ -159,7 +149,7 @@ const AdminUserManagement = () => {
 
       if (error) throw error;
 
-      // Log the action
+      // Log the action using the RPC function
       await supabase.rpc('log_admin_action', {
         p_action: 'DELETE_ADMIN_USER',
         p_resource_type: 'admin_users',
