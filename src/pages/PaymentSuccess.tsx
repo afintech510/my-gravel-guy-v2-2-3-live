@@ -328,12 +328,13 @@ const PaymentSuccess = () => {
       
       setOrderItems(displayOrders);
       setDbInsertComplete(true);
-      
+
+      /*
       toast({
         title: "Order Processed Successfully",
         description: "Your order has been recorded successfully!",
         variant: "default"
-      });
+      }); */
 
       // Send emails after successful database insert
       await handleEmailSending(insertedOrders, currentOrderId);
@@ -372,11 +373,14 @@ const PaymentSuccess = () => {
       });
       
       if (emailResults.overallSuccess) {
+        /*
         toast({
           title: "Emails Sent Successfully",
           description: "Order confirmation emails have been sent!",
           variant: "default"
-        });
+        }); */
+         clearCart();
+          clearCheckoutBackup(); 
       } else {
         let errorMessage = "Some emails failed to send: ";
         if (!emailResults.customerEmail.success) {
@@ -545,12 +549,13 @@ const PaymentSuccess = () => {
       
       setOrderItems(displayOrders);
       setDbInsertComplete(true);
-      
+
+      /*
       toast({
         title: "Checkout-Style Insert Successful",
         description: "Order inserted using checkout method with metadata access!",
         variant: "default"
-      });
+      }); */
 
       // Send emails after successful database insert
       await handleEmailSending(data, checkoutOrderId);
