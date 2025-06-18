@@ -1,5 +1,5 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { checkRateLimit, getClientId } from "../shared/rateLimiter.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,6 +12,28 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  // Rate limiting check
+  const clientId = getClientId(req);
+  const rateLimitResult = await checkRateLimit('send-sms', clientId);
+  
+  if (!rateLimitResult.allowed) {
+    console.log('Rate limit exceeded for send-sms:', clientId);
+    return new Response(
+      JSON.stringify({ 
+        error: "Too many SMS requests. Please try again later.",
+        rateLimitExceeded: true
+      }),
+      { 
+        status: 429, 
+        headers: { 
+          ...corsHeaders, 
+          ...rateLimitResult.rateLimitHeaders,
+          'Content-Type': 'application/json' 
+        } 
+      }
+    );
+  }
+
   try {
     const { phoneNumber } = await req.json()
 
@@ -22,7 +44,11 @@ serve(async (req) => {
         JSON.stringify({ error: 'Invalid phone number format' }),
         { 
           status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { 
+            ...corsHeaders, 
+            ...rateLimitResult.rateLimitHeaders,
+            'Content-Type': 'application/json' 
+          } 
         }
       )
     }
@@ -37,7 +63,11 @@ serve(async (req) => {
         JSON.stringify({ error: 'Twilio credentials not configured' }),
         { 
           status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { 
+            ...corsHeaders, 
+            ...rateLimitResult.rateLimitHeaders,
+            'Content-Type': 'application/json' 
+          } 
         }
       )
     }
@@ -74,7 +104,11 @@ serve(async (req) => {
         JSON.stringify({ error: 'Failed to send SMS' }),
         { 
           status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { 
+            ...corsHeaders, 
+            ...rateLimitResult.rateLimitHeaders,
+            'Content-Type': 'application/json' 
+          } 
         }
       )
     }
@@ -86,7 +120,11 @@ serve(async (req) => {
       JSON.stringify({ success: true, messageSid: data.sid }),
       { 
         status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { 
+          ...corsHeaders, 
+          ...rateLimitResult.rateLimitHeaders,
+          'Content-Type': 'application/json' 
+        } 
       }
     )
 
@@ -96,7 +134,11 @@ serve(async (req) => {
       JSON.stringify({ error: 'Internal server error' }),
       { 
         status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { 
+          ...corsHeaders, 
+          ...rateLimitResult.rateLimitHeaders,
+          'Content-Type': 'application/json' 
+        } 
       }
     )
   }
