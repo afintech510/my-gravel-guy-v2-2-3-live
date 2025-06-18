@@ -1,14 +1,9 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import OrdersTable from '@/components/dashboard/OrdersTable';
 import LoginPrompt from '@/components/dashboard/LoginPrompt';
-import AdminUserManagement from '@/components/admin/AdminUserManagement';
-import AuditLogViewer from '@/components/admin/AuditLogViewer';
-import FileUploadTest from '@/components/storage/FileUploadTest';
-import RateLimitTest from '@/components/security/RateLimitTest';
 
 const Dashboard = () => {
   const { user, loading, isAdmin, signOut } = useAuth();
@@ -82,7 +77,7 @@ const Dashboard = () => {
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
-                PHASE 3 SECURITY ENABLED
+                AUTH ENABLED
               </span>
               <button
                 onClick={signOut}
@@ -102,37 +97,7 @@ const Dashboard = () => {
       </div>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs defaultValue="orders" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="orders">Orders</TabsTrigger>
-            <TabsTrigger value="admin-users">Admin Users</TabsTrigger>
-            <TabsTrigger value="audit-logs">Audit Logs</TabsTrigger>
-            <TabsTrigger value="storage-test">Storage Test</TabsTrigger>
-            <TabsTrigger value="security-tests">Security Tests</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="orders" className="mt-6">
-            <OrdersTable />
-          </TabsContent>
-          
-          <TabsContent value="admin-users" className="mt-6">
-            <AdminUserManagement />
-          </TabsContent>
-          
-          <TabsContent value="audit-logs" className="mt-6">
-            <AuditLogViewer />
-          </TabsContent>
-          
-          <TabsContent value="storage-test" className="mt-6">
-            <FileUploadTest />
-          </TabsContent>
-          
-          <TabsContent value="security-tests" className="mt-6">
-            <div className="space-y-6">
-              <RateLimitTest />
-            </div>
-          </TabsContent>
-        </Tabs>
+        <OrdersTable />
       </div>
     </div>
   );
