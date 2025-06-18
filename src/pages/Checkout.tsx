@@ -1,27 +1,18 @@
-
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2, MapPinIcon, PhoneIcon, MailIcon, ClockIcon, FileTextIcon, UserIcon, CreditCard, Database, AlertCircle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, MapPinIcon, PhoneIcon, MailIcon, ClockIcon, FileTextIcon, UserIcon, CreditCard, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { storeCheckoutBackup, createEnhancedBackup } from '../utils/paymentUtils';
 import CouponCode from '../components/cart/CouponCode';
-import { AutoAuthService } from '../services/autoAuthService';
-import type { OrderInsertData } from '../services/productTypes';
 
 const Checkout = () => {
   const { items, total, discountTotal, clearCart } = useCart();
   const [isLoading, setIsLoading] = useState(false);
-  const [isTestingDB, setIsTestingDB] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
-  const [authStatus, setAuthStatus] = useState<{
-    isVerified: boolean;
-    user?: any;
-    sessionId?: string;
-  }>({ isVerified: false });
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -30,34 +21,6 @@ const Checkout = () => {
     navigate('/cart');
     return null;
   }
-
-  // Verify authentication state on component mount
-  useEffect(() => {
-    const verifyAuth = async () => {
-      console.log('=== CHECKOUT AUTH VERIFICATION ===');
-      const authState = await AutoAuthService.verifyAuthenticationState();
-      console.log('Checkout auth state:', authState);
-      
-      // Map isAuthenticated to isVerified for state consistency
-      setAuthStatus({
-        isVerified: authState.isAuthenticated,
-        user: authState.user,
-        sessionId: authState.sessionId
-      });
-      
-      if (!authState.isAuthenticated) {
-        console.warn('User not authenticated on checkout page');
-        toast({
-          variant: "destructive", 
-          title: "Authentication Required",
-          description: "Please complete the cart process to continue.",
-        });
-        // Don't redirect immediately, let user try to proceed and handle it gracefully
-      }
-    };
-    
-    verifyAuth();
-  }, [toast]);
 
   // Calculate if discounts are applied
   const hasDiscounts = total !== discountTotal;
@@ -85,72 +48,6 @@ const Checkout = () => {
     return null;
   };
 
-  // Test database insertion function with schema-accurate data
-  const testDatabaseInsertion = async () => {
-    setIsTestingDB(true);
-    setCheckoutError(null);
-    
-    try {
-      console.log('=== TESTING SCHEMA-ACCURATE DATABASE INSERTION ===');
-      
-      const testOrderId = `TEST-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
-      const orderRecords: OrderInsertData[] = items.map((item, index) => ({
-        order_id: testOrderId,
-        stripe_session_id: `test_session_${testOrderId}_${index}`,
-        product_id: item.id.toString(),
-        unit: 'tons',
-        unit_price: item.price,
-        total_price: item.price * (item.tons || 1),
-        quantity: item.tons || 1,
-        status: 'test',
-        delivery_name: item.contactInfo?.name,
-        delivery_phone: item.contactInfo?.phone,
-        delivery_email: item.contactInfo?.email,
-        billing_name: item.contactInfo?.name,
-        billing_email: item.contactInfo?.email,
-        delivery_date: item.deliveryDate?.toISOString(),
-        delivery_street: item.deliveryAddress?.street,
-        delivery_city: item.deliveryAddress?.city,
-        delivery_state: item.deliveryAddress?.state,
-        delivery_zip: item.deliveryAddress?.zip,
-        delivery_time_preference: item.deliveryTimePreference,
-        delivery_instructions: item.deliveryInstructions
-      }));
-
-      console.log('Schema-accurate order records to insert:', orderRecords);
-
-      const { data, error } = await supabase
-        .from('orders')
-        .insert(orderRecords)
-        .select();
-
-      if (error) {
-        console.error('Database insertion error:', error);
-        throw error;
-      }
-
-      console.log('Successfully inserted schema-accurate test orders:', data);
-      
-      toast({
-        title: "Schema-Accurate Database Test Successful!",
-        description: `Inserted ${data?.length || 0} test records with ID: ${testOrderId}`,
-        className: "border-green-500 border-2 shadow-[0_0_15px_rgba(20,255,106,0.5)]"
-      });
-
-    } catch (error) {
-      console.error('Schema-accurate database test failed:', error);
-      
-      toast({
-        variant: "destructive",
-        title: "Database Test Failed",
-        description: error instanceof Error ? error.message : "Failed to insert test records",
-      });
-    } finally {
-      setIsTestingDB(false);
-    }
-  };
-
   // Transform cart items to a format suitable for Stripe
   const formatCartItemsForStripe = () => {
     return items.map(item => {
@@ -165,7 +62,9 @@ const Checkout = () => {
         metadata = {
           deliveryDate: item.deliveryDate ? item.deliveryDate.toISOString() : undefined,
           deliveryAddress: item.deliveryAddress ? JSON.stringify(item.deliveryAddress) : undefined,
-          contactPhone: item.contactPhone,
+          contactName: item.contactInfo?.name,
+          contactPhone: item.contactInfo?.phone,
+          contactEmail: item.contactInfo?.email,
           deliveryTimePreference: item.deliveryTimePreference,
           deliveryInstructions: item.deliveryInstructions
         };
@@ -189,12 +88,6 @@ const Checkout = () => {
       console.log('=== CHECKOUT CONFIRMATION EMAIL DEBUG ===');
       console.log('Sending checkout confirmation email...');
       
-      // Verify session before sending email
-      if (!authStatus.isVerified) {
-        console.warn('Skipping confirmation email - user not properly authenticated');
-        return;
-      }
-      
       const orderData = {
         order_id: orderId,
         items: items.map(item => ({
@@ -209,17 +102,17 @@ const Checkout = () => {
           location_photo_url: item.locationPhotoUrl
         })),
         total_amount: discountTotal,
-        customer_email: items[0]?.contactInfo?.email || 'checkout-confirmation@customer.com',
-        customer_name: items[0]?.contactInfo?.name || 'Checkout Customer'
+        customer_email: items[0]?.contactInfo?.email || 'guest@checkout.com',
+        customer_name: items[0]?.contactInfo?.name || 'Guest Customer'
       };
 
       console.log('Checkout confirmation order data:', orderData);
 
-      // Call the Edge Function with proper authentication headers
+      // Call the Edge Function without authentication headers (guest checkout)
       const { data, error } = await supabase.functions.invoke('send-email', {
         body: {
           to: 'order.support@mygravelguy.com',
-          subject: 'Continued to Payment - Customer Proceeded to Stripe',
+          subject: 'Guest Checkout - Customer Proceeded to Payment',
           html: generateCheckoutConfirmationEmail(orderData),
           type: 'internal_notification',
           orderData
@@ -243,12 +136,12 @@ const Checkout = () => {
       <html>
       <head>
         <meta charset="utf-8">
-        <title>Continued to Payment</title>
+        <title>Guest Checkout to Payment</title>
       </head>
       <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: #dc2626; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-          <h1 style="margin: 0; font-size: 28px;">Continued to Payment 💳</h1>
-          <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Customer proceeded to Stripe checkout</p>
+          <h1 style="margin: 0; font-size: 28px;">Guest Checkout to Payment 💳</h1>
+          <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Customer proceeded to Stripe checkout as guest</p>
         </div>
         
         <div style="background: #f8fafc; padding: 30px; border-radius: 0 0 10px 10px;">
@@ -257,7 +150,7 @@ const Checkout = () => {
           <p><strong>Email:</strong> ${orderData.customer_email}</p>
           <p><strong>Total Amount:</strong> $${orderData.total_amount.toFixed(2)}</p>
           <p><strong>Items:</strong> ${orderData.items.length}</p>
-          <p><strong>Status:</strong> Proceeding to Stripe Payment</p>
+          <p><strong>Status:</strong> Guest Checkout - Proceeding to Stripe Payment</p>
           
           <div style="margin: 20px 0;">
             <h3>Order Items with Complete Delivery Details:</h3>
@@ -348,37 +241,7 @@ const Checkout = () => {
         throw new Error('Some items are missing required delivery information. Please complete all delivery forms.');
       }
 
-      console.log('=== ENHANCED CHECKOUT PROCESS START ===');
-      console.log('Initial auth status:', authStatus);
-
-      // If user is not authenticated, try to re-authenticate
-      if (!authStatus.isVerified) {
-        console.log('User not authenticated, attempting re-authentication...');
-        
-        const firstItem = items[0];
-        const authData = {
-          email: firstItem.contactInfo!.email,
-          phone: firstItem.contactInfo!.phone,
-          name: firstItem.contactInfo!.name
-        };
-        
-        const authResult = await AutoAuthService.ensureAuthenticated(authData);
-        if (!authResult.success) {
-          throw new Error('Please complete the checkout process from the cart page');
-        }
-        
-        // Update auth status with proper property mapping
-        const newAuthState = await AutoAuthService.verifyAuthenticationState();
-        setAuthStatus({
-          isVerified: newAuthState.isAuthenticated,
-          user: newAuthState.user,
-          sessionId: newAuthState.sessionId
-        });
-        
-        if (!newAuthState.isAuthenticated) {
-          throw new Error('Authentication failed - please try again from the cart page');
-        }
-      }
+      console.log('=== GUEST CHECKOUT PROCESS START ===');
 
       const formattedItems = formatCartItemsForStripe();
       const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -387,13 +250,12 @@ const Checkout = () => {
       console.log('Formatted items with discounts:', formattedItems);
       console.log('Original total:', total);
       console.log('Discounted total:', discountTotal);
-      console.log('User authenticated:', authStatus.user?.email);
-      console.log('Session ID:', authStatus.sessionId?.substring(0, 20) + '...');
+      console.log('Processing as guest checkout');
       
       // Send checkout confirmation email first (non-blocking)
       await sendCheckoutConfirmationEmail(orderId);
       
-      // Create enhanced backup with better validation
+      // Create enhanced backup with customer info from cart
       const orderBackup = createEnhancedBackup(orderId, items, {
         email: items[0]?.contactInfo?.email || 'guest@mygravelguy.com',
         name: items[0]?.contactInfo?.name || 'Guest User'
@@ -403,11 +265,16 @@ const Checkout = () => {
       
       console.log('Enhanced order backup stored:', orderBackup);
       
-      // Call the create-payment Supabase Edge function
+      // Call the create-payment Supabase Edge function without authentication
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: JSON.stringify({ 
           items: formattedItems,
-          orderId: orderId
+          orderId: orderId,
+          customerInfo: {
+            email: items[0]?.contactInfo?.email,
+            name: items[0]?.contactInfo?.name,
+            phone: items[0]?.contactInfo?.phone
+          }
         })
       });
       
@@ -422,13 +289,13 @@ const Checkout = () => {
       }
       
       console.log('Payment URL received:', data.url);
-      console.log('=== ENHANCED CHECKOUT PROCESS SUCCESS ===');
+      console.log('=== GUEST CHECKOUT PROCESS SUCCESS ===');
       
       // Redirect to Stripe checkout
       window.location.href = data.url;
       
     } catch (error) {
-      console.error('Enhanced checkout error:', error);
+      console.error('Guest checkout error:', error);
       
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       setCheckoutError(errorMessage);
@@ -456,34 +323,19 @@ const Checkout = () => {
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Cart
       </Button>
       
-      <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+      <h1 className="text-3xl font-bold mb-8">Guest Checkout</h1>
 
-      {/* Authentication Status Display */}
+      {/* Guest Checkout Status Display */}
       <Card className="mb-6">
         <CardContent className="pt-6">
-          <div className={`flex items-center gap-3 p-3 rounded-lg ${
-            authStatus.isVerified 
-              ? 'bg-green-50 border border-green-200' 
-              : 'bg-amber-50 border border-amber-200'
-          }`}>
-            {authStatus.isVerified ? (
-              <CheckCircle className="h-5 w-5 text-green-600" />
-            ) : (
-              <AlertCircle className="h-5 w-5 text-amber-600" />
-            )}
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
+            <CheckCircle className="h-5 w-5 text-blue-600" />
             <div className="flex-1">
-              <p className={`font-medium ${
-                authStatus.isVerified ? 'text-green-800' : 'text-amber-800'
-              }`}>
-                {authStatus.isVerified ? 'Authentication Verified' : 'Authentication Status'}
+              <p className="font-medium text-blue-800">
+                Guest Checkout
               </p>
-              <p className={`text-sm ${
-                authStatus.isVerified ? 'text-green-600' : 'text-amber-600'
-              }`}>
-                {authStatus.isVerified 
-                  ? `Signed in as ${authStatus.user?.email}`
-                  : 'Authentication may be required for checkout'
-                }
+              <p className="text-sm text-blue-600">
+                No account required - proceed directly to payment
               </p>
             </div>
           </div>
@@ -735,29 +587,9 @@ const Checkout = () => {
                 'Continue to Payment'
               )}
             </Button>
-
-            {/* Hidden test button - keeping functionality but hiding from users */}
-            <Button 
-              onClick={testDatabaseInsertion}
-              disabled={isTestingDB}
-              variant="outline"
-              className="w-full mb-4 hidden"
-            >
-              {isTestingDB ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Testing Schema-Accurate DB...
-                </>
-              ) : (
-                <>
-                  <Database className="mr-2 h-4 w-4" />
-                  Test Schema-Accurate DB Insert
-                </>
-              )}
-            </Button>
             
             <p className="text-xs text-gray-500 mt-3 text-center">
-              Secure checkout powered by Stripe
+              Secure guest checkout powered by Stripe
             </p>
           </div>
         </div>
