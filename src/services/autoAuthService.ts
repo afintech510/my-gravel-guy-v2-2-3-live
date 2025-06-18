@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -106,6 +105,7 @@ export class AutoAuthService {
     success: boolean;
     user?: any;
     error?: string;
+    isNewAccount?: boolean;
   }> {
     // Check if user is already authenticated
     const { data: { session } } = await supabase.auth.getSession();
@@ -114,7 +114,8 @@ export class AutoAuthService {
       console.log('User already authenticated:', session.user.email);
       return {
         success: true,
-        user: session.user
+        user: session.user,
+        isNewAccount: false
       };
     }
     
