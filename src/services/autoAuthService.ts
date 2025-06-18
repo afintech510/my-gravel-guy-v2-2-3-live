@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface AutoAuthData {
@@ -12,6 +11,48 @@ export class AutoAuthService {
     // Use phone number as password for simplicity
     // In production, you might want to add additional entropy
     return phone.replace(/\D/g, ''); // Remove non-digits
+  }
+
+  static async resetPasswordAndSignIn(email: string, newPassword: string, phone: string): Promise<{
+    success: boolean;
+    user?: any;
+    error?: string;
+  }> {
+    try {
+      console.log('=== PASSWORD RESET FLOW ===');
+      console.log('Initiating password reset for:', email);
+      
+      // Store phone temporarily for the reset process
+      localStorage.setItem('temp_checkout_phone', phone);
+      
+      // Step 1: Trigger password reset
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/auth/reset-password'
+      });
+      
+      if (resetError) {
+        console.error('Password reset request failed:', resetError);
+        // Clean up on failure
+        localStorage.removeItem('temp_checkout_phone');
+        throw resetError;
+      }
+      
+      console.log('Password reset email sent successfully');
+      
+      // For frictionless checkout, we return success but let the user know about the email
+      return {
+        success: true,
+        error: 'Password reset email sent. Please check your email to complete the process, or contact support for immediate assistance.'
+      };
+      
+    } catch (error) {
+      console.error('Password reset flow failed:', error);
+      localStorage.removeItem('temp_checkout_phone');
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Password reset failed'
+      };
+    }
   }
 
   static async createAccountAndLogin(authData: AutoAuthData): Promise<{
@@ -47,10 +88,30 @@ export class AutoAuthService {
         };
       }
       
-      console.log('Sign in failed, attempting to create new account...');
+      console.log('Sign in failed, checking error type...');
       console.log('Sign in error:', signInError);
       
-      // If sign in fails, create a new account
+      // Check if the error is "Invalid login credentials" which likely means user exists but wrong password
+      if (signInError?.message?.includes('Invalid login credentials')) {
+        console.log('Invalid credentials detected - user likely exists with different password');
+        console.log('Attempting password reset approach...');
+        
+        const resetResult = await this.resetPasswordAndSignIn(authData.email, password, authData.phone);
+        
+        if (resetResult.success) {
+          return {
+            success: false, // We return false because they need to check their email
+            error: resetResult.error // This contains the user-friendly message about checking email
+          };
+        }
+        
+        // If reset approach fails, continue with account creation attempt
+        console.log('Password reset approach failed, continuing with account creation...');
+      }
+      
+      // If sign in fails for other reasons, try to create a new account
+      console.log('Attempting to create new account...');
+      
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: authData.email,
         password: password,
@@ -67,15 +128,16 @@ export class AutoAuthService {
       if (signUpError) {
         console.error('Sign up failed:', signUpError);
         
-        // If the account already exists but password is wrong, try to update it
+        // If the account already exists but password is wrong, provide helpful message
         if (signUpError.message?.includes('already registered')) {
-          console.log('Account exists but password mismatch. This is expected for frictionless checkout.');
+          console.log('Account exists - initiating password reset');
           
-          // For now, we'll treat this as a success and continue
-          // In a production environment, you might want to handle this differently
+          // Try the reset approach as a last resort
+          const resetResult = await this.resetPasswordAndSignIn(authData.email, password, authData.phone);
+          
           return {
             success: false,
-            error: 'Account exists with different credentials. Please contact support.'
+            error: resetResult.error || 'An account with this email already exists. Please check your email for password reset instructions.'
           };
         }
         

@@ -46,6 +46,7 @@ import Dashboard from "./pages/Dashboard";
 import Sitemap from "./pages/Sitemap";
 import SitemapXML from "./pages/SitemapXML";
 import SMSConsent from "./pages/SMSConsent";
+import PasswordReset from './pages/PasswordReset';
 import { Link } from "react-router-dom";
 
 const queryClient = new QueryClient();
@@ -111,6 +112,7 @@ function App() {
                       <Route path="/sitemap" element={<Sitemap />} />
                       <Route path="/sitemap.xml" element={<SitemapXML />} />
                       <Route path="/sms-consent" element={<SMSConsent />} />
+                      <Route path="/auth/reset-password" element={<PasswordReset />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                     <Footer />
