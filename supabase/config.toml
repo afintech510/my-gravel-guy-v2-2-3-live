@@ -1,17 +1,16 @@
-
 project_id = "losrkjvrcambvgijfism"
 
 [functions.create-payment]
-verify_jwt = false
+verify_jwt = true  # Require authentication for payments
 
 [functions.send-email]
-verify_jwt = false
+verify_jwt = true  # Require authentication for emails
 
 [functions.send-sms]
-verify_jwt = false
+verify_jwt = true  # Require authentication for SMS
 
 [functions.verify-payment]
-verify_jwt = false
+verify_jwt = false  # Keep public but add validation
 
 [functions.voice-response]
-verify_jwt = false
+verify_jwt = false  # Keep public for Twilio webhooks

@@ -1,4 +1,6 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { checkRateLimit, getClientId } from "../shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,6 +23,29 @@ serve(async (req) => {
       status: 200, 
       headers: corsHeaders 
     });
+  }
+
+  // Rate limiting check
+  const clientId = getClientId(req);
+  const rateLimitResult = await checkRateLimit('send-email', clientId);
+  
+  if (!rateLimitResult.allowed) {
+    console.log('Rate limit exceeded for send-email:', clientId);
+    return new Response(
+      JSON.stringify({ 
+        error: "Too many email requests. Please try again later.",
+        success: false,
+        rateLimitExceeded: true
+      }),
+      {
+        headers: { 
+          ...corsHeaders, 
+          ...rateLimitResult.rateLimitHeaders,
+          "Content-Type": "application/json" 
+        },
+        status: 429,
+      }
+    );
   }
 
   try {
@@ -51,7 +76,11 @@ serve(async (req) => {
           success: false
         }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { 
+            ...corsHeaders, 
+            ...rateLimitResult.rateLimitHeaders,
+            "Content-Type": "application/json" 
+          },
           status: 500,
         }
       );
@@ -97,7 +126,11 @@ serve(async (req) => {
         recipient: to
       }),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { 
+          ...corsHeaders, 
+          ...rateLimitResult.rateLimitHeaders,
+          "Content-Type": "application/json" 
+        },
         status: 200,
       }
     );
@@ -111,7 +144,11 @@ serve(async (req) => {
         success: false
       }),
       {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { 
+          ...corsHeaders, 
+          ...rateLimitResult.rateLimitHeaders,
+          "Content-Type": "application/json" 
+        },
         status: 500,
       }
     );
