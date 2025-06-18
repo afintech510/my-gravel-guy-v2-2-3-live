@@ -1212,9 +1212,9 @@ const PaymentSuccess = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <h3 className="font-medium mb-2">Customer Service</h3>
-                <p className="text-sm">Phone: (555) 123-4567</p>
+                <p className="text-sm">Phone: (844) 624-0400</p>
                 <p className="text-sm">Email: support@mygravelguy.com</p>
-                <p className="text-sm">Hours: Mon-Fri, 8am-5pm</p>
+                <p className="text-sm">Hours: Mon-Fri, 8am-5pm EDT</p>
               </div>
               <div>
                 <h3 className="font-medium mb-2">Need Help?</h3>
