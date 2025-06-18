@@ -19,9 +19,7 @@ interface BlogPost {
   category_id: string;
   published_at: string;
   author: string | null;
-  meta_title: string | null;
   meta_description: string | null;
-  is_featured: boolean;
   categoryName?: string; // Added for convenience when joining with categories
 }
 
@@ -81,7 +79,7 @@ export const BlogProvider = ({ children }: { children: React.ReactNode }) => {
         if (categoriesError) throw new Error(categoriesError.message);
         setCategories(categoriesData || []);
 
-        // Fetch all posts with category information
+        // Fetch all posts with category information - using only existing fields
         const { data: postsData, error: postsError } = await supabase
           .from('blog_posts')
           .select(`
@@ -103,16 +101,15 @@ export const BlogProvider = ({ children }: { children: React.ReactNode }) => {
           category_id: post.category_id,
           published_at: post.published_at,
           author: post.author,
-          meta_title: post.meta_title,
           meta_description: post.meta_description,
-          is_featured: post.is_featured ?? false, // Ensure boolean with fallback
           categoryName: post.blog_categories?.name
         })) || [];
 
         setPosts(formattedPosts);
 
-        // Set featured posts
-        const featured = formattedPosts.filter(post => post.is_featured);
+        // Since is_featured doesn't exist in schema, we'll use published_at to determine featured posts
+        // Get the 3 most recent posts as featured
+        const featured = formattedPosts.slice(0, 3);
         setFeaturedPosts(featured);
 
         setIsLoading(false);
@@ -156,9 +153,7 @@ export const BlogProvider = ({ children }: { children: React.ReactNode }) => {
           category_id: data.category_id,
           published_at: data.published_at,
           author: data.author,
-          meta_title: data.meta_title,
           meta_description: data.meta_description,
-          is_featured: data.is_featured ?? false,
           categoryName: data.blog_categories?.name
         };
       }
@@ -199,9 +194,7 @@ export const BlogProvider = ({ children }: { children: React.ReactNode }) => {
         category_id: post.category_id,
         published_at: post.published_at,
         author: post.author,
-        meta_title: post.meta_title,
         meta_description: post.meta_description,
-        is_featured: post.is_featured ?? false,
         categoryName: post.blog_categories?.name
       })) || [];
     } catch (err) {

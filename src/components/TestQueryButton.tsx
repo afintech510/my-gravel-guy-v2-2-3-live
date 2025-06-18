@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -69,10 +70,10 @@ const TestQueryButton = () => {
         throw new Error(`Count error: ${countError.message}`);
       }
       
-      // Query for sample data - use generic field names
+      // Query for sample data - use correct field names from schema
       const { data, error, count: resultCount } = await supabase
         .from('service_zip_codes')
-        .select('city, state_name, zip', { count: 'exact' }) // Use state_name instead of state_id
+        .select('city, state, zip_code', { count: 'exact' })
         .limit(10);
       
       console.log('Query results:', data);
@@ -84,8 +85,8 @@ const TestQueryButton = () => {
       // Convert to expected format
       const formattedResults: LocationResult[] = (data || []).map(item => ({
         city: item.city || 'Unknown',
-        state_id: item.state_name || 'Unknown',
-        zip: item.zip || 'Unknown'
+        state_id: item.state || 'Unknown',
+        zip: item.zip_code || 'Unknown'
       }));
       
       setResults(formattedResults);
