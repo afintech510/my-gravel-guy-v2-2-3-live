@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2, MapPinIcon, PhoneIcon, MailIcon, ClockIcon, FileTextIcon, UserIcon, CreditCard, Database, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, MapPinIcon, PhoneIcon, MailIcon, ClockIcon, FileTextIcon, UserIcon, CreditCard, Database, AlertCircle, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { storeCheckoutBackup, createEnhancedBackup } from '../utils/paymentUtils';
 import CouponCode from '../components/cart/CouponCode';
+import { AutoAuthService } from '../services/autoAuthService';
 import type { OrderInsertData } from '../services/productTypes';
 
 const Checkout = () => {
@@ -15,6 +16,11 @@ const Checkout = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isTestingDB, setIsTestingDB] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [authStatus, setAuthStatus] = useState<{
+    isVerified: boolean;
+    user?: any;
+    sessionId?: string;
+  }>({ isVerified: false });
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -23,6 +29,29 @@ const Checkout = () => {
     navigate('/cart');
     return null;
   }
+
+  // Verify authentication state on component mount
+  useEffect(() => {
+    const verifyAuth = async () => {
+      console.log('=== CHECKOUT AUTH VERIFICATION ===');
+      const authState = await AutoAuthService.verifyAuthenticationState();
+      console.log('Checkout auth state:', authState);
+      
+      setAuthStatus(authState);
+      
+      if (!authState.isAuthenticated) {
+        console.warn('User not authenticated on checkout page');
+        toast({
+          variant: "destructive", 
+          title: "Authentication Required",
+          description: "Please complete the cart process to continue.",
+        });
+        // Don't redirect immediately, let user try to proceed and handle it gracefully
+      }
+    };
+    
+    verifyAuth();
+  }, [toast]);
 
   // Calculate if discounts are applied
   const hasDiscounts = total !== discountTotal;
@@ -154,24 +183,11 @@ const Checkout = () => {
       console.log('=== CHECKOUT CONFIRMATION EMAIL DEBUG ===');
       console.log('Sending checkout confirmation email...');
       
-      // Since user is now authenticated through auto-auth, this should work
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error('Session error:', sessionError);
-        // Don't throw error, just log it since email is not critical for checkout
-        console.log('Continuing checkout without confirmation email due to session error');
+      // Verify session before sending email
+      if (!authStatus.isVerified) {
+        console.warn('Skipping confirmation email - user not properly authenticated');
         return;
       }
-      
-      if (!session) {
-        console.error('No active session found for confirmation email');
-        // Don't throw error, just log it since email is not critical for checkout
-        console.log('Continuing checkout without confirmation email due to no session');
-        return;
-      }
-      
-      console.log('User session verified for email sending');
       
       const orderData = {
         order_id: orderId,
@@ -326,31 +342,43 @@ const Checkout = () => {
         throw new Error('Some items are missing required delivery information. Please complete all delivery forms.');
       }
 
-      // User should already be authenticated via auto-auth from cart
-      // But we'll do a gentle check without throwing errors
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error('Session error:', sessionError);
-        console.log('Proceeding with checkout despite session error');
-      }
-      
-      if (!session) {
-        console.error('No active session found');
-        console.log('Proceeding with checkout despite no session - user may have been auto-authenticated');
-      } else {
-        console.log('User session verified for checkout:', session.user.email);
+      console.log('=== ENHANCED CHECKOUT PROCESS START ===');
+      console.log('Initial auth status:', authStatus);
+
+      // If user is not authenticated, try to re-authenticate
+      if (!authStatus.isVerified) {
+        console.log('User not authenticated, attempting re-authentication...');
+        
+        const firstItem = items[0];
+        const authData = {
+          email: firstItem.contactInfo!.email,
+          phone: firstItem.contactInfo!.phone,
+          name: firstItem.contactInfo!.name
+        };
+        
+        const authResult = await AutoAuthService.ensureAuthenticated(authData);
+        if (!authResult.success) {
+          throw new Error('Please complete the checkout process from the cart page');
+        }
+        
+        // Update auth status
+        const newAuthState = await AutoAuthService.verifyAuthenticationState();
+        setAuthStatus(newAuthState);
+        
+        if (!newAuthState.isAuthenticated) {
+          throw new Error('Authentication failed - please try again from the cart page');
+        }
       }
 
       const formattedItems = formatCartItemsForStripe();
       const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
-      console.log('=== CHECKOUT DEBUG START ===');
       console.log('Order ID generated:', orderId);
       console.log('Formatted items with discounts:', formattedItems);
       console.log('Original total:', total);
       console.log('Discounted total:', discountTotal);
-      console.log('User authenticated:', session?.user?.email || 'No session found');
+      console.log('User authenticated:', authStatus.user?.email);
+      console.log('Session ID:', authStatus.sessionId?.substring(0, 20) + '...');
       
       // Send checkout confirmation email first (non-blocking)
       await sendCheckoutConfirmationEmail(orderId);
@@ -384,13 +412,13 @@ const Checkout = () => {
       }
       
       console.log('Payment URL received:', data.url);
-      console.log('=== CHECKOUT DEBUG END ===');
+      console.log('=== ENHANCED CHECKOUT PROCESS SUCCESS ===');
       
       // Redirect to Stripe checkout
       window.location.href = data.url;
       
     } catch (error) {
-      console.error('Checkout error:', error);
+      console.error('Enhanced checkout error:', error);
       
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       setCheckoutError(errorMessage);
@@ -419,6 +447,38 @@ const Checkout = () => {
       </Button>
       
       <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+
+      {/* Authentication Status Display */}
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className={`flex items-center gap-3 p-3 rounded-lg ${
+            authStatus.isVerified 
+              ? 'bg-green-50 border border-green-200' 
+              : 'bg-amber-50 border border-amber-200'
+          }`}>
+            {authStatus.isVerified ? (
+              <CheckCircle className="h-5 w-5 text-green-600" />
+            ) : (
+              <AlertCircle className="h-5 w-5 text-amber-600" />
+            )}
+            <div className="flex-1">
+              <p className={`font-medium ${
+                authStatus.isVerified ? 'text-green-800' : 'text-amber-800'
+              }`}>
+                {authStatus.isVerified ? 'Authentication Verified' : 'Authentication Status'}
+              </p>
+              <p className={`text-sm ${
+                authStatus.isVerified ? 'text-green-600' : 'text-amber-600'
+              }`}>
+                {authStatus.isVerified 
+                  ? `Signed in as ${authStatus.user?.email}`
+                  : 'Authentication may be required for checkout'
+                }
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Checkout Error Display */}
       {checkoutError && (

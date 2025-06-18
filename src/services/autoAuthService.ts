@@ -1,5 +1,5 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
 
 export interface AutoAuthData {
   email: string;
@@ -36,6 +36,10 @@ export class AutoAuthService {
       
       if (signInData?.user && !signInError) {
         console.log('Successfully signed in with existing account:', signInData.user.email);
+        
+        // Wait for session to be established
+        await this.waitForSession(5000);
+        
         return {
           success: true,
           user: signInData.user,
@@ -85,6 +89,9 @@ export class AutoAuthService {
       console.log('Successfully created new account:', signUpData.user.email);
       console.log('Account confirmation required:', !signUpData.user.email_confirmed_at);
       
+      // Wait for session to be established
+      await this.waitForSession(5000);
+      
       // For frictionless checkout, we'll treat unconfirmed accounts as valid
       return {
         success: true,
@@ -121,6 +128,63 @@ export class AutoAuthService {
     
     // If not authenticated, create account and login
     const result = await this.createAccountAndLogin(authData);
+    
+    if (result.success) {
+      // Double-check that session is properly established
+      const { data: { session: newSession } } = await supabase.auth.getSession();
+      if (!newSession) {
+        console.warn('Authentication succeeded but session not found');
+        // Wait a bit more and try again
+        await this.waitForSession(3000);
+        const { data: { session: finalSession } } = await supabase.auth.getSession();
+        if (!finalSession) {
+          return {
+            success: false,
+            error: 'Authentication succeeded but session could not be established'
+          };
+        }
+      }
+    }
+    
     return result;
+  }
+
+  // Helper method to wait for session to be established
+  private static async waitForSession(timeoutMs: number = 5000): Promise<boolean> {
+    const startTime = Date.now();
+    
+    while (Date.now() - startTime < timeoutMs) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        console.log('Session established for user:', session.user.email);
+        return true;
+      }
+      
+      // Wait 100ms before checking again
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    console.warn('Timed out waiting for session to be established');
+    return false;
+  }
+
+  // Method to verify authentication state
+  static async verifyAuthenticationState(): Promise<{
+    isAuthenticated: boolean;
+    user?: any;
+    sessionId?: string;
+  }> {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error('Error checking authentication state:', error);
+      return { isAuthenticated: false };
+    }
+    
+    return {
+      isAuthenticated: !!session?.user,
+      user: session?.user,
+      sessionId: session?.access_token
+    };
   }
 }
