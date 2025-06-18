@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
@@ -37,7 +38,12 @@ const Checkout = () => {
       const authState = await AutoAuthService.verifyAuthenticationState();
       console.log('Checkout auth state:', authState);
       
-      setAuthStatus(authState);
+      // Map isAuthenticated to isVerified for state consistency
+      setAuthStatus({
+        isVerified: authState.isAuthenticated,
+        user: authState.user,
+        sessionId: authState.sessionId
+      });
       
       if (!authState.isAuthenticated) {
         console.warn('User not authenticated on checkout page');
@@ -361,9 +367,13 @@ const Checkout = () => {
           throw new Error('Please complete the checkout process from the cart page');
         }
         
-        // Update auth status
+        // Update auth status with proper property mapping
         const newAuthState = await AutoAuthService.verifyAuthenticationState();
-        setAuthStatus(newAuthState);
+        setAuthStatus({
+          isVerified: newAuthState.isAuthenticated,
+          user: newAuthState.user,
+          sessionId: newAuthState.sessionId
+        });
         
         if (!newAuthState.isAuthenticated) {
           throw new Error('Authentication failed - please try again from the cart page');
