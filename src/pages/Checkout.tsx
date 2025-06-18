@@ -63,24 +63,23 @@ const Checkout = () => {
       const orderRecords: OrderInsertData[] = items.map((item, index) => ({
         order_id: testOrderId,
         stripe_session_id: `test_session_${testOrderId}_${index}`,
+        stripe_payment_intent_id: `test_intent_${testOrderId}`,
         product_id: item.id.toString(),
         unit: 'tons',
         unit_price: item.price,
         total_price: item.price * (item.tons || 1),
-        quantity: item.tons || 1,
+        delivery_date: item.deliveryDate?.toISOString() || new Date().toISOString(),
+        delivery_address: item.deliveryAddress?.street || 'Test Address',
+        delivery_city: item.deliveryAddress?.city || 'Test City',
+        delivery_state: item.deliveryAddress?.state || 'TX',
+        delivery_zip: item.deliveryAddress?.zip || '12345',
+        customer_name: item.contactInfo?.name || 'Test Customer',
+        customer_email: item.contactInfo?.email || 'test@example.com',
+        customer_phone: item.contactInfo?.phone || '555-1234',
+        instructions: item.deliveryInstructions || null,
         status: 'test',
-        delivery_name: item.contactInfo?.name,
-        delivery_phone: item.contactInfo?.phone,
-        delivery_email: item.contactInfo?.email,
-        billing_name: item.contactInfo?.name,
-        billing_email: item.contactInfo?.email,
-        delivery_date: item.deliveryDate?.toISOString(),
-        delivery_street: item.deliveryAddress?.street,
-        delivery_city: item.deliveryAddress?.city,
-        delivery_state: item.deliveryAddress?.state,
-        delivery_zip: item.deliveryAddress?.zip,
-        delivery_time_preference: item.deliveryTimePreference,
-        delivery_instructions: item.deliveryInstructions
+        tons: item.tons || 1,
+        zip_adjust: 0
       }));
 
       console.log('Schema-accurate order records to insert:', orderRecords);

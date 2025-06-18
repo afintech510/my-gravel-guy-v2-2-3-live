@@ -71,36 +71,35 @@ export interface CartItemForOrders {
   };
 }
 
-// Updated OrderInsertData to match the actual database schema from Supabase types
+// Updated OrderInsertData to match the exact database schema from Supabase types
 export interface OrderInsertData {
   id?: string;
   order_id: string;
-  stripe_session_id?: string | null;
-  stripe_payment_intent_id?: string | null;
+  stripe_session_id: string;
+  stripe_payment_intent_id: string;
   product_id: string;
   unit: string;
   unit_price: number;
   total_price: number;
-  delivery_date?: string | null;
-  delivery_address?: string | null; // Updated to match schema
-  delivery_city?: string | null;
-  delivery_state?: string | null;
-  delivery_zip?: string | null;
-  delivery_time_preference?: string | null;
-  delivery_instructions?: string | null;
-  customer_name?: string | null; // Updated to match schema
-  customer_email?: string | null; // Updated to match schema
-  customer_phone?: string | null; // Updated to match schema
-  billing_name?: string | null;
-  billing_email?: string | null;
-  status?: string | null;
-  quantity?: number | null;
-  notes?: string | null;
-  supplier_id?: string | null;
-  supplier_charges?: number | null;
-  zip_adjust?: number | null;
+  delivery_date: string;
+  delivery_address: string;
+  delivery_city: string;
+  delivery_state: string;
+  delivery_zip: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  instructions?: string | null;
+  status?: string;
   created_at?: string;
   updated_at?: string;
+  supplier_id?: string | null;
+  supplier_name?: string | null;
+  supplier_price?: number | null;
+  supplier_confirmed?: boolean;
+  supplier_notes?: string | null;
+  tons: number;
+  zip_adjust: number;
 }
 
 // Updated type definition for MaterialSize to be a string instead of specific literal types
