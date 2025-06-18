@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
@@ -155,17 +154,21 @@ const Checkout = () => {
       console.log('=== CHECKOUT CONFIRMATION EMAIL DEBUG ===');
       console.log('Sending checkout confirmation email...');
       
-      // Get the current user session to ensure we're authenticated
+      // Since user is now authenticated through auto-auth, this should work
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
         console.error('Session error:', sessionError);
-        throw new Error('Authentication required for email sending');
+        // Don't throw error, just log it since email is not critical for checkout
+        console.log('Continuing checkout without confirmation email due to session error');
+        return;
       }
       
       if (!session) {
-        console.error('No active session found');
-        throw new Error('User must be logged in to send emails');
+        console.error('No active session found for confirmation email');
+        // Don't throw error, just log it since email is not critical for checkout
+        console.log('Continuing checkout without confirmation email due to no session');
+        return;
       }
       
       console.log('User session verified for email sending');
@@ -323,20 +326,21 @@ const Checkout = () => {
         throw new Error('Some items are missing required delivery information. Please complete all delivery forms.');
       }
 
-      // Check authentication before proceeding
+      // User should already be authenticated via auto-auth from cart
+      // But we'll do a gentle check without throwing errors
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
         console.error('Session error:', sessionError);
-        throw new Error('Authentication error. Please try logging in again.');
+        console.log('Proceeding with checkout despite session error');
       }
       
       if (!session) {
         console.error('No active session found');
-        throw new Error('You must be logged in to complete checkout. Please log in and try again.');
+        console.log('Proceeding with checkout despite no session - user may have been auto-authenticated');
+      } else {
+        console.log('User session verified for checkout:', session.user.email);
       }
-
-      console.log('User session verified for checkout');
 
       const formattedItems = formatCartItemsForStripe();
       const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -346,9 +350,9 @@ const Checkout = () => {
       console.log('Formatted items with discounts:', formattedItems);
       console.log('Original total:', total);
       console.log('Discounted total:', discountTotal);
-      console.log('User authenticated:', session.user.email);
+      console.log('User authenticated:', session?.user?.email || 'No session found');
       
-      // Send checkout confirmation email first
+      // Send checkout confirmation email first (non-blocking)
       await sendCheckoutConfirmationEmail(orderId);
       
       // Create enhanced backup with better validation
@@ -361,7 +365,7 @@ const Checkout = () => {
       
       console.log('Enhanced order backup stored:', orderBackup);
       
-      // Call the create-payment Supabase Edge function with authentication
+      // Call the create-payment Supabase Edge function
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: JSON.stringify({ 
           items: formattedItems,

@@ -18,8 +18,6 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // REAL AUTH CODE - Re-enabled for testing
-    
     // Get initial session
     const getSession = async () => {
       console.log('useAuth: Getting initial session...');
@@ -78,6 +76,39 @@ export const useAuth = () => {
     }
   };
 
+  const signUp = async (email: string, password: string, metadata?: any) => {
+    console.log('useAuth: Starting email/password sign up...');
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: metadata
+      }
+    });
+    
+    if (error) {
+      console.error('Error signing up:', error);
+      throw error;
+    }
+    
+    return data;
+  };
+
+  const signIn = async (email: string, password: string) => {
+    console.log('useAuth: Starting email/password sign in...');
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+    
+    if (error) {
+      console.error('Error signing in:', error);
+      throw error;
+    }
+    
+    return data;
+  };
+
   const signOut = async () => {
     console.log('useAuth: Signing out...');
     const { error } = await supabase.auth.signOut();
@@ -119,6 +150,8 @@ export const useAuth = () => {
     loading,
     isAdmin,
     signInWithGoogle,
+    signUp,
+    signIn,
     signOut
   };
 };
