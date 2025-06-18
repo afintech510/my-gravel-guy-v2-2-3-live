@@ -2,7 +2,7 @@
 project_id = "losrkjvrcambvgijfism"
 
 [functions.create-payment]
-verify_jwt = true  # Require authentication for payments
+verify_jwt = false  # Disabled for guest checkout
 
 [functions.send-email]
 verify_jwt = false  # Temporarily disable JWT for frictionless checkout emails
