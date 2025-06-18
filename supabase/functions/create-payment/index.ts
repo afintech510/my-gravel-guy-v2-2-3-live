@@ -1,7 +1,7 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { checkRateLimit, getClientId } from "../shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +18,28 @@ serve(async (req) => {
     });
   }
 
+  // Rate limiting check
+  const clientId = getClientId(req);
+  const rateLimitResult = await checkRateLimit('create-payment', clientId);
+  
+  if (!rateLimitResult.allowed) {
+    console.log('Rate limit exceeded for create-payment:', clientId);
+    return new Response(
+      JSON.stringify({ 
+        error: "Too many requests. Please try again later.",
+        rateLimitExceeded: true
+      }),
+      {
+        headers: { 
+          ...corsHeaders, 
+          ...rateLimitResult.rateLimitHeaders,
+          "Content-Type": "application/json" 
+        },
+        status: 429,
+      }
+    );
+  }
+
   try {
     // Parse request body
     const requestBody = await req.text();
@@ -31,7 +53,11 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Invalid JSON in request body" }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { 
+            ...corsHeaders, 
+            ...rateLimitResult.rateLimitHeaders,
+            "Content-Type": "application/json" 
+          },
           status: 400,
         }
       );
@@ -48,7 +74,11 @@ serve(async (req) => {
           error: "Stripe secret key not found in environment variables" 
         }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { 
+            ...corsHeaders, 
+            ...rateLimitResult.rateLimitHeaders,
+            "Content-Type": "application/json" 
+          },
           status: 500,
         }
       );
@@ -62,7 +92,11 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Invalid or empty items array" }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { 
+            ...corsHeaders, 
+            ...rateLimitResult.rateLimitHeaders,
+            "Content-Type": "application/json" 
+          },
           status: 400,
         }
       );
@@ -288,11 +322,15 @@ serve(async (req) => {
       // Don't fail the payment process - we can handle order creation in the success page
     }
 
-    // Return the checkout URL
+    // Return the checkout URL with rate limit headers
     return new Response(
       JSON.stringify({ url: session.url, orderId }),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { 
+          ...corsHeaders, 
+          ...rateLimitResult.rateLimitHeaders,
+          "Content-Type": "application/json" 
+        },
         status: 200,
       }
     );
@@ -311,7 +349,11 @@ serve(async (req) => {
         fullError: error.toString()
       }),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { 
+          ...corsHeaders, 
+          ...rateLimitResult.rateLimitHeaders,
+          "Content-Type": "application/json" 
+        },
         status: 500,
       }
     );

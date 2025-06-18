@@ -47,6 +47,7 @@ export class OrderService {
 
   /**
    * Fetch orders with optional filtering and pagination
+   * Now respects RLS policies - users see only their own orders, admins see all
    */
   static async fetchOrders(
     filters: OrderFilters = {},
@@ -54,8 +55,25 @@ export class OrderService {
     limit: number = 10
   ): Promise<OrderServiceResponse> {
     try {
-      console.log('Fetching orders with filters:', filters);
+      console.log('Fetching orders with filters (RLS enabled):', filters);
       
+      // Check if user is authenticated
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError) {
+        console.error('Authentication error:', authError);
+        throw new Error('Authentication required to access orders');
+      }
+
+      if (!user) {
+        console.log('No authenticated user, returning empty results');
+        return {
+          orders: [],
+          total: 0,
+          page,
+          limit
+        };
+      }
+
       let query = supabase
         .from('orders')
         .select('*', { count: 'exact' });
@@ -95,7 +113,17 @@ export class OrderService {
       const { data, error, count } = await query;
 
       if (error) {
-        console.error('Error fetching orders:', error);
+        console.error('Error fetching orders (RLS may be blocking access):', error);
+        // If RLS is blocking access, it might be because user doesn't have permission
+        if (error.code === 'PGRST116' || error.message.includes('permission')) {
+          console.log('RLS policy blocked access - user may not have orders or admin access');
+          return {
+            orders: [],
+            total: 0,
+            page,
+            limit
+          };
+        }
         throw new Error(`Failed to fetch orders: ${error.message}`);
       }
 
@@ -104,6 +132,8 @@ export class OrderService {
       
       // Resolve product names
       const ordersWithProductNames = await this.resolveProductNames(groupedOrders);
+
+      console.log(`Retrieved ${ordersWithProductNames.length} orders for user (RLS applied)`);
 
       return {
         orders: ordersWithProductNames,
@@ -119,10 +149,23 @@ export class OrderService {
 
   /**
    * Fetch a single order by order ID
+   * Now respects RLS policies - users can only see their own orders
    */
   static async fetchOrderById(orderId: string): Promise<GroupedOrder | null> {
     try {
-      console.log('Fetching order by ID:', orderId);
+      console.log('Fetching order by ID (RLS enabled):', orderId);
+      
+      // Check if user is authenticated
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError) {
+        console.error('Authentication error:', authError);
+        throw new Error('Authentication required to access orders');
+      }
+
+      if (!user) {
+        console.log('No authenticated user, cannot fetch order');
+        return null;
+      }
       
       const { data, error } = await supabase
         .from('orders')
@@ -131,10 +174,16 @@ export class OrderService {
 
       if (error) {
         console.error('Error fetching order by ID:', error);
+        // If RLS blocks access, the order might not belong to the user
+        if (error.code === 'PGRST116' || error.message.includes('permission')) {
+          console.log('RLS policy blocked access - order may not belong to user');
+          return null;
+        }
         throw new Error(`Failed to fetch order: ${error.message}`);
       }
 
       if (!data || data.length === 0) {
+        console.log('No order found with ID:', orderId);
         return null;
       }
 
