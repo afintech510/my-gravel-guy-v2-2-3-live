@@ -71,26 +71,30 @@ export interface CartItemForOrders {
   };
 }
 
-// Updated OrderInsertData to match the exact database schema from Supabase types
+// Updated OrderInsertData to match the actual database schema used in the application
 export interface OrderInsertData {
   id?: string;
   order_id: string;
   stripe_session_id: string;
-  stripe_payment_intent_id: string;
+  stripe_payment_intent_id?: string | null;
   product_id: string;
   unit: string;
   unit_price: number;
   total_price: number;
-  delivery_date: string;
-  delivery_address: string;
-  delivery_city: string;
-  delivery_state: string;
-  delivery_zip: string;
-  customer_name: string;
-  customer_email: string;
-  customer_phone: string;
-  instructions?: string | null;
+  quantity: number; // Changed from tons to quantity to match actual usage
   status?: string;
+  delivery_name?: string | null; // Changed from customer_name to delivery_name
+  delivery_phone?: string | null;
+  delivery_email?: string | null;
+  billing_name?: string | null;
+  billing_email?: string | null;
+  delivery_date?: string | null;
+  delivery_street?: string | null; // Changed from delivery_address to delivery_street
+  delivery_city?: string | null;
+  delivery_state?: string | null;
+  delivery_zip?: string | null;
+  delivery_time_preference?: string | null;
+  delivery_instructions?: string | null;
   created_at?: string;
   updated_at?: string;
   supplier_id?: string | null;
@@ -98,8 +102,6 @@ export interface OrderInsertData {
   supplier_price?: number | null;
   supplier_confirmed?: boolean;
   supplier_notes?: string | null;
-  tons: number;
-  zip_adjust: number;
 }
 
 // Updated type definition for MaterialSize to be a string instead of specific literal types

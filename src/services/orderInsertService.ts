@@ -65,6 +65,7 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
         console.warn('Missing delivery address for item:', item.id);
       }
 
+      // Updated record structure to match the corrected OrderInsertData interface
       const record = {
         order_id: orderData.orderId,
         stripe_session_id: orderData.stripeSessionId || `test_session_${orderData.orderId}_${index}`,
@@ -73,7 +74,7 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
         unit: 'tons',
         unit_price: item.price || 0,
         total_price: (item.price || 0) * quantity,
-        quantity: quantity,
+        quantity: quantity, // Using quantity instead of tons for consistency
         status: 'confirmed',
         delivery_name: contactInfo.name || null,
         delivery_phone: contactInfo.phone || null,
@@ -81,7 +82,7 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
         billing_name: contactInfo.name || null,
         billing_email: contactInfo.email || null,
         delivery_date: deliveryDate || null,
-        delivery_street: deliveryAddress.street || null,
+        delivery_street: deliveryAddress.street || null, // Using delivery_street
         delivery_city: deliveryAddress.city || null,
         delivery_state: deliveryAddress.state || null,
         delivery_zip: deliveryAddress.zip || null,
@@ -124,7 +125,7 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
   }
 };
 
-// Test function to insert sample data
+// Test function to insert sample data - updated to use correct field names
 export const testDatabaseInsert = async () => {
   console.log('=== TESTING DATABASE INSERT ===');
   
