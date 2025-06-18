@@ -3,23 +3,12 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
-// Admin email list - add authorized admin emails here
-const ADMIN_EMAILS = [
-  'admin@mygravelguy.com',
-  'manager@mygravelguy.com',
-  'adam@easternbuilding.supply',
-  'techminded.xyz@gmail.com',
-  'ronnie@easternbuilding.supply',
-  // Add more admin emails as needed
-];
-
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // REAL AUTH CODE - Re-enabled for testing
-    
     // Get initial session
     const getSession = async () => {
       console.log('useAuth: Getting initial session...');
@@ -34,11 +23,13 @@ export const useAuth = () => {
       
       if (session?.user) {
         console.log('useAuth: User email from session:', session.user.email);
-        console.log('useAuth: User object keys:', Object.keys(session.user));
-        console.log('useAuth: Full user object:', JSON.stringify(session.user, null, 2));
+        setUser(session.user);
+        await checkAdminStatus(session.user);
+      } else {
+        setUser(null);
+        setIsAdmin(false);
       }
       
-      setUser(session?.user ?? null);
       setLoading(false);
     };
 
@@ -46,22 +37,69 @@ export const useAuth = () => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log('useAuth: Auth state change event:', event);
         console.log('useAuth: Auth state change session:', session);
         
         if (session?.user) {
           console.log('useAuth: User email from auth change:', session.user.email);
-          console.log('useAuth: User object from auth change:', JSON.stringify(session.user, null, 2));
+          setUser(session.user);
+          await checkAdminStatus(session.user);
+          
+          // Update last login time
+          await updateLastLogin(session.user);
+        } else {
+          setUser(null);
+          setIsAdmin(false);
         }
         
-        setUser(session?.user ?? null);
         setLoading(false);
       }
     );
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const checkAdminStatus = async (user: User) => {
+    try {
+      console.log('useAuth: Checking admin status for:', user.email);
+      
+      // Check if user exists in admin_users table
+      const { data: adminUser, error } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+        console.error('useAuth: Error checking admin status:', error);
+        setIsAdmin(false);
+        return;
+      }
+
+      const isAdminUser = !!adminUser;
+      console.log('useAuth: Admin user data:', adminUser);
+      console.log('useAuth: Is admin?', isAdminUser);
+      
+      setIsAdmin(isAdminUser);
+    } catch (error) {
+      console.error('useAuth: Exception checking admin status:', error);
+      setIsAdmin(false);
+    }
+  };
+
+  const updateLastLogin = async (user: User) => {
+    try {
+      // Update last_login_at for the admin user
+      await supabase
+        .from('admin_users')
+        .update({ last_login_at: new Date().toISOString() })
+        .eq('user_id', user.id);
+    } catch (error) {
+      console.error('useAuth: Error updating last login:', error);
+    }
+  };
 
   const signInWithGoogle = async () => {
     console.log('useAuth: Starting Google sign in...');
@@ -86,33 +124,6 @@ export const useAuth = () => {
       throw error;
     }
   };
-
-  // Enhanced admin check with debugging and email normalization
-  const checkIsAdmin = () => {
-    console.log('useAuth: Checking admin status...');
-    console.log('useAuth: Current user:', user);
-    console.log('useAuth: User email:', user?.email);
-    console.log('useAuth: Admin emails list:', ADMIN_EMAILS);
-    
-    if (!user?.email) {
-      console.log('useAuth: No user email found, not admin');
-      return false;
-    }
-    
-    // Normalize email for comparison (lowercase and trim)
-    const normalizedUserEmail = user.email.toLowerCase().trim();
-    const normalizedAdminEmails = ADMIN_EMAILS.map(email => email.toLowerCase().trim());
-    
-    console.log('useAuth: Normalized user email:', normalizedUserEmail);
-    console.log('useAuth: Normalized admin emails:', normalizedAdminEmails);
-    
-    const isAdmin = normalizedAdminEmails.includes(normalizedUserEmail);
-    console.log('useAuth: Is admin?', isAdmin);
-    
-    return isAdmin;
-  };
-
-  const isAdmin = checkIsAdmin();
 
   return {
     user,
