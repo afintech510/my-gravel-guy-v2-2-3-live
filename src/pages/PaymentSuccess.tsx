@@ -1,8 +1,7 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, Truck, Package, MapPin, Calendar, AlertCircle, RefreshCw, Shield, Clock, XCircle, Database, Mail, User, Phone, FileText, Camera } from "lucide-react";
+import { CheckCircle, Truck, Package, MapPin, Calendar, AlertCircle, RefreshCw, Shield, Clock, XCircle, Database, Mail } from "lucide-react";
 import { useCart } from '../contexts/CartContext';
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -29,7 +28,6 @@ interface OrderItem {
   delivery_time_preference: string | null;
   delivery_instructions: string | null;
   status: string;
-  locationPhotoUrl?: string | null; // Added missing property
 }
 
 const PaymentSuccess = () => {
@@ -1009,7 +1007,7 @@ const PaymentSuccess = () => {
         <VerificationStatusCard />
         {/*    <ProcessingStatusCard /> /*}
 
-        {/* Order Items Details - Enhanced with full contact info and delivery details */}
+        {/* Order Items Details - Updated to show resolved product names */}
         {orderItems.length > 0 && (
           <Card className="mb-8">
             <CardContent className="pt-6">
@@ -1047,7 +1045,7 @@ const PaymentSuccess = () => {
                       </div>
                     </div>
 
-                    {(item.delivery_address_street || item.delivery_date || item.contact_name) && (
+                    {(item.delivery_address_street || item.delivery_date) && (
                       <div className="bg-gray-50 rounded-lg p-4">
                         <h4 className="font-medium mb-3 flex items-center gap-2">
                           <Truck className="h-4 w-4" />
@@ -1055,35 +1053,9 @@ const PaymentSuccess = () => {
                         </h4>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {/* Contact Information */}
-                          {item.contact_name && (
-                            <div>
-                              <h5 className="font-medium text-sm mb-2 flex items-center gap-1">
-                                <User className="h-3 w-3" />
-                                Contact Information
-                              </h5>
-                              <div className="space-y-1 text-sm text-gray-600">
-                                <div className="font-medium">{item.contact_name}</div>
-                                {item.contact_email && (
-                                  <div className="flex items-center gap-1">
-                                    <Mail className="h-3 w-3" />
-                                    <span>{item.contact_email}</span>
-                                  </div>
-                                )}
-                                {item.contact_phone && (
-                                  <div className="flex items-center gap-1">
-                                    <Phone className="h-3 w-3" />
-                                    <span>{item.contact_phone}</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Delivery Address */}
                           {item.delivery_address_street && (
                             <div>
-                              <h5 className="font-medium text-sm mb-2 flex items-center gap-1">
+                              <h5 className="font-medium text-sm mb-1 flex items-center gap-1">
                                 <MapPin className="h-3 w-3" />
                                 Delivery Address
                               </h5>
@@ -1096,10 +1068,9 @@ const PaymentSuccess = () => {
                             </div>
                           )}
 
-                          {/* Delivery Schedule */}
                           {item.delivery_date && (
                             <div>
-                              <h5 className="font-medium text-sm mb-2 flex items-center gap-1">
+                              <h5 className="font-medium text-sm mb-1 flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
                                 Delivery Schedule
                               </h5>
@@ -1118,41 +1089,10 @@ const PaymentSuccess = () => {
                           )}
                         </div>
 
-                        {/* Special Instructions and Photo Upload Indication */}
-                        {(item.delivery_instructions || item.locationPhotoUrl) && (
-                          <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
-                            {item.delivery_instructions && (
-                              <div>
-                                <h5 className="font-medium text-sm mb-1 flex items-center gap-1">
-                                  <FileText className="h-3 w-3" />
-                                  Special Instructions
-                                </h5>
-                                <p className="text-sm text-gray-600 bg-white p-2 rounded border">
-                                  {item.delivery_instructions}
-                                </p>
-                              </div>
-                            )}
-                            
-                            {/* Photo Upload Indication */}
-                            <div>
-                              <h5 className="font-medium text-sm mb-1 flex items-center gap-1">
-                                <Camera className="h-3 w-3" />
-                                Location Photo
-                              </h5>
-                              <div className="text-sm">
-                                {item.locationPhotoUrl ? (
-                                  <div className="flex items-center gap-2 text-green-600 bg-green-50 p-2 rounded border border-green-200">
-                                    <CheckCircle className="h-4 w-4" />
-                                    <span>Photo uploaded - delivery location documented</span>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center gap-2 text-gray-500 bg-gray-100 p-2 rounded border">
-                                    <Camera className="h-4 w-4" />
-                                    <span>No location photo provided</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
+                        {item.delivery_instructions && (
+                          <div className="mt-4 pt-4 border-t border-gray-200">
+                            <h5 className="font-medium text-sm mb-1">Special Instructions</h5>
+                            <p className="text-sm text-gray-600">{item.delivery_instructions}</p>
                           </div>
                         )}
                       </div>
@@ -1212,9 +1152,9 @@ const PaymentSuccess = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <h3 className="font-medium mb-2">Customer Service</h3>
-                <p className="text-sm">Phone: (844) 624-0400</p>
+                <p className="text-sm">Phone: (555) 123-4567</p>
                 <p className="text-sm">Email: support@mygravelguy.com</p>
-                <p className="text-sm">Hours: Mon-Fri, 8am-5pm EDT</p>
+                <p className="text-sm">Hours: Mon-Fri, 8am-5pm</p>
               </div>
               <div>
                 <h3 className="font-medium mb-2">Need Help?</h3>

@@ -1,18 +1,19 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2, MapPinIcon, PhoneIcon, MailIcon, ClockIcon, FileTextIcon, UserIcon, CreditCard, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, MapPinIcon, PhoneIcon, MailIcon, ClockIcon, FileTextIcon, UserIcon, CreditCard, Database, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { storeCheckoutBackup, createEnhancedBackup } from '../utils/paymentUtils';
 import CouponCode from '../components/cart/CouponCode';
+import type { OrderInsertData } from '../services/productTypes';
 
 const Checkout = () => {
   const { items, total, discountTotal, clearCart } = useCart();
   const [isLoading, setIsLoading] = useState(false);
+  const [isTestingDB, setIsTestingDB] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -49,6 +50,72 @@ const Checkout = () => {
     return null;
   };
 
+  // Test database insertion function with schema-accurate data
+  const testDatabaseInsertion = async () => {
+    setIsTestingDB(true);
+    setCheckoutError(null);
+    
+    try {
+      console.log('=== TESTING SCHEMA-ACCURATE DATABASE INSERTION ===');
+      
+      const testOrderId = `TEST-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      const orderRecords: OrderInsertData[] = items.map((item, index) => ({
+        order_id: testOrderId,
+        stripe_session_id: `test_session_${testOrderId}_${index}`,
+        product_id: item.id.toString(),
+        unit: 'tons',
+        unit_price: item.price,
+        total_price: item.price * (item.tons || 1),
+        quantity: item.tons || 1,
+        status: 'test',
+        delivery_name: item.contactInfo?.name,
+        delivery_phone: item.contactInfo?.phone,
+        delivery_email: item.contactInfo?.email,
+        billing_name: item.contactInfo?.name,
+        billing_email: item.contactInfo?.email,
+        delivery_date: item.deliveryDate?.toISOString(),
+        delivery_street: item.deliveryAddress?.street,
+        delivery_city: item.deliveryAddress?.city,
+        delivery_state: item.deliveryAddress?.state,
+        delivery_zip: item.deliveryAddress?.zip,
+        delivery_time_preference: item.deliveryTimePreference,
+        delivery_instructions: item.deliveryInstructions
+      }));
+
+      console.log('Schema-accurate order records to insert:', orderRecords);
+
+      const { data, error } = await supabase
+        .from('orders')
+        .insert(orderRecords)
+        .select();
+
+      if (error) {
+        console.error('Database insertion error:', error);
+        throw error;
+      }
+
+      console.log('Successfully inserted schema-accurate test orders:', data);
+      
+      toast({
+        title: "Schema-Accurate Database Test Successful!",
+        description: `Inserted ${data?.length || 0} test records with ID: ${testOrderId}`,
+        className: "border-green-500 border-2 shadow-[0_0_15px_rgba(20,255,106,0.5)]"
+      });
+
+    } catch (error) {
+      console.error('Schema-accurate database test failed:', error);
+      
+      toast({
+        variant: "destructive",
+        title: "Database Test Failed",
+        description: error instanceof Error ? error.message : "Failed to insert test records",
+      });
+    } finally {
+      setIsTestingDB(false);
+    }
+  };
+
   // Transform cart items to a format suitable for Stripe
   const formatCartItemsForStripe = () => {
     return items.map(item => {
@@ -63,9 +130,7 @@ const Checkout = () => {
         metadata = {
           deliveryDate: item.deliveryDate ? item.deliveryDate.toISOString() : undefined,
           deliveryAddress: item.deliveryAddress ? JSON.stringify(item.deliveryAddress) : undefined,
-          contactName: item.contactInfo?.name,
-          contactPhone: item.contactInfo?.phone,
-          contactEmail: item.contactInfo?.email,
+          contactPhone: item.contactPhone,
           deliveryTimePreference: item.deliveryTimePreference,
           deliveryInstructions: item.deliveryInstructions
         };
@@ -83,7 +148,7 @@ const Checkout = () => {
     });
   };
 
-  // Send checkout confirmation email to internal team
+  // Send checkout confirmation email to internal team with enhanced delivery details
   const sendCheckoutConfirmationEmail = async (orderId: string) => {
     try {
       console.log('=== CHECKOUT CONFIRMATION EMAIL DEBUG ===');
@@ -103,8 +168,8 @@ const Checkout = () => {
           location_photo_url: item.locationPhotoUrl
         })),
         total_amount: discountTotal,
-        customer_email: items[0]?.contactInfo?.email || 'guest@checkout.com',
-        customer_name: items[0]?.contactInfo?.name || 'Guest Customer'
+        customer_email: items[0]?.contactInfo?.email || 'checkout-confirmation@customer.com',
+        customer_name: items[0]?.contactInfo?.name || 'Checkout Customer'
       };
 
       console.log('Checkout confirmation order data:', orderData);
@@ -112,7 +177,7 @@ const Checkout = () => {
       const { data, error } = await supabase.functions.invoke('send-email', {
         body: {
           to: 'order.support@mygravelguy.com',
-          subject: 'Guest Checkout - Customer Proceeded to Payment',
+          subject: 'Continued to Payment - Customer Proceeded to Stripe',
           html: generateCheckoutConfirmationEmail(orderData),
           type: 'internal_notification',
           orderData
@@ -129,19 +194,19 @@ const Checkout = () => {
     }
   };
 
-  // Generate enhanced email template for checkout confirmation
+  // Generate enhanced email template for checkout confirmation with full delivery details
   const generateCheckoutConfirmationEmail = (orderData: any) => {
     return `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="utf-8">
-        <title>Guest Checkout to Payment</title>
+        <title>Continued to Payment</title>
       </head>
       <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: #dc2626; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-          <h1 style="margin: 0; font-size: 28px;">Guest Checkout to Payment 💳</h1>
-          <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Customer proceeded to Stripe checkout as guest</p>
+          <h1 style="margin: 0; font-size: 28px;">Continued to Payment 💳</h1>
+          <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Customer proceeded to Stripe checkout</p>
         </div>
         
         <div style="background: #f8fafc; padding: 30px; border-radius: 0 0 10px 10px;">
@@ -150,7 +215,7 @@ const Checkout = () => {
           <p><strong>Email:</strong> ${orderData.customer_email}</p>
           <p><strong>Total Amount:</strong> $${orderData.total_amount.toFixed(2)}</p>
           <p><strong>Items:</strong> ${orderData.items.length}</p>
-          <p><strong>Status:</strong> Guest Checkout - Proceeding to Stripe Payment</p>
+          <p><strong>Status:</strong> Proceeding to Stripe Payment</p>
           
           <div style="margin: 20px 0;">
             <h3>Order Items with Complete Delivery Details:</h3>
@@ -241,19 +306,19 @@ const Checkout = () => {
         throw new Error('Some items are missing required delivery information. Please complete all delivery forms.');
       }
 
-      console.log('=== GUEST CHECKOUT PROCESS START ===');
-
       const formattedItems = formatCartItemsForStripe();
       const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
+      console.log('=== CHECKOUT DEBUG START ===');
       console.log('Order ID generated:', orderId);
-      console.log('Formatted items:', formattedItems.length);
-      console.log('Customer info from first item:', items[0]?.contactInfo);
+      console.log('Formatted items with discounts:', formattedItems);
+      console.log('Original total:', total);
+      console.log('Discounted total:', discountTotal);
       
-      // Send checkout confirmation email first (non-blocking)
+      // Send checkout confirmation email first
       await sendCheckoutConfirmationEmail(orderId);
       
-      // Create enhanced backup with customer info from cart
+      // Create enhanced backup with better validation
       const orderBackup = createEnhancedBackup(orderId, items, {
         email: items[0]?.contactInfo?.email || 'guest@mygravelguy.com',
         name: items[0]?.contactInfo?.name || 'Guest User'
@@ -263,17 +328,12 @@ const Checkout = () => {
       
       console.log('Enhanced order backup stored:', orderBackup);
       
-      // Call the create-payment function with properly formatted data
+      // Call the create-payment Supabase Edge function with better error handling
       const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: { 
+        body: JSON.stringify({ 
           items: formattedItems,
-          orderId: orderId,
-          customerInfo: {
-            email: items[0]?.contactInfo?.email || 'guest@mygravelguy.com',
-            name: items[0]?.contactInfo?.name || 'Guest User',
-            phone: items[0]?.contactInfo?.phone || ''
-          }
-        }
+          orderId: orderId
+        })
       });
       
       if (error) {
@@ -287,13 +347,13 @@ const Checkout = () => {
       }
       
       console.log('Payment URL received:', data.url);
-      console.log('=== GUEST CHECKOUT PROCESS SUCCESS ===');
+      console.log('=== CHECKOUT DEBUG END ===');
       
       // Redirect to Stripe checkout
       window.location.href = data.url;
       
     } catch (error) {
-      console.error('Guest checkout error:', error);
+      console.error('Checkout error:', error);
       
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       setCheckoutError(errorMessage);
@@ -321,24 +381,7 @@ const Checkout = () => {
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Cart
       </Button>
       
-      <h1 className="text-3xl font-bold mb-8">Guest Checkout</h1>
-
-      {/* Guest Checkout Status Display */}
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
-            <CheckCircle className="h-5 w-5 text-blue-600" />
-            <div className="flex-1">
-              <p className="font-medium text-blue-800">
-                Guest Checkout
-              </p>
-              <p className="text-sm text-blue-600">
-                No account required - proceed directly to payment
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <h1 className="text-3xl font-bold mb-8">Checkout</h1>
 
       {/* Checkout Error Display */}
       {checkoutError && (
@@ -585,9 +628,29 @@ const Checkout = () => {
                 'Continue to Payment'
               )}
             </Button>
+
+            {/* Hidden test button - keeping functionality but hiding from users */}
+            <Button 
+              onClick={testDatabaseInsertion}
+              disabled={isTestingDB}
+              variant="outline"
+              className="w-full mb-4 hidden"
+            >
+              {isTestingDB ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Testing Schema-Accurate DB...
+                </>
+              ) : (
+                <>
+                  <Database className="mr-2 h-4 w-4" />
+                  Test Schema-Accurate DB Insert
+                </>
+              )}
+            </Button>
             
             <p className="text-xs text-gray-500 mt-3 text-center">
-              Secure guest checkout powered by Stripe
+              Secure checkout powered by Stripe
             </p>
           </div>
         </div>

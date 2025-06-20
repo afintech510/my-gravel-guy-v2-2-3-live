@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { checkRateLimit, getClientId } from "../shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,29 +14,6 @@ serve(async (req) => {
       status: 200, 
       headers: corsHeaders 
     });
-  }
-
-  // Rate limiting check
-  const clientId = getClientId(req);
-  const rateLimitResult = await checkRateLimit('verify-payment', clientId);
-  
-  if (!rateLimitResult.allowed) {
-    console.log('Rate limit exceeded for verify-payment:', clientId);
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: "Too many verification requests. Please try again later.",
-        rateLimitExceeded: true
-      }),
-      {
-        headers: { 
-          ...corsHeaders, 
-          ...rateLimitResult.rateLimitHeaders,
-          "Content-Type": "application/json" 
-        },
-        status: 429,
-      }
-    );
   }
 
   try {
@@ -57,11 +33,7 @@ serve(async (req) => {
           debug_info: "stripe secret key not found in environment"
         }),
         {
-          headers: { 
-            ...corsHeaders, 
-            ...rateLimitResult.rateLimitHeaders,
-            "Content-Type": "application/json" 
-          },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 500,
         }
       );
@@ -76,11 +48,7 @@ serve(async (req) => {
           debug_info: "supabase url or service role key not found"
         }),
         {
-          headers: { 
-            ...corsHeaders, 
-            ...rateLimitResult.rateLimitHeaders,
-            "Content-Type": "application/json" 
-          },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 500,
         }
       );
@@ -363,11 +331,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify(verificationResult),
       {
-        headers: { 
-          ...corsHeaders, 
-          ...rateLimitResult.rateLimitHeaders,
-          "Content-Type": "application/json" 
-        },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       }
     );
@@ -382,11 +346,7 @@ serve(async (req) => {
         debug_info: error.stack || 'No stack trace available'
       }),
       {
-        headers: { 
-          ...corsHeaders, 
-          ...rateLimitResult.rateLimitHeaders,
-          "Content-Type": "application/json" 
-        },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
       }
     );
