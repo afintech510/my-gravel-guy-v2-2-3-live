@@ -19,6 +19,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('=== CREATE-PAYMENT FUNCTION START ===');
+    
     // Parse request body
     const requestBody = await req.text();
     console.log('Received request body:', requestBody);
@@ -37,7 +39,9 @@ serve(async (req) => {
       );
     }
     
-    const { items } = parsedData;
+    const { items, orderId } = parsedData;
+    console.log('Parsed items count:', items?.length || 0);
+    console.log('Order ID:', orderId);
     
     // Access Stripe secret key and validate it exists
     const stripeKey = Deno.env.get("stripe");
@@ -68,17 +72,19 @@ serve(async (req) => {
       );
     }
 
-    // Generate a unique order ID for this entire order
-    const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    console.log('Generated order ID:', orderId);
+    // Use provided order ID or generate a new one
+    const finalOrderId = orderId || `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    console.log('Final order ID:', finalOrderId);
 
     // Validate and transform each item with detailed error logging
     const validatedLineItems = [];
-    let orderMetadata = { order_id: orderId };
+    let orderMetadata = { order_id: finalOrderId };
     
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       try {
+        console.log(`Processing item ${i}:`, item);
+        
         if (!item.name || typeof item.price !== 'number' || !item.quantity) {
           console.error(`Invalid item at index ${i}:`, item);
           throw new Error(`Invalid item at index ${i}: missing required fields or invalid types`);
@@ -164,13 +170,15 @@ serve(async (req) => {
           },
           quantity: item.quantity,
         });
+        
+        console.log(`Successfully processed item ${i}:`, cleanName);
       } catch (validationError) {
         console.error(`Item validation error for item ${i}:`, validationError);
         throw new Error(`Item validation error: ${validationError.message}`);
       }
     }
 
-    console.log('Creating Stripe checkout session with items:', validatedLineItems);
+    console.log('Creating Stripe checkout session with items:', validatedLineItems.length);
     console.log('Order metadata:', orderMetadata);
 
     // Get origin for success/cancel URLs
@@ -186,7 +194,7 @@ serve(async (req) => {
       ],
       line_items: validatedLineItems,
       mode: "payment",
-      success_url: `${origin}/payment-success?payment_intent={CHECKOUT_SESSION_ID}&order_id=${orderId}`,
+      success_url: `${origin}/payment-success?payment_intent={CHECKOUT_SESSION_ID}&order_id=${finalOrderId}`,
       cancel_url: `${origin}/cart`,
       metadata: orderMetadata,
       payment_intent_data: {
@@ -202,7 +210,7 @@ serve(async (req) => {
           preferred_locale: "en-US"
         },
         afterpay_clearpay: {
-          reference: orderId
+          reference: finalOrderId
         },
         affirm: {
           preferred_locale: "en-US"
@@ -210,11 +218,19 @@ serve(async (req) => {
       }
     });
 
-    console.log('Stripe checkout session created:', session.id);
+    console.log('Stripe checkout session created successfully:', session.id);
     console.log('Customer email collection enabled for session');
 
+    // TEMPORARILY DISABLED: Database insertion to isolate the error
+    console.log('=== DATABASE INSERTION TEMPORARILY DISABLED ===');
+    console.log('Would have created order records for:', finalOrderId);
+    console.log('Items count:', items.length);
+    
+    /*
     // After successful Stripe session creation, create order records
     try {
+      console.log('=== STARTING DATABASE INSERTION ===');
+      
       // Create Supabase client with service role key to bypass RLS
       const supabase = createClient(
         Deno.env.get("SUPABASE_URL") ?? "",
@@ -227,8 +243,10 @@ serve(async (req) => {
         }
       );
 
-      // Prepare order records for each cart item with correct field mapping
+      // Prepare order records for each cart item with CORRECTED field mapping to match orders table schema
       const orderRecords = items.map((item, index) => {
+        console.log(`Preparing order record ${index + 1} for item:`, item.name);
+        
         let deliveryAddress = null;
 
         if (item.metadata?.deliveryAddress) {
@@ -240,35 +258,37 @@ serve(async (req) => {
           }
         }
 
-        return {
-          order_id: orderId,
+        // FIXED: Map to actual orders table schema
+        const record = {
+          order_id: finalOrderId,
           stripe_session_id: session.id,
           product_id: String(item.id || ''),
-          material_category: item.materialCategory || item.category || null,
-          quantity_tons: item.quantity || item.tons || 0,
-          quantity_yards: item.yards || null,
+          unit: 'tons', // Fixed field name
           unit_price: item.price,
           total_price: item.price * (item.quantity || item.tons || 0),
-          material_size: item.materialSize || item.size || null,
+          quantity: item.quantity || item.tons || 0, // Fixed field name
+          status: 'pending_payment',
+          delivery_name: item.metadata?.contactName || null,
+          delivery_phone: item.metadata?.contactPhone || null,
+          delivery_email: item.metadata?.contactEmail || null,
+          billing_name: item.metadata?.contactName || null,
+          billing_email: item.metadata?.contactEmail || null,
           delivery_date: item.metadata?.deliveryDate || null,
-          delivery_address_street: deliveryAddress?.street || null,
-          delivery_address_city: deliveryAddress?.city || null,
-          delivery_address_state: deliveryAddress?.state || null,
-          delivery_address_zip: deliveryAddress?.zip || null,
-          contact_name: item.metadata?.contactName || null,
-          contact_phone: item.metadata?.contactPhone || null,
-          contact_email: item.metadata?.contactEmail || null,
-          customer_email: item.metadata?.contactEmail || null,
-          customer_name: item.metadata?.contactName || null,
+          delivery_street: deliveryAddress?.street || null,
+          delivery_city: deliveryAddress?.city || null,
+          delivery_state: deliveryAddress?.state || null,
+          delivery_zip: deliveryAddress?.zip || null,
           delivery_time_preference: item.metadata?.deliveryTimePreference || null,
           delivery_instructions: item.metadata?.deliveryInstructions || null,
-          status: 'pending_payment',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
+
+        console.log(`Order record ${index + 1} prepared:`, record);
+        return record;
       });
 
-      console.log('Creating order records with correct field mapping:', orderRecords);
+      console.log('All order records prepared, inserting into database...');
 
       // Insert order records into the database
       const { data: orderData, error: orderError } = await supabase
@@ -277,38 +297,51 @@ serve(async (req) => {
         .select();
 
       if (orderError) {
-        console.error('Failed to create order records:', orderError);
+        console.error('Database insertion error details:', {
+          message: orderError.message,
+          details: orderError.details,
+          hint: orderError.hint,
+          code: orderError.code
+        });
         // Log the error but don't fail the payment - we can handle this in the success page
       } else {
-        console.log('Successfully created order records:', orderData);
+        console.log('Successfully created order records:', orderData?.length || 0, 'records');
       }
 
     } catch (dbError) {
       console.error('Database error when creating orders:', dbError);
+      console.error('Database error stack:', dbError.stack);
       // Don't fail the payment process - we can handle order creation in the success page
     }
+    */
 
+    console.log('=== CREATE-PAYMENT FUNCTION SUCCESS ===');
+    
     // Return the checkout URL
     return new Response(
-      JSON.stringify({ url: session.url, orderId }),
+      JSON.stringify({ 
+        url: session.url, 
+        orderId: finalOrderId,
+        sessionId: session.id
+      }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       }
     );
   } catch (error) {
-    console.error("Detailed Checkout Error:", {
-      message: error.message,
-      stack: error.stack,
-      name: error.name,
-      details: error.toString()
-    });
+    console.error("=== CREATE-PAYMENT FUNCTION ERROR ===");
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+    console.error("Error name:", error.name);
+    console.error("Full error object:", error);
     
     return new Response(
       JSON.stringify({ 
         error: error.message,
         details: "A detailed error occurred during the checkout process",
-        fullError: error.toString()
+        fullError: error.toString(),
+        timestamp: new Date().toISOString()
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
