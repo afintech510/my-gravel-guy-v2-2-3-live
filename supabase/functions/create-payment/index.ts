@@ -9,6 +9,64 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+// Helper function to compress delivery address into a single string
+const compressDeliveryAddress = (address: any): string => {
+  if (!address || typeof address !== 'object') return '';
+  const parts = [
+    address.street || '',
+    address.city || '',
+    address.state || '',
+    address.zip || ''
+  ].filter(part => part.trim().length > 0);
+  return parts.join(', ').substring(0, 400); // Keep under 500 char limit
+};
+
+// Helper function to validate and limit metadata size
+const validateMetadata = (metadata: Record<string, string>): { 
+  isValid: boolean; 
+  metadata: Record<string, string>; 
+  warnings: string[] 
+} => {
+  const warnings: string[] = [];
+  const validatedMetadata: Record<string, string> = {};
+  
+  // Stripe limits: 40 keys max, 500 chars per value, 5KB total
+  const MAX_KEYS = 35; // Leave some buffer
+  const MAX_VALUE_LENGTH = 450; // Leave some buffer
+  
+  let totalSize = 0;
+  let keyCount = 0;
+  
+  for (const [key, value] of Object.entries(metadata)) {
+    if (keyCount >= MAX_KEYS) {
+      warnings.push(`Skipped key '${key}' - exceeded maximum of ${MAX_KEYS} keys`);
+      continue;
+    }
+    
+    const truncatedValue = String(value || '').substring(0, MAX_VALUE_LENGTH);
+    const entrySize = key.length + truncatedValue.length;
+    
+    if (totalSize + entrySize > 4500) { // 4.5KB buffer for 5KB limit
+      warnings.push(`Skipped key '${key}' - would exceed total size limit`);
+      continue;
+    }
+    
+    if (truncatedValue.length < String(value || '').length) {
+      warnings.push(`Truncated value for '${key}' from ${String(value || '').length} to ${truncatedValue.length} chars`);
+    }
+    
+    validatedMetadata[key] = truncatedValue;
+    totalSize += entrySize;
+    keyCount++;
+  }
+  
+  return {
+    isValid: keyCount <= MAX_KEYS && totalSize <= 4500,
+    metadata: validatedMetadata,
+    warnings
+  };
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -76,7 +134,7 @@ serve(async (req) => {
     const finalOrderId = orderId || `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     console.log('Final order ID:', finalOrderId);
 
-    // Validate and transform each item with enhanced error handling
+    // Validate and transform each item with OPTIMIZED metadata handling
     const validatedLineItems = [];
     let orderMetadata = { order_id: finalOrderId };
     
@@ -106,74 +164,73 @@ serve(async (req) => {
           }
         }
 
-        // ENHANCED: Better metadata collection with proper validation and fallbacks
-        orderMetadata[`item_${i+1}_product_id`] = String(item.id || '');
-        orderMetadata[`item_${i+1}_material_category`] = item.materialCategory || item.category || '';
-        orderMetadata[`item_${i+1}_quantity_tons`] = String(item.quantity || item.tons || 0);
-        orderMetadata[`item_${i+1}_quantity_yards`] = String(item.yards || 0);
-        orderMetadata[`item_${i+1}_unit_price`] = String(item.price || 0);
-        orderMetadata[`item_${i+1}_total_price`] = String((item.price * item.quantity) || 0);
-        orderMetadata[`item_${i+1}_material_size`] = item.materialSize || item.size || '';
+        // OPTIMIZED: Create compressed metadata with essential information only
+        const itemMetadata: Record<string, string> = {};
+        
+        // Essential product info (use shorter keys)
+        itemMetadata[`i${i+1}_id`] = String(item.id || '');
+        itemMetadata[`i${i+1}_cat`] = item.materialCategory || item.category || '';
+        itemMetadata[`i${i+1}_qty`] = String(item.quantity || item.tons || 0);
+        itemMetadata[`i${i+1}_price`] = String(item.price || 0);
+        itemMetadata[`i${i+1}_total`] = String((item.price * item.quantity) || 0);
 
-        // ENHANCED: Process metadata with better error handling and validation
+        // OPTIMIZED: Process metadata with compression and prioritization
         if (item.metadata) {
           console.log(`Processing metadata for item ${i}:`, item.metadata);
           
-          // Contact information - FIXED: Handle contact info properly
+          // Priority 1: Contact information (essential for delivery)
           if (item.metadata.contactName) {
-            orderMetadata[`item_${i+1}_contact_name`] = String(item.metadata.contactName).substring(0, 100);
+            itemMetadata[`i${i+1}_contact`] = `${item.metadata.contactName}|${item.metadata.contactPhone || ''}|${item.metadata.contactEmail || ''}`.substring(0, 400);
           }
           
-          if (item.metadata.contactPhone) {
-            orderMetadata[`item_${i+1}_contact_phone`] = String(item.metadata.contactPhone).substring(0, 50);
-          }
-
-          if (item.metadata.contactEmail) {
-            orderMetadata[`item_${i+1}_contact_email`] = String(item.metadata.contactEmail).substring(0, 100);
-          }
-          
-          // Delivery date
+          // Priority 2: Delivery date (essential for scheduling)
           if (item.metadata.deliveryDate) {
             try {
               const deliveryDate = new Date(item.metadata.deliveryDate);
               if (!isNaN(deliveryDate.getTime())) {
-                orderMetadata[`item_${i+1}_delivery_date`] = deliveryDate.toISOString().split('T')[0];
+                itemMetadata[`i${i+1}_date`] = deliveryDate.toISOString().split('T')[0];
               }
             } catch (dateError) {
               console.warn(`Invalid delivery date for item ${i}:`, item.metadata.deliveryDate);
             }
           }
           
-          // Delivery address
+          // Priority 3: Compressed delivery address
           if (item.metadata.deliveryAddress) {
             try {
               const address = typeof item.metadata.deliveryAddress === 'string' ? 
                 JSON.parse(item.metadata.deliveryAddress) : item.metadata.deliveryAddress;
               
               if (address && typeof address === 'object') {
-                orderMetadata[`item_${i+1}_delivery_address_street`] = String(address.street || '').substring(0, 100);
-                orderMetadata[`item_${i+1}_delivery_address_city`] = String(address.city || '').substring(0, 50);
-                orderMetadata[`item_${i+1}_delivery_address_state`] = String(address.state || '').substring(0, 20);
-                orderMetadata[`item_${i+1}_delivery_address_zip`] = String(address.zip || '').substring(0, 10);
+                itemMetadata[`i${i+1}_addr`] = compressDeliveryAddress(address);
               }
             } catch (addressError) {
               console.warn(`Failed to parse delivery address for item ${i}:`, addressError);
             }
           }
           
-          // Delivery preferences
+          // Priority 4: Time preference and instructions (compressed)
           if (item.metadata.deliveryTimePreference) {
-            orderMetadata[`item_${i+1}_delivery_time_preference`] = String(item.metadata.deliveryTimePreference).substring(0, 50);
+            itemMetadata[`i${i+1}_time`] = String(item.metadata.deliveryTimePreference).substring(0, 20);
           }
           
           if (item.metadata.deliveryInstructions) {
             const instructions = String(item.metadata.deliveryInstructions);
-            orderMetadata[`item_${i+1}_delivery_instructions`] = 
-              instructions.length > 100 ? instructions.substring(0, 97) + '...' : instructions;
+            itemMetadata[`i${i+1}_notes`] = instructions.substring(0, 200); // Reduced from 300
           }
         } else {
           console.warn(`No metadata found for item ${i}`);
         }
+        
+        // Add item metadata to order metadata with validation
+        const { isValid, metadata: validatedItemMetadata, warnings } = validateMetadata(itemMetadata);
+        
+        if (warnings.length > 0) {
+          console.warn(`Metadata warnings for item ${i}:`, warnings);
+        }
+        
+        // Merge validated item metadata into order metadata
+        Object.assign(orderMetadata, validatedItemMetadata);
         
         validatedLineItems.push({
           price_data: {
@@ -194,8 +251,23 @@ serve(async (req) => {
       }
     }
 
+    // Final metadata validation before sending to Stripe
+    const { isValid: finalValid, metadata: finalMetadata, warnings: finalWarnings } = validateMetadata(orderMetadata);
+    
+    if (finalWarnings.length > 0) {
+      console.warn('Final metadata warnings:', finalWarnings);
+    }
+    
+    if (!finalValid) {
+      console.error('Final metadata validation failed, using minimal metadata');
+      finalMetadata.order_id = finalOrderId;
+      finalMetadata.item_count = String(items.length);
+      finalMetadata.total_items = String(items.length);
+    }
+
     console.log('Creating Stripe checkout session with items:', validatedLineItems.length);
-    console.log('Order metadata keys:', Object.keys(orderMetadata));
+    console.log('Final metadata keys count:', Object.keys(finalMetadata).length);
+    console.log('Final metadata estimated size:', JSON.stringify(finalMetadata).length, 'bytes');
 
     // Get origin for success/cancel URLs
     const origin = req.headers.get("origin") || "http://localhost:3000";
@@ -212,9 +284,9 @@ serve(async (req) => {
       mode: "payment",
       success_url: `${origin}/payment-success?payment_intent={CHECKOUT_SESSION_ID}&order_id=${finalOrderId}`,
       cancel_url: `${origin}/cart`,
-      metadata: orderMetadata,
+      metadata: finalMetadata,
       payment_intent_data: {
-        metadata: orderMetadata
+        metadata: finalMetadata
       },
       // Enable customer email collection
       customer_email: undefined, // Let Stripe prompt for email
@@ -236,6 +308,7 @@ serve(async (req) => {
 
     console.log('Stripe checkout session created successfully:', session.id);
     console.log('Customer email collection enabled for session');
+    console.log('Metadata optimization completed successfully');
 
     console.log('=== CREATE-PAYMENT FUNCTION SUCCESS ===');
     
@@ -244,7 +317,8 @@ serve(async (req) => {
       JSON.stringify({ 
         url: session.url, 
         orderId: finalOrderId,
-        sessionId: session.id
+        sessionId: session.id,
+        metadataWarnings: finalWarnings.length > 0 ? finalWarnings : undefined
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -258,12 +332,14 @@ serve(async (req) => {
     console.error("Error name:", error.name);
     console.error("Full error object:", error);
     
+    // Enhanced error response with more context
     return new Response(
       JSON.stringify({ 
         error: error.message,
         details: "A detailed error occurred during the checkout process",
         fullError: error.toString(),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        errorType: error.name || 'UnknownError'
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
