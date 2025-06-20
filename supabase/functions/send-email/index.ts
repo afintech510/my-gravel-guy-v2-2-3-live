@@ -1,6 +1,4 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { checkRateLimit, getClientId } from "../shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,66 +23,22 @@ serve(async (req) => {
     });
   }
 
-  console.log('=== EMAIL FUNCTION START ===');
-
-  // Rate limiting check with error handling
-  let rateLimitResult;
-  try {
-    const clientId = getClientId(req);
-    rateLimitResult = await checkRateLimit('send-email', clientId);
-    
-    if (!rateLimitResult.allowed) {
-      console.log('Rate limit exceeded for send-email:', clientId);
-      return new Response(
-        JSON.stringify({ 
-          error: "Too many email requests. Please try again later.",
-          success: false,
-          rateLimitExceeded: true
-        }),
-        {
-          headers: { 
-            ...corsHeaders, 
-            ...rateLimitResult.rateLimitHeaders,
-            "Content-Type": "application/json" 
-          },
-          status: 429,
-        }
-      );
-    }
-  } catch (rateLimitError) {
-    console.error('Rate limiting error, proceeding without rate limit:', rateLimitError);
-    // Continue with default headers if rate limiting fails
-    rateLimitResult = {
-      allowed: true,
-      rateLimitHeaders: {
-        'X-RateLimit-Limit': '5',
-        'X-RateLimit-Remaining': '4',
-        'X-RateLimit-Reset': new Date(Date.now() + 60000).toISOString()
-      }
-    };
-  }
-
   try {
     const { to, subject, html, type, orderData }: EmailRequest = await req.json();
     
+    console.log('=== EMAIL FUNCTION DEBUG ===');
     console.log('Email type:', type);
     console.log('Recipient (to):', to);
+    console.log('Recipient type:', typeof to);
     console.log('Subject:', subject);
     console.log('From address will be: team@mygravelguy.com');
     
     if (orderData) {
       console.log('Order customer email:', orderData.customer_email);
-      console.log('Order ID:', orderData.order_id);
     }
     
     if (!to || !subject || !html) {
       throw new Error("Missing required email fields: to, subject, or html");
-    }
-
-    // Validate email address format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(to)) {
-      throw new Error("Invalid email address format");
     }
 
     // Get Resend API key from environment variables
@@ -97,11 +51,7 @@ serve(async (req) => {
           success: false
         }),
         {
-          headers: { 
-            ...corsHeaders, 
-            ...rateLimitResult.rateLimitHeaders,
-            "Content-Type": "application/json" 
-          },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 500,
         }
       );
@@ -116,7 +66,7 @@ serve(async (req) => {
       html: html,
     };
     
-    console.log('Email payload prepared for Resend API');
+    console.log('Resend payload:', JSON.stringify(emailPayload, null, 2));
 
     // Send email using Resend API
     const response = await fetch("https://api.resend.com/emails", {
@@ -130,14 +80,13 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error("Resend API error:", response.status, errorData);
+      console.error("Resend API error:", errorData);
       throw new Error(`Failed to send email: ${response.status} ${errorData}`);
     }
 
     const result = await response.json();
-    console.log("Email sent successfully");
+    console.log("Email sent successfully:", result);
     console.log("Email ID:", result.id);
-    console.log('=== EMAIL FUNCTION SUCCESS ===');
 
     return new Response(
       JSON.stringify({ 
@@ -148,30 +97,21 @@ serve(async (req) => {
         recipient: to
       }),
       {
-        headers: { 
-          ...corsHeaders, 
-          ...rateLimitResult.rateLimitHeaders,
-          "Content-Type": "application/json" 
-        },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       }
     );
 
   } catch (error) {
     console.error("Email sending error:", error);
-    console.log('=== EMAIL FUNCTION ERROR ===');
     
     return new Response(
       JSON.stringify({ 
-        error: error.message || "Failed to send email",
+        error: error.message,
         success: false
       }),
       {
-        headers: { 
-          ...corsHeaders, 
-          ...rateLimitResult.rateLimitHeaders,
-          "Content-Type": "application/json" 
-        },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
       }
     );

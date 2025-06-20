@@ -2,7 +2,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { checkRateLimit, getClientId } from "../shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,103 +18,43 @@ serve(async (req) => {
     });
   }
 
-  console.log('=== CREATE-PAYMENT FUNCTION START ===');
-
-  // Rate limiting check with error handling
-  let rateLimitResult;
   try {
-    const clientId = getClientId(req);
-    console.log('Rate limit check for client:', clientId);
-    rateLimitResult = await checkRateLimit('create-payment', clientId);
-    console.log('Rate limit result:', rateLimitResult);
-    
-    if (!rateLimitResult.allowed) {
-      console.log('Rate limit exceeded for create-payment:', clientId);
-      return new Response(
-        JSON.stringify({ 
-          error: "Too many requests. Please try again later.",
-          rateLimitExceeded: true
-        }),
-        {
-          headers: { 
-            ...corsHeaders, 
-            ...rateLimitResult.rateLimitHeaders,
-            "Content-Type": "application/json" 
-          },
-          status: 429,
-        }
-      );
-    }
-  } catch (rateLimitError) {
-    console.error('Rate limiting error, proceeding without rate limit:', rateLimitError);
-    // Continue with default headers if rate limiting fails
-    rateLimitResult = {
-      allowed: true,
-      rateLimitHeaders: {
-        'X-RateLimit-Limit': '10',
-        'X-RateLimit-Remaining': '9',
-        'X-RateLimit-Reset': new Date(Date.now() + 60000).toISOString()
-      }
-    };
-  }
-
-  try {
-    console.log('=== GUEST CHECKOUT CREATE-PAYMENT START ===');
-    
-    // Parse request body with better error handling
+    // Parse request body
     const requestBody = await req.text();
-    console.log('Raw request body received:', requestBody);
+    console.log('Received request body:', requestBody);
     
     let parsedData;
     try {
       parsedData = JSON.parse(requestBody);
-      console.log('Successfully parsed JSON data');
     } catch (parseError) {
       console.error('JSON parsing error:', parseError.message);
-      console.error('Raw body that failed to parse:', requestBody);
       return new Response(
         JSON.stringify({ error: "Invalid JSON in request body" }),
         {
-          headers: { 
-            ...corsHeaders, 
-            ...rateLimitResult.rateLimitHeaders,
-            "Content-Type": "application/json" 
-          },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 400,
         }
       );
     }
     
-    const { items, orderId, customerInfo } = parsedData;
-    console.log('Extracted data:', { 
-      itemsCount: items?.length, 
-      orderId, 
-      customerInfo: customerInfo ? 'present' : 'missing'
-    });
+    const { items } = parsedData;
     
-    // Validate Stripe secret key first
+    // Access Stripe secret key and validate it exists
     const stripeKey = Deno.env.get("stripe");
-    console.log('Stripe key check:', stripeKey ? 'present' : 'MISSING');
     if (!stripeKey) {
-      console.error('CRITICAL: Stripe secret key is missing from environment');
+      console.error('Stripe secret key is missing');
       return new Response(
         JSON.stringify({ 
-          error: "Payment service configuration error - Stripe key missing" 
+          error: "Stripe secret key not found in environment variables" 
         }),
         {
-          headers: { 
-            ...corsHeaders, 
-            ...rateLimitResult.rateLimitHeaders,
-            "Content-Type": "application/json" 
-          },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 500,
         }
       );
     }
     
-    console.log('Initializing Stripe with key...');
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-    console.log('Stripe initialized successfully');
 
     // Validate input
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -123,89 +62,54 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Invalid or empty items array" }),
         {
-          headers: { 
-            ...corsHeaders, 
-            ...rateLimitResult.rateLimitHeaders,
-            "Content-Type": "application/json" 
-          },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 400,
         }
       );
     }
 
-    console.log('Processing customer information...');
-    // Extract customer information for guest checkout
-    let customerEmail = customerInfo?.email;
-    let customerName = customerInfo?.name;
-    
-    // Fallback: try to get customer info from items
-    if (!customerEmail || !customerName) {
-      console.log('Fallback: extracting customer info from items metadata');
-      for (const item of items) {
-        if (item.metadata?.contactEmail && !customerEmail) {
-          customerEmail = item.metadata.contactEmail;
-        }
-        if (item.metadata?.contactName && !customerName) {
-          customerName = item.metadata.contactName;
-        }
-      }
-    }
-    
-    // Final fallback for guest checkout
-    if (!customerEmail) {
-      customerEmail = 'guest@mygravelguy.com';
-    }
-    if (!customerName) {
-      customerName = 'Guest Customer';
-    }
-    
-    console.log('Customer info resolved:', { customerEmail, customerName });
+    // Generate a unique order ID for this entire order
+    const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    console.log('Generated order ID:', orderId);
 
-    // Validate and transform each item
-    console.log('Validating and transforming items...');
+    // Validate and transform each item with detailed error logging
     const validatedLineItems = [];
-    let orderMetadata = { 
-      order_id: orderId || `ORDER-${Date.now()}`,
-      customer_email: customerEmail,
-      customer_name: customerName,
-      is_guest: 'true'
-    };
+    let orderMetadata = { order_id: orderId };
     
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      console.log(`Processing item ${i + 1}:`, { 
-        name: item.name, 
-        price: item.price, 
-        quantity: item.quantity 
-      });
-      
       try {
         if (!item.name || typeof item.price !== 'number' || !item.quantity) {
           console.error(`Invalid item at index ${i}:`, item);
-          throw new Error(`Invalid item at index ${i}: missing required fields`);
+          throw new Error(`Invalid item at index ${i}: missing required fields or invalid types`);
         }
         
+        // Use a clean name for Stripe (no special chars)
         const cleanName = String(item.name).replace(/['"\\]/g, '');
         
-        // Process image URL safely
+        // Process image URL
         let imageArray = [];
         if (item.image) {
           try {
-            new URL(item.image);
+            // Validate that the image URL is properly formatted
+            const url = new URL(item.image);
             imageArray = [item.image];
-            console.log(`Valid image URL for item ${i + 1}`);
           } catch (urlError) {
-            console.warn(`Invalid image URL for item ${i}: ${item.image}`);
+            console.warn(`Invalid image URL for item ${i}: ${item.image}. Skipping image.`);
+            // Don't include the image if the URL is invalid, don't throw an error
           }
         }
 
-        // Add metadata for order tracking
+        // Enhanced metadata collection for proper database mapping
         orderMetadata[`item_${i+1}_product_id`] = String(item.id || '');
-        orderMetadata[`item_${i+1}_quantity_tons`] = String(item.quantity || 0);
+        orderMetadata[`item_${i+1}_material_category`] = item.materialCategory || item.category || '';
+        orderMetadata[`item_${i+1}_quantity_tons`] = String(item.quantity || item.tons || 0);
+        orderMetadata[`item_${i+1}_quantity_yards`] = String(item.yards || 0);
         orderMetadata[`item_${i+1}_unit_price`] = String(item.price || 0);
         orderMetadata[`item_${i+1}_total_price`] = String((item.price * item.quantity) || 0);
+        orderMetadata[`item_${i+1}_material_size`] = item.materialSize || item.size || '';
 
-        // Add delivery metadata if available
+        // Add delivery and contact metadata from item metadata
         if (item.metadata) {
           if (item.metadata.deliveryDate) {
             orderMetadata[`item_${i+1}_delivery_date`] = item.metadata.deliveryDate;
@@ -224,10 +128,30 @@ serve(async (req) => {
               console.warn(`Failed to parse delivery address for item ${i}:`, addressError);
             }
           }
+          
+          if (item.metadata.contactPhone) {
+            orderMetadata[`item_${i+1}_contact_phone`] = item.metadata.contactPhone;
+          }
+
+          if (item.metadata.contactName) {
+            orderMetadata[`item_${i+1}_contact_name`] = item.metadata.contactName;
+          }
+
+          if (item.metadata.contactEmail) {
+            orderMetadata[`item_${i+1}_contact_email`] = item.metadata.contactEmail;
+          }
+          
+          if (item.metadata.deliveryTimePreference) {
+            orderMetadata[`item_${i+1}_delivery_time_preference`] = item.metadata.deliveryTimePreference;
+          }
+          
+          if (item.metadata.deliveryInstructions) {
+            // Truncate long instructions for metadata limits
+            const instructions = item.metadata.deliveryInstructions;
+            orderMetadata[`item_${i+1}_delivery_instructions`] = 
+              instructions.length > 100 ? instructions.substring(0, 97) + '...' : instructions;
+          }
         }
-        
-        const unitAmount = Math.max(50, Math.round(item.price * 100));
-        console.log(`Item ${i + 1} unit amount: ${unitAmount} cents`);
         
         validatedLineItems.push({
           price_data: {
@@ -236,28 +160,23 @@ serve(async (req) => {
               name: cleanName,
               images: imageArray,
             },
-            unit_amount: unitAmount,
+            unit_amount: Math.round(item.price * 100), // Convert to cents
           },
           quantity: item.quantity,
         });
-        
-        console.log(`Item ${i + 1} processed successfully`);
       } catch (validationError) {
         console.error(`Item validation error for item ${i}:`, validationError);
         throw new Error(`Item validation error: ${validationError.message}`);
       }
     }
 
-    console.log('Creating Stripe checkout session...');
-    console.log('Line items count:', validatedLineItems.length);
-    console.log('Order metadata keys:', Object.keys(orderMetadata).length);
+    console.log('Creating Stripe checkout session with items:', validatedLineItems);
+    console.log('Order metadata:', orderMetadata);
 
     // Get origin for success/cancel URLs
     const origin = req.headers.get("origin") || "http://localhost:3000";
-    console.log('Using origin for URLs:', origin);
 
-    // Create Stripe checkout session for guest
-    console.log('Calling Stripe API to create checkout session...');
+    // Create a Stripe checkout session with BNPL payment methods and customer email collection
     const session = await stripe.checkout.sessions.create({
       payment_method_types: [
         "card",
@@ -267,21 +186,23 @@ serve(async (req) => {
       ],
       line_items: validatedLineItems,
       mode: "payment",
-      success_url: `${origin}/payment-success?payment_intent={CHECKOUT_SESSION_ID}&order_id=${orderMetadata.order_id}`,
+      success_url: `${origin}/payment-success?payment_intent={CHECKOUT_SESSION_ID}&order_id=${orderId}`,
       cancel_url: `${origin}/cart`,
       metadata: orderMetadata,
       payment_intent_data: {
         metadata: orderMetadata
       },
-      customer_email: customerEmail,
+      // Enable customer email collection
+      customer_email: undefined, // Let Stripe prompt for email
       billing_address_collection: 'required',
       customer_creation: 'always',
+      // Configure BNPL options
       payment_method_options: {
         klarna: {
           preferred_locale: "en-US"
         },
         afterpay_clearpay: {
-          reference: orderMetadata.order_id
+          reference: orderId
         },
         affirm: {
           preferred_locale: "en-US"
@@ -289,50 +210,108 @@ serve(async (req) => {
       }
     });
 
-    console.log('Stripe checkout session created successfully:', session.id);
-    console.log('Session URL:', session.url);
-    console.log('=== GUEST CHECKOUT CREATE-PAYMENT SUCCESS ===');
+    console.log('Stripe checkout session created:', session.id);
+    console.log('Customer email collection enabled for session');
 
+    // After successful Stripe session creation, create order records
+    try {
+      // Create Supabase client with service role key to bypass RLS
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        }
+      );
+
+      // Prepare order records for each cart item with correct field mapping
+      const orderRecords = items.map((item, index) => {
+        let deliveryAddress = null;
+
+        if (item.metadata?.deliveryAddress) {
+          try {
+            deliveryAddress = typeof item.metadata.deliveryAddress === 'string' ? 
+              JSON.parse(item.metadata.deliveryAddress) : item.metadata.deliveryAddress;
+          } catch (e) {
+            console.warn(`Failed to parse delivery address for item ${index}:`, e);
+          }
+        }
+
+        return {
+          order_id: orderId,
+          stripe_session_id: session.id,
+          product_id: String(item.id || ''),
+          material_category: item.materialCategory || item.category || null,
+          quantity_tons: item.quantity || item.tons || 0,
+          quantity_yards: item.yards || null,
+          unit_price: item.price,
+          total_price: item.price * (item.quantity || item.tons || 0),
+          material_size: item.materialSize || item.size || null,
+          delivery_date: item.metadata?.deliveryDate || null,
+          delivery_address_street: deliveryAddress?.street || null,
+          delivery_address_city: deliveryAddress?.city || null,
+          delivery_address_state: deliveryAddress?.state || null,
+          delivery_address_zip: deliveryAddress?.zip || null,
+          contact_name: item.metadata?.contactName || null,
+          contact_phone: item.metadata?.contactPhone || null,
+          contact_email: item.metadata?.contactEmail || null,
+          customer_email: item.metadata?.contactEmail || null,
+          customer_name: item.metadata?.contactName || null,
+          delivery_time_preference: item.metadata?.deliveryTimePreference || null,
+          delivery_instructions: item.metadata?.deliveryInstructions || null,
+          status: 'pending_payment',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+      });
+
+      console.log('Creating order records with correct field mapping:', orderRecords);
+
+      // Insert order records into the database
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert(orderRecords)
+        .select();
+
+      if (orderError) {
+        console.error('Failed to create order records:', orderError);
+        // Log the error but don't fail the payment - we can handle this in the success page
+      } else {
+        console.log('Successfully created order records:', orderData);
+      }
+
+    } catch (dbError) {
+      console.error('Database error when creating orders:', dbError);
+      // Don't fail the payment process - we can handle order creation in the success page
+    }
+
+    // Return the checkout URL
     return new Response(
-      JSON.stringify({ 
-        url: session.url, 
-        orderId: orderMetadata.order_id,
-        customerType: 'guest'
-      }),
+      JSON.stringify({ url: session.url, orderId }),
       {
-        headers: { 
-          ...corsHeaders, 
-          ...rateLimitResult.rateLimitHeaders,
-          "Content-Type": "application/json" 
-        },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       }
     );
   } catch (error) {
-    console.error("=== GUEST CHECKOUT ERROR ===");
-    console.error("Error type:", error.constructor.name);
-    console.error("Error message:", error.message);
-    console.error("Error stack:", error.stack);
-    
-    // Check if it's a Stripe-specific error
-    if (error.type) {
-      console.error("Stripe error type:", error.type);
-      console.error("Stripe error code:", error.code);
-      console.error("Stripe error param:", error.param);
-    }
+    console.error("Detailed Checkout Error:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      details: error.toString()
+    });
     
     return new Response(
       JSON.stringify({ 
-        error: error.message || "An error occurred during checkout",
-        details: "Guest checkout processing failed",
-        errorType: error.constructor.name
+        error: error.message,
+        details: "A detailed error occurred during the checkout process",
+        fullError: error.toString()
       }),
       {
-        headers: { 
-          ...corsHeaders, 
-          ...rateLimitResult.rateLimitHeaders,
-          "Content-Type": "application/json" 
-        },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
       }
     );
