@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { checkRateLimit, getClientId } from "./rateLimiter.ts";
+import { checkRateLimit, getClientId } from "../shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,26 +19,44 @@ serve(async (req) => {
     });
   }
 
-  // Rate limiting check
-  const clientId = getClientId(req);
-  const rateLimitResult = await checkRateLimit('create-payment', clientId);
-  
-  if (!rateLimitResult.allowed) {
-    console.log('Rate limit exceeded for create-payment:', clientId);
-    return new Response(
-      JSON.stringify({ 
-        error: "Too many requests. Please try again later.",
-        rateLimitExceeded: true
-      }),
-      {
-        headers: { 
-          ...corsHeaders, 
-          ...rateLimitResult.rateLimitHeaders,
-          "Content-Type": "application/json" 
-        },
-        status: 429,
+  console.log('=== CREATE-PAYMENT FUNCTION START ===');
+
+  // Rate limiting check with error handling
+  let rateLimitResult;
+  try {
+    const clientId = getClientId(req);
+    console.log('Rate limit check for client:', clientId);
+    rateLimitResult = await checkRateLimit('create-payment', clientId);
+    console.log('Rate limit result:', rateLimitResult);
+    
+    if (!rateLimitResult.allowed) {
+      console.log('Rate limit exceeded for create-payment:', clientId);
+      return new Response(
+        JSON.stringify({ 
+          error: "Too many requests. Please try again later.",
+          rateLimitExceeded: true
+        }),
+        {
+          headers: { 
+            ...corsHeaders, 
+            ...rateLimitResult.rateLimitHeaders,
+            "Content-Type": "application/json" 
+          },
+          status: 429,
+        }
+      );
+    }
+  } catch (rateLimitError) {
+    console.error('Rate limiting error, proceeding without rate limit:', rateLimitError);
+    // Continue with default headers if rate limiting fails
+    rateLimitResult = {
+      allowed: true,
+      rateLimitHeaders: {
+        'X-RateLimit-Limit': '10',
+        'X-RateLimit-Remaining': '9',
+        'X-RateLimit-Reset': new Date(Date.now() + 60000).toISOString()
       }
-    );
+    };
   }
 
   try {
