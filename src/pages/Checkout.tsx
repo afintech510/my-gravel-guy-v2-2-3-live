@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
@@ -116,7 +117,7 @@ const Checkout = () => {
     }
   };
 
-  // Transform cart items to a format suitable for Stripe
+  // FIXED: Transform cart items to a format suitable for Stripe with proper contact info mapping
   const formatCartItemsForStripe = () => {
     return items.map(item => {
       const itemTotal = item.price * item.tons;
@@ -124,17 +125,21 @@ const Checkout = () => {
       const discountedTotal = itemTotal - couponDiscount;
       const discountedPricePerTon = discountedTotal / item.tons;
 
-      let metadata = {};
-      
-      if (item.deliveryAddress) {
-        metadata = {
-          deliveryDate: item.deliveryDate ? item.deliveryDate.toISOString() : undefined,
-          deliveryAddress: item.deliveryAddress ? JSON.stringify(item.deliveryAddress) : undefined,
-          contactPhone: item.contactPhone,
-          deliveryTimePreference: item.deliveryTimePreference,
-          deliveryInstructions: item.deliveryInstructions
-        };
-      }
+      // FIXED: Always include contact information in metadata, with proper validation
+      const metadata = {
+        // Delivery information
+        deliveryDate: item.deliveryDate ? item.deliveryDate.toISOString() : undefined,
+        deliveryAddress: item.deliveryAddress ? JSON.stringify(item.deliveryAddress) : undefined,
+        deliveryTimePreference: item.deliveryTimePreference || undefined,
+        deliveryInstructions: item.deliveryInstructions || undefined,
+        
+        // FIXED: Always include contact information from contactInfo object
+        contactName: item.contactInfo?.name || undefined,
+        contactPhone: item.contactInfo?.phone || undefined,
+        contactEmail: item.contactInfo?.email || undefined,
+      };
+
+      console.log(`Formatted item ${item.id} with metadata:`, metadata);
 
       return {
         id: item.id,
@@ -306,12 +311,13 @@ const Checkout = () => {
         throw new Error('Some items are missing required delivery information. Please complete all delivery forms.');
       }
 
+      // FIXED: Use the corrected formatCartItemsForStripe function
       const formattedItems = formatCartItemsForStripe();
       const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
       console.log('=== CHECKOUT DEBUG START ===');
       console.log('Order ID generated:', orderId);
-      console.log('Formatted items with discounts:', formattedItems);
+      console.log('Formatted items with proper contact info:', formattedItems);
       console.log('Original total:', total);
       console.log('Discounted total:', discountTotal);
       
