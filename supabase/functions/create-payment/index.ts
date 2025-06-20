@@ -76,7 +76,7 @@ serve(async (req) => {
     const finalOrderId = orderId || `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     console.log('Final order ID:', finalOrderId);
 
-    // Validate and transform each item with detailed error logging
+    // Validate and transform each item with enhanced error handling
     const validatedLineItems = [];
     let orderMetadata = { order_id: finalOrderId };
     
@@ -106,7 +106,7 @@ serve(async (req) => {
           }
         }
 
-        // Enhanced metadata collection for proper database mapping
+        // ENHANCED: Better metadata collection with proper validation and fallbacks
         orderMetadata[`item_${i+1}_product_id`] = String(item.id || '');
         orderMetadata[`item_${i+1}_material_category`] = item.materialCategory || item.category || '';
         orderMetadata[`item_${i+1}_quantity_tons`] = String(item.quantity || item.tons || 0);
@@ -115,48 +115,64 @@ serve(async (req) => {
         orderMetadata[`item_${i+1}_total_price`] = String((item.price * item.quantity) || 0);
         orderMetadata[`item_${i+1}_material_size`] = item.materialSize || item.size || '';
 
-        // Add delivery and contact metadata from item metadata
+        // ENHANCED: Process metadata with better error handling and validation
         if (item.metadata) {
-          if (item.metadata.deliveryDate) {
-            orderMetadata[`item_${i+1}_delivery_date`] = item.metadata.deliveryDate;
+          console.log(`Processing metadata for item ${i}:`, item.metadata);
+          
+          // Contact information - FIXED: Handle contact info properly
+          if (item.metadata.contactName) {
+            orderMetadata[`item_${i+1}_contact_name`] = String(item.metadata.contactName).substring(0, 100);
           }
           
+          if (item.metadata.contactPhone) {
+            orderMetadata[`item_${i+1}_contact_phone`] = String(item.metadata.contactPhone).substring(0, 50);
+          }
+
+          if (item.metadata.contactEmail) {
+            orderMetadata[`item_${i+1}_contact_email`] = String(item.metadata.contactEmail).substring(0, 100);
+          }
+          
+          // Delivery date
+          if (item.metadata.deliveryDate) {
+            try {
+              const deliveryDate = new Date(item.metadata.deliveryDate);
+              if (!isNaN(deliveryDate.getTime())) {
+                orderMetadata[`item_${i+1}_delivery_date`] = deliveryDate.toISOString().split('T')[0];
+              }
+            } catch (dateError) {
+              console.warn(`Invalid delivery date for item ${i}:`, item.metadata.deliveryDate);
+            }
+          }
+          
+          // Delivery address
           if (item.metadata.deliveryAddress) {
             try {
               const address = typeof item.metadata.deliveryAddress === 'string' ? 
                 JSON.parse(item.metadata.deliveryAddress) : item.metadata.deliveryAddress;
               
-              orderMetadata[`item_${i+1}_delivery_address_street`] = address.street || '';
-              orderMetadata[`item_${i+1}_delivery_address_city`] = address.city || '';
-              orderMetadata[`item_${i+1}_delivery_address_state`] = address.state || '';
-              orderMetadata[`item_${i+1}_delivery_address_zip`] = address.zip || '';
+              if (address && typeof address === 'object') {
+                orderMetadata[`item_${i+1}_delivery_address_street`] = String(address.street || '').substring(0, 100);
+                orderMetadata[`item_${i+1}_delivery_address_city`] = String(address.city || '').substring(0, 50);
+                orderMetadata[`item_${i+1}_delivery_address_state`] = String(address.state || '').substring(0, 20);
+                orderMetadata[`item_${i+1}_delivery_address_zip`] = String(address.zip || '').substring(0, 10);
+              }
             } catch (addressError) {
               console.warn(`Failed to parse delivery address for item ${i}:`, addressError);
             }
           }
           
-          if (item.metadata.contactPhone) {
-            orderMetadata[`item_${i+1}_contact_phone`] = item.metadata.contactPhone;
-          }
-
-          if (item.metadata.contactName) {
-            orderMetadata[`item_${i+1}_contact_name`] = item.metadata.contactName;
-          }
-
-          if (item.metadata.contactEmail) {
-            orderMetadata[`item_${i+1}_contact_email`] = item.metadata.contactEmail;
-          }
-          
+          // Delivery preferences
           if (item.metadata.deliveryTimePreference) {
-            orderMetadata[`item_${i+1}_delivery_time_preference`] = item.metadata.deliveryTimePreference;
+            orderMetadata[`item_${i+1}_delivery_time_preference`] = String(item.metadata.deliveryTimePreference).substring(0, 50);
           }
           
           if (item.metadata.deliveryInstructions) {
-            // Truncate long instructions for metadata limits
-            const instructions = item.metadata.deliveryInstructions;
+            const instructions = String(item.metadata.deliveryInstructions);
             orderMetadata[`item_${i+1}_delivery_instructions`] = 
               instructions.length > 100 ? instructions.substring(0, 97) + '...' : instructions;
           }
+        } else {
+          console.warn(`No metadata found for item ${i}`);
         }
         
         validatedLineItems.push({
@@ -179,7 +195,7 @@ serve(async (req) => {
     }
 
     console.log('Creating Stripe checkout session with items:', validatedLineItems.length);
-    console.log('Order metadata:', orderMetadata);
+    console.log('Order metadata keys:', Object.keys(orderMetadata));
 
     // Get origin for success/cancel URLs
     const origin = req.headers.get("origin") || "http://localhost:3000";
@@ -220,100 +236,6 @@ serve(async (req) => {
 
     console.log('Stripe checkout session created successfully:', session.id);
     console.log('Customer email collection enabled for session');
-
-    // TEMPORARILY DISABLED: Database insertion to isolate the error
-    console.log('=== DATABASE INSERTION TEMPORARILY DISABLED ===');
-    console.log('Would have created order records for:', finalOrderId);
-    console.log('Items count:', items.length);
-    
-    /*
-    // After successful Stripe session creation, create order records
-    try {
-      console.log('=== STARTING DATABASE INSERTION ===');
-      
-      // Create Supabase client with service role key to bypass RLS
-      const supabase = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
-          }
-        }
-      );
-
-      // Prepare order records for each cart item with CORRECTED field mapping to match orders table schema
-      const orderRecords = items.map((item, index) => {
-        console.log(`Preparing order record ${index + 1} for item:`, item.name);
-        
-        let deliveryAddress = null;
-
-        if (item.metadata?.deliveryAddress) {
-          try {
-            deliveryAddress = typeof item.metadata.deliveryAddress === 'string' ? 
-              JSON.parse(item.metadata.deliveryAddress) : item.metadata.deliveryAddress;
-          } catch (e) {
-            console.warn(`Failed to parse delivery address for item ${index}:`, e);
-          }
-        }
-
-        // FIXED: Map to actual orders table schema
-        const record = {
-          order_id: finalOrderId,
-          stripe_session_id: session.id,
-          product_id: String(item.id || ''),
-          unit: 'tons', // Fixed field name
-          unit_price: item.price,
-          total_price: item.price * (item.quantity || item.tons || 0),
-          quantity: item.quantity || item.tons || 0, // Fixed field name
-          status: 'pending_payment',
-          delivery_name: item.metadata?.contactName || null,
-          delivery_phone: item.metadata?.contactPhone || null,
-          delivery_email: item.metadata?.contactEmail || null,
-          billing_name: item.metadata?.contactName || null,
-          billing_email: item.metadata?.contactEmail || null,
-          delivery_date: item.metadata?.deliveryDate || null,
-          delivery_street: deliveryAddress?.street || null,
-          delivery_city: deliveryAddress?.city || null,
-          delivery_state: deliveryAddress?.state || null,
-          delivery_zip: deliveryAddress?.zip || null,
-          delivery_time_preference: item.metadata?.deliveryTimePreference || null,
-          delivery_instructions: item.metadata?.deliveryInstructions || null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-
-        console.log(`Order record ${index + 1} prepared:`, record);
-        return record;
-      });
-
-      console.log('All order records prepared, inserting into database...');
-
-      // Insert order records into the database
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .insert(orderRecords)
-        .select();
-
-      if (orderError) {
-        console.error('Database insertion error details:', {
-          message: orderError.message,
-          details: orderError.details,
-          hint: orderError.hint,
-          code: orderError.code
-        });
-        // Log the error but don't fail the payment - we can handle this in the success page
-      } else {
-        console.log('Successfully created order records:', orderData?.length || 0, 'records');
-      }
-
-    } catch (dbError) {
-      console.error('Database error when creating orders:', dbError);
-      console.error('Database error stack:', dbError.stack);
-      // Don't fail the payment process - we can handle order creation in the success page
-    }
-    */
 
     console.log('=== CREATE-PAYMENT FUNCTION SUCCESS ===');
     
