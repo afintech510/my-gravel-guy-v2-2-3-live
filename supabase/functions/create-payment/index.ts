@@ -9,136 +9,258 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Helper function to verify JWT and extract user info (optional for guest checkout)
-const verifyAuth = async (authHeader: string | null, supabaseUrl: string, supabaseAnonKey: string) => {
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null; // Return null for guest users instead of throwing error
-  }
-
-  const token = authHeader.substring(7);
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
-  
-  try {
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    
-    if (error || !user) {
-      return null; // Return null instead of throwing error
-    }
-    
-    return user;
-  } catch (error) {
-    return null; // Return null for any auth errors
-  }
+// Enhanced debug logging function
+const debugLog = (stage: string, data?: any) => {
+  console.log(`[DEBUG-${stage}]`, data ? JSON.stringify(data, null, 2) : '');
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 200, headers: corsHeaders });
+    return new Response(null, { 
+      status: 200, 
+      headers: corsHeaders 
+    });
   }
 
   try {
-    // Environment validation
-    const stripeSecretKey = Deno.env.get("stripe");
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
-
-    if (!stripeSecretKey || !supabaseUrl || !supabaseAnonKey) {
+    debugLog('FUNCTION_START', { method: req.method });
+    
+    // Parse request body with enhanced error handling
+    const requestBody = await req.text();
+    debugLog('RAW_REQUEST_BODY', { body: requestBody, length: requestBody.length });
+    
+    let parsedData;
+    try {
+      parsedData = JSON.parse(requestBody);
+      debugLog('PARSED_DATA', { 
+        hasItems: !!parsedData.items, 
+        itemsLength: parsedData.items?.length || 0,
+        hasOrderId: !!parsedData.orderId 
+      });
+    } catch (parseError) {
+      debugLog('JSON_PARSE_ERROR', { error: parseError.message, body: requestBody });
       return new Response(
-        JSON.stringify({ error: "Server configuration error" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+        JSON.stringify({ error: "Invalid JSON in request body", details: parseError.message }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
+    }
+    
+    const { items, orderId } = parsedData;
+    
+    // Validate environment variables
+    const stripeKey = Deno.env.get("stripe");
+    if (!stripeKey) {
+      debugLog('STRIPE_KEY_ERROR', { message: 'Environment variable "stripe" not found' });
+      return new Response(
+        JSON.stringify({ error: "Stripe configuration missing" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        }
+      );
+    }
+    debugLog('STRIPE_KEY_CHECK', { hasKey: !!stripeKey, keyLength: stripeKey.length });
+    
+    // Initialize Stripe with error handling
+    let stripe;
+    try {
+      stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+      debugLog('STRIPE_INIT', { success: true });
+    } catch (stripeError) {
+      debugLog('STRIPE_INIT_ERROR', { error: stripeError.message });
+      return new Response(
+        JSON.stringify({ error: "Stripe initialization failed", details: stripeError.message }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        }
       );
     }
 
-    // Try to verify authentication (optional for guest checkout)
-    const authHeader = req.headers.get('authorization');
-    const user = await verifyAuth(authHeader, supabaseUrl, supabaseAnonKey);
-    
-    console.log('Auth check result:', { hasUser: !!user, userEmail: user?.email });
-
-    const { items, orderId } = await req.json();
-
+    // Validate input data
     if (!items || !Array.isArray(items) || items.length === 0) {
+      debugLog('ITEMS_VALIDATION_ERROR', { items, type: typeof items, isArray: Array.isArray(items) });
       return new Response(
-        JSON.stringify({ error: "Invalid items provided" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        JSON.stringify({ error: "Invalid or empty items array" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
       );
     }
 
-    // Extract contact email from items for guest checkout
-    const contactEmail = items.find(item => item.metadata?.contactEmail)?.metadata?.contactEmail;
+    // Generate order ID
+    const finalOrderId = orderId || `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    debugLog('ORDER_ID', { orderId: finalOrderId });
+
+    // Process line items with minimal metadata (temporarily)
+    const validatedLineItems = [];
     
-    if (!contactEmail) {
-      return new Response(
-        JSON.stringify({ error: "Contact email is required for checkout" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
-      );
-    }
-
-    // For authenticated users, validate that contact email matches user email
-    if (user && user.email !== contactEmail) {
-      return new Response(
-        JSON.stringify({ error: "Contact information must match authenticated user" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
-      );
-    }
-
-    const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
-
-    // Create line items for Stripe
-    const lineItems = items.map(item => ({
-      price_data: {
-        currency: 'usd',
-        product_data: {
-          name: item.name,
-          description: item.description || '',
-          images: item.image ? [item.image] : [],
-          metadata: {
-            orderId: orderId,
-            userId: user?.id || 'guest',
-            ...item.metadata
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      debugLog(`ITEM_${i}_PROCESSING`, { 
+        name: item.name, 
+        price: item.price, 
+        quantity: item.quantity,
+        hasMetadata: !!item.metadata 
+      });
+      
+      try {
+        // Validate required fields
+        if (!item.name || typeof item.price !== 'number' || !item.quantity) {
+          throw new Error(`Invalid item at index ${i}: missing required fields`);
+        }
+        
+        // Clean name for Stripe
+        const cleanName = String(item.name).replace(/['"\\]/g, '').substring(0, 50);
+        
+        // Validate price and quantity
+        const unitAmount = Math.round(item.price * 100);
+        const quantity = parseInt(item.quantity);
+        
+        if (unitAmount < 50) { // Stripe minimum $0.50
+          throw new Error(`Price too low for item ${i}: $${item.price}`);
+        }
+        
+        if (quantity < 1 || quantity > 999999) {
+          throw new Error(`Invalid quantity for item ${i}: ${quantity}`);
+        }
+        
+        // Process image with validation
+        let imageArray = [];
+        if (item.image) {
+          try {
+            new URL(item.image); // Validate URL format
+            imageArray = [item.image];
+          } catch (urlError) {
+            debugLog(`ITEM_${i}_IMAGE_ERROR`, { url: item.image, error: urlError.message });
           }
-        },
-        unit_amount: Math.round(item.price * 100),
-      },
-      quantity: item.quantity,
-    }));
+        }
+        
+        validatedLineItems.push({
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: cleanName,
+              images: imageArray,
+            },
+            unit_amount: unitAmount,
+          },
+          quantity: quantity,
+        });
+        
+        debugLog(`ITEM_${i}_SUCCESS`, { 
+          name: cleanName, 
+          unitAmount, 
+          quantity,
+          hasImage: imageArray.length > 0 
+        });
+      } catch (itemError) {
+        debugLog(`ITEM_${i}_ERROR`, { error: itemError.message, item });
+        return new Response(
+          JSON.stringify({ 
+            error: `Item validation error: ${itemError.message}`,
+            itemIndex: i 
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400,
+          }
+        );
+      }
+    }
 
-    // Create Stripe checkout session
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: lineItems,
-      mode: 'payment',
-      success_url: `${req.headers.get('origin')}/payment-success?session_id={CHECKOUT_SESSION_ID}&order_id=${orderId}`,
-      cancel_url: `${req.headers.get('origin')}/cart`,
-      metadata: {
-        orderId: orderId,
-        userId: user?.id || 'guest',
-        userEmail: user?.email || contactEmail,
-        isGuest: user ? 'false' : 'true'
-      },
-      customer_email: contactEmail,
-      billing_address_collection: 'required',
-      shipping_address_collection: {
-        allowed_countries: ['US'],
-      },
-    });
+    debugLog('LINE_ITEMS_VALIDATED', { count: validatedLineItems.length });
 
-    console.log('Stripe session created:', { 
-      sessionId: session.id, 
-      userType: user ? 'authenticated' : 'guest',
-      contactEmail 
-    });
+    // Get origin for URLs
+    const origin = req.headers.get("origin") || "http://localhost:3000";
+    debugLog('ORIGIN', { origin });
 
-    return new Response(
-      JSON.stringify({ url: session.url }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-    );
+    // Create Stripe checkout session with simplified configuration
+    debugLog('STRIPE_SESSION_CREATE_START');
+    
+    try {
+      const sessionConfig = {
+        payment_method_types: ["card"], // Start with just cards
+        line_items: validatedLineItems,
+        mode: "payment",
+        success_url: `${origin}/payment-success?payment_intent={CHECKOUT_SESSION_ID}&order_id=${finalOrderId}`,
+        cancel_url: `${origin}/cart`,
+        metadata: { 
+          order_id: finalOrderId,
+          item_count: String(items.length)
+        }, // Minimal metadata
+        billing_address_collection: 'required',
+        customer_creation: 'always',
+      };
+      
+      debugLog('SESSION_CONFIG', sessionConfig);
+      
+      const session = await stripe.checkout.sessions.create(sessionConfig);
+      
+      debugLog('STRIPE_SESSION_SUCCESS', { 
+        sessionId: session.id, 
+        url: session.url,
+        paymentStatus: session.payment_status 
+      });
 
+      return new Response(
+        JSON.stringify({ 
+          url: session.url, 
+          orderId: finalOrderId,
+          sessionId: session.id
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    } catch (stripeSessionError) {
+      debugLog('STRIPE_SESSION_ERROR', { 
+        error: stripeSessionError.message,
+        type: stripeSessionError.type,
+        code: stripeSessionError.code,
+        decline_code: stripeSessionError.decline_code,
+        param: stripeSessionError.param
+      });
+      
+      return new Response(
+        JSON.stringify({ 
+          error: "Failed to create checkout session",
+          details: stripeSessionError.message,
+          stripeErrorType: stripeSessionError.type,
+          stripeErrorCode: stripeSessionError.code
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        }
+      );
+    }
+    
   } catch (error) {
-    console.error('Payment processing error:', error);
+    debugLog('FUNCTION_ERROR', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      type: typeof error
+    });
+    
     return new Response(
-      JSON.stringify({ error: "Payment processing failed" }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      JSON.stringify({ 
+        error: error.message || "Unknown error occurred",
+        errorName: error.name,
+        timestamp: new Date().toISOString(),
+        stage: "general_error"
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      }
     );
   }
 });
