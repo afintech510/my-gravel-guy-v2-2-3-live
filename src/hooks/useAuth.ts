@@ -57,8 +57,8 @@ export const useAuth = () => {
         return;
       }
 
-      // Call server-side function to check admin status
-      const { data, error } = await supabase.rpc('check_user_admin_status', {
+      // Call server-side function to check admin status with type assertion
+      const { data, error } = await (supabase as any).rpc('check_user_admin_status', {
         user_email: user.email
       });
 
