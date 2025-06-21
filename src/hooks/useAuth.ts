@@ -50,6 +50,13 @@ export const useAuth = () => {
   // Server-side admin check using RPC function
   const checkAdminStatus = async (user: User) => {
     try {
+      // Ensure user has an email before proceeding
+      if (!user.email) {
+        console.error('User email is not available');
+        setIsAdmin(false);
+        return;
+      }
+
       // Call server-side function to check admin status
       const { data, error } = await supabase.rpc('check_user_admin_status', {
         user_email: user.email
