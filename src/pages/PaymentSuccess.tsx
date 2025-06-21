@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { detectPaymentSuccess, clearCheckoutBackup, getCheckoutBackup } from '../utils/paymentUtils';
-import { insertOrderToDatabase, testDatabaseInsert } from '../services/orderInsertService';
+import { insertOrderToDatabase, testEnhancedDatabaseInsert } from '../services/orderInsertService';
 import { sendBothOrderEmails } from '../services/emailService';
 import { useProductNameResolver } from '../hooks/useProductNameResolver';
 
@@ -575,7 +575,7 @@ const PaymentSuccess = () => {
   const handleTestDatabaseInsert = async () => {
     setTestingDbInsert(true);
     try {
-      const result = await testDatabaseInsert();
+      const result = await testEnhancedDatabaseInsert();
       if (result.success) {
         toast({
           title: "Test Insert Successful",
