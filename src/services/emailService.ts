@@ -19,6 +19,57 @@ interface EmailResult {
   timestamp: string;
 }
 
+// Enhanced helper function to extract customer email from order data
+const extractCustomerEmailFromOrderData = (orderData: any): string | null => {
+  console.log('=== EXTRACTING CUSTOMER EMAIL FROM ORDER DATA ===');
+  console.log('Order data keys:', Object.keys(orderData));
+  console.log('Direct customer_email:', orderData.customer_email);
+  
+  // Try direct customer_email first
+  if (orderData.customer_email) {
+    console.log('Found direct customer_email:', orderData.customer_email);
+    return orderData.customer_email;
+  }
+  
+  // Try customerInfo
+  if (orderData.customerInfo?.email) {
+    console.log('Found customerInfo.email:', orderData.customerInfo.email);
+    return orderData.customerInfo.email;
+  }
+  
+  // Try to extract from first item's contact info
+  if (orderData.items && orderData.items.length > 0) {
+    for (const item of orderData.items) {
+      console.log('Checking item for contact info:', {
+        hasContactInfo: !!item.contactInfo,
+        hasDirectEmail: !!item.contact_info?.email,
+        hasMetadataEmail: !!item.metadata?.contactEmail
+      });
+      
+      // Check direct contactInfo
+      if (item.contactInfo?.email) {
+        console.log('Found item.contactInfo.email:', item.contactInfo.email);
+        return item.contactInfo.email;
+      }
+      
+      // Check contact_info
+      if (item.contact_info?.email) {
+        console.log('Found item.contact_info.email:', item.contact_info.email);
+        return item.contact_info.email;
+      }
+      
+      // Check metadata
+      if (item.metadata?.contactEmail) {
+        console.log('Found item.metadata.contactEmail:', item.metadata.contactEmail);
+        return item.metadata.contactEmail;
+      }
+    }
+  }
+  
+  console.log('No customer email found in order data');
+  return null;
+};
+
 class EmailService {
   private async logEmailAttempt(
     orderData: OrderData, 
@@ -98,50 +149,79 @@ class EmailService {
     return result;
   }
 
-  async sendOrderConfirmationEmail(orderData: OrderData): Promise<EmailResult> {
+  async sendOrderConfirmationEmail(orderData: any): Promise<EmailResult> {
     try {
-      console.log('=== CUSTOMER EMAIL SERVICE DEBUG ===');
-      console.log('Sending customer confirmation email to:', orderData.customer_email);
-      console.log('Order data:', JSON.stringify(orderData, null, 2));
+      console.log('=== ENHANCED CUSTOMER EMAIL SERVICE DEBUG ===');
+      console.log('Sending enhanced customer confirmation email...');
+      console.log('Raw order data:', JSON.stringify(orderData, null, 2));
       
-      if (!orderData.customer_email) {
-        throw new Error('Customer email is required');
+      // Enhanced customer email extraction
+      const customerEmail = extractCustomerEmailFromOrderData(orderData);
+      
+      if (!customerEmail) {
+        const errorMsg = 'No customer email found in order data after enhanced extraction';
+        console.error(errorMsg);
+        console.error('Order data structure:', {
+          hasCustomerEmail: !!orderData.customer_email,
+          hasCustomerInfo: !!orderData.customerInfo,
+          itemsCount: orderData.items?.length || 0,
+          firstItemKeys: orderData.items?.[0] ? Object.keys(orderData.items[0]) : []
+        });
+        
+        return {
+          success: false,
+          error: errorMsg,
+          emailType: 'customer_confirmation',
+          recipient: 'unknown',
+          timestamp: new Date().toISOString()
+        };
       }
 
-      if (!orderData.customer_email.includes('@')) {
+      if (!customerEmail.includes('@')) {
         throw new Error('Invalid customer email format');
       }
       
-      const emailHtml = generateCustomerConfirmationEmail(orderData);
+      // Create properly formatted order data for email template
+      const formattedOrderData = {
+        order_id: orderData.order_id,
+        items: orderData.items || [],
+        total_amount: orderData.total_amount || 0,
+        customer_email: customerEmail,
+        customer_name: orderData.customer_name || orderData.customerInfo?.name || 'Valued Customer'
+      };
+      
+      console.log('Formatted order data for email:', formattedOrderData);
+      
+      const emailHtml = generateCustomerConfirmationEmail(formattedOrderData);
       
       return await this.sendEmailWithRetry({
-        to: orderData.customer_email,
-        subject: `Order Confirmation - ${orderData.order_id} 📦`,
+        to: customerEmail,
+        subject: `Order Confirmation - ${formattedOrderData.order_id} 📦`,
         html: emailHtml,
         type: 'customer_confirmation',
-        orderData
+        orderData: formattedOrderData
       });
 
     } catch (error) {
-      console.error('Failed to send customer confirmation email:', error);
+      console.error('Failed to send enhanced customer confirmation email:', error);
       
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
         emailType: 'customer_confirmation',
-        recipient: orderData.customer_email,
+        recipient: orderData.customer_email || 'unknown',
         timestamp: new Date().toISOString()
       };
     }
   }
 
   async sendInternalNotificationEmail(
-    orderData: OrderData, 
+    orderData: any, 
     salesEmail: string = 'order.support@mygravelguy.com'
   ): Promise<EmailResult> {
     try {
-      console.log('=== INTERNAL EMAIL SERVICE DEBUG ===');
-      console.log('Sending internal notification email to:', salesEmail);
+      console.log('=== ENHANCED INTERNAL EMAIL SERVICE DEBUG ===');
+      console.log('Sending enhanced internal notification email to:', salesEmail);
       console.log('Order total:', orderData.total_amount);
       
       if (!salesEmail) {
@@ -152,18 +232,32 @@ class EmailService {
         throw new Error('Invalid sales email format');
       }
       
-      const emailHtml = generateInternalNotificationEmail(orderData);
+      // Extract customer email for internal email context
+      const customerEmail = extractCustomerEmailFromOrderData(orderData);
+      
+      // Create properly formatted order data for internal email
+      const formattedOrderData = {
+        order_id: orderData.order_id,
+        items: orderData.items || [],
+        total_amount: orderData.total_amount || 0,
+        customer_email: customerEmail || 'guest@mygravelguy.com',
+        customer_name: orderData.customer_name || orderData.customerInfo?.name || 'Guest User'
+      };
+      
+      console.log('Formatted order data for internal email:', formattedOrderData);
+      
+      const emailHtml = generateInternalNotificationEmail(formattedOrderData);
       
       return await this.sendEmailWithRetry({
         to: salesEmail,
-        subject: `🚨 New Order: ${orderData.order_id} - ${orderData.total_amount.toFixed(2)}`,
+        subject: `🚨 New Order: ${formattedOrderData.order_id} - $${formattedOrderData.total_amount.toFixed(2)}`,
         html: emailHtml,
         type: 'internal_notification',
-        orderData
+        orderData: formattedOrderData
       });
 
     } catch (error) {
-      console.error('Failed to send internal notification email:', error);
+      console.error('Failed to send enhanced internal notification email:', error);
       
       return {
         success: false,
@@ -175,14 +269,14 @@ class EmailService {
     }
   }
 
-  async sendBothOrderEmails(orderData: OrderData): Promise<{
+  async sendBothOrderEmails(orderData: any): Promise<{
     customerEmail: EmailResult;
     internalEmail: EmailResult;
     overallSuccess: boolean;
   }> {
     try {
-      console.log('=== SENDING BOTH EMAILS SERVICE DEBUG ===');
-      console.log('Order data received:', JSON.stringify(orderData, null, 2));
+      console.log('=== SENDING BOTH ENHANCED EMAILS SERVICE DEBUG ===');
+      console.log('Enhanced order data received:', JSON.stringify(orderData, null, 2));
       
       // Send both emails in parallel
       const [customerResult, internalResult] = await Promise.allSettled([
@@ -196,7 +290,7 @@ class EmailService {
             success: false,
             error: customerResult.reason?.message || 'Promise rejected',
             emailType: 'customer_confirmation' as const,
-            recipient: orderData.customer_email,
+            recipient: extractCustomerEmailFromOrderData(orderData) || 'unknown',
             timestamp: new Date().toISOString()
           };
 
@@ -212,7 +306,7 @@ class EmailService {
 
       const overallSuccess = customerEmail.success && internalEmail.success;
 
-      console.log('Email sending results:', {
+      console.log('Enhanced email sending results:', {
         customerEmail,
         internalEmail,
         overallSuccess
@@ -237,7 +331,7 @@ class EmailService {
         customerEmail: {
           ...errorResult,
           emailType: 'customer_confirmation' as const,
-          recipient: orderData.customer_email
+          recipient: extractCustomerEmailFromOrderData(orderData) || 'unknown'
         },
         internalEmail: {
           ...errorResult,
