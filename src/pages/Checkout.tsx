@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
@@ -57,8 +56,6 @@ const Checkout = () => {
     setCheckoutError(null);
     
     try {
-      console.log('=== TESTING SCHEMA-ACCURATE DATABASE INSERTION ===');
-      
       const testOrderId = `TEST-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
       const orderRecords: OrderInsertData[] = items.map((item, index) => ({
@@ -84,29 +81,22 @@ const Checkout = () => {
         delivery_instructions: item.deliveryInstructions
       }));
 
-      console.log('Schema-accurate order records to insert:', orderRecords);
-
       const { data, error } = await supabase
         .from('orders')
         .insert(orderRecords)
         .select();
 
       if (error) {
-        console.error('Database insertion error:', error);
         throw error;
       }
-
-      console.log('Successfully inserted schema-accurate test orders:', data);
       
       toast({
-        title: "Schema-Accurate Database Test Successful!",
-        description: `Inserted ${data?.length || 0} test records with ID: ${testOrderId}`,
-        className: "border-green-500 border-2 shadow-[0_0_15px_rgba(20,255,106,0.5)]"
+        title: "Database Test Successful!",
+        description: `Inserted ${data?.length || 0} test records`,
+        className: "border-green-500 border-2"
       });
 
     } catch (error) {
-      console.error('Schema-accurate database test failed:', error);
-      
       toast({
         variant: "destructive",
         title: "Database Test Failed",
@@ -117,7 +107,7 @@ const Checkout = () => {
     }
   };
 
-  // FIXED: Transform cart items to a format suitable for Stripe with proper contact info mapping
+  // Transform cart items to a format suitable for Stripe with proper contact info mapping
   const formatCartItemsForStripe = () => {
     return items.map(item => {
       const itemTotal = item.price * item.tons;
@@ -125,21 +115,15 @@ const Checkout = () => {
       const discountedTotal = itemTotal - couponDiscount;
       const discountedPricePerTon = discountedTotal / item.tons;
 
-      // FIXED: Always include contact information in metadata, with proper validation
       const metadata = {
-        // Delivery information
         deliveryDate: item.deliveryDate ? item.deliveryDate.toISOString() : undefined,
         deliveryAddress: item.deliveryAddress ? JSON.stringify(item.deliveryAddress) : undefined,
         deliveryTimePreference: item.deliveryTimePreference || undefined,
         deliveryInstructions: item.deliveryInstructions || undefined,
-        
-        // FIXED: Always include contact information from contactInfo object
         contactName: item.contactInfo?.name || undefined,
         contactPhone: item.contactInfo?.phone || undefined,
         contactEmail: item.contactInfo?.email || undefined,
       };
-
-      console.log(`Formatted item ${item.id} with metadata:`, metadata);
 
       return {
         id: item.id,
@@ -153,12 +137,9 @@ const Checkout = () => {
     });
   };
 
-  // Send checkout confirmation email to internal team with enhanced delivery details
+  // Send checkout confirmation email to internal team
   const sendCheckoutConfirmationEmail = async (orderId: string) => {
     try {
-      console.log('=== CHECKOUT CONFIRMATION EMAIL DEBUG ===');
-      console.log('Sending checkout confirmation email...');
-      
       const orderData = {
         order_id: orderId,
         items: items.map(item => ({
@@ -177,8 +158,6 @@ const Checkout = () => {
         customer_name: items[0]?.contactInfo?.name || 'Checkout Customer'
       };
 
-      console.log('Checkout confirmation order data:', orderData);
-
       const { data, error } = await supabase.functions.invoke('send-email', {
         body: {
           to: 'order.support@mygravelguy.com',
@@ -191,15 +170,13 @@ const Checkout = () => {
 
       if (error) {
         console.error('Checkout confirmation email error:', error);
-      } else {
-        console.log('Checkout confirmation email sent successfully:', data);
       }
     } catch (error) {
       console.error('Checkout confirmation email exception:', error);
     }
   };
 
-  // Generate enhanced email template for checkout confirmation with full delivery details
+  // Generate email template for checkout confirmation
   const generateCheckoutConfirmationEmail = (orderData: any) => {
     return `
       <!DOCTYPE html>
@@ -223,66 +200,12 @@ const Checkout = () => {
           <p><strong>Status:</strong> Proceeding to Stripe Payment</p>
           
           <div style="margin: 20px 0;">
-            <h3>Order Items with Complete Delivery Details:</h3>
+            <h3>Order Items:</h3>
             ${orderData.items.map((item: any) => `
               <div style="background: white; padding: 20px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #dc2626;">
                 <h4 style="margin-top: 0; color: #dc2626;">${item.product_name}</h4>
                 <p><strong>Quantity:</strong> ${item.quantity} tons</p>
                 <p><strong>Price:</strong> $${item.total_price.toFixed(2)}</p>
-                
-                ${item.contact_info ? `
-                  <div style="background: #fef2f2; padding: 15px; border-radius: 6px; margin: 10px 0;">
-                    <h5 style="margin-top: 0; color: #991b1b;">Contact Information:</h5>
-                    <p><strong>Name:</strong> ${item.contact_info.name}</p>
-                    <p><strong>Phone:</strong> ${item.contact_info.phone}</p>
-                    <p><strong>Email:</strong> ${item.contact_info.email}</p>
-                  </div>
-                ` : ''}
-                
-                ${item.delivery_address ? `
-                  <div style="background: #fef2f2; padding: 15px; border-radius: 6px; margin: 10px 0;">
-                    <h5 style="margin-top: 0; color: #991b1b;">Delivery Address:</h5>
-                    <p>${item.delivery_address.street}</p>
-                    <p>${item.delivery_address.city}, ${item.delivery_address.state} ${item.delivery_address.zip}</p>
-                  </div>
-                ` : ''}
-                
-                ${item.delivery_date ? `
-                  <div style="background: #fef2f2; padding: 15px; border-radius: 6px; margin: 10px 0;">
-                    <h5 style="margin-top: 0; color: #991b1b;">Delivery Schedule:</h5>
-                    <p><strong>Date:</strong> ${new Date(item.delivery_date).toLocaleDateString('en-US', {
-                      weekday: 'long',
-                      month: 'short', 
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}</p>
-                    ${item.delivery_time_preference ? `
-                      <p><strong>Time Preference:</strong> ${
-                        item.delivery_time_preference === 'anytime' ? 'Anytime (7am-5pm)' :
-                        item.delivery_time_preference === 'morning' ? 'Morning (7am-12pm)' :
-                        item.delivery_time_preference === 'afternoon' ? 'Afternoon (12pm-5pm)' :
-                        'Not specified'
-                      }</p>
-                    ` : ''}
-                  </div>
-                ` : ''}
-                
-                ${item.delivery_instructions ? `
-                  <div style="background: #fff7ed; padding: 15px; border-radius: 6px; margin: 10px 0;">
-                    <h5 style="margin-top: 0; color: #c2410c;">Special Instructions:</h5>
-                    <p>${item.delivery_instructions}</p>
-                  </div>
-                ` : ''}
-                
-                ${item.location_photo_url ? `
-                  <div style="background: #f3f4f6; padding: 15px; border-radius: 6px; margin: 10px 0;">
-                    <h5 style="margin-top: 0; color: #374151;">Location Photo:</h5>
-                    <div style="text-align: center; margin: 10px 0;">
-                      <img src="${item.location_photo_url}" alt="Customer Location Photo" style="max-width: 100%; height: auto; max-height: 300px; border-radius: 4px; border: 1px solid #d1d5db;" />
-                    </div>
-                    <p style="font-size: 12px; color: #6b7280; text-align: center;">Photo uploaded by customer</p>
-                  </div>
-                ` : ''}
               </div>
             `).join('')}
           </div>
@@ -311,20 +234,13 @@ const Checkout = () => {
         throw new Error('Some items are missing required delivery information. Please complete all delivery forms.');
       }
 
-      // FIXED: Use the corrected formatCartItemsForStripe function
       const formattedItems = formatCartItemsForStripe();
       const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
-      console.log('=== CHECKOUT DEBUG START ===');
-      console.log('Order ID generated:', orderId);
-      console.log('Formatted items with proper contact info:', formattedItems);
-      console.log('Original total:', total);
-      console.log('Discounted total:', discountTotal);
       
       // Send checkout confirmation email first
       await sendCheckoutConfirmationEmail(orderId);
       
-      // Create enhanced backup with better validation
+      // Create enhanced backup
       const orderBackup = createEnhancedBackup(orderId, items, {
         email: items[0]?.contactInfo?.email || 'guest@mygravelguy.com',
         name: items[0]?.contactInfo?.name || 'Guest User'
@@ -332,10 +248,14 @@ const Checkout = () => {
       
       storeCheckoutBackup(orderBackup);
       
-      console.log('Enhanced order backup stored:', orderBackup);
+      // Get current session for authorization
+      const { data: { session } } = await supabase.auth.getSession();
       
-      // Call the create-payment Supabase Edge function with better error handling
+      // Call the create-payment Supabase Edge function with authentication
       const { data, error } = await supabase.functions.invoke('create-payment', {
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`
+        },
         body: JSON.stringify({ 
           items: formattedItems,
           orderId: orderId
@@ -343,24 +263,17 @@ const Checkout = () => {
       });
       
       if (error) {
-        console.error('Create payment error:', error);
         throw new Error(`Payment service error: ${error.message}`);
       }
       
       if (!data || !data.url) {
-        console.error('Invalid payment response:', data);
         throw new Error('Invalid response from payment service - no checkout URL received');
       }
-      
-      console.log('Payment URL received:', data.url);
-      console.log('=== CHECKOUT DEBUG END ===');
       
       // Redirect to Stripe checkout
       window.location.href = data.url;
       
     } catch (error) {
-      console.error('Checkout error:', error);
-      
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       setCheckoutError(errorMessage);
       
@@ -389,7 +302,6 @@ const Checkout = () => {
       
       <h1 className="text-3xl font-bold mb-8">Checkout</h1>
 
-      {/* Checkout Error Display */}
       {checkoutError && (
         <Card className="mb-8 border-red-200">
           <CardContent className="pt-6">
@@ -645,12 +557,12 @@ const Checkout = () => {
               {isTestingDB ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Testing Schema-Accurate DB...
+                  Testing Database...
                 </>
               ) : (
                 <>
                   <Database className="mr-2 h-4 w-4" />
-                  Test Schema-Accurate DB Insert
+                  Test Database Insert
                 </>
               )}
             </Button>
