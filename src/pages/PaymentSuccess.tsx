@@ -110,13 +110,19 @@ const PaymentSuccess = () => {
     }
     
     try {
-      // Extract URL parameters - prioritize payment_intent
+      // Extract URL parameters - prioritize payment_intent and session_id
       const paymentIntentId = searchParams.get('payment_intent') || searchParams.get('payment_intent_id');
+      const sessionId = searchParams.get('session_id');
       const orderIdParam = searchParams.get('order_id');
       const paymentSuccess = searchParams.get('success');
       
-      console.log('URL Parameters:', {
+      // Use session_id if available, otherwise use payment_intent
+      const stripeId = sessionId || paymentIntentId;
+      
+      console.log('=== URL PARAMETERS EXTRACTED ===', {
         paymentIntentId: paymentIntentId ? paymentIntentId.substring(0, 20) + '...' : null,
+        sessionId: sessionId ? sessionId.substring(0, 20) + '...' : null,
+        stripeId: stripeId ? stripeId.substring(0, 20) + '...' : null,
         orderIdParam,
         paymentSuccess,
         hasProcessedPayment
@@ -148,7 +154,7 @@ const PaymentSuccess = () => {
       
       // Determine if we should process the payment
       const shouldProcess = !hasProcessedPayment && (
-        paymentIntentId || 
+        stripeId || 
         paymentSuccess === 'true' || 
         (checkoutInProgress === 'true' && checkoutOrderId)
       );
@@ -169,29 +175,31 @@ const PaymentSuccess = () => {
           }
         }
         
-        // Primary: Try payment intent verification (without DB insert)
-        if (paymentIntentId) {
-          console.log('Processing with payment intent ID:', paymentIntentId.substring(0, 20) + '...');
+        // Primary: Try Stripe verification (without DB insert)
+        if (stripeId) {
+          console.log('=== PROCESSING WITH STRIPE ID ===', stripeId.substring(0, 20) + '...');
           
           const { data, error } = await supabase.functions.invoke('verify-payment', {
             body: { 
-              paymentIntentId,
+              paymentIntentId: stripeId, // This handles both session_id and payment_intent
               orderId: orderIdParam || checkoutOrderId,
               backupData: checkoutOrderBackup,
               skipDbInsert: true
             }
           });
 
-          console.log('Verify payment response (payment intent):', { 
+          console.log('=== STRIPE VERIFICATION RESPONSE ===', { 
             success: data?.success, 
             paymentVerified: data?.paymentVerified,
+            sessionId: data?.sessionId,
+            paymentIntentId: data?.paymentIntentId,
             error: error?.message 
           });
           verificationResult = { data, error };
         } 
         // Fallback: Use backup data only
         else if (checkoutOrderId && checkoutOrderBackup) {
-          console.log('Processing with backup data only:', checkoutOrderId);
+          console.log('=== PROCESSING WITH BACKUP DATA ONLY ===', checkoutOrderId);
           
           const { data, error } = await supabase.functions.invoke('verify-payment', {
             body: { 
@@ -202,7 +210,7 @@ const PaymentSuccess = () => {
             }
           });
 
-          console.log('Fallback verification response:', { 
+          console.log('=== FALLBACK VERIFICATION RESPONSE ===', { 
             success: data?.success, 
             paymentVerified: data?.paymentVerified,
             error: error?.message 
@@ -210,18 +218,15 @@ const PaymentSuccess = () => {
           verificationResult = { data, error };
         }
         
-        // Process verification result - only show errors for actual failures, not sandbox/testing scenarios
+        // Process verification result
         if (verificationResult) {
           const { data, error } = verificationResult;
           
-          if (error && !paymentIntentId) {
-            // Only show verification errors if we have a payment intent (real payment)
-            // For fallback/testing scenarios, don't show verification errors
+          if (error && !stripeId) {
             console.log('Verification error in fallback mode (likely testing):', error);
           } else if (error) {
             console.error('Payment verification error:', error);
-            // Only show error for real payment scenarios with payment intent
-            if (paymentIntentId) {
+            if (stripeId) {
               setProcessingError(`Payment verification issue: ${error.message}`);
               setDetailedError(error.details || error.stack || 'No additional details available');
               
@@ -232,7 +237,7 @@ const PaymentSuccess = () => {
               });
             }
           } else if (data?.success && data?.paymentVerified) {
-            console.log('Payment verification successful');
+            console.log('=== PAYMENT VERIFICATION SUCCESSFUL ===');
             
             const currentOrderId = data.orderId || orderIdParam || checkoutOrderId;
             setOrderId(currentOrderId);
@@ -241,26 +246,24 @@ const PaymentSuccess = () => {
             setProcessingError(null);
             setDetailedError(null);
             
-            // Now insert the order to database using our simplified service
+            // Now insert the order to database with enhanced Stripe ID extraction
             if (checkoutOrderBackup && !dbInsertComplete) {
-              await handleDatabaseInsert(checkoutOrderBackup, currentOrderId, data);
+              await handleDatabaseInsert(checkoutOrderBackup, currentOrderId, data, stripeId);
             }
             
-          } else if (data?.success === false && paymentIntentId) {
+          } else if (data?.success === false && stripeId) {
             console.warn('Verification returned success: false', data);
-            // Only show error if we're in a real payment scenario
             setProcessingError(data.error || 'Payment verification failed');
             setDetailedError(data.debug_info || 'No additional debug information');
           } else {
             console.log('No payment verification data found, proceeding with fallback');
-            // For testing/fallback scenarios, proceed anyway
             const currentOrderId = orderIdParam || checkoutOrderId;
             setOrderId(currentOrderId);
             setVerificationMethod('fallback');
             setUsedFallback(true);
             
             if (checkoutOrderBackup && !dbInsertComplete) {
-              await handleDatabaseInsert(checkoutOrderBackup, currentOrderId, {});
+              await handleDatabaseInsert(checkoutOrderBackup, currentOrderId, {}, stripeId);
             }
           }
         } else {
@@ -293,15 +296,65 @@ const PaymentSuccess = () => {
     }
   };
 
-  const handleDatabaseInsert = async (checkoutOrderBackup: any, currentOrderId: string, verificationData: any) => {
+  const handleDatabaseInsert = async (checkoutOrderBackup: any, currentOrderId: string, verificationData: any, urlStripeId?: string) => {
     try {
-      console.log('=== STARTING DATABASE INSERT ===');
+      console.log('=== STARTING ENHANCED DATABASE INSERT ===');
+      console.log('Verification data received:', verificationData);
+      console.log('URL Stripe ID:', urlStripeId);
+      
+      // Enhanced Stripe ID extraction with multiple fallbacks
+      let stripeSessionId = null;
+      let stripePaymentIntentId = null;
+      
+      // Priority 1: Use verification data from edge function
+      if (verificationData.sessionId) {
+        stripeSessionId = verificationData.sessionId;
+        console.log('✅ Session ID from verification data:', stripeSessionId);
+      }
+      
+      if (verificationData.paymentIntentId) {
+        stripePaymentIntentId = verificationData.paymentIntentId;
+        console.log('✅ Payment Intent ID from verification data:', stripePaymentIntentId);
+      }
+      
+      // Priority 2: Use URL parameters as fallback
+      if (!stripeSessionId && urlStripeId?.startsWith('cs_')) {
+        stripeSessionId = urlStripeId;
+        console.log('✅ Session ID from URL fallback:', stripeSessionId);
+      }
+      
+      if (!stripePaymentIntentId && urlStripeId?.startsWith('pi_')) {
+        stripePaymentIntentId = urlStripeId;
+        console.log('✅ Payment Intent ID from URL fallback:', stripePaymentIntentId);
+      }
+      
+      // Priority 3: Extract from URL search params directly
+      if (!stripeSessionId) {
+        const sessionFromUrl = searchParams.get('session_id');
+        if (sessionFromUrl) {
+          stripeSessionId = sessionFromUrl;
+          console.log('✅ Session ID from URL params:', stripeSessionId);
+        }
+      }
+      
+      if (!stripePaymentIntentId) {
+        const paymentIntentFromUrl = searchParams.get('payment_intent') || searchParams.get('payment_intent_id');
+        if (paymentIntentFromUrl) {
+          stripePaymentIntentId = paymentIntentFromUrl;
+          console.log('✅ Payment Intent ID from URL params:', stripePaymentIntentId);
+        }
+      }
+      
+      console.log('=== FINAL STRIPE IDs FOR DATABASE ===', {
+        stripeSessionId,
+        stripePaymentIntentId
+      });
       
       const orderData = {
         orderId: currentOrderId,
         items: checkoutOrderBackup.items,
-        stripeSessionId: verificationData.sessionId,
-        stripePaymentIntentId: verificationData.paymentIntentId
+        stripeSessionId,
+        stripePaymentIntentId
       };
       
       const insertedOrders = await insertOrderToDatabase(orderData);
@@ -329,12 +382,11 @@ const PaymentSuccess = () => {
       setOrderItems(displayOrders);
       setDbInsertComplete(true);
 
-      /*
-      toast({
-        title: "Order Processed Successfully",
-        description: "Your order has been recorded successfully!",
-        variant: "default"
-      }); */
+      console.log('=== DATABASE INSERT SUCCESSFUL ===', { 
+        recordCount: insertedOrders.length,
+        stripeSessionId,
+        stripePaymentIntentId 
+      });
 
       // Send emails after successful database insert
       await handleEmailSending(insertedOrders, currentOrderId);
