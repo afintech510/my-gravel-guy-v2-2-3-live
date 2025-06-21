@@ -9,22 +9,26 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Helper function to verify JWT and extract user info
+// Helper function to verify JWT and extract user info (optional for guest checkout)
 const verifyAuth = async (authHeader: string | null, supabaseUrl: string, supabaseAnonKey: string) => {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    throw new Error('Missing or invalid authorization header');
+    return null; // Return null for guest users instead of throwing error
   }
 
   const token = authHeader.substring(7);
   const supabase = createClient(supabaseUrl, supabaseAnonKey);
   
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-  
-  if (error || !user) {
-    throw new Error('Invalid or expired token');
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user) {
+      return null; // Return null instead of throwing error
+    }
+    
+    return user;
+  } catch (error) {
+    return null; // Return null for any auth errors
   }
-  
-  return user;
 };
 
 serve(async (req) => {
@@ -45,18 +49,11 @@ serve(async (req) => {
       );
     }
 
-    // Verify authentication
+    // Try to verify authentication (optional for guest checkout)
     const authHeader = req.headers.get('authorization');
-    let user = null;
+    const user = await verifyAuth(authHeader, supabaseUrl, supabaseAnonKey);
     
-    try {
-      user = await verifyAuth(authHeader, supabaseUrl, supabaseAnonKey);
-    } catch (authError) {
-      return new Response(
-        JSON.stringify({ error: "Authentication required" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
-      );
-    }
+    console.log('Auth check result:', { hasUser: !!user, userEmail: user?.email });
 
     const { items, orderId } = await req.json();
 
@@ -67,13 +64,18 @@ serve(async (req) => {
       );
     }
 
-    // Validate that user email matches contact info in items
-    const userEmail = user.email;
-    const hasValidContact = items.some(item => 
-      item.metadata?.contactEmail === userEmail
-    );
+    // Extract contact email from items for guest checkout
+    const contactEmail = items.find(item => item.metadata?.contactEmail)?.metadata?.contactEmail;
+    
+    if (!contactEmail) {
+      return new Response(
+        JSON.stringify({ error: "Contact email is required for checkout" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
 
-    if (!hasValidContact) {
+    // For authenticated users, validate that contact email matches user email
+    if (user && user.email !== contactEmail) {
       return new Response(
         JSON.stringify({ error: "Contact information must match authenticated user" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
@@ -92,7 +94,7 @@ serve(async (req) => {
           images: item.image ? [item.image] : [],
           metadata: {
             orderId: orderId,
-            userId: user.id,
+            userId: user?.id || 'guest',
             ...item.metadata
           }
         },
@@ -110,14 +112,21 @@ serve(async (req) => {
       cancel_url: `${req.headers.get('origin')}/cart`,
       metadata: {
         orderId: orderId,
-        userId: user.id,
-        userEmail: user.email
+        userId: user?.id || 'guest',
+        userEmail: user?.email || contactEmail,
+        isGuest: user ? 'false' : 'true'
       },
-      customer_email: user.email,
+      customer_email: contactEmail,
       billing_address_collection: 'required',
       shipping_address_collection: {
         allowed_countries: ['US'],
       },
+    });
+
+    console.log('Stripe session created:', { 
+      sessionId: session.id, 
+      userType: user ? 'authenticated' : 'guest',
+      contactEmail 
     });
 
     return new Response(
@@ -126,6 +135,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
+    console.error('Payment processing error:', error);
     return new Response(
       JSON.stringify({ error: "Payment processing failed" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }

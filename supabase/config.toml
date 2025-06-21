@@ -2,7 +2,7 @@
 project_id = "losrkjvrcambvgijfism"
 
 [functions.create-payment]
-verify_jwt = true
+verify_jwt = false
 
 [functions.send-email]
 verify_jwt = false
@@ -11,7 +11,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.verify-payment]
-verify_jwt = true
+verify_jwt = false
 
 [functions.voice-response]
 verify_jwt = false

@@ -248,19 +248,25 @@ const Checkout = () => {
       
       storeCheckoutBackup(orderBackup);
       
-      // Get current session for authorization
+      // Try to get current session for authentication (optional for guest checkout)
       const { data: { session } } = await supabase.auth.getSession();
       
-      // Call the create-payment Supabase Edge function with authentication
-      const { data, error } = await supabase.functions.invoke('create-payment', {
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`
-        },
+      // Call the create-payment Supabase Edge function (with optional authentication)
+      const requestOptions: any = {
         body: JSON.stringify({ 
           items: formattedItems,
           orderId: orderId
         })
-      });
+      };
+      
+      // Include auth header if user is logged in
+      if (session?.access_token) {
+        requestOptions.headers = {
+          Authorization: `Bearer ${session.access_token}`
+        };
+      }
+      
+      const { data, error } = await supabase.functions.invoke('create-payment', requestOptions);
       
       if (error) {
         throw new Error(`Payment service error: ${error.message}`);
@@ -269,6 +275,12 @@ const Checkout = () => {
       if (!data || !data.url) {
         throw new Error('Invalid response from payment service - no checkout URL received');
       }
+      
+      console.log('Proceeding to Stripe checkout:', { 
+        orderId, 
+        hasAuth: !!session?.access_token,
+        checkoutUrl: data.url 
+      });
       
       // Redirect to Stripe checkout
       window.location.href = data.url;
@@ -568,7 +580,7 @@ const Checkout = () => {
             </Button>
             
             <p className="text-xs text-gray-500 mt-3 text-center">
-              Secure checkout powered by Stripe
+              Secure checkout powered by Stripe • No account required
             </p>
           </div>
         </div>

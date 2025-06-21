@@ -9,22 +9,26 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Helper function to verify JWT and extract user info
+// Helper function to verify JWT and extract user info (optional for guest verification)
 const verifyAuth = async (authHeader: string | null, supabaseUrl: string, supabaseAnonKey: string) => {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    throw new Error('Missing or invalid authorization header');
+    return null; // Return null for guest users
   }
 
   const token = authHeader.substring(7);
   const supabase = createClient(supabaseUrl, supabaseAnonKey);
   
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-  
-  if (error || !user) {
-    throw new Error('Invalid or expired token');
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user) {
+      return null;
+    }
+    
+    return user;
+  } catch (error) {
+    return null;
   }
-  
-  return user;
 };
 
 serve(async (req) => {
@@ -55,10 +59,12 @@ serve(async (req) => {
       );
     }
 
-    // Verify authentication for non-fallback requests
+    // Try to verify authentication (optional for guest verification)
     const authHeader = req.headers.get('authorization');
-    let user = null;
+    const user = await verifyAuth(authHeader, supabaseUrl, supabaseAnonKey);
     
+    console.log('Auth check result:', { hasUser: !!user, userEmail: user?.email });
+
     const requestBody = await req.text();
     let parsedData;
     try {
@@ -83,21 +89,6 @@ serve(async (req) => {
       backupData,
       skipDbInsert = false
     } = parsedData;
-
-    // Require authentication for non-fallback operations
-    if (!fallbackMode) {
-      try {
-        user = await verifyAuth(authHeader, supabaseUrl, supabaseAnonKey);
-      } catch (authError) {
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: "Authentication required" 
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
-        );
-      }
-    }
 
     const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
 
@@ -127,7 +118,8 @@ serve(async (req) => {
           throw new Error(`Unknown payment identifier format`);
         }
 
-        // Validate that the payment belongs to the authenticated user
+        // For authenticated users, validate that the payment belongs to them
+        // For guest users, we rely on the backup data validation
         if (user && isCheckoutSession) {
           if (stripeObject.customer_email !== user.email) {
             return new Response(
@@ -159,14 +151,15 @@ serve(async (req) => {
         }
 
       } catch (stripeError) {
+        console.error('Stripe verification error:', stripeError);
         verificationResult.error = `Stripe verification failed`;
       }
     }
 
-    // Fallback verification with additional security checks
+    // Fallback verification with guest support
     if ((fallbackMode || !verificationResult.paymentVerified) && backupData) {
       if (backupData.items && Array.isArray(backupData.items) && backupData.items.length > 0) {
-        // Additional validation for fallback mode
+        // For authenticated users, validate email match
         if (user && backupData.customer?.email !== user.email) {
           return new Response(
             JSON.stringify({ 
@@ -174,6 +167,17 @@ serve(async (req) => {
               error: "Backup data does not match authenticated user" 
             }),
             { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
+          );
+        }
+        
+        // For guest users, validate that backup data contains contact email
+        if (!user && !backupData.customer?.email) {
+          return new Response(
+            JSON.stringify({ 
+              success: false, 
+              error: "Guest checkout requires customer email in backup data" 
+            }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
           );
         }
         
@@ -199,7 +203,7 @@ serve(async (req) => {
       );
     }
 
-    // Database insertion with proper authorization
+    // Database insertion with guest support
     if (verificationResult.success && backupData && !skipDbInsert) {
       try {
         const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
@@ -210,6 +214,10 @@ serve(async (req) => {
         });
 
         const paymentStatus = verificationResult.used_fallback ? 'processed' : (verificationResult.paymentVerified ? 'paid' : 'pending');
+        
+        // Use guest defaults if no user is authenticated
+        const billingEmail = user?.email || backupData.customer?.email || 'guest@mygravelguy.com';
+        const billingName = backupData.customer?.name || 'Guest User';
         
         const orderRecords = backupData.items.map(item => ({
           order_id: verificationResult.orderId,
@@ -229,8 +237,8 @@ serve(async (req) => {
           delivery_email: item.delivery_email,
           delivery_time_preference: item.delivery_time_preference,
           delivery_instructions: item.delivery_instructions,
-          billing_name: item.customer_name || 'Guest User',
-          billing_email: item.customer_email || 'guest@mygravelguy.com',
+          billing_name: billingName,
+          billing_email: billingEmail,
           status: paymentStatus,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
@@ -266,19 +274,26 @@ serve(async (req) => {
         
         const totalAmount = backupData.items.reduce((sum, item) => sum + item.total_price, 0);
         
+        console.log('Order saved successfully:', { 
+          orderId: verificationResult.orderId, 
+          userType: user ? 'authenticated' : 'guest',
+          customerEmail: billingEmail 
+        });
+        
         return new Response(
           JSON.stringify({
             success: true,
             payment_status: paymentStatus,
             orderId: verificationResult.orderId,
             orders: transformedOrders,
-            customer_email: backupData.customer?.email || 'guest@mygravelguy.com',
-            customer_name: backupData.customer?.name || 'Guest User',
+            customer_email: billingEmail,
+            customer_name: billingName,
             payment_intent_id: paymentIntentId,
             total_amount: totalAmount,
             timestamp: new Date().toISOString(),
             verification_method: verificationResult.verification_method,
-            used_fallback: verificationResult.used_fallback
+            used_fallback: verificationResult.used_fallback,
+            user_type: user ? 'authenticated' : 'guest'
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -287,7 +302,7 @@ serve(async (req) => {
         );
 
       } catch (dbError) {
-        // Don't fail the verification if DB insert fails, but log securely
+        console.error('Database operation failed:', dbError);
         verificationResult.error = 'Database operation failed';
       }
     }
@@ -301,6 +316,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
+    console.error('Payment verification error:', error);
     return new Response(
       JSON.stringify({ 
         success: false, 
