@@ -109,13 +109,25 @@ serve(async (req) => {
         let stripeObject;
         let isCheckoutSession = false;
 
+        console.log('=== STRIPE VERIFICATION START ===', { paymentIntentId });
+
         if (paymentIntentId.startsWith('cs_')) {
           stripeObject = await stripe.checkout.sessions.retrieve(paymentIntentId);
           isCheckoutSession = true;
+          console.log('Retrieved checkout session:', { 
+            id: stripeObject.id,
+            status: stripeObject.status,
+            payment_status: stripeObject.payment_status,
+            payment_intent: stripeObject.payment_intent
+          });
         } else if (paymentIntentId.startsWith('pi_')) {
           stripeObject = await stripe.paymentIntents.retrieve(paymentIntentId);
+          console.log('Retrieved payment intent:', { 
+            id: stripeObject.id,
+            status: stripeObject.status
+          });
         } else {
-          throw new Error(`Unknown payment identifier format`);
+          throw new Error(`Unknown payment identifier format: ${paymentIntentId}`);
         }
 
         // For authenticated users, validate that the payment belongs to them
@@ -135,29 +147,44 @@ serve(async (req) => {
         let paymentSuccess = false;
         if (isCheckoutSession) {
           paymentSuccess = stripeObject.status === 'complete' && stripeObject.payment_status === 'paid';
+          // IMPORTANT: Always set the Stripe IDs in verification result
           verificationResult.sessionId = stripeObject.id;
           verificationResult.paymentIntentId = stripeObject.payment_intent;
+          console.log('=== STRIPE IDs CAPTURED ===', {
+            sessionId: verificationResult.sessionId,
+            paymentIntentId: verificationResult.paymentIntentId
+          });
         } else {
           paymentSuccess = stripeObject.status === 'succeeded';
           verificationResult.paymentIntentId = stripeObject.id;
+          console.log('=== PAYMENT INTENT ID CAPTURED ===', {
+            paymentIntentId: verificationResult.paymentIntentId
+          });
         }
 
         if (paymentSuccess) {
           verificationResult.success = true;
           verificationResult.paymentVerified = true;
           verificationResult.verification_method = 'stripe_verified';
+          console.log('=== STRIPE VERIFICATION SUCCESS ===', verificationResult);
         } else {
           verificationResult.error = `Payment not successful. Status: ${stripeObject.status}`;
+          console.log('=== STRIPE VERIFICATION FAILED ===', { 
+            status: stripeObject.status,
+            payment_status: isCheckoutSession ? stripeObject.payment_status : 'N/A'
+          });
         }
 
       } catch (stripeError) {
         console.error('Stripe verification error:', stripeError);
-        verificationResult.error = `Stripe verification failed`;
+        verificationResult.error = `Stripe verification failed: ${stripeError.message}`;
       }
     }
 
     // Fallback verification with guest support
     if ((fallbackMode || !verificationResult.paymentVerified) && backupData) {
+      console.log('=== FALLBACK VERIFICATION START ===', { fallbackMode, hasBackupData: !!backupData });
+      
       if (backupData.items && Array.isArray(backupData.items) && backupData.items.length > 0) {
         // For authenticated users, validate email match
         if (user && backupData.customer?.email !== user.email) {
@@ -187,13 +214,26 @@ serve(async (req) => {
         verificationResult.used_fallback = true;
         verificationResult.orderId = backupData.orderId;
         verificationResult.error = null;
+
+        // IMPORTANT: For fallback mode, try to preserve any Stripe IDs from URL or backup
+        if (paymentIntentId) {
+          if (paymentIntentId.startsWith('cs_')) {
+            verificationResult.sessionId = paymentIntentId;
+          } else if (paymentIntentId.startsWith('pi_')) {
+            verificationResult.paymentIntentId = paymentIntentId;
+          }
+        }
+
+        console.log('=== FALLBACK VERIFICATION SUCCESS ===', verificationResult);
       } else {
         verificationResult.error = 'Invalid backup data: missing or empty items';
+        console.log('=== FALLBACK VERIFICATION FAILED ===', verificationResult.error);
       }
     }
 
-    // Skip database operations if requested
+    // Skip database operations if requested - but still return Stripe IDs
     if (skipDbInsert) {
+      console.log('=== SKIPPING DB INSERT - RETURNING VERIFICATION RESULT ===', verificationResult);
       return new Response(
         JSON.stringify(verificationResult),
         {
