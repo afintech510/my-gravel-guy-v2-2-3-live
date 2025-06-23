@@ -284,8 +284,10 @@ const ShoppingModule = () => {
   return <div className="py-8 md:py-16 px-4 bg-white">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-6 md:mb-8">
-          <Scale className="h-8 w-8" />
-          <h2 className="text-2xl md:text-3xl font-bold mb-4 mx-0">Quick Price Compare </h2>
+          <div className="flex justify-center items-center gap-2 mb-4">
+            <Scale className="h-8 w-8" />
+            <h2 className="text-2xl md:text-3xl font-bold m-0">Quick Price Compare</h2>
+          </div>
           
         </div>
 
