@@ -1,13 +1,16 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, MessageSquare } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Loader2, MessageSquare, Package } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import OrdersTable from '@/components/dashboard/OrdersTable';
 import LoginPrompt from '@/components/dashboard/LoginPrompt';
+import MessageInbox from '@/components/messaging/MessageInbox';
+import ConversationThread from '@/components/messaging/ConversationThread';
 
 const Dashboard = () => {
   const { user, loading, isAdmin, signOut } = useAuth();
+  const [selectedPhoneNumber, setSelectedPhoneNumber] = useState<string | null>(null);
   
   // Loading state - show spinner while checking authentication
   if (loading) {
@@ -64,13 +67,6 @@ const Dashboard = () => {
               <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
                 SECURE MODE
               </span>
-              <Link
-                to="/dashboard/comm"
-                className="flex items-center text-gray-600 hover:text-gray-900 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg transition-colors"
-              >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Messages
-              </Link>
               <button
                 onClick={signOut}
                 className="text-gray-600 hover:text-gray-900"
@@ -89,7 +85,46 @@ const Dashboard = () => {
       </div>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <OrdersTable />
+        <Tabs defaultValue="orders" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="orders" className="flex items-center gap-2">
+              <Package className="h-4 w-4" />
+              Orders
+            </TabsTrigger>
+            <TabsTrigger value="messages" className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              Messages
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="orders" className="mt-6">
+            <OrdersTable />
+          </TabsContent>
+          
+          <TabsContent value="messages" className="mt-6">
+            <div className="bg-white rounded-lg shadow-lg h-[calc(100vh-250px)]">
+              <div className="flex h-full">
+                {/* Left sidebar - Message inbox */}
+                <div className={`${selectedPhoneNumber ? 'w-1/3' : 'w-full'} border-r border-gray-200 transition-all duration-300`}>
+                  <MessageInbox 
+                    selectedPhoneNumber={selectedPhoneNumber}
+                    onSelectPhone={setSelectedPhoneNumber}
+                  />
+                </div>
+                
+                {/* Right panel - Conversation thread */}
+                {selectedPhoneNumber && (
+                  <div className="w-2/3">
+                    <ConversationThread 
+                      phoneNumber={selectedPhoneNumber}
+                      onClose={() => setSelectedPhoneNumber(null)}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
