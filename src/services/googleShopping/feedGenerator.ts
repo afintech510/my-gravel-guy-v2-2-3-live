@@ -1,7 +1,7 @@
 
 import { Product } from '@/services/productTypes';
 import { getProducts } from '@/services/productService';
-import { calculateProductExponentialPrice } from '@/services/products/exponentialPricing';
+import { calculateFinalPrice } from '@/services/products/pricingUtils';
 
 export interface GoogleShoppingProduct {
   id: string;
@@ -17,46 +17,78 @@ export interface GoogleShoppingProduct {
   mpn?: string;
   product_type: string;
   google_product_category: string;
-  shipping_weight: string;
-  custom_label_0?: string; // For geographic targeting
-  custom_label_1?: string; // For material type
-  custom_label_2?: string; // For size
-  custom_label_3?: string; // For usage type
-  custom_label_4?: string; // For pricing tier
+  shipping: string;
+  tax: string;
+  custom_label_0?: string; // For material type
+  custom_label_1?: string; // For size
+  custom_label_2?: string; // For usage type
+  custom_label_3?: string; // For pricing tier
+  custom_label_4?: string; // For availability
 }
 
 export class GoogleShoppingFeedGenerator {
   private baseUrl: string;
   private brandName: string;
   private defaultZipCode: string;
+  private minimumOrderTons: number;
+  private taxRate: number;
 
-  constructor(baseUrl: string = 'https://mygravelguy.com', brandName: string = 'My Gravel Guy', defaultZipCode: string = '75001') {
+  constructor(
+    baseUrl: string = 'https://mygravelguy.com', 
+    brandName: string = 'My Gravel Guy', 
+    defaultZipCode: string = '75001',
+    minimumOrderTons: number = 3,
+    taxRate: number = 0.08 // 8% default tax rate
+  ) {
     this.baseUrl = baseUrl;
     this.brandName = brandName;
     this.defaultZipCode = defaultZipCode;
+    this.minimumOrderTons = minimumOrderTons;
+    this.taxRate = taxRate;
   }
 
   /**
-   * Generate Google Shopping feed for all products
+   * Generate Google Shopping feed for all products with flat pricing
    */
-  async generateFeed(zipCode?: string): Promise<GoogleShoppingProduct[]> {
+  async generateFeed(): Promise<GoogleShoppingProduct[]> {
     const products = await getProducts();
-    const targetZip = zipCode || this.defaultZipCode;
     
-    console.log(`Generating Google Shopping feed for ${products.length} products in zip code ${targetZip}`);
+    console.log(`Generating Google Shopping feed for ${products.length} products with ${this.minimumOrderTons}-ton minimum order`);
     
-    return products.map(product => this.convertToGoogleShoppingProduct(product, targetZip));
+    const googleProducts: GoogleShoppingProduct[] = [];
+    
+    for (const product of products) {
+      try {
+        const googleProduct = await this.convertToGoogleShoppingProduct(product);
+        googleProducts.push(googleProduct);
+      } catch (error) {
+        console.error(`Error converting product ${product.id} to Google Shopping format:`, error);
+        // Continue with other products even if one fails
+      }
+    }
+    
+    return googleProducts;
   }
 
   /**
-   * Convert internal product to Google Shopping format
+   * Convert internal product to Google Shopping format with flat pricing
    */
-  private convertToGoogleShoppingProduct(product: Product, zipCode: string): GoogleShoppingProduct {
-    // Calculate price for standard 10-ton quantity
-    const pricingResult = calculateProductExponentialPrice(product, 10);
-    const basePrice = Math.round(pricingResult.pricePerTon * 100) / 100;
+  private async convertToGoogleShoppingProduct(product: Product): Promise<GoogleShoppingProduct> {
+    // Calculate price for minimum order quantity (3 tons) with flat pricing
+    const pricingResult = await calculateFinalPrice(
+      product, 
+      this.minimumOrderTons, 
+      this.defaultZipCode
+    );
     
-    // Generate proper product URL
+    // Calculate total price for minimum order including tax
+    const totalOrderPrice = pricingResult.finalPrice;
+    const priceWithTax = Math.round(totalOrderPrice * (1 + this.taxRate) * 100) / 100;
+    
+    // Calculate per-ton price for display
+    const pricePerTon = Math.round(priceWithTax / this.minimumOrderTons * 100) / 100;
+    
+    // Generate proper product URL without zip parameters
     const productUrl = `${this.baseUrl}/products/${encodeURIComponent(product.slug)}`;
     
     // Get primary image with fallback
@@ -68,9 +100,6 @@ export class GoogleShoppingFeedGenerator {
     // Create product type hierarchy
     const productType = this.createProductTypeHierarchy(product);
     
-    // Calculate shipping weight (tons to pounds)
-    const shippingWeight = this.calculateShippingWeight(product);
-    
     return {
       id: product.id.toString(),
       title: this.createOptimizedTitle(product),
@@ -78,17 +107,18 @@ export class GoogleShoppingFeedGenerator {
       link: productUrl,
       image_link: imageUrl,
       condition: 'new',
-      availability: 'in_stock', // Bulk materials are typically always available
-      price: `${basePrice} USD`,
+      availability: 'in_stock',
+      price: `${pricePerTon} USD`,
       brand: this.brandName,
       product_type: productType,
       google_product_category: googleCategory,
-      shipping_weight: shippingWeight,
-      custom_label_0: this.getGeographicLabel(zipCode),
-      custom_label_1: product.category,
-      custom_label_2: product.size || 'Various',
-      custom_label_3: product.usage || 'General',
-      custom_label_4: this.getPricingTier(basePrice)
+      shipping: 'Free', // Always free shipping
+      tax: 'Included', // Tax included in price
+      custom_label_0: product.category,
+      custom_label_1: product.size || 'Various',
+      custom_label_2: product.usage || 'General',
+      custom_label_3: this.getPricingTier(pricePerTon),
+      custom_label_4: 'Available'
     };
   }
 
@@ -112,8 +142,8 @@ export class GoogleShoppingFeedGenerator {
       title += ' Base Material';
     }
     
-    // Add "Bulk Delivery" to indicate service type
-    title += ' - Bulk Delivery';
+    // Add minimum order information
+    title += ` - ${this.minimumOrderTons} Ton Minimum - Free Delivery`;
     
     // Ensure title doesn't exceed Google's 150 character limit
     return title.length > 150 ? title.substring(0, 147) + '...' : title;
@@ -125,12 +155,17 @@ export class GoogleShoppingFeedGenerator {
   private createOptimizedDescription(product: Product): string {
     let description = product.description;
     
+    // Add minimum order and pricing information
+    description += ` Minimum order: ${this.minimumOrderTons} tons.`;
+    description += ' Free delivery included.';
+    description += ' Tax included in price.';
+    
     // Add key selling points
     const sellingPoints = [
-      'Bulk delivery available',
       'Professional grade materials',
       'Local supplier network',
-      'Competitive pricing'
+      'Competitive flat-rate pricing',
+      'Same-day or next-day delivery available'
     ];
     
     // Add material specifications
@@ -228,67 +263,27 @@ export class GoogleShoppingFeedGenerator {
   }
 
   /**
-   * Calculate shipping weight for bulk materials
-   */
-  private calculateShippingWeight(product: Product): string {
-    // Default weight for 1 ton in pounds (2000 lbs)
-    // This represents minimum order quantity
-    const defaultWeightLbs = 2000;
-    
-    // Adjust based on material density if ton/yard ratio is available
-    if (product.tonYardRatio) {
-      // Higher ratio means denser material
-      const adjustedWeight = defaultWeightLbs * (product.tonYardRatio / 1.5);
-      return `${Math.round(adjustedWeight)} lb`;
-    }
-    
-    return `${defaultWeightLbs} lb`;
-  }
-
-  /**
-   * Get geographic label for targeting
-   */
-  private getGeographicLabel(zipCode: string): string {
-    // Extract state/region from zip code (simplified mapping)
-    const firstDigit = zipCode.charAt(0);
-    const regionMap: Record<string, string> = {
-      '0': 'Northeast',
-      '1': 'Northeast', 
-      '2': 'Southeast',
-      '3': 'Southeast',
-      '4': 'Southeast',
-      '5': 'Midwest',
-      '6': 'South-Central',
-      '7': 'South-Central',
-      '8': 'Mountain',
-      '9': 'West'
-    };
-    
-    return regionMap[firstDigit] || 'National';
-  }
-
-  /**
    * Determine pricing tier for segmentation
    */
-  private getPricingTier(price: number): string {
-    if (price < 30) return 'Budget';
-    if (price < 60) return 'Standard';
-    if (price < 100) return 'Premium';
+  private getPricingTier(pricePerTon: number): string {
+    if (pricePerTon < 30) return 'Budget';
+    if (pricePerTon < 60) return 'Standard';
+    if (pricePerTon < 100) return 'Premium';
     return 'Specialty';
   }
 
   /**
    * Generate XML feed format for Google Merchant Center
    */
-  async generateXMLFeed(zipCode?: string): Promise<string> {
-    const products = await this.generateFeed(zipCode);
+  async generateXMLFeed(): Promise<string> {
+    const products = await this.generateFeed();
     
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
     xml += '<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">\n';
     xml += '<channel>\n';
     xml += `<title>${this.brandName} Product Feed</title>\n`;
     xml += `<link>${this.baseUrl}</link>\n`;
-    xml += '<description>Premium landscaping materials with bulk delivery</description>\n';
+    xml += '<description>Premium landscaping materials with bulk delivery - minimum 3 ton orders</description>\n';
     
     products.forEach(product => {
       xml += '<item>\n';
@@ -303,7 +298,8 @@ export class GoogleShoppingFeedGenerator {
       xml += `<g:brand>${this.escapeXml(product.brand)}</g:brand>\n`;
       xml += `<g:product_type>${this.escapeXml(product.product_type)}</g:product_type>\n`;
       xml += `<g:google_product_category>${product.google_product_category}</g:google_product_category>\n`;
-      xml += `<g:shipping_weight>${product.shipping_weight}</g:shipping_weight>\n`;
+      xml += `<g:shipping>${product.shipping}</g:shipping>\n`;
+      xml += `<g:tax>${product.tax}</g:tax>\n`;
       xml += `<g:custom_label_0>${this.escapeXml(product.custom_label_0 || '')}</g:custom_label_0>\n`;
       xml += `<g:custom_label_1>${this.escapeXml(product.custom_label_1 || '')}</g:custom_label_1>\n`;
       xml += `<g:custom_label_2>${this.escapeXml(product.custom_label_2 || '')}</g:custom_label_2>\n`;
