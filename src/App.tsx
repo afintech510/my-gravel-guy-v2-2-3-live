@@ -9,6 +9,7 @@ import { CartProvider } from '@/contexts/CartContext';
 import { ZipCodeProvider } from '@/contexts/ZipCodeContext';
 import { QuizProvider } from '@/contexts/QuizContext';
 import { BlogProvider } from '@/contexts/BlogContext';
+import Layout from './components/Layout';
 import Index from "./pages/Index";
 import Products from "./pages/Products";
 import Calculator from "./pages/Calculator";
@@ -70,43 +71,45 @@ const App = () => (
                 <BrowserRouter>
                   <ScrollToTop />
                   <RouteTracker />
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/products" element={<Products />} />
-                    <Route path="/calculator" element={<Calculator />} />
-                    <Route path="/calculator-shop" element={<CalculatorShop />} />
-                    <Route path="/product/:productName" element={<ProductDetail />} />
-                    <Route path="/product-calculator/:productName" element={<ProductCalculator />} />
-                    <Route path="/cart" element={<Cart />} />
-                    <Route path="/checkout" element={<Checkout />} />
-                    <Route path="/success" element={<PaymentSuccess />} />
-                    <Route path="/stripe-test" element={<StripeTest />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/delivery-info" element={<DeliveryInfo />} />
-                    <Route path="/locations" element={<LocationsIndex />} />
-                    <Route path="/locations/:region/:state/:city" element={<LocationPage />} />
-                    <Route path="/delivery-map" element={<DeliveryMap />} />
-                    <Route path="/bulk-landscape-materials" element={<BulkLandscapeMaterials />} />
-                    <Route path="/faq" element={<FAQ />} />
-                    <Route path="/reviews" element={<Reviews />} />
-                    <Route path="/quiz" element={<Quiz />} />
-                    <Route path="/shop" element={<Shop />} />
-                    <Route path="/blog" element={<Blog />} />
-                    <Route path="/blog/:slug" element={<BlogPost />} />
-                    <Route path="/blog/category/:categorySlug" element={<BlogCategory />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/signup" element={<Signup />} />
-                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                    <Route path="/terms-of-service" element={<TermsOfService />} />
-                    <Route path="/refund-policy" element={<RefundPolicy />} />
-                    <Route path="/sms-consent" element={<SMSConsent />} />
-                    <Route path="/google-shopping" element={<GoogleShopping />} />
-                    <Route path="/sitemap" element={<Sitemap />} />
-                    <Route path="/sitemap.xml" element={<SitemapXML />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
+                  <Layout>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/products" element={<Products />} />
+                      <Route path="/calculator" element={<Calculator />} />
+                      <Route path="/calculator-shop" element={<CalculatorShop />} />
+                      <Route path="/product/:productName" element={<ProductDetail />} />
+                      <Route path="/product-calculator/:productName" element={<ProductCalculator />} />
+                      <Route path="/cart" element={<Cart />} />
+                      <Route path="/checkout" element={<Checkout />} />
+                      <Route path="/success" element={<PaymentSuccess />} />
+                      <Route path="/stripe-test" element={<StripeTest />} />
+                      <Route path="/contact" element={<Contact />} />
+                      <Route path="/about" element={<About />} />
+                      <Route path="/delivery-info" element={<DeliveryInfo />} />
+                      <Route path="/locations" element={<LocationsIndex />} />
+                      <Route path="/locations/:region/:state/:city" element={<LocationPage />} />
+                      <Route path="/delivery-map" element={<DeliveryMap />} />
+                      <Route path="/bulk-landscape-materials" element={<BulkLandscapeMaterials />} />
+                      <Route path="/faq" element={<FAQ />} />
+                      <Route path="/reviews" element={<Reviews />} />
+                      <Route path="/quiz" element={<Quiz />} />
+                      <Route path="/shop" element={<Shop />} />
+                      <Route path="/blog" element={<Blog />} />
+                      <Route path="/blog/:slug" element={<BlogPost />} />
+                      <Route path="/blog/category/:categorySlug" element={<BlogCategory />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/signup" element={<Signup />} />
+                      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                      <Route path="/terms-of-service" element={<TermsOfService />} />
+                      <Route path="/refund-policy" element={<RefundPolicy />} />
+                      <Route path="/sms-consent" element={<SMSConsent />} />
+                      <Route path="/google-shopping" element={<GoogleShopping />} />
+                      <Route path="/sitemap" element={<Sitemap />} />
+                      <Route path="/sitemap.xml" element={<SitemapXML />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </Layout>
                 </BrowserRouter>
               </BlogProvider>
             </QuizProvider>
