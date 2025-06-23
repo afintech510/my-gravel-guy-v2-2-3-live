@@ -40,12 +40,12 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white dark:bg-gray-900 border-b z-40">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="bg-white dark:bg-gray-900 border-b z-40 w-full">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14">
           <div className="flex-1">
             {/* Theme Toggle positioned to the left of the logo */}
-            <div className="absolute left-4 md:left-[calc((100%-72rem)/2+1rem)] -top-1 z-50 flex items-center gap-2">
+            <div className="absolute left-4 -top-1 z-50 flex items-center gap-2">
               {/*     <ThemeToggle /> */}
               {/* Logo floating above banner and navbar */}
               <Link to="/">

@@ -10,8 +10,10 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="min-h-screen">
-      <TopBanner />
-      <Navbar />
+      <div className="sticky top-0 z-50 w-full">
+        <TopBanner />
+        <Navbar />
+      </div>
       <main>
         {children}
       </main>
