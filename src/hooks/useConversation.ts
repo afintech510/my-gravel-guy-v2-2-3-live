@@ -33,13 +33,20 @@ export const useConversation = (phoneNumber: string) => {
       setLoading(true);
       setError(null);
 
-      const { data, error } = await supabase.functions.invoke('get-messages', {
-        body: { phone_number: phoneNumber }
+      // Make a GET request with phone_number as a query parameter
+      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/get-messages?phone_number=${encodeURIComponent(phoneNumber)}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${supabase.supabaseKey}`,
+          'Content-Type': 'application/json',
+        },
       });
 
-      if (error) {
-        throw new Error(error.message || 'Failed to fetch conversation');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      const data = await response.json();
 
       if (!data?.messages) {
         throw new Error('Invalid response format');
@@ -80,9 +87,18 @@ export const useConversation = (phoneNumber: string) => {
 
   const markAsRead = useCallback(async () => {
     try {
-      await supabase.functions.invoke('mark-messages-read', {
-        body: { phoneNumber }
+      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/mark-messages-read`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabase.supabaseKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phoneNumber }),
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
     } catch (error) {
       console.error('Error marking messages as read:', error);
     }

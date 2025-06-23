@@ -25,11 +25,20 @@ export const useMessages = () => {
       setLoading(true);
       setError(null);
 
-      const { data, error } = await supabase.functions.invoke('get-messages');
+      // Make a GET request to fetch all conversations (no phone_number parameter)
+      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/get-messages`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${supabase.supabaseKey}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
-      if (error) {
-        throw new Error(error.message || 'Failed to fetch conversations');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      const data = await response.json();
 
       if (!data?.conversations) {
         throw new Error('Invalid response format');
