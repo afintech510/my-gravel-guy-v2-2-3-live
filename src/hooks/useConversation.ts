@@ -33,79 +33,78 @@ export const useConversation = (phoneNumber: string) => {
       setLoading(true);
       setError(null);
 
-      // Mock data for demonstration - replace with actual database queries
-      const mockMessages: Message[] = [
-        {
-          id: '1',
-          direction: 'outbound',
-          body: 'Hi! Your gravel delivery for order ORD-2024-001 is scheduled for tomorrow between 9-11 AM. Please ensure the delivery area is accessible.',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-          userEmail: 'admin@mygravelguy.com',
-          status: 'delivered'
-        },
-        {
-          id: '2',
-          direction: 'inbound',
-          body: 'Sounds good! Will be home. Thanks for the update.',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 23).toISOString()
-        },
-        {
-          id: '3',
-          direction: 'outbound',
-          body: 'Perfect! Our driver will call when they are 15 minutes away.',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 22).toISOString(),
-          userEmail: 'admin@mygravelguy.com',
-          status: 'delivered'
-        },
-        {
-          id: '4',
-          direction: 'inbound',
-          body: 'Thank you for the delivery! The gravel looks great.',
-          mediaUrls: ['https://via.placeholder.com/300x200/4f46e5/ffffff?text=Delivered+Gravel'],
-          timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString()
-        }
-      ];
+      const { data, error } = await supabase.functions.invoke('get-messages', {
+        body: { phone_number: phoneNumber }
+      });
 
-      const mockCustomerInfo: CustomerInfo = {
-        name: 'John Smith',
-        orderId: 'ORD-2024-001',
-        deliveryAddress: '123 Main St, Springfield, IL 62701',
-        products: 'Pea Gravel (2 tons)',
-        deliveryDate: 'March 15, 2024'
-      };
+      if (error) {
+        throw new Error(error.message || 'Failed to fetch conversation');
+      }
 
-      setMessages(mockMessages);
-      setCustomerInfo(mockCustomerInfo);
+      if (!data?.messages) {
+        throw new Error('Invalid response format');
+      }
+
+      // Transform database messages to UI format
+      const transformedMessages = data.messages.map((msg: any) => ({
+        id: msg.id,
+        direction: msg.direction,
+        body: msg.body || '',
+        mediaUrls: msg.media_urls || undefined,
+        timestamp: msg.created_at,
+        userEmail: msg.user_email || undefined,
+        status: msg.status || 'sent'
+      }));
+
+      setMessages(transformedMessages);
+
+      // Extract customer info from the first message with customer data
+      const messageWithCustomerInfo = data.messages.find((msg: any) => 
+        msg.customer_name || msg.order_id
+      );
+
+      if (messageWithCustomerInfo) {
+        setCustomerInfo({
+          name: messageWithCustomerInfo.customer_name,
+          orderId: messageWithCustomerInfo.order_id
+        });
+      }
+
     } catch (err) {
       console.error('Error fetching conversation:', err);
-      setError('Failed to load conversation');
+      setError(err instanceof Error ? err.message : 'Failed to load conversation');
     } finally {
       setLoading(false);
     }
   }, [phoneNumber]);
 
   const markAsRead = useCallback(async () => {
-    // Mark messages as read in the database
-    console.log('Marking messages as read for:', phoneNumber);
+    try {
+      await supabase.functions.invoke('mark-messages-read', {
+        body: { phoneNumber }
+      });
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
+    }
   }, [phoneNumber]);
 
   useEffect(() => {
     fetchConversation();
 
     // Set up real-time subscription
-    // const subscription = supabase
-    //   .channel(`conversation:${phoneNumber}`)
-    //   .on('postgres_changes', 
-    //     { event: '*', schema: 'public', table: 'messages', filter: `delivery_phone=eq.${phoneNumber}` }, 
-    //     () => {
-    //       fetchConversation();
-    //     }
-    //   )
-    //   .subscribe();
+    const subscription = supabase
+      .channel(`conversation:${phoneNumber}`)
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'messages', filter: `phone_number=eq.${phoneNumber}` }, 
+        () => {
+          fetchConversation();
+        }
+      )
+      .subscribe();
 
-    // return () => {
-    //   subscription.unsubscribe();
-    // };
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [fetchConversation]);
 
   return {
