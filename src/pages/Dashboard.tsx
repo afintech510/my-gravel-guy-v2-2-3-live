@@ -1,22 +1,71 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, MessageSquare, Package } from 'lucide-react';
+import { Loader2, MessageSquare, Package, AlertCircle, RefreshCw } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import OrdersTable from '@/components/dashboard/OrdersTable';
 import LoginPrompt from '@/components/dashboard/LoginPrompt';
 import MessageInbox from '@/components/messaging/MessageInbox';
 import ConversationThread from '@/components/messaging/ConversationThread';
 
 const Dashboard = () => {
-  const { user, loading, isAdmin, signOut } = useAuth();
+  const { user, loading, isAdmin, signOut, error, clearSession } = useAuth();
   const [selectedPhoneNumber, setSelectedPhoneNumber] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   
-  // Loading state - show spinner while checking authentication
+  // Loading state with timeout message
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600 mb-2">Loading dashboard...</p>
+          {retryCount > 0 && (
+            <p className="text-sm text-gray-500">
+              If this takes too long, try refreshing the page
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Error state with recovery options
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 text-center">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Dashboard Error</h1>
+          <p className="text-gray-600 mb-4">{error}</p>
+          
+          <div className="space-y-3">
+            <Button
+              onClick={() => window.location.reload()}
+              className="w-full"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Refresh Page
+            </Button>
+            
+            <Button
+              onClick={clearSession}
+              variant="outline"
+              className="w-full"
+            >
+              Clear Session & Retry
+            </Button>
+            
+            <Button
+              onClick={() => window.location.href = '/'}
+              variant="ghost"
+              className="w-full"
+            >
+              Return Home
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
