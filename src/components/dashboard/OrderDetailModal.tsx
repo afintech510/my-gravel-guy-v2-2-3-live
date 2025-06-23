@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,11 +10,14 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Lock, Unlock, Upload, Mail, Save, FileText, User, MapPin, DollarSign } from 'lucide-react';
+import { Lock, Unlock, Upload, Mail, Save, FileText, User, MapPin, DollarSign, MessageSquare, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { GroupedOrder, OrderStatus } from '@/types/order.types';
 import { OrderService } from '@/services/orderService';
+import { useOrderSMS, SMS_TEMPLATES } from '@/hooks/useOrderSMS';
 import SupplierSelector from './SupplierSelector';
+import SMSTemplateSelector from './SMSTemplateSelector';
+import SMSPreview from './SMSPreview';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -33,6 +35,8 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   onOrderUpdate
 }) => {
   const { toast } = useToast();
+  const { sendOrderSMS, isLoading: isSendingSMS, formatTemplate, getTemplateData } = useOrderSMS();
+  
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [status, setStatus] = useState<OrderStatus>(order?.status || 'pending');
   const [internalNotes, setInternalNotes] = useState('');
@@ -43,6 +47,11 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [isSavingSupplier, setIsSavingSupplier] = useState(false);
+  
+  // SMS state
+  const [selectedTemplate, setSelectedTemplate] = useState('');
+  const [customMessage, setCustomMessage] = useState('');
+  const [smsPhoneNumber, setSmsPhoneNumber] = useState('');
 
   // Reset form when order changes
   React.useEffect(() => {
@@ -53,10 +62,31 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
       setSupplierCharges(order.items[0]?.supplier_charges?.toString() || '');
       setEmailNote('');
       setIsUnlocked(false);
+      
+      // Set default SMS phone number from delivery info
+      const deliveryPhone = order.items[0]?.delivery_phone || '';
+      setSmsPhoneNumber(deliveryPhone);
+      setSelectedTemplate('');
+      setCustomMessage('');
     }
   }, [order]);
 
   if (!order) return null;
+
+  // Get formatted template data
+  const templateData = getTemplateData(order);
+
+  // Get preview message
+  const getPreviewMessage = () => {
+    if (selectedTemplate === 'custom') {
+      return customMessage;
+    }
+    const template = SMS_TEMPLATES.find(t => t.id === selectedTemplate);
+    if (template) {
+      return formatTemplate(template.message, templateData);
+    }
+    return '';
+  };
 
   const handleStatusUpdate = async () => {
     if (!isUnlocked) {
@@ -171,7 +201,6 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
     try {
       setIsSending(true);
       
-      // Create email template
       const emailHtml = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #333;">Order Update - ${order.order_id}</h2>
@@ -234,7 +263,6 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // In a real implementation, you'd upload to Supabase storage
       toast({
         title: "File Upload",
         description: `File "${file.name}" uploaded successfully`,
@@ -252,6 +280,39 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
       case 'cancelled': return 'bg-red-100 text-red-800';
       case 'paid': return 'bg-emerald-100 text-emerald-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const handleSendSMS = async () => {
+    if (!smsPhoneNumber.trim()) {
+      toast({
+        title: "Phone Number Required",
+        description: "Please enter a phone number",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const message = getPreviewMessage();
+    if (!message.trim()) {
+      toast({
+        title: "Message Required",
+        description: "Please select a template or enter a custom message",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const success = await sendOrderSMS(
+      smsPhoneNumber,
+      message,
+      order.order_id,
+      selectedTemplate === 'custom' ? 'custom' : 'order_update'
+    );
+
+    if (success) {
+      setSelectedTemplate('');
+      setCustomMessage('');
     }
   };
 
@@ -285,11 +346,12 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
         </DialogHeader>
 
         <Tabs defaultValue="details" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="details">Details</TabsTrigger>
             <TabsTrigger value="status">Status & Notes</TabsTrigger>
             <TabsTrigger value="supplier">Supplier</TabsTrigger>
-            <TabsTrigger value="communication">Communication</TabsTrigger>
+            <TabsTrigger value="communication">Email</TabsTrigger>
+            <TabsTrigger value="sms">SMS</TabsTrigger>
           </TabsList>
 
           <TabsContent value="details" className="space-y-4">
@@ -524,6 +586,65 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 >
                   <Mail className="h-4 w-4 mr-2" />
                   {isSending ? 'Sending...' : 'Send Update Email'}
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="sms" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  Send SMS Update
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Phone Number</Label>
+                  <Input
+                    type="tel"
+                    placeholder="+1 (555) 123-4567"
+                    value={smsPhoneNumber}
+                    onChange={(e) => setSmsPhoneNumber(e.target.value)}
+                  />
+                  <p className="text-xs text-gray-500">
+                    Enter phone number with country code (e.g., +1 for US)
+                  </p>
+                </div>
+
+                <SMSTemplateSelector
+                  templates={SMS_TEMPLATES}
+                  selectedTemplate={selectedTemplate}
+                  onTemplateChange={setSelectedTemplate}
+                />
+
+                {selectedTemplate === 'custom' && (
+                  <div className="space-y-2">
+                    <Label>Custom Message</Label>
+                    <Textarea
+                      placeholder="Type your custom SMS message here..."
+                      value={customMessage}
+                      onChange={(e) => setCustomMessage(e.target.value)}
+                      rows={4}
+                    />
+                  </div>
+                )}
+
+                {selectedTemplate && getPreviewMessage() && (
+                  <SMSPreview 
+                    message={getPreviewMessage()} 
+                    phoneNumber={smsPhoneNumber} 
+                  />
+                )}
+
+                <Button 
+                  onClick={handleSendSMS} 
+                  disabled={isSendingSMS || !smsPhoneNumber.trim() || !getPreviewMessage().trim()}
+                  className="w-full"
+                >
+                  <Phone className="h-4 w-4 mr-2" />
+                  {isSendingSMS ? 'Sending...' : 'Send SMS'}
                 </Button>
               </CardContent>
             </Card>
