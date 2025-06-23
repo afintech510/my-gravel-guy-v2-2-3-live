@@ -1,4 +1,3 @@
-
 import { Product } from '@/services/productTypes';
 import { getProducts } from '@/services/productService';
 import { calculateFinalPrice } from '@/services/products/pricingUtils';
@@ -31,20 +30,17 @@ export class GoogleShoppingFeedGenerator {
   private brandName: string;
   private defaultZipCode: string;
   private minimumOrderTons: number;
-  private taxRate: number;
 
   constructor(
     baseUrl: string = 'https://mygravelguy.com', 
     brandName: string = 'My Gravel Guy', 
     defaultZipCode: string = '75001',
-    minimumOrderTons: number = 3,
-    taxRate: number = 0.08 // 8% default tax rate
+    minimumOrderTons: number = 3
   ) {
     this.baseUrl = baseUrl;
     this.brandName = brandName;
     this.defaultZipCode = defaultZipCode;
     this.minimumOrderTons = minimumOrderTons;
-    this.taxRate = taxRate;
   }
 
   /**
@@ -74,19 +70,20 @@ export class GoogleShoppingFeedGenerator {
    * Convert internal product to Google Shopping format with flat pricing
    */
   private async convertToGoogleShoppingProduct(product: Product): Promise<GoogleShoppingProduct> {
-    // Calculate price for minimum order quantity (3 tons) with flat pricing
+    // Calculate price for minimum order quantity (3 tons) - tax and shipping already included
     const pricingResult = await calculateFinalPrice(
       product, 
       this.minimumOrderTons, 
       this.defaultZipCode
     );
     
-    // Calculate total price for minimum order including tax
+    // Use the final price as-is since it already includes tax and shipping
     const totalOrderPrice = pricingResult.finalPrice;
-    const priceWithTax = Math.round(totalOrderPrice * (1 + this.taxRate) * 100) / 100;
     
-    // Calculate per-ton price for display
-    const pricePerTon = Math.round(priceWithTax / this.minimumOrderTons * 100) / 100;
+    // Calculate per-ton price for display (no additional tax needed)
+    const pricePerTon = Math.round(totalOrderPrice / this.minimumOrderTons * 100) / 100;
+    
+    console.log(`Product ${product.name}: Total for ${this.minimumOrderTons} tons = $${totalOrderPrice}, Per ton = $${pricePerTon}`);
     
     // Generate proper product URL without zip parameters
     const productUrl = `${this.baseUrl}/products/${encodeURIComponent(product.slug)}`;
