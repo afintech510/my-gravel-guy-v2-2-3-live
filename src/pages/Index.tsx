@@ -19,7 +19,7 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section - Full width background */}
-      <section className="py-16 px-4 bg-gradient-to-b from-gray-50 to-gray-100 w-screen">
+      <section className="py-16 px-4 bg-gradient-to-b from-gray-50 to-gray-100 w-full">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">AI-Driven Local Gravel Network</h1>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">Get the lowest prices by instantly connecting with your area's best suppliers—AI finds the deals, you save the money.</p>
