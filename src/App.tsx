@@ -44,7 +44,6 @@ import BlogCategory from "./pages/BlogCategory";
 import StripeTest from "./pages/StripeTest";
 import Reviews from "./pages/Reviews";
 import Dashboard from "./pages/Dashboard";
-import MessagingConsole from "./pages/MessagingConsole";
 import Sitemap from "./pages/Sitemap";
 import SitemapXML from "./pages/SitemapXML";
 import SMSConsent from "./pages/SMSConsent";
@@ -111,7 +110,6 @@ function App() {
                       <Route path="/stripe-test" element={<StripeTest />} />
                       <Route path="/reviews" element={<Reviews />} />
                       <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/dashboard/comm" element={<MessagingConsole />} />
                       <Route path="/google-shopping" element={<GoogleShopping />} />
                       <Route path="/sitemap" element={<Sitemap />} />
                       <Route path="/sitemap.xml" element={<SitemapXML />} />
