@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MessageSquare } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import OrdersTable from '@/components/dashboard/OrdersTable';
 import LoginPrompt from '@/components/dashboard/LoginPrompt';
 
@@ -63,6 +64,13 @@ const Dashboard = () => {
               <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
                 SECURE MODE
               </span>
+              <Link
+                to="/dashboard/comm"
+                className="flex items-center text-gray-600 hover:text-gray-900 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg transition-colors"
+              >
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Messages
+              </Link>
               <button
                 onClick={signOut}
                 className="text-gray-600 hover:text-gray-900"
