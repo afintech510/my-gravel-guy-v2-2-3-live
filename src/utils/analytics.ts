@@ -6,7 +6,8 @@ import {
   trackLeadConversion,
   trackAddToCartConversion,
   trackBeginCheckoutConversion,
-  trackCalculatorConversion
+  trackCalculatorConversion,
+  trackPageViewConversion
 } from './googleAdsTracking';
 
 // Define window with gtag
@@ -21,7 +22,7 @@ declare global {
 }
 
 /**
- * Track a page view
+ * Track a page view with Google Ads conversion
  * @param path - The current page path
  * @param title - The page title
  */
@@ -36,6 +37,12 @@ export const trackPageView = (path: string, title?: string) => {
     page_title: title || document.title,
     page_location: window.location.href
   });
+
+  // Track Google Ads page view conversion for key pages
+  const keyPages = ['/shop', '/calculator', '/products'];
+  if (keyPages.some(page => path.includes(page))) {
+    trackPageViewConversion(path);
+  }
 };
 
 /**
@@ -110,6 +117,12 @@ export const trackEcommerce = (
         trackBeginCheckoutConversion(value, items);
       }
       break;
+    case 'view_item':
+      // Track product view conversion
+      if (items.length > 0) {
+        trackEvent('product_view', 'Engagement', items[0].item_name || items[0].name);
+      }
+      break;
   }
 };
 
@@ -179,5 +192,81 @@ export const trackContactSubmission = (
   console.log('Contact submission tracked:', {
     formType,
     source
+  });
+};
+
+/**
+ * Track product interactions
+ * @param productName - Name of the product
+ * @param action - Action taken (view, calculate, quote)
+ * @param value - Optional value
+ */
+export const trackProductInteraction = (
+  productName: string,
+  action: 'view' | 'calculate' | 'quote',
+  value?: number
+) => {
+  // Track GA4 event
+  trackEvent(`product_${action}`, 'Product Engagement', productName, value);
+  
+  // Track Google Ads conversions based on action
+  if (action === 'calculate') {
+    trackCalculatorConversion('product_calculator', productName);
+  } else if (action === 'quote') {
+    trackLeadConversion('product_quote', value);
+  }
+  
+  console.log('Product interaction tracked:', {
+    productName,
+    action,
+    value
+  });
+};
+
+/**
+ * Track add to cart action
+ * @param product - Product being added
+ * @param quantity - Quantity added
+ * @param price - Price per unit
+ */
+export const trackAddToCart = (
+  product: any,
+  quantity: number,
+  price: number
+) => {
+  const value = quantity * price;
+  const items = [{
+    item_id: product.id,
+    item_name: product.name,
+    category: 'Landscape Materials',
+    quantity: quantity,
+    price: price
+  }];
+
+  // Track GA4 ecommerce event
+  trackEcommerce('add_to_cart', items, value);
+  
+  console.log('Add to cart tracked:', {
+    product: product.name,
+    quantity,
+    value
+  });
+};
+
+/**
+ * Track checkout initiation
+ * @param cartItems - Items in cart
+ * @param totalValue - Total cart value
+ */
+export const trackCheckoutBegin = (
+  cartItems: any[],
+  totalValue: number
+) => {
+  // Track GA4 ecommerce event
+  trackEcommerce('begin_checkout', cartItems, totalValue);
+  
+  console.log('Checkout begin tracked:', {
+    items: cartItems.length,
+    totalValue
   });
 };

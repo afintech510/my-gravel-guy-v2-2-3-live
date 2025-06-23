@@ -8,6 +8,7 @@ import CouponCode from '../components/cart/CouponCode';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { trackCheckoutBegin } from '@/utils/analytics';
 
 const Cart = () => {
   const {
@@ -51,7 +52,6 @@ const Cart = () => {
     });
 
     // Check if this update makes all items complete
-    // We need to simulate the updated state since React state updates are async
     const updatedItems = items.map(item => 
       item.id === productId ? { ...item, ...details } : item
     );
@@ -249,6 +249,17 @@ const Cart = () => {
     
     setIsProcessingCheckout(true);
     try {
+      // Track checkout begin with Google Ads conversion
+      const cartItems = items.map(item => ({
+        id: item.id,
+        name: item.name,
+        category: 'Landscape Materials',
+        quantity: item.tons || 1,
+        price: item.price || 0
+      }));
+      
+      trackCheckoutBegin(cartItems, discountTotal);
+
       // Send enhanced cart confirmation email
       await sendCartConfirmationEmail();
 
@@ -288,7 +299,6 @@ const Cart = () => {
 
   return (
     <div className="py-8 px-4 max-w-6xl mx-auto">
-      {/* Add the pricing updater component */}
       <CartPricingUpdater />
       
       <h1 className="text-3xl font-bold mb-8">Confirm Delivery Details</h1>
