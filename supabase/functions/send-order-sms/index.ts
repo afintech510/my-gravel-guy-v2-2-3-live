@@ -1,5 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,6 +10,7 @@ const corsHeaders = {
 interface SMSRequest {
   phoneNumber: string;
   message: string;
+  mediaUrls?: string[];
   orderId?: string;
   type?: 'test' | 'order_update' | 'delivery_notification' | 'custom';
 }
@@ -20,7 +22,8 @@ serve(async (req) => {
   }
 
   try {
-    const { phoneNumber, message, orderId, type = 'custom' }: SMSRequest = await req.json()
+    const authHeader = req.headers.get('Authorization')
+    const { phoneNumber, message, mediaUrls, orderId, type = 'custom' }: SMSRequest = await req.json()
 
     // Validate phone number format (basic validation)
     const phoneRegex = /^\+?[1-9]\d{1,14}$/
@@ -67,7 +70,7 @@ serve(async (req) => {
     }
     formattedPhone = '+' + formattedPhone
 
-    // Send SMS via Twilio API
+    // Send SMS/MMS via Twilio API
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`
     
     const body = new URLSearchParams({
@@ -75,6 +78,13 @@ serve(async (req) => {
       To: formattedPhone,
       Body: message
     })
+
+    // Add media URLs if provided
+    if (mediaUrls && mediaUrls.length > 0) {
+      mediaUrls.forEach(url => {
+        body.append('MediaUrl', url)
+      })
+    }
 
     const response = await fetch(twilioUrl, {
       method: 'POST',
@@ -99,6 +109,42 @@ serve(async (req) => {
 
     const data = await response.json()
     console.log('SMS sent successfully:', data.sid, 'Order ID:', orderId, 'Type:', type)
+
+    // Store message in database if we have auth context
+    if (authHeader) {
+      try {
+        const supabase = createClient(
+          Deno.env.get('SUPABASE_URL') ?? '',
+          Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+          {
+            global: {
+              headers: { Authorization: authHeader }
+            }
+          }
+        )
+
+        // Get user info
+        const { data: { user } } = await supabase.auth.getUser()
+
+        await supabase
+          .from('messages')
+          .insert({
+            phone_number: formattedPhone,
+            body: message,
+            media_urls: mediaUrls && mediaUrls.length > 0 ? mediaUrls : null,
+            direction: 'outbound',
+            status: 'sent',
+            twilio_sid: data.sid,
+            user_email: user?.email,
+            order_id: orderId,
+            is_read: true // Outbound messages are always "read"
+          })
+
+      } catch (dbError) {
+        console.error('Error storing message in database:', dbError)
+        // Don't fail the API call if database storage fails
+      }
+    }
 
     return new Response(
       JSON.stringify({ 

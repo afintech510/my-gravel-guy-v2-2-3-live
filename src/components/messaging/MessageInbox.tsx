@@ -1,10 +1,11 @@
 
 import React, { useState } from 'react';
-import { Search, MessageCircle, Clock, User } from 'lucide-react';
+import { Search, MessageCircle, Clock, User, MessageSquarePlus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useMessages } from '@/hooks/useMessages';
 import { formatDistanceToNow } from 'date-fns';
+import NewMessageDialog from './NewMessageDialog';
 
 interface MessageInboxProps {
   selectedPhoneNumber: string | null;
@@ -13,6 +14,7 @@ interface MessageInboxProps {
 
 const MessageInbox: React.FC<MessageInboxProps> = ({ selectedPhoneNumber, onSelectPhone }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [showNewMessage, setShowNewMessage] = useState(false);
   const { conversations, loading, error } = useMessages();
 
   const filteredConversations = conversations.filter(conv => 
@@ -47,7 +49,18 @@ const MessageInbox: React.FC<MessageInboxProps> = ({ selectedPhoneNumber, onSele
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">Conversations</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold text-gray-900">Conversations</h2>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowNewMessage(true)}
+            className="flex items-center gap-2"
+          >
+            <MessageSquarePlus className="h-4 w-4" />
+            New Msg
+          </Button>
+        </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
@@ -65,9 +78,17 @@ const MessageInbox: React.FC<MessageInboxProps> = ({ selectedPhoneNumber, onSele
           <div className="p-8 text-center">
             <MessageCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No conversations</h3>
-            <p className="text-gray-500">
+            <p className="text-gray-500 mb-4">
               {searchTerm ? 'No conversations match your search.' : 'No messages have been received yet.'}
             </p>
+            <Button
+              variant="outline"
+              onClick={() => setShowNewMessage(true)}
+              className="flex items-center gap-2"
+            >
+              <MessageSquarePlus className="h-4 w-4" />
+              Start New Conversation
+            </Button>
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
@@ -127,6 +148,16 @@ const MessageInbox: React.FC<MessageInboxProps> = ({ selectedPhoneNumber, onSele
           {filteredConversations.length} conversation{filteredConversations.length !== 1 ? 's' : ''}
         </div>
       </div>
+
+      {/* New Message Dialog */}
+      <NewMessageDialog 
+        open={showNewMessage}
+        onOpenChange={setShowNewMessage}
+        onMessageSent={(phoneNumber) => {
+          onSelectPhone(phoneNumber);
+          setShowNewMessage(false);
+        }}
+      />
     </div>
   );
 };

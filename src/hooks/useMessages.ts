@@ -25,50 +25,20 @@ export const useMessages = () => {
       setLoading(true);
       setError(null);
 
-      // This would normally fetch from a messages table, but since we don't have it yet,
-      // we'll create mock data to demonstrate the UI
-      const mockConversations: Conversation[] = [
-        {
-          phoneNumber: '+15551234567',
-          customerName: 'John Smith',
-          lastMessage: 'Thank you for the delivery! The gravel looks great.',
-          lastMessageTime: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
-          unreadCount: 0,
-          orderInfo: {
-            orderId: 'ORD-2024-001',
-            deliveryAddress: '123 Main St, Springfield, IL',
-            products: 'Pea Gravel (2 tons)'
-          }
-        },
-        {
-          phoneNumber: '+15559876543',
-          customerName: 'Sarah Johnson',
-          lastMessage: 'What time will the delivery arrive tomorrow?',
-          lastMessageTime: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-          unreadCount: 1,
-          orderInfo: {
-            orderId: 'ORD-2024-002',
-            deliveryAddress: '456 Oak Ave, Madison, WI',
-            products: 'River Rock (3 tons)'
-          }
-        },
-        {
-          phoneNumber: '+15555555555',
-          lastMessage: 'Hi, I need a quote for crushed stone delivery',
-          lastMessageTime: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-          unreadCount: 1
-        }
-      ];
+      const { data, error } = await supabase.functions.invoke('get-messages');
 
-      // Sort by last message time (most recent first)
-      mockConversations.sort((a, b) => 
-        new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()
-      );
+      if (error) {
+        throw new Error(error.message || 'Failed to fetch conversations');
+      }
 
-      setConversations(mockConversations);
+      if (!data?.conversations) {
+        throw new Error('Invalid response format');
+      }
+
+      setConversations(data.conversations);
     } catch (err) {
       console.error('Error fetching conversations:', err);
-      setError('Failed to load conversations');
+      setError(err instanceof Error ? err.message : 'Failed to load conversations');
     } finally {
       setLoading(false);
     }
@@ -77,17 +47,17 @@ export const useMessages = () => {
   useEffect(() => {
     fetchConversations();
 
-    // Set up real-time subscription (when messages table exists)
-    // const subscription = supabase
-    //   .channel('messages')
-    //   .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
-    //     fetchConversations();
-    //   })
-    //   .subscribe();
+    // Set up real-time subscription
+    const subscription = supabase
+      .channel('messages')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
+        fetchConversations();
+      })
+      .subscribe();
 
-    // return () => {
-    //   subscription.unsubscribe();
-    // };
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   return {
