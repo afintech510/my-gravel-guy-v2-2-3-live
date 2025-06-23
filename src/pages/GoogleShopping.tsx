@@ -7,8 +7,8 @@ import { ShoppingCart, Target, TrendingUp, Globe } from 'lucide-react';
 
 const GoogleShopping = () => {
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gray-50 py-8 px-4 w-full">
+      <div className="w-full space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold text-gray-900">Google Shopping Integration</h1>
