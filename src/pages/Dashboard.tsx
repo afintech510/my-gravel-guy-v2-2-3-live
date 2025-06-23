@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MessageSquare } from 'lucide-react';
 import OrdersTable from '@/components/dashboard/OrdersTable';
 import LoginPrompt from '@/components/dashboard/LoginPrompt';
+import { Button } from '@/components/ui/button';
 
 const Dashboard = () => {
   const { user, loading, isAdmin, signOut } = useAuth();
@@ -60,6 +61,14 @@ const Dashboard = () => {
               <p className="text-gray-600">Welcome, {user.email}</p>
             </div>
             <div className="flex items-center space-x-4">
+              <Button
+                onClick={() => window.location.href = '/dashboard/comm'}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <MessageSquare className="h-4 w-4" />
+                Messaging Console
+              </Button>
               <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
                 SECURE MODE
               </span>
