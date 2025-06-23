@@ -4,20 +4,25 @@ import { Input } from "@/components/ui/input";
 import { Calculator } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { useCalculator } from "@/hooks/useCalculator";
+import { trackCalculatorUsage } from "@/utils/analytics";
+
 interface MiniCalculatorProps {
   onQuantityCalculated: (tons: number) => void;
   pricePerTon: number;
   tonYardRatio?: number;
+  productName?: string;
 }
+
 const MiniCalculator = ({
   onQuantityCalculated,
   pricePerTon,
-  tonYardRatio = 1.5 // Default if not provided
+  tonYardRatio = 1.5,
+  productName = 'Unknown Product'
 }: MiniCalculatorProps) => {
   const [length, setLength] = useState<number>(0);
   const [width, setWidth] = useState<number>(0);
-  const [depth, setDepth] = useState<number>(2); // Default 2 inches
-  const [extraPercentage, setExtraPercentage] = useState<number>(10); // Default 10% extra
+  const [depth, setDepth] = useState<number>(2);
+  const [extraPercentage, setExtraPercentage] = useState<number>(10);
 
   const {
     totalSquareFeet,
@@ -27,17 +32,21 @@ const MiniCalculator = ({
     length,
     width
   }], depth, extraPercentage, pricePerTon, tonYardRatio);
+
   const handleCalculate = () => {
-    // Don't calculate if no dimensions entered
     if (length <= 0 || width <= 0) {
       return;
     }
 
-    // Round to integer value
     const roundedTons = Math.round(totalTons);
-    // Send the calculated tons to the parent
+    const estimatedValue = pricePerTon * roundedTons;
+    
+    // Track calculator usage with Google Ads conversion
+    trackCalculatorUsage('mini_calculator', productName, estimatedValue);
+    
     onQuantityCalculated(roundedTons);
   };
+
   return <div className="border rounded-lg overflow-hidden font-montserrat">
       <div className="bg-gray-50 p-4 border-b">
         <div className="flex items-center gap-2">
@@ -116,4 +125,5 @@ const MiniCalculator = ({
       </div>
     </div>;
 };
+
 export default MiniCalculator;

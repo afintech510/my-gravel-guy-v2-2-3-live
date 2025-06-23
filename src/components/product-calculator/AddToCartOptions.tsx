@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Product } from '@/services/productTypes';
 import { useCart } from '@/contexts/CartContext';
@@ -10,6 +11,7 @@ import QuantityAdjuster from './QuantityAdjuster';
 import CartOptionCard from './CartOptionCard';
 import { AlertTriangle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { trackAddToCart } from '@/utils/analytics';
 
 interface AddToCartOptionsProps {
   product: Product;
@@ -77,7 +79,7 @@ export default function AddToCartOptions({
     };
 
     calculateOptionPrices();
-  }, [product, zipCode, adjustedTons]); // Recalculate when these change
+  }, [product, zipCode, adjustedTons]);
 
   // Handle increment/decrement with 3 ton minimum
   const handleIncrement = () => {
@@ -97,12 +99,17 @@ export default function AddToCartOptions({
       const pricing = await calculateFinalPrice(product, tons, zipCode || undefined);
       console.log('AddToCartOptions: Recalculated price for cart:', pricing);
       
-      addToCart({ 
+      const cartProduct = { 
         ...product, 
-        price: pricing.pricePerTon, // Use adjusted price per ton
+        price: pricing.pricePerTon,
         tons,
         yards: tons / (product.tonYardRatio || 1.5)
-      });
+      };
+
+      // Track add to cart event with Google Ads conversion
+      trackAddToCart(cartProduct, tons, pricing.pricePerTon);
+      
+      addToCart(cartProduct);
       
       // Navigate to cart page for delivery info completion
       navigate('/cart');
@@ -131,7 +138,6 @@ export default function AddToCartOptions({
 
   return (
     <div>
-      {/* Show warning if calculated tons is under minimum */}
       {isUnderMinimum && (
         <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
           <div className="flex items-start gap-3">
@@ -158,7 +164,6 @@ export default function AddToCartOptions({
       
       <div className="space-y-3">
         {options.map((option) => {
-          // Use the pre-calculated price for this option
           const price = optionPrices[option.label] || (product.price * option.tons);
           
           return (

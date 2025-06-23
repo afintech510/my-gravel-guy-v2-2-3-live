@@ -57,6 +57,23 @@ export const trackGoogleAdsConversion = (
 };
 
 /**
+ * Track page view conversion for key pages
+ * @param pagePath - The page path being viewed
+ */
+export const trackPageViewConversion = (pagePath: string) => {
+  // Replace with your actual Google Ads conversion ID and label
+  const PAGE_VIEW_CONVERSION_ID = 'AW-YOUR_CONVERSION_ID';
+  const PAGE_VIEW_CONVERSION_LABEL = 'PAGE_VIEW_LABEL';
+
+  trackGoogleAdsConversion(
+    PAGE_VIEW_CONVERSION_ID,
+    PAGE_VIEW_CONVERSION_LABEL
+  );
+
+  console.log('Page view conversion tracked for:', pagePath);
+};
+
+/**
  * Track purchase conversion
  * @param orderId - Order ID
  * @param value - Total order value
@@ -96,6 +113,8 @@ export const trackPurchaseConversion = (
       }))
     });
   }
+
+  console.log('Purchase conversion tracked:', { orderId, value, itemCount: items?.length });
 };
 
 /**
@@ -125,6 +144,8 @@ export const trackLeadConversion = (
       value: value
     });
   }
+
+  console.log('Lead conversion tracked:', { leadType, value });
 };
 
 /**
@@ -160,6 +181,8 @@ export const trackAddToCartConversion = (
       }]
     });
   }
+
+  console.log('Add to cart conversion tracked:', { itemName: item.name, value });
 };
 
 /**
@@ -195,6 +218,8 @@ export const trackBeginCheckoutConversion = (
       }))
     });
   }
+
+  console.log('Begin checkout conversion tracked:', { cartValue, itemCount: items.length });
 };
 
 /**
@@ -223,4 +248,6 @@ export const trackCalculatorConversion = (
       custom_parameter_1: productType || 'unknown'
     });
   }
+
+  console.log('Calculator conversion tracked:', { calculatorType, productType });
 };
