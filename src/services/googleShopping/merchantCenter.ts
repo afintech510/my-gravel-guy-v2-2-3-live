@@ -1,3 +1,4 @@
+
 import { GoogleShoppingProduct } from './feedGenerator';
 
 export interface MerchantCenterConfig {
@@ -46,6 +47,10 @@ export class GoogleMerchantCenterAPI {
       brand: product.brand,
       productTypes: [product.product_type],
       googleProductCategory: product.google_product_category,
+      shippingWeight: {
+        value: parseFloat(product.shipping_weight.replace(' lb', '')),
+        unit: 'lb'
+      },
       customLabel0: product.custom_label_0,
       customLabel1: product.custom_label_1,
       customLabel2: product.custom_label_2,
@@ -103,6 +108,10 @@ export class GoogleMerchantCenterAPI {
         brand: product.brand,
         productTypes: [product.product_type],
         googleProductCategory: product.google_product_category,
+        shippingWeight: {
+          value: parseFloat(product.shipping_weight.replace(' lb', '')),
+          unit: 'lb'
+        },
         customLabel0: product.custom_label_0,
         customLabel1: product.custom_label_1,
         customLabel2: product.custom_label_2,

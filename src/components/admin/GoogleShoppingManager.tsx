@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,10 +61,10 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
     try {
       console.log('Generating Google Shopping feed...');
       
-      const generatedProducts = await feedGenerator.generateFeed();
+      const generatedProducts = await feedGenerator.generateFeed(zipCode);
       setProducts(generatedProducts);
       
-      const xml = await feedGenerator.generateXMLFeed();
+      const xml = await feedGenerator.generateXMLFeed(zipCode);
       setXmlFeed(xml);
       
       toast({
@@ -229,7 +230,7 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
             <TrendingUp className="h-4 w-4" />
             <AlertDescription>
               Manage your Google Shopping product feed and Merchant Center integration. 
-              Generate feeds with standardized 3-ton minimum pricing across all locations.
+              Generate feeds for different geographic areas to optimize local targeting.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -251,17 +252,13 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
             <CardContent className="space-y-4">
               <div className="flex gap-4 items-end">
                 <div className="flex-1">
-                  <Label htmlFor="zipcode">Reference Zip Code (Display Only)</Label>
+                  <Label htmlFor="zipcode">Target Zip Code</Label>
                   <Input
                     id="zipcode"
                     value={zipCode}
                     onChange={(e) => setZipCode(e.target.value)}
-                    placeholder="Enter zip code for display"
-                    disabled
+                    placeholder="Enter zip code for pricing"
                   />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Feed uses standardized pricing for 3-ton minimum orders across all locations
-                  </p>
                 </div>
                 <Button 
                   onClick={handleGenerateFeed} 
@@ -281,7 +278,7 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">
-                      Generated {products.length} products with standardized pricing
+                      Generated {products.length} products for zip code {zipCode}
                     </span>
                     <Button
                       onClick={handleDownloadFeed}

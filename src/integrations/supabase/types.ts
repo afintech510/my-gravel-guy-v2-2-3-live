@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -35,54 +34,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      messages: {
-        Row: {
-          id: string
-          created_at: string
-          updated_at: string
-          phone_number: string
-          body: string | null
-          media_urls: string[] | null
-          direction: string
-          status: string | null
-          twilio_sid: string | null
-          user_email: string | null
-          customer_name: string | null
-          order_id: string | null
-          is_read: boolean | null
-        }
-        Insert: {
-          id?: string
-          created_at?: string
-          updated_at?: string
-          phone_number: string
-          body?: string | null
-          media_urls?: string[] | null
-          direction: string
-          status?: string | null
-          twilio_sid?: string | null
-          user_email?: string | null
-          customer_name?: string | null
-          order_id?: string | null
-          is_read?: boolean | null
-        }
-        Update: {
-          id?: string
-          created_at?: string
-          updated_at?: string
-          phone_number?: string
-          body?: string | null
-          media_urls?: string[] | null
-          direction?: string
-          status?: string | null
-          twilio_sid?: string | null
-          user_email?: string | null
-          customer_name?: string | null
-          order_id?: string | null
-          is_read?: boolean | null
-        }
-        Relationships: []
-      }
       
       price_tiers: {
         Row: {
@@ -112,7 +63,6 @@ export type Database = {
         Relationships: []
       }
 
-      // ... keep existing code (all other table definitions)
       blog_categories: {
         Row: {
           created_at: string | null
