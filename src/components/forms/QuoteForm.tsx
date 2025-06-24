@@ -1,3 +1,4 @@
+
 import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -17,7 +18,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { trackQuoteSubmission } from "@/utils/analytics";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -51,13 +51,6 @@ const QuoteForm = () => {
 
   const onSubmit = (data: FormData) => {
     console.log("Form submitted:", data);
-    
-    // Track quote submission with Google Ads conversion
-    const formType = `${data.projectType}_${data.timeline}`;
-    const estimatedValue = data.projectType === 'commercial' ? 1000 : 500; // Estimate based on project type
-    
-    trackQuoteSubmission('general_quote', formType, estimatedValue);
-    
     toast({
       title: "Quote Request Submitted",
       description: "We'll get back to you as soon as possible!",

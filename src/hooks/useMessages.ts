@@ -15,9 +15,6 @@ export interface Conversation {
   };
 }
 
-const SUPABASE_URL = "https://losrkjvrcambvgijfism.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxvc3JranZyY2FtYnZnaWpmaXNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4OTI0NjIsImV4cCI6MjA2MTQ2ODQ2Mn0.LdtyGNA5PmayO9VYcNRsO12DCAg0iS460rtTsDsS5B8";
-
 export const useMessages = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,17 +25,11 @@ export const useMessages = () => {
       setLoading(true);
       setError(null);
 
-      // Get current session for authorization
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('No active session');
-      }
-
       // Make a GET request to fetch all conversations (no phone_number parameter)
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/get-messages`, {
+      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/get-messages`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${supabase.supabaseKey}`,
           'Content-Type': 'application/json',
         },
       });

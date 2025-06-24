@@ -33,10 +33,10 @@ const TopBanner = ({ className }: TopBannerProps) => {
   
   return (
     <div className={cn(
-      "bg-primary text-primary-foreground py-0.5 px-4 text-right md:text-center z-50 relative w-full",
+      "bg-primary text-primary-foreground py-0.5 px-4 text-right md:text-center z-50 relative",
       className
     )}>
-      <div className="w-full flex items-center justify-end md:justify-center">
+      <div className="max-w-6xl mx-auto flex items-center justify-end md:justify-center">
         <h3 className="text-sm font-roboto-mono font-bold">
           <span className="italic">FREE</span>{' '}DELIVERY{' '} 
            

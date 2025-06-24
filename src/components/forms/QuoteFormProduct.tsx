@@ -7,7 +7,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useZipCode } from "@/contexts/ZipCodeContext";
 import { Product } from '@/services/productTypes';
-import { trackQuoteSubmission } from '@/utils/analytics';
 
 interface QuoteFormProductProps {
   selectedProduct?: Product | null;
@@ -49,12 +48,6 @@ const QuoteFormProduct: React.FC<QuoteFormProductProps> = ({ selectedProduct }) 
       
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Track quote submission with Google Ads conversion
-      const productType = selectedProduct ? selectedProduct.name : 'General Inquiry';
-      const estimatedValue = selectedProduct ? selectedProduct.price * 5 : undefined; // Estimate 5 tons
-      
-      trackQuoteSubmission('product_quote', productType, estimatedValue);
       
       toast({
         title: "Quote request submitted!",

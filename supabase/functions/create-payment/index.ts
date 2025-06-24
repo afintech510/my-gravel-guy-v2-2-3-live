@@ -103,7 +103,7 @@ serve(async (req) => {
       quantity: item.quantity,
     }));
 
-    // Create Stripe checkout session - REMOVED shipping address collection
+    // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: lineItems,
@@ -118,7 +118,9 @@ serve(async (req) => {
       },
       customer_email: contactEmail,
       billing_address_collection: 'required',
-      // REMOVED: shipping_address_collection - no longer collecting shipping addresses
+      shipping_address_collection: {
+        allowed_countries: ['US'],
+      },
     });
 
     console.log('Stripe session created:', { 

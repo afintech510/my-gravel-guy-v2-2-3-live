@@ -1,71 +1,19 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, MessageSquare, Package, AlertCircle, RefreshCw } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
+import { Loader2, MessageSquare } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import OrdersTable from '@/components/dashboard/OrdersTable';
 import LoginPrompt from '@/components/dashboard/LoginPrompt';
-import MessageInbox from '@/components/messaging/MessageInbox';
-import ConversationThread from '@/components/messaging/ConversationThread';
 
 const Dashboard = () => {
-  const { user, loading, isAdmin, signOut, error, clearSession } = useAuth();
-  const [selectedPhoneNumber, setSelectedPhoneNumber] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
+  const { user, loading, isAdmin, signOut } = useAuth();
   
-  // Loading state with timeout message
+  // Loading state - show spinner while checking authentication
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 mb-2">Loading dashboard...</p>
-          {retryCount > 0 && (
-            <p className="text-sm text-gray-500">
-              If this takes too long, try refreshing the page
-            </p>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // Error state with recovery options
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 text-center">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Dashboard Error</h1>
-          <p className="text-gray-600 mb-4">{error}</p>
-          
-          <div className="space-y-3">
-            <Button
-              onClick={() => window.location.reload()}
-              className="w-full"
-            >
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh Page
-            </Button>
-            
-            <Button
-              onClick={clearSession}
-              variant="outline"
-              className="w-full"
-            >
-              Clear Session & Retry
-            </Button>
-            
-            <Button
-              onClick={() => window.location.href = '/'}
-              variant="ghost"
-              className="w-full"
-            >
-              Return Home
-            </Button>
-          </div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
@@ -116,6 +64,13 @@ const Dashboard = () => {
               <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
                 SECURE MODE
               </span>
+              <Link
+                to="/dashboard/comm"
+                className="flex items-center text-gray-600 hover:text-gray-900 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg transition-colors"
+              >
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Messages
+              </Link>
               <button
                 onClick={signOut}
                 className="text-gray-600 hover:text-gray-900"
@@ -134,46 +89,7 @@ const Dashboard = () => {
       </div>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs defaultValue="orders" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="orders" className="flex items-center gap-2">
-              <Package className="h-4 w-4" />
-              Orders
-            </TabsTrigger>
-            <TabsTrigger value="messages" className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
-              Messages
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="orders" className="mt-6">
-            <OrdersTable />
-          </TabsContent>
-          
-          <TabsContent value="messages" className="mt-6">
-            <div className="bg-white rounded-lg shadow-lg h-[calc(100vh-250px)]">
-              <div className="flex h-full">
-                {/* Left sidebar - Message inbox */}
-                <div className={`${selectedPhoneNumber ? 'w-1/3' : 'w-full'} border-r border-gray-200 transition-all duration-300`}>
-                  <MessageInbox 
-                    selectedPhoneNumber={selectedPhoneNumber}
-                    onSelectPhone={setSelectedPhoneNumber}
-                  />
-                </div>
-                
-                {/* Right panel - Conversation thread */}
-                {selectedPhoneNumber && (
-                  <div className="w-2/3">
-                    <ConversationThread 
-                      phoneNumber={selectedPhoneNumber}
-                      onClose={() => setSelectedPhoneNumber(null)}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
+        <OrdersTable />
       </div>
     </div>
   );
