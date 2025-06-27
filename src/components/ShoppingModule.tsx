@@ -8,7 +8,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useZipCode } from '@/contexts/ZipCodeContext';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Minus, Package, Layers, Mountain, RockingChair, Building2, Shovel, Waves, Flower } from 'lucide-react';
+import { Plus, Minus, Package, Layers, Mountain, RockingChair, Building2, Shovel, Waves, Flower, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getPriceAdjustmentForZipCode } from '@/services/products/pricingUtils';
 import { calculateProductExponentialPrice } from '@/services/products/exponentialPricing';
@@ -284,7 +284,7 @@ const ShoppingModule = () => {
   return <div className="py-8 md:py-16 px-4 bg-white">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-6 md:mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4 mx-0">Quick Price Compare ⚖️</h2>
+          <h2 className="text-2xl md:text-3xl font-bold mb-4 mx-0">Quick Price Compare ⚖️</h2>
           
         </div>
 
@@ -320,6 +320,7 @@ const ShoppingModule = () => {
                 {filteredProducts.map(product => {
               const quantity = quantities[product.id.toString()] || 5;
               const totalPrice = calculateFinalPrice(product, quantity);
+              const pricePerTon = calculatePricePerTon(product, quantity);
               const cubicYards = Math.round(quantity / (product.tonYardRatio || 1.5) * 10) / 10;
               return <div key={product.id} className="border rounded-lg p-4">
                       {/* Mobile Layout */}
@@ -329,23 +330,37 @@ const ShoppingModule = () => {
                           <div className="flex-1 min-w-0">
                             <h4 className="font-semibold text-sm leading-tight">{product.name}</h4>
                             {product.size && <p className="text-xs text-gray-500 mt-1">{product.size}</p>}
-                            <Link to={`/products/${product.slug}`} className="text-xs text-blue-600 hover:text-blue-800 mt-1 inline-block">
-                              More Details...
-                            </Link>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => navigate(`/products/${product.slug}`)}
+                              className="mt-2 h-6 text-xs border-green-500 bg-gray-50 hover:bg-gray-100 text-green-700"
+                            >
+                              <ExternalLink className="mr-1 h-3 w-3" />
+                              Explore
+                            </Button>
                           </div>
                         </div>
                         
                         <div className="flex items-center justify-between">
                           <div className="flex items-center border rounded-md">
-                            <button onClick={() => updateQuantity(product.id.toString(), -1)} className="p-2 hover:bg-gray-100" disabled={quantity <= 3}>
-                              <Minus className="h-3 w-3" />
+                            <button 
+                              onClick={() => updateQuantity(product.id.toString(), -1)} 
+                              className="p-3 hover:bg-gray-100 min-h-[48px] min-w-[48px] flex items-center justify-center" 
+                              disabled={quantity <= 3}
+                            >
+                              <Minus className="h-4 w-4" />
                             </button>
                             <div className="px-3 py-2 text-center">
                               <div className="text-sm font-medium">{quantity} tons</div>
                               <div className="text-xs text-gray-500">≡ {cubicYards} yd³</div>
+                              <div className="text-xs text-green-600 font-medium">${pricePerTon.toFixed(2)}/ton</div>
                             </div>
-                            <button onClick={() => updateQuantity(product.id.toString(), 1)} className="p-2 hover:bg-gray-100">
-                              <Plus className="h-3 w-3" />
+                            <button 
+                              onClick={() => updateQuantity(product.id.toString(), 1)} 
+                              className="p-3 hover:bg-gray-100 min-h-[48px] min-w-[48px] flex items-center justify-center"
+                            >
+                              <Plus className="h-4 w-4" />
                             </button>
                           </div>
 
@@ -366,22 +381,36 @@ const ShoppingModule = () => {
                           <h4 className="font-semibold">{product.name}</h4>
                           {product.size && <p className="text-sm text-gray-500">{product.size}</p>}
                            {product.description && <p className="text-sm text-gray-600 mt-1 line-clamp-2">{product.description}</p>}
-                          <Link to={`/products/${product.slug}`} className="text-sm text-blue-600 hover:text-blue-800">
-                            More Details...
-                          </Link>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate(`/products/${product.slug}`)}
+                            className="mt-2 h-7 text-sm border-green-500 bg-gray-50 hover:bg-gray-100 text-green-700"
+                          >
+                            <ExternalLink className="mr-2 h-3 w-3" />
+                            Explore
+                          </Button>
                         </div>
 
                         <div className="flex items-center gap-3">
                           <div className="flex items-center border rounded-md">
-                            <button onClick={() => updateQuantity(product.id.toString(), -1)} className="p-2 hover:bg-gray-100" disabled={quantity <= 3}>
-                              <Minus className="h-4 w-4" />
+                            <button 
+                              onClick={() => updateQuantity(product.id.toString(), -1)} 
+                              className="p-3 hover:bg-gray-100 min-h-[52px] min-w-[52px] flex items-center justify-center" 
+                              disabled={quantity <= 3}
+                            >
+                              <Minus className="h-5 w-5" />
                             </button>
                             <div className="px-4 py-2 text-center">
                               <div className="font-medium">{quantity} tons</div>
                               <div className="text-xs text-gray-500">≡ {cubicYards} yd³</div>
+                              <div className="text-xs text-green-600 font-medium">${pricePerTon.toFixed(2)}/ton</div>
                             </div>
-                            <button onClick={() => updateQuantity(product.id.toString(), 1)} className="p-2 hover:bg-gray-100">
-                              <Plus className="h-4 w-4" />
+                            <button 
+                              onClick={() => updateQuantity(product.id.toString(), 1)} 
+                              className="p-3 hover:bg-gray-100 min-h-[52px] min-w-[52px] flex items-center justify-center"
+                            >
+                              <Plus className="h-5 w-5" />
                             </button>
                           </div>
 
