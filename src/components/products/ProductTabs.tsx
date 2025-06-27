@@ -19,7 +19,10 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
         </TabsList>
         <TabsContent value="details" className="prose max-w-none">
           <h3 className="text-xl font-semibold mb-4">Product Details</h3>
-          <p className="text-gray-600">{product.description}</p>
+          <div 
+            className="text-gray-600"
+            dangerouslySetInnerHTML={{ __html: product.description }}
+          />
         </TabsContent>
         <TabsContent value="specifications">
           <h3 className="text-xl font-semibold mb-4">Specifications</h3>
