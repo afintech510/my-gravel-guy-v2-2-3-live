@@ -7,6 +7,7 @@ export type ProductRow = {
   id: string;
   name: string;
   description: string | null;
+  short_description: string | null; // Added missing field
   price: number;
   category: string | null;
   size: string | null;
@@ -81,6 +82,7 @@ export function transformProductRow(row: any, index: number): Product {
     id: productRow.id || `temp-${index + 1}`,
     name: productRow.name || `Product ${index + 1}`,
     description: productRow.description || "",
+    short_description: productRow.short_description || "", // Added mapping for short_description
     price: parseFloat(String(productRow.price)) || 0,
     image: productImages[0], // For backward compatibility, use first image
     images: productImages,
