@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -147,12 +148,14 @@ const ProductActions = ({
       />
 
       <div className="space-y-4">
-         
-
         <div className="border-t border-b py-4 space-y-2">
           <div className="flex justify-between items-center text-lg font-bold">
             <span>Total:</span>
             <span>${totalPrice.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between items-center text-sm text-gray-600">
+            <span>${adjustedPrice.toFixed(2)} per ton</span>
+            <span></span>
           </div>
           <div className="flex justify-between items-center text-sm text-gray-600">
             <span>Shipping:</span>
