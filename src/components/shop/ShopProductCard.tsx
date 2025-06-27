@@ -53,6 +53,20 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
 
   const cubicYards = calculateCubicYards(selectedTons);
 
+  // Get description to display - use short_description if available, otherwise use description
+  const getDisplayDescription = () => {
+    if (product.short_description && product.short_description.trim()) {
+      return product.short_description;
+    }
+    // Fallback to truncated description if short_description is not available
+    if (product.description) {
+      return product.description.length > 100 
+        ? product.description.substring(0, 100) + '...'
+        : product.description;
+    }
+    return '';
+  };
+
   const handleAddToCart = () => {
     const deliveryDate = new Date();
     deliveryDate.setDate(deliveryDate.getDate() + 3); // Default to 3 days from now
@@ -123,7 +137,7 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
               </div>
             </div>
             <div className="text-sm text-gray-600">
-              {product.short_description}
+              {getDisplayDescription()}
             </div>
           </div>
         </div>
