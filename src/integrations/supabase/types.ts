@@ -325,6 +325,7 @@ export type Database = {
           color: string | null
           created_at: string | null
           description: string | null
+          short_description: string | null
           efficiency: string | null
           id: string
           image: string | null
@@ -341,6 +342,7 @@ export type Database = {
           color?: string | null
           created_at?: string | null
           description?: string | null
+          short_description?: string | null
           efficiency?: string | null
           id?: string
           image?: string | null
@@ -357,6 +359,7 @@ export type Database = {
           color?: string | null
           created_at?: string | null
           description?: string | null
+          short_description?: string | null
           efficiency?: string | null
           id?: string
           image?: string | null
