@@ -123,7 +123,7 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
               </div>
             </div>
             <div className="text-sm text-gray-600">
-              {product.short_description || product.description}
+              {product.short_description}
             </div>
           </div>
         </div>
