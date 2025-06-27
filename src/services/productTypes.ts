@@ -3,7 +3,6 @@ export interface Product {
   id: string | number;
   name: string;
   description: string;
-  short_description?: string; // Added missing property
   price: number;
   image: string;
   images?: string[]; // New field for multiple images
