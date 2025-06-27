@@ -1,15 +1,13 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Product } from '@/services/productTypes';
-
 interface ProductTabsProps {
   product: Product;
 }
-
-const ProductTabs = ({ product }: ProductTabsProps) => {
-  return (
-    <div className="mt-16">
+const ProductTabs = ({
+  product
+}: ProductTabsProps) => {
+  return <div className="mt-16">
       <Tabs defaultValue="details">
         <TabsList className="w-full justify-start">
           <TabsTrigger value="details">Details</TabsTrigger>
@@ -18,11 +16,10 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
           <TabsTrigger value="faq">FAQ</TabsTrigger>
         </TabsList>
         <TabsContent value="details" className="prose max-w-none">
-          <h3 className="text-xl font-semibold mb-4">Product Details</h3>
-          <div 
-            className="text-gray-600"
-            dangerouslySetInnerHTML={{ __html: product.description }}
-          />
+          
+          <div className="text-gray-600" dangerouslySetInnerHTML={{
+          __html: product.description
+        }} />
         </TabsContent>
         <TabsContent value="specifications">
           <h3 className="text-xl font-semibold mb-4">Specifications</h3>
@@ -40,8 +37,6 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
           <h3 className="text-xl font-semibold mb-4">Frequently Asked Questions</h3>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 };
-
 export default ProductTabs;
