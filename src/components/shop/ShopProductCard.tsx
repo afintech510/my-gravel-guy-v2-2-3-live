@@ -85,13 +85,6 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
     }
   };
 
-  const truncateDescription = (text: string, maxLength: number = 130) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength).trim() + '...';
-  };
-
-  const shouldShowMoreLink = product.description.length > 130;
-
   return (
     <Card 
       className={cn(
@@ -130,16 +123,7 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
               </div>
             </div>
             <div className="text-sm text-gray-600">
-              {truncateDescription(product.description)}
-              {shouldShowMoreLink && (
-                <Link 
-                  to={`/products/${product.slug}`}
-                  className="text-primary hover:text-primary/80 ml-1 inline-flex items-center"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  More Details...
-                </Link>
-              )}
+              {product.short_description || product.description}
             </div>
           </div>
         </div>
@@ -184,29 +168,14 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
                   </span>
                   <span className="ml-2 text-sm text-gray-500">Total</span>
                 </div>
+                <div className="text-sm text-gray-600 font-medium mb-1">
+                  ${displayPrice.toFixed(2)} per ton
+                </div>
                 <div className="text-sm text-black-600 font-medium">
                   FREE Delivery
                 </div>
               </div>
             </div>
-
-            {/* Product Specifications */}
-            {product.specifications && (
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Specifications</h4>
-                <div className="text-xs text-gray-600 space-y-1">
-                  {product.specifications.size && (
-                    <p>Size: {product.specifications.size}</p>
-                  )}
-                  {product.specifications.color && (
-                    <p>Color: {product.specifications.color}</p>
-                  )}
-                  {product.specifications.coverage && (
-                    <p>Coverage: {product.specifications.coverage}</p>
-                  )}
-                </div>
-              </div>
-            )}
 
             {/* Uses */}
             {product.uses && product.uses.length > 0 && (
@@ -223,22 +192,22 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
             )}
 
             {/* Action Buttons */}
-            <div className="flex gap-2 pt-2">
+            <div className="flex flex-col gap-2 pt-2">
+              <Button
+                variant="outline"
+                onClick={handleViewDetails}
+                className="w-full border-green-500 bg-gray-50 hover:bg-gray-100 text-green-700"
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                More Details
+              </Button>
               <Button
                 onClick={handleAddToCart}
-                className="flex-1"
+                className="w-full"
                 size="sm"
               >
                 <ShoppingCart className="mr-2 h-4 w-4" />
                 Add to Cart
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleViewDetails}
-                size="sm"
-                className="flex-shrink-0"
-              >
-                <ExternalLink className="h-4 w-4" />
               </Button>
             </div>
           </div>
