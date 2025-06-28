@@ -380,7 +380,7 @@ const ShoppingModule = () => {
                         <div className="flex-1">
                           <h4 className="font-semibold">{product.name}</h4>
                           {product.size && <p className="text-sm text-gray-500">{product.size}</p>}
-                           {product.description && <p className="text-sm text-gray-600 mt-1 line-clamp-2">{product.description}</p>}
+                           {product.short_description && <p className="text-sm text-gray-600 mt-1 line-clamp-2">{product.short_description}</p>}
                           <Button
                             variant="outline"
                             size="sm"
