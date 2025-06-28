@@ -90,7 +90,7 @@ serve(async (req) => {
         currency: 'usd',
         product_data: {
           name: item.name,
-          description: item.short_description || '',
+          description: item.description || '',
           images: item.image ? [item.image] : [],
           metadata: {
             orderId: orderId,
