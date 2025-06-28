@@ -21,6 +21,7 @@ export interface OrderItemData {
   quantity: number;
   tons?: number;
   yards?: number;
+  short_description?: string;
   size?: string;
   materialSize?: string;
   image?: string;
@@ -193,6 +194,7 @@ export const prepareItemsForStripe = (cartItems: any[]): OrderItemData[] => {
       size: item.size,
       materialSize: item.materialSize || item.size,
       image: item.image || item.images?.[0],
+      short_description: item.short_description,
       // Enhanced: Include delivery information directly on the item
       deliveryDate: item.deliveryDate,
       deliveryAddress: item.deliveryAddress,
