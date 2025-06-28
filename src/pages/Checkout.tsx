@@ -128,7 +128,7 @@ const Checkout = () => {
       return {
         id: item.id,
         name: item.name,
-        description: item.description?.substring(0, 100) || '',
+        description: item.short_description?.substring(0, 100) || item.description?.substring(0, 100) || 'Landscape Material',
         price: Math.max(0.01, discountedPricePerTon),
         quantity: item.tons,
         image: item.image || item.images?.[0],
