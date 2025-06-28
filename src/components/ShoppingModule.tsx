@@ -284,8 +284,10 @@ const ShoppingModule = () => {
   return <div className="py-8 md:py-16 px-4 bg-white">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-6 md:mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4 mx-0">Quick Price Compare ⚖️</h2>
-          
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Scale className="h-5 w-5" />
+            <h2 className="text-2xl md:text-3xl font-bold mx-0">Quick Price Compare</h2>
+          </div>
         </div>
 
         {/* Material Category Selector - Updated with Lucide icons and primary styling */}
