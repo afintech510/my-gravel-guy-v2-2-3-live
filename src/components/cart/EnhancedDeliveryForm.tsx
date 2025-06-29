@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -38,10 +39,9 @@ const enhancedDeliverySchema = z.object({
   deliveryTimePreference: z.enum(["anytime", "morning", "afternoon"]).optional(),
   deliveryInstructions: z.string().optional(),
   locationPhotoUrl: z.string().optional(),
-  // Communication consent fields - email consent is now required
-  smsConsent: z.boolean().default(false),
-  emailConsent: z.boolean().refine(val => val === true, {
-    message: "Email consent is required to process your order and send delivery confirmations"
+  // Single consolidated communication consent field - required
+  communicationConsent: z.boolean().refine(val => val === true, {
+    message: "Communication consent is required to process your order and send delivery updates"
   }),
 });
 
@@ -79,8 +79,7 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
       deliveryTimePreference: item?.deliveryTimePreference || "anytime",
       deliveryInstructions: item?.deliveryInstructions || '',
       locationPhotoUrl: item?.locationPhotoUrl || '',
-      smsConsent: false,
-      emailConsent: false,
+      communicationConsent: false,
     }
   });
 
@@ -220,6 +219,28 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
     }
   };
 
+  // Function to scroll to the first field with an error
+  const scrollToFirstError = () => {
+    setTimeout(() => {
+      const firstErrorElement = document.querySelector('[data-invalid="true"]') || 
+                               document.querySelector('.text-destructive') ||
+                               document.querySelector('[aria-invalid="true"]');
+      
+      if (firstErrorElement) {
+        firstErrorElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center',
+          inline: 'nearest'
+        });
+        
+        // Focus the element if it's focusable
+        if (firstErrorElement instanceof HTMLElement && firstErrorElement.focus) {
+          setTimeout(() => firstErrorElement.focus(), 100);
+        }
+      }
+    }, 100);
+  };
+
   const handleSubmitForm = (data: EnhancedDeliveryFormData) => {
     // Don't allow submission if photo is still uploading
     if (isUploadingPhoto) {
@@ -233,12 +254,19 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
     
     const formData = {
       ...data,
-      locationPhotoUrl: uploadedPhotoUrl || undefined
+      locationPhotoUrl: uploadedPhotoUrl || undefined,
+      // Map the single consent to both email and SMS for backward compatibility
+      smsConsent: data.communicationConsent,
+      emailConsent: data.communicationConsent,
     };
     
     console.log('Submitting form with photo URL:', uploadedPhotoUrl);
-    console.log('Communication consents:', { sms: data.smsConsent, email: data.emailConsent });
+    console.log('Communication consent:', data.communicationConsent);
     onSubmit(formData);
+  };
+
+  const handleInvalidSubmit = () => {
+    scrollToFirstError();
   };
 
   // Get minimum date (60 hours from now)
@@ -265,7 +293,7 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmitForm)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(handleSubmitForm, handleInvalidSubmit)} className="space-y-6">
           {/* Delivery Date */}
           <FormField
             control={form.control}
@@ -553,60 +581,38 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
             </div>
           </div>
 
-          {/* Communication Consent Section */}
+          {/* Consolidated Communication Consent Section */}
           <div className="space-y-4">
             <h4 className="font-medium text-base">Communication Preferences</h4>
             <div className="p-4 bg-gray-50 rounded-lg border space-y-4">
               <p className="text-sm text-gray-600">
-                Please let us know how you'd like to receive delivery updates and order information.
+                Please consent to receive order and delivery communications.
               </p>
               
-              <div className="space-y-3">
-                <FormField
-                  control={form.control}
-                  name="emailConsent"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel className="text-sm font-normal">
-                          I consent to receive email communications about my order, delivery confirmations, and important updates. *
-                        </FormLabel>
-                        <p className="text-xs text-muted-foreground">
-                          Required for order processing and delivery notifications
-                        </p>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="smsConsent"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel className="text-sm font-normal">
-                          I consent to receive SMS/text messages for delivery updates and driver coordination. 
-                          Message & data rates may apply. Reply STOP to opt out.
-                        </FormLabel>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="communicationConsent"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-sm font-normal">
+                        I consent to receive email and SMS/text communications about my order, delivery confirmations, 
+                        driver coordination, and important updates. Message & data rates may apply. Reply STOP to opt out of SMS. *
+                      </FormLabel>
+                      <p className="text-xs text-muted-foreground">
+                        Required for order processing and delivery notifications
+                      </p>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <p className="text-xs text-gray-500">
                 Learn more about our communication practices on our{" "}

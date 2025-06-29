@@ -32,6 +32,7 @@ interface DeliveryFormProps {
 const DeliveryForm = ({ onSubmit, item }: DeliveryFormProps) => {
   const handleEnhancedSubmit = (data: EnhancedDeliveryFormData) => {
     // Convert enhanced form data to legacy format for compatibility
+    // The communication consent is handled internally in the enhanced form
     const legacyData: DeliveryFormData = {
       deliveryDate: data.deliveryDate,
       name: data.name,
