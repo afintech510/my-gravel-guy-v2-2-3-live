@@ -11,6 +11,7 @@ interface CouponCodeProps {
 
 // Sample coupon codes for demonstration
 const COUPON_CODES = {
+  'SAVE5': { discount: 5, type: 'percentage' as const, description: '10% off your order' },
   'FIRST50': { discount: 50, type: 'fixed' as const, description: '$50 off your order' },
   'FREE25': { discount: 25, type: 'fixed' as const, description: '$25 off your order' }
 };
