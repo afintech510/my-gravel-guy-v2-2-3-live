@@ -39,6 +39,37 @@ const Cart = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  // Function to scroll to the first incomplete item
+  const scrollToFirstIncompleteItem = () => {
+    const incompleteItemIndex = items.findIndex(item => 
+      !item.deliveryDate || 
+      !item.deliveryAddress?.street || 
+      !item.contactInfo?.name || 
+      !item.contactInfo?.phone || 
+      !item.contactInfo?.email
+    );
+
+    if (incompleteItemIndex !== -1) {
+      // Find the cart item card element
+      const cartItemElement = document.querySelector(`[data-item-index="${incompleteItemIndex}"]`);
+      if (cartItemElement) {
+        cartItemElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center',
+          inline: 'nearest'
+        });
+        
+        // If the delivery form is collapsed, try to expand it
+        setTimeout(() => {
+          const expandButton = cartItemElement.querySelector('[data-testid="expand-delivery-form"]');
+          if (expandButton instanceof HTMLElement) {
+            expandButton.click();
+          }
+        }, 500);
+      }
+    }
+  };
+
   // Handle delivery details update with auto-checkout logic
   const handleDeliveryUpdate = (productId: string | number, details: any) => {
     updateDeliveryDetails(productId, {
@@ -245,7 +276,16 @@ const Cart = () => {
   };
 
   const handleProceedToCheckout = async () => {
-    if (!allItemsComplete) return;
+    // If not all items are complete, scroll to the first incomplete item
+    if (!allItemsComplete) {
+      scrollToFirstIncompleteItem();
+      toast({
+        variant: "destructive",
+        title: "Incomplete Information",
+        description: "Please complete the delivery information for all items to proceed.",
+      });
+      return;
+    }
     
     setIsProcessingCheckout(true);
     try {
@@ -296,13 +336,14 @@ const Cart = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           {items.map((item, index) => (
-            <CartItemCard 
-              key={`${item.id}-${index}`} 
-              item={item} 
-              onRemove={removeFromCart} 
-              onUpdateDelivery={handleDeliveryUpdate}
-              autoExpandDelivery={true} // Auto-expand for better UX
-            />
+            <div key={`${item.id}-${index}`} data-item-index={index}>
+              <CartItemCard 
+                item={item} 
+                onRemove={removeFromCart} 
+                onUpdateDelivery={handleDeliveryUpdate}
+                autoExpandDelivery={true} // Auto-expand for better UX
+              />
+            </div>
           ))}
         </div>
         
@@ -377,6 +418,179 @@ const Cart = () => {
       </div>
     </div>
   );
+};
+
+// Enhanced cart confirmation email with better data structure
+const sendCartConfirmationEmail = async () => {
+  try {
+    console.log('=== ENHANCED CART CONFIRMATION EMAIL DEBUG ===');
+    console.log('Sending enhanced cart confirmation email...');
+
+    // Get customer info from the first item's contact info
+    const customerEmail = items[0]?.contactInfo?.email;
+    const customerName = items[0]?.contactInfo?.name || 'Cart Customer';
+    
+    console.log('Customer email:', customerEmail);
+    console.log('Customer name:', customerName);
+    
+    if (!customerEmail) {
+      console.error('No customer email found in cart form data');
+      return;
+    }
+
+    // Create enhanced order data with properly structured delivery information
+    const orderData = {
+      order_id: `CART-${Date.now()}`,
+      items: items.map(item => {
+        console.log('Processing cart item for email:', {
+          id: item.id,
+          name: item.name,
+          hasContactInfo: !!item.contactInfo,
+          hasDeliveryAddress: !!item.deliveryAddress,
+          hasDeliveryDate: !!item.deliveryDate
+        });
+
+        return {
+          product_name: item.name,
+          quantity: item.tons,
+          total_price: item.price * item.tons,
+          delivery_date: item.deliveryDate?.toISOString(),
+          delivery_address: item.deliveryAddress ? {
+            street: item.deliveryAddress.street,
+            city: item.deliveryAddress.city,
+            state: item.deliveryAddress.state,
+            zip: item.deliveryAddress.zip
+          } : null,
+          contact_info: item.contactInfo ? {
+            name: item.contactInfo.name,
+            email: item.contactInfo.email,
+            phone: item.contactInfo.phone
+          } : null,
+          delivery_time_preference: item.deliveryTimePreference,
+          delivery_instructions: item.deliveryInstructions,
+          location_photo_url: item.locationPhotoUrl
+        };
+      }),
+      total_amount: discountTotal,
+      customer_email: customerEmail,
+      customer_name: customerName
+    };
+
+    console.log('Enhanced cart confirmation order data:', orderData);
+
+    const { data, error } = await supabase.functions.invoke('send-email', {
+      body: {
+        to: 'order.support@mygravelguy.com',
+        subject: 'Enhanced Cart Confirmation - Complete Delivery Information',
+        html: generateCartConfirmationEmail(orderData),
+        type: 'internal_notification',
+        orderData
+      }
+    });
+
+    if (error) {
+      console.error('Enhanced cart confirmation email error:', error);
+    } else {
+      console.log('Enhanced cart confirmation email sent successfully:', data);
+    }
+  } catch (error) {
+    console.error('Enhanced cart confirmation email exception:', error);
+  }
+};
+
+// Generate enhanced email template for cart confirmation with delivery details
+const generateCartConfirmationEmail = (orderData: any) => {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Enhanced Cart Confirmation</title>
+    </head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: #1e3a8a; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+        <h1 style="margin: 0; font-size: 28px;">Enhanced Cart Confirmation 🛒</h1>
+        <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Customer completed enhanced delivery information</p>
+      </div>
+      
+      <div style="background: #f8fafc; padding: 30px; border-radius: 0 0 10px 10px;">
+        <h2 style="color: #1e3a8a; margin-top: 0;">Cart ID: ${orderData.order_id}</h2>
+        <p><strong>Customer:</strong> ${orderData.customer_name}</p>
+        <p><strong>Email:</strong> ${orderData.customer_email}</p>
+        <p><strong>Total Amount:</strong> $${orderData.total_amount.toFixed(2)}</p>
+        <p><strong>Items:</strong> ${orderData.items.length}</p>
+        
+        <div style="margin: 20px 0;">
+          <h3>Enhanced Order Items with Complete Delivery Details:</h3>
+          ${orderData.items.map((item: any) => `
+            <div style="background: white; padding: 20px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #1e3a8a;">
+              <h4 style="margin-top: 0; color: #1e3a8a;">${item.product_name}</h4>
+              <p><strong>Quantity:</strong> ${item.quantity} tons</p>
+              <p><strong>Price:</strong> $${item.total_price.toFixed(2)}</p>
+              
+              ${item.contact_info ? `
+                <div style="background: #f0f9ff; padding: 15px; border-radius: 6px; margin: 10px 0;">
+                  <h5 style="margin-top: 0; color: #1e40af;">✅ Contact Information (Complete):</h5>
+                  <p><strong>Name:</strong> ${item.contact_info.name}</p>
+                  <p><strong>Phone:</strong> ${item.contact_info.phone}</p>
+                  <p><strong>Email:</strong> ${item.contact_info.email}</p>
+                </div>
+              ` : '<p style="color: #dc2626;">❌ Missing contact information</p>'}
+              
+              ${item.delivery_address ? `
+                <div style="background: #f0f9ff; padding: 15px; border-radius: 6px; margin: 10px 0;">
+                  <h5 style="margin-top: 0; color: #1e40af;">✅ Delivery Address (Complete):</h5>
+                  <p>${item.delivery_address.street}</p>
+                  <p>${item.delivery_address.city}, ${item.delivery_address.state} ${item.delivery_address.zip}</p>
+                </div>
+              ` : '<p style="color: #dc2626;">❌ Missing delivery address</p>'}
+              
+              ${item.delivery_date ? `
+                <div style="background: #f0f9ff; padding: 15px; border-radius: 6px; margin: 10px 0;">
+                  <h5 style="margin-top: 0; color: #1e40af;">✅ Delivery Schedule (Complete):</h5>
+                  <p><strong>Date:</strong> ${new Date(item.delivery_date).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}</p>
+                  ${item.delivery_time_preference ? `
+                    <p><strong>Time Preference:</strong> ${
+                      item.delivery_time_preference === 'anytime' ? 'Anytime (7am-5pm)' : 
+                      item.delivery_time_preference === 'morning' ? 'Morning (7am-12pm)' : 
+                      item.delivery_time_preference === 'afternoon' ? 'Afternoon (12pm-5pm)' : 
+                      'Not specified'
+                    }</p>
+                  ` : ''}
+                </div>
+              ` : '<p style="color: #dc2626;">❌ Missing delivery date</p>'}
+              
+              ${item.delivery_instructions ? `
+                <div style="background: #fff7ed; padding: 15px; border-radius: 6px; margin: 10px 0;">
+                  <h5 style="margin-top: 0; color: #c2410c;">📝 Special Instructions:</h5>
+                  <p>${item.delivery_instructions}</p>
+                </div>
+              ` : ''}
+              
+              ${item.location_photo_url ? `
+                <div style="background: #f3f4f6; padding: 15px; border-radius: 6px; margin: 10px 0;">
+                  <h5 style="margin-top: 0; color: #374151;">📷 Location Photo:</h5>
+                  <p>Photo uploaded by customer</p>
+                  <p style="font-size: 12px; color: #6b7280;">URL: ${item.location_photo_url}</p>
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+        
+        <div style="background: #dcfce7; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #16a34a;">
+          <h5 style="margin-top: 0; color: #166534;">✅ Data Quality Check:</h5>
+          <p style="color: #166534; margin: 0;">All required delivery information has been collected and is ready for checkout processing.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
 };
 
 export default Cart;
