@@ -162,7 +162,7 @@ const CouponCode: React.FC<CouponCodeProps> = ({ onCouponApplied }) => {
                 </Button>
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                Try: SAVE10, WELCOME20, FLAT50, FREE25, or MEGA99
+                Try: SAVE5, FIRST50, FREE25
               </p>
             </div>
           )}
