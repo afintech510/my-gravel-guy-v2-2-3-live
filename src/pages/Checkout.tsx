@@ -499,13 +499,13 @@ const Checkout = () => {
                     <div className="text-xs text-gray-500 mt-1">Monthly payments</div>
                   </div>
                 </div> 
-                */}
                 <p className="text-xs text-gray-500">
                   Payment options may vary based on order total and location. Final options will be displayed at checkout.
                 </p>
               </div>
             </CardContent>
           </Card>
+                */}
         </div>
         
         <div className="lg:col-span-1">
