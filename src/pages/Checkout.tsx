@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { storeCheckoutBackup, createEnhancedBackup } from '../utils/paymentUtils';
 import CouponCode from '../components/cart/CouponCode';
+import PaymentMethodLogos from '../components/payment/PaymentMethodLogos';
 import type { OrderInsertData } from '../services/productTypes';
 
 const Checkout = () => {
@@ -558,6 +559,9 @@ const Checkout = () => {
                 'Continue to Payment'
               )}
             </Button>
+
+            {/* Add Payment Method Logos */}
+            <PaymentMethodLogos />
 
             {/* Hidden test button - keeping functionality but hiding from users */}
             <Button 
