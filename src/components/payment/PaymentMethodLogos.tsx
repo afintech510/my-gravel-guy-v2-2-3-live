@@ -9,44 +9,21 @@ const PaymentMethodLogos = () => {
         Accepted payment methods:
       </div>
       
-      {/* Credit Card Icons - Using simple styled divs since we can't use copyrighted logos */}
-      <div className="flex items-center gap-2">
-        {/* Visa */}
-        <div className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold">
-          VISA
-        </div>
+      {/* Payment Method Images */}
+      <div className="flex items-center justify-center gap-2 flex-wrap">
+        {/* Credit Cards (Visa, MC, Amex, Discover) */}
+        <img 
+          src="https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//visa-mc-amex-disc_pay-logos.png" 
+          alt="Visa, Mastercard, American Express, Discover"
+          className="h-8 object-contain"
+        />
         
-        {/* Mastercard */}
-        <div className="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">
-          MC
-        </div>
-        
-        {/* Amex */}
-        <div className="bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold">
-          AMEX
-        </div>
-        
-        {/* Discover */}
-        <div className="bg-orange-500 text-white px-2 py-1 rounded text-xs font-bold">
-          DISC
-        </div>
-      </div>
-      
-      <div className="flex items-center gap-2">
-        {/* Apple Pay */}
-        <div className="bg-black text-white px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
-          🍎 Pay
-        </div>
-        
-        {/* Google Pay */}
-        <div className="bg-gray-700 text-white px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
-          G Pay
-        </div>
-        
-        {/* Link */}
-        <div className="bg-green-600 text-white px-2 py-1 rounded text-xs font-bold">
-          Link
-        </div>
+        {/* Digital Payment Methods (Apple Pay, Google Pay, Link) */}
+        <img 
+          src="https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//app-goog-link_pay-logos.png" 
+          alt="Apple Pay, Google Pay, Link"
+          className="h-8 object-contain"
+        />
       </div>
       
       {/* Alternative: Generic credit card icon */}
