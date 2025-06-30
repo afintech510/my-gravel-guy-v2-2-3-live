@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { CustomerReview } from '@/types/review.types';
-import { fetchProductReviews } from '@/services/reviewService';
+import { fetchProductReviews, fetchReviews } from '@/services/reviewService';
 import ReviewList from '../reviews/ReviewList';
 import StarRating from '../reviews/StarRating';
 import { Button } from '../ui/button';
@@ -18,8 +18,15 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, productName 
   
   useEffect(() => {
     const loadReviews = async () => {
-      const productReviews = await fetchProductReviews(productId);
-      setReviews(productReviews);
+      if (productId === 'all-products') {
+        // Fetch all reviews instead of product-specific ones
+        const { reviews: allReviews } = await fetchReviews('all', 1, 6);
+        setReviews(allReviews);
+      } else {
+        // Fetch product-specific reviews
+        const productReviews = await fetchProductReviews(productId);
+        setReviews(productReviews);
+      }
       setLoading(false);
     };
     
@@ -48,7 +55,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, productName 
         </div>
         
         <Button asChild variant="outline">
-          <Link to={`/reviews?product=${productId}`}>
+          <Link to="/reviews">
             View All Reviews
           </Link>
         </Button>
@@ -57,15 +64,15 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, productName 
       <ReviewList 
         initialReviews={reviews} 
         totalInitial={reviews.length} 
-        perPage={3}
+        perPage={6}
         compact
       />
       
       {reviews.length > 0 && (
         <div className="text-center pt-4">
           <Button asChild variant="outline">
-            <Link to={`/reviews?product=${productId}&write=true`}>
-              Write a Review
+            <Link to="/reviews">
+              View More Reviews
             </Link>
           </Button>
         </div>
@@ -74,11 +81,11 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, productName 
       {reviews.length === 0 && !loading && (
         <div className="text-center py-8 border rounded-lg bg-gray-50">
           <p className="text-gray-600 mb-4">
-            There are no reviews yet for this product.
+            There are no reviews yet.
           </p>
           <Button asChild>
-            <Link to={`/reviews?product=${productId}&write=true`}>
-              Be the First to Write a Review
+            <Link to="/reviews">
+              View All Reviews
             </Link>
           </Button>
         </div>

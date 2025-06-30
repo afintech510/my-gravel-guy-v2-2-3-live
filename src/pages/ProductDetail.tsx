@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import { Product } from '@/services/productTypes';
 import { trackEcommerce, trackEvent } from '@/utils/analytics';
 import QuoteFormProduct from '@/components/forms/QuoteFormProduct';
 import SecurePay from '@/components/products/SecurePay';
+import ProductReviews from '@/components/products/ProductReviews';
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -173,6 +175,12 @@ const ProductDetail = () => {
               pricePerTon={adjustedPrice ?? product.price}
               onQuantityCalculated={handleCalculatorQuantity}
               tonYardRatio={product?.tonYardRatio}
+            />
+
+            {/* Product Reviews - positioned under calculator */}
+            <ProductReviews 
+              productId="all-products" 
+              productName="All Products"
             />
           </div>
         </div>
