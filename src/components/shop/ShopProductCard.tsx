@@ -123,7 +123,7 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <h3 className="font-semibold text-lg text-gray-900 mb-1">{product.name}</h3>
-                <p className="text-sm text-primary font-medium mb-2">
+                <p className="text-sm text-black font-medium mb-2">
                   Starting at ${(displayStartingPrice * 3).toFixed(0)} for 3 tons delivered
                 </p>
               </div>
@@ -177,7 +177,7 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
               {/* Total Price and Free Delivery */}
               <div className="text-right">
                 <div className="mb-1">
-                  <span className="text-2xl font-bold text-primary">
+                  <span className="text-2xl font-bold text-black">
                     ${(displayPrice * selectedTons).toFixed(2)}
                   </span>
                   <span className="ml-2 text-sm text-gray-500">Total</span>
