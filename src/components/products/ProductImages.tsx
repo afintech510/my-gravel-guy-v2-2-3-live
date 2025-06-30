@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Product } from '@/services/productTypes';
 import { ImageOff, Play } from 'lucide-react';
@@ -48,15 +47,12 @@ const ProductImages = ({ product }: ProductImagesProps) => {
             <div className="relative w-full h-full">
               <video
                 src={images[selectedImage]}
-                className="object-cover w-full h-full"
+                className="object-cover w-full h-full animate-bounce"
                 autoPlay
                 loop
                 muted
                 playsInline
                 preload="metadata"
-                style={{
-                  animation: 'bounce 2s infinite'
-                }}
                 onError={() => {
                   console.log(`Video failed to load for ${product?.name}:`, images[selectedImage]);
                   setImageError(true);
@@ -64,19 +60,6 @@ const ProductImages = ({ product }: ProductImagesProps) => {
               >
                 Your browser does not support the video tag.
               </video>
-              <style jsx>{`
-                @keyframes bounce {
-                  0%, 20%, 50%, 80%, 100% {
-                    transform: translateY(0);
-                  }
-                  40% {
-                    transform: translateY(-10px);
-                  }
-                  60% {
-                    transform: translateY(-5px);
-                  }
-                }
-              `}</style>
             </div>
           ) : (
             <img
