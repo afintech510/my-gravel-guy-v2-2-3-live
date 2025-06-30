@@ -7,12 +7,12 @@ const SecurePay = () => {
       <img 
         src="https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//visa-mc-amex-disc_pay-logos.png" 
         alt="Visa, Mastercard, American Express, Discover"
-        className="w-full h-12 object-contain"
+        className="w-full h-16 object-contain"
       />
       <img 
         src="https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//app-goog-link_pay-logos.png" 
         alt="Apple Pay, Google Pay, Link"
-        className="w-full h-12 object-contain"
+        className="w-full h-16 object-contain"
       />
     </div>
   );
