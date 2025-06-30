@@ -29,6 +29,9 @@ export default function CartOptionCard({
   };
 
   const cubicYards = calculateCubicYards(option.tons);
+  
+  // Calculate price per ton
+  const pricePerTon = price / option.tons;
 
   return (
     <div 
@@ -38,14 +41,14 @@ export default function CartOptionCard({
     >
       <div className="flex items-center justify-between">
         <div>
+          <p className="text-sm text-black font-medium mb-1">{product.name}</p>
           <p className="font-medium">{option.tons} tons</p>
           <p className="flex items-center">
             <EqualApproximately className="h-3 w-3 mr-1 text-black-300" />
             <span>{cubicYards} yd³</span>
           </p>
-          <p className="text-sm text-black font-medium mb-1">{product.name}</p>
           <div className="flex items-center text-xs text-gray-500">
-            <span>{option.label}</span> 
+            <span>${pricePerTon.toFixed(2)} per ton</span> 
           </div>
         </div>
         <div className="text-right">
