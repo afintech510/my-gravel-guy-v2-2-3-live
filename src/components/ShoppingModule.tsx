@@ -8,7 +8,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useZipCode } from '@/contexts/ZipCodeContext';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Minus, Package, Layers, Mountain, RockingChair, Building2, Shovel, Waves, Flower, ExternalLink, Scale } from 'lucide-react';
+import { Plus, Minus, Package, Layers, Mountain, RockingChair, Building2, Shovel, Waves, Flower, ExternalLink, Scale, Route } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getPriceAdjustmentForZipCode } from '@/services/products/pricingUtils';
 import { calculateProductExponentialPrice } from '@/services/products/exponentialPricing';
@@ -22,7 +22,7 @@ interface ProductPricing {
 
 const ShoppingModule = () => {
   const isMobile = useIsMobile();
-  const [selectedCategory, setSelectedCategory] = useState<string>('gravel');
+  const [selectedCategory, setSelectedCategory] = useState<string>('walkway-gravel');
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
@@ -41,15 +41,31 @@ const ShoppingModule = () => {
   } = useZipCode();
   const navigate = useNavigate();
 
-  // Material categories with Lucide icons (matching ShopProductFilterSelector)
+  // Material categories with Lucide icons (updated to match ShopProductFilterSelector)
   const categories = [{
     id: 'all',
     label: 'All Products',
     icon: <Package className="h-5 w-5" />
   }, {
-    id: 'gravel',
-    label: 'Gravel',
+    id: 'walkway-gravel',
+    label: 'Walkway Gravel',
+    icon: <Route className="h-5 w-5" />
+  }, {
+    id: 'natural-gravel',
+    label: 'Natural Gravel',
     icon: <Layers className="h-5 w-5" />
+  }, {
+    id: 'river-rock',
+    label: 'River Rock',
+    icon: <Mountain className="h-5 w-5" />
+  }, {
+    id: 'driveway-gravel',
+    label: 'Driveway Gravel',
+    icon: <RockingChair className="h-5 w-5" />
+  }, {
+    id: 'crushed-stone',
+    label: 'Crushed Stone',
+    icon: <Building2 className="h-5 w-5" />
   }, {
     id: 'rock',
     label: 'Rock & Stone',
@@ -151,7 +167,7 @@ const ShoppingModule = () => {
     }
   }, [zipCode]);
 
-  // Filter products based on selected category (matching ShopProductFilterSelector logic)
+  // Filter products based on selected category (updated to match ShopProductFilterSelector logic)
   useEffect(() => {
     if (selectedCategory === 'all') {
       setFilteredProducts(products);
@@ -159,11 +175,33 @@ const ShoppingModule = () => {
       const filtered = products.filter(product => {
         const productCategory = product.category?.toLowerCase() || '';
         console.log(`Checking product: ${product.name}, category: ${productCategory}`);
+        
         switch (selectedCategory) {
-          case 'gravel':
-            const isGravel = productCategory === 'gravel';
-            if (isGravel) console.log(`Product ${product.name} included as gravel`);
-            return isGravel;
+          case 'walkway-gravel':
+            const isWalkwayGravel = productCategory === 'walkway-gravel';
+            if (isWalkwayGravel) console.log(`Product ${product.name} included as walkway-gravel`);
+            return isWalkwayGravel;
+          
+          case 'natural-gravel':
+            const isNaturalGravel = productCategory === 'natural-gravel';
+            if (isNaturalGravel) console.log(`Product ${product.name} included as natural-gravel`);
+            return isNaturalGravel;
+          
+          case 'river-rock':
+            const isRiverRock = productCategory === 'river-rock';
+            if (isRiverRock) console.log(`Product ${product.name} included as river-rock`);
+            return isRiverRock;
+          
+          case 'driveway-gravel':
+            const isDrivewayGravel = productCategory === 'driveway-gravel';
+            if (isDrivewayGravel) console.log(`Product ${product.name} included as driveway-gravel`);
+            return isDrivewayGravel;
+          
+          case 'crushed-stone':
+            const isCrushedStone = productCategory === 'crushed-stone';
+            if (isCrushedStone) console.log(`Product ${product.name} included as crushed-stone`);
+            return isCrushedStone;
+          
           case 'rock':
             const isRockOrStone = productCategory === 'rock' || productCategory === 'stone' || productCategory === 'rock-stone';
             if (isRockOrStone) console.log(`Product ${product.name} included as rock or stone`);
