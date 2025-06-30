@@ -19,6 +19,7 @@ import { useProduct } from '@/hooks/useProduct';
 import { Product } from '@/services/productTypes';
 import { trackEcommerce, trackEvent } from '@/utils/analytics';
 import QuoteFormProduct from '@/components/forms/QuoteFormProduct';
+import SecurePay from '@/components/products/SecurePay';
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -161,10 +162,13 @@ const ProductDetail = () => {
               selectedTons={currentTons}
             />
 
-            {/* Trust Module - positioned under Add to Cart button, above payment methods */}
+            {/* Trust Module - positioned under Add to Cart button, above SecurePay */}
             <ProductTrustModule />
 
-            {/* Payment Method Logos - positioned under trust module */}
+            {/* SecurePay Module - positioned under trust module */}
+            <SecurePay />
+
+            {/* Payment Method Logos - positioned under SecurePay module */}
             <Card className="bg-gray-50">
               <CardContent className="pt-6">
                 <PaymentMethodLogos />
