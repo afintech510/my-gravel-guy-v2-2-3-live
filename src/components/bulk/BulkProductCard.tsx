@@ -1,10 +1,9 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Product } from '@/services/productTypes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { useCart } from '@/contexts/CartContext';
 import { useZipCode } from '@/contexts/ZipCodeContext';
 import { useProduct } from '@/hooks/useProduct';
@@ -30,7 +29,6 @@ export default function BulkProductCard({
   quantity = 5,
   onQuantityChange
 }: BulkProductCardProps) {
-  const [inputValue, setInputValue] = useState(quantity.toString());
   const { addToCart } = useCart();
   const { zipCode } = useZipCode();
   const { toast } = useToast();
@@ -64,43 +62,10 @@ export default function BulkProductCard({
 
   const handleQuantityChange = (change: number) => {
     const newQuantity = Math.max(3, quantity + change);
-    setInputValue(newQuantity.toString());
     if (onQuantityChange) {
       onQuantityChange(newQuantity);
     }
   };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setInputValue(value);
-  };
-
-  const handleInputBlur = () => {
-    const numValue = parseInt(inputValue);
-    if (isNaN(numValue) || numValue < 3) {
-      // Reset to minimum if invalid
-      setInputValue("3");
-      if (onQuantityChange) {
-        onQuantityChange(3);
-      }
-    } else {
-      // Update with valid value
-      if (onQuantityChange) {
-        onQuantityChange(numValue);
-      }
-    }
-  };
-
-  const handleInputKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleInputBlur();
-    }
-  };
-
-  // Update input value when quantity prop changes (for sync functionality)
-  React.useEffect(() => {
-    setInputValue(quantity.toString());
-  }, [quantity]);
 
   const handleAddToCart = () => {
     const deliveryDate = new Date();
@@ -210,18 +175,8 @@ export default function BulkProductCard({
                   >
                     -
                   </Button>
-                  <div className="flex flex-col items-center">
-                    <Input
-                      type="number"
-                      min="3"
-                      value={inputValue}
-                      onChange={handleInputChange}
-                      onBlur={handleInputBlur}
-                      onKeyPress={handleInputKeyPress}
-                      className="w-20 text-center text-sm font-medium"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">tons</div>
+                  <div className="px-4 py-2 border rounded text-center min-w-[80px]">
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{quantity} tons</div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">≡ {cubicYards.toFixed(1)} cu. yds.</div>
                   </div>
                   <Button
