@@ -56,7 +56,20 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
         <div className="space-y-4">
           <div>
             <h3 className="text-base font-medium mb-1">Description</h3>
-            <p className="text-sm text-gray-700">{product.description}</p>
+            {/* Mobile: Show short description */}
+            <div className="block md:hidden">
+              <p className="text-sm text-gray-700">
+                {product.short_description || product.description}
+              </p>
+            </div>
+            
+            {/* Desktop: Show full HTML description */}
+            <div className="hidden md:block">
+              <div 
+                className="text-sm text-gray-700 prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: product.description }}
+              />
+            </div>
           </div>
 
           
