@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { getProducts } from '@/services/productService';
 import { Product } from '@/services/productTypes';
 import { cn } from '@/lib/utils';
-import { Package, Layers, Mountain, RockingChair, Building2, Shovel, Waves, Flower } from 'lucide-react';
+import { Package, Layers, Mountain, RockingChair, Building2, Shovel, Waves, Flower, Route } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ShopProductFilterSelectorProps {
@@ -19,10 +20,14 @@ export default function ShopProductFilterSelector({ onFilterChange, sortOrder = 
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   
-  // Hardcoded categories with Lucide icons
+  // Updated categories with new specific gravel types
   const categories = [
     { id: 'all', label: 'All Products', icon: <Package className="h-5 w-5" /> },
-    { id: 'gravel', label: 'Gravel', icon: <Layers className="h-5 w-5" /> },
+    { id: 'walkway-gravel', label: 'Walkway Gravel', icon: <Route className="h-5 w-5" /> },
+    { id: 'natural-gravel', label: 'Natural Gravel', icon: <Layers className="h-5 w-5" /> },
+    { id: 'river-rock', label: 'River Rock', icon: <Mountain className="h-5 w-5" /> },
+    { id: 'driveway-gravel', label: 'Driveway Gravel', icon: <RockingChair className="h-5 w-5" /> },
+    { id: 'crushed-stone', label: 'Crushed Stone', icon: <Building2 className="h-5 w-5" /> },
     { id: 'rock', label: 'Rock & Stone', icon: <Mountain className="h-5 w-5" /> },
     { id: 'crushed-gravel', label: 'Crushed Gravel', icon: <RockingChair className="h-5 w-5" /> },
     { id: 'crushed-concrete', label: 'Crushed Concrete', icon: <Building2 className="h-5 w-5" /> },
@@ -116,10 +121,30 @@ export default function ShopProductFilterSelector({ onFilterChange, sortOrder = 
         console.log(`Checking product: ${product.name}, category: ${productCategory}`);
         
         switch (selectedCategory) {
-          case 'gravel':
-            const isGravel = productCategory === 'gravel';
-            if (isGravel) console.log(`Product ${product.name} included as gravel`);
-            return isGravel;
+          case 'walkway-gravel':
+            const isWalkwayGravel = productCategory === 'walkway-gravel';
+            if (isWalkwayGravel) console.log(`Product ${product.name} included as walkway-gravel`);
+            return isWalkwayGravel;
+          
+          case 'natural-gravel':
+            const isNaturalGravel = productCategory === 'natural-gravel';
+            if (isNaturalGravel) console.log(`Product ${product.name} included as natural-gravel`);
+            return isNaturalGravel;
+          
+          case 'river-rock':
+            const isRiverRock = productCategory === 'river-rock';
+            if (isRiverRock) console.log(`Product ${product.name} included as river-rock`);
+            return isRiverRock;
+          
+          case 'driveway-gravel':
+            const isDrivewayGravel = productCategory === 'driveway-gravel';
+            if (isDrivewayGravel) console.log(`Product ${product.name} included as driveway-gravel`);
+            return isDrivewayGravel;
+          
+          case 'crushed-stone':
+            const isCrushedStone = productCategory === 'crushed-stone';
+            if (isCrushedStone) console.log(`Product ${product.name} included as crushed-stone`);
+            return isCrushedStone;
           
           case 'rock':
             const isRockOrStone = productCategory === 'rock' || productCategory === 'stone' || productCategory === 'rock-stone';
