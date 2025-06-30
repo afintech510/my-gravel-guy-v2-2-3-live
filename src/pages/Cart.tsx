@@ -6,6 +6,7 @@ import { ShoppingCart, ArrowRight, Loader2 } from 'lucide-react';
 import CartItemCard from '../components/cart/CartItemCard';
 import { CartPricingUpdater } from '../components/cart/CartPricingUpdater';
 import CouponCode from '../components/cart/CouponCode';
+import PaymentMethodLogos from '../components/payment/PaymentMethodLogos';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -414,6 +415,9 @@ const Cart = () => {
 
             {/* Coupon Code Component */}
             <CouponCode />
+
+            {/* Payment Method Logos */}
+            <PaymentMethodLogos />
           </div>
         </div>
       </div>
