@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Product } from '@/services/productTypes';
-import { ImageOff } from 'lucide-react';
+import { ImageOff, Play } from 'lucide-react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 // Default product image
@@ -31,6 +31,11 @@ const ProductImages = ({ product }: ProductImagesProps) => {
   const images = getProductImages();
   console.log('ProductImages - Images to display:', images);
   
+  // Check if a file is a video
+  const isVideo = (url: string): boolean => {
+    return url.toLowerCase().endsWith('.mp4') || url.toLowerCase().includes('.mp4');
+  };
+  
   return (
     <div className="space-y-3">
       <div className="relative overflow-hidden rounded-lg border border-gray-200">
@@ -38,6 +43,21 @@ const ProductImages = ({ product }: ProductImagesProps) => {
           {imageError ? (
             <div className="w-full h-full flex items-center justify-center">
               <ImageOff className="h-12 w-12 text-gray-400" />
+            </div>
+          ) : isVideo(images[selectedImage]) ? (
+            <div className="relative w-full h-full">
+              <video
+                src={images[selectedImage]}
+                className="object-cover w-full h-full"
+                controls
+                preload="metadata"
+                onError={() => {
+                  console.log(`Video failed to load for ${product?.name}:`, images[selectedImage]);
+                  setImageError(true);
+                }}
+              >
+                Your browser does not support the video tag.
+              </video>
             </div>
           ) : (
             <img
@@ -62,19 +82,34 @@ const ProductImages = ({ product }: ProductImagesProps) => {
                 setSelectedImage(index);
                 setImageError(false); // Reset error state when changing images
               }}
-              className={`cursor-pointer rounded-md overflow-hidden border-2 h-12 w-12 flex-shrink-0 transition-all ${
+              className={`cursor-pointer rounded-md overflow-hidden border-2 h-12 w-12 flex-shrink-0 transition-all relative ${
                 selectedImage === index ? "border-primary" : "border-transparent opacity-70 hover:opacity-100"
               }`}
             >
-              <img 
-                src={image} 
-                alt={`${product?.name} thumbnail ${index + 1}`} 
-                className="object-cover w-full h-full"
-                onError={(e) => {
-                  console.log(`Thumbnail failed to load for ${product?.name}:`, image);
-                  e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
-                }}
-              />
+              {isVideo(image) ? (
+                <div className="relative w-full h-full bg-black flex items-center justify-center">
+                  <video 
+                    src={image} 
+                    className="object-cover w-full h-full"
+                    preload="metadata"
+                    onError={(e) => {
+                      console.log(`Video thumbnail failed to load for ${product?.name}:`, image);
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                  <Play className="absolute inset-0 m-auto h-3 w-3 text-white opacity-80" />
+                </div>
+              ) : (
+                <img 
+                  src={image} 
+                  alt={`${product?.name} thumbnail ${index + 1}`} 
+                  className="object-cover w-full h-full"
+                  onError={(e) => {
+                    console.log(`Thumbnail failed to load for ${product?.name}:`, image);
+                    e.currentTarget.src = DEFAULT_PRODUCT_IMAGE;
+                  }}
+                />
+              )}
             </div>
           ))}
         </div>
