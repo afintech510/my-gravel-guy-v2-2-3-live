@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
 import { Product } from '@/services/productTypes';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { ChevronUp, ChevronDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ProductDetailsProps {
   product: Product;
@@ -10,12 +12,31 @@ interface ProductDetailsProps {
 
 export default function ProductDetails({ product }: ProductDetailsProps) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [imageStartIndex, setImageStartIndex] = useState(0);
   const isMobile = useIsMobile();
   
   // Use the product images array, fallback to single image if necessary
   const images = product.images && product.images.length > 0 
     ? product.images 
     : [product.image];
+
+  const canScrollUp = imageStartIndex > 0;
+  const canScrollDown = imageStartIndex + 3 < images.length;
+
+  const scrollUp = () => {
+    if (canScrollUp) {
+      setImageStartIndex(imageStartIndex - 1);
+    }
+  };
+
+  const scrollDown = () => {
+    if (canScrollDown) {
+      setImageStartIndex(imageStartIndex + 1);
+    }
+  };
+
+  // Get 3 images to display starting from imageStartIndex
+  const displayedImages = images.slice(imageStartIndex, imageStartIndex + 3);
     
   return (
     <div>
@@ -57,28 +78,45 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
               )}
             </>
           ) : (
-            // Desktop: Show 3 vertically stacked images with carousel
-            <Carousel className="w-full">
-              <CarouselContent className="h-[600px]">
-                {images.map((image, index) => (
-                  <CarouselItem key={index} className="basis-1/3 h-full">
-                    <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden h-full">
-                      <img 
-                        src={image} 
-                        alt={`${product.name} - image ${index + 1}`}
-                        className="w-full h-full object-cover" 
-                      />
-                    </div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              {images.length > 3 && (
-                <>
-                  <CarouselPrevious className="left-2" />
-                  <CarouselNext className="right-2" />
-                </>
+            // Desktop: Show 3 vertically stacked images with arrow controls
+            <div className="relative">
+              {/* Scroll Up Button */}
+              {canScrollUp && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute -top-12 left-1/2 transform -translate-x-1/2 z-10 h-8 w-8 rounded-full"
+                  onClick={scrollUp}
+                >
+                  <ChevronUp className="h-4 w-4" />
+                </Button>
               )}
-            </Carousel>
+
+              {/* Vertically Stacked Images */}
+              <div className="space-y-2">
+                {displayedImages.map((image, index) => (
+                  <div key={imageStartIndex + index} className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                    <img 
+                      src={image} 
+                      alt={`${product.name} - image ${imageStartIndex + index + 1}`}
+                      className="w-full h-full object-cover" 
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Scroll Down Button */}
+              {canScrollDown && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 z-10 h-8 w-8 rounded-full"
+                  onClick={scrollDown}
+                >
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           )}
         </div>
         
