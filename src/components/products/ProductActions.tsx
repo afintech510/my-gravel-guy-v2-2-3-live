@@ -6,9 +6,9 @@ import { useNavigate } from 'react-router-dom';
 import DeliveryDatePicker from './DeliveryDatePicker';
 import { Product } from '@/services/productTypes';
 import AmountSelector from './AmountSelector';
-import QuantityInput from './QuantityInput';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/contexts/CartContext';
+import { Minus, Plus } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ProductActionsProps {
@@ -50,6 +50,17 @@ const ProductActions = ({
     const adjustedTons = Math.max(3, tons);
     if (onQuantityChange) {
       onQuantityChange(adjustedTons);
+    }
+  };
+
+  // Handle increment/decrement with 3 ton minimum
+  const handleIncrement = () => {
+    handleQuantityChange(selectedTons + 1);
+  };
+
+  const handleDecrement = () => {
+    if (selectedTons > 3) {
+      handleQuantityChange(selectedTons - 1);
     }
   };
 
@@ -100,14 +111,36 @@ const ProductActions = ({
         onSelectAmount={handleQuantityChange}
       />
       
-      {/* Quantity Input with increment/decrement buttons */}
-      <QuantityInput
-        value={selectedTons}
-        onChange={handleQuantityChange}
-        min={3}
-        max={100}
-        cubicYards={cubicYards}
-      />
+      {/* Product name and tons/cubic yards display with increment/decrement buttons */}
+      <div className="flex flex-col items-center justify-center text-center my-4">
+        <div className="flex items-center justify-center gap-4">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleDecrement}
+            disabled={selectedTons <= 3}
+            className="h-12 w-12"
+          >
+            <Minus className="h-6 w-6" />
+          </Button>
+          
+          <div className="flex flex-col items-center justify-center">
+            <span className="text-4xl font-bold">{selectedTons} tons</span>
+            <span className="text-xl text-gray-500">
+              ≈ {cubicYards} yd³
+            </span>
+          </div>
+          
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleIncrement}
+            className="h-12 w-12"
+          >
+            <Plus className="h-6 w-6" />
+          </Button>
+        </div>
+      </div>
 
       <DeliveryDatePicker 
         selectedDate={deliveryDate}
