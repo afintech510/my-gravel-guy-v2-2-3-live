@@ -166,14 +166,7 @@ const ProductDetail = () => {
             <ProductTrustModule />
 
             {/* SecurePay Module - positioned under trust module */}
-            <SecurePay />
-
-            {/* Payment Method Logos - positioned under SecurePay module */}
-            <Card className="bg-gray-50">
-              <CardContent className="pt-6">
-                <PaymentMethodLogos />
-              </CardContent>
-            </Card>
+            <SecurePay /> 
 
             {/* Keep mini calculator separate */}
             <MiniCalculator
