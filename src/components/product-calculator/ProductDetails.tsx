@@ -1,7 +1,8 @@
-
 import React, { useState } from 'react';
 import { Product } from '@/services/productTypes';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
 interface ProductDetailsProps {
   product: Product;
@@ -9,6 +10,7 @@ interface ProductDetailsProps {
 
 export default function ProductDetails({ product }: ProductDetailsProps) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const isMobile = useIsMobile();
   
   // Use the product images array, fallback to single image if necessary
   const images = product.images && product.images.length > 0 
@@ -22,33 +24,61 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
         {/* Image Gallery */}
         <div>
-          <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-2">
-            <img 
-              src={images[activeImageIndex]} 
-              alt={product.name} 
-              className="w-full h-full object-cover" 
-            />
-          </div>
-          
-          {images.length > 1 && (
-            <div className="flex overflow-x-auto gap-2 py-2">
-              {images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setActiveImageIndex(index)}
-                  className={cn(
-                    "w-16 h-16 rounded-md flex-shrink-0 overflow-hidden",
-                    activeImageIndex === index ? "ring-2 ring-primary" : ""
-                  )}
-                >
-                  <img 
-                    src={image} 
-                    alt={`${product.name} - image ${index + 1}`}
-                    className="w-full h-full object-cover" 
-                  />
-                </button>
-              ))}
-            </div>
+          {isMobile ? (
+            // Mobile: Keep existing thumbnail layout
+            <>
+              <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-2">
+                <img 
+                  src={images[activeImageIndex]} 
+                  alt={product.name} 
+                  className="w-full h-full object-cover" 
+                />
+              </div>
+              
+              {images.length > 1 && (
+                <div className="flex overflow-x-auto gap-2 py-2">
+                  {images.map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setActiveImageIndex(index)}
+                      className={cn(
+                        "w-16 h-16 rounded-md flex-shrink-0 overflow-hidden",
+                        activeImageIndex === index ? "ring-2 ring-primary" : ""
+                      )}
+                    >
+                      <img 
+                        src={image} 
+                        alt={`${product.name} - image ${index + 1}`}
+                        className="w-full h-full object-cover" 
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            // Desktop: Show 3 vertically stacked images with carousel
+            <Carousel className="w-full">
+              <CarouselContent className="h-[600px]">
+                {images.map((image, index) => (
+                  <CarouselItem key={index} className="basis-1/3 h-full">
+                    <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden h-full">
+                      <img 
+                        src={image} 
+                        alt={`${product.name} - image ${index + 1}`}
+                        className="w-full h-full object-cover" 
+                      />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              {images.length > 3 && (
+                <>
+                  <CarouselPrevious className="left-2" />
+                  <CarouselNext className="right-2" />
+                </>
+              )}
+            </Carousel>
           )}
         </div>
         
