@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { Product } from '@/services/productTypes';
 import { ImageOff, Play } from 'lucide-react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
@@ -13,6 +14,8 @@ interface ProductImagesProps {
 const ProductImages = ({ product }: ProductImagesProps) => {
   const [selectedImage, setSelectedImage] = useState<number>(0);
   const [imageError, setImageError] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isReversing, setIsReversing] = useState(false);
   
   // Get product images directly from the product.images array
   const getProductImages = (): string[] => {
@@ -34,6 +37,38 @@ const ProductImages = ({ product }: ProductImagesProps) => {
   const isVideo = (url: string): boolean => {
     return url.toLowerCase().endsWith('.mp4') || url.toLowerCase().includes('.mp4');
   };
+
+  // Handle video end event to reverse playback
+  const handleVideoEnd = () => {
+    const video = videoRef.current;
+    if (video) {
+      if (!isReversing) {
+        // Start playing in reverse
+        setIsReversing(true);
+        video.currentTime = video.duration;
+        video.playbackRate = -1;
+        video.play();
+      } else {
+        // Reset to forward playback
+        setIsReversing(false);
+        video.currentTime = 0;
+        video.playbackRate = 1;
+        video.play();
+      }
+    }
+  };
+
+  // Handle when video reaches the beginning while reversing
+  const handleTimeUpdate = () => {
+    const video = videoRef.current;
+    if (video && isReversing && video.currentTime <= 0) {
+      // Reset to forward playback
+      setIsReversing(false);
+      video.currentTime = 0;
+      video.playbackRate = 1;
+      video.play();
+    }
+  };
   
   return (
     <div className="space-y-3">
@@ -46,13 +81,15 @@ const ProductImages = ({ product }: ProductImagesProps) => {
           ) : isVideo(images[selectedImage]) ? (
             <div className="relative w-full h-full">
               <video
+                ref={videoRef}
                 src={images[selectedImage]}
-                className="object-cover w-full h-full animate-bounce"
+                className="object-cover w-full h-full"
                 autoPlay
-                loop
                 muted
                 playsInline
                 preload="metadata"
+                onEnded={handleVideoEnd}
+                onTimeUpdate={handleTimeUpdate}
                 onError={() => {
                   console.log(`Video failed to load for ${product?.name}:`, images[selectedImage]);
                   setImageError(true);
