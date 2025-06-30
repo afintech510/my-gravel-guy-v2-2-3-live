@@ -9,6 +9,22 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+// Utility function to convert relative image paths to absolute URLs
+const convertToAbsoluteUrl = (imagePath: string, baseUrl: string): string => {
+  // If the path is already absolute (starts with http:// or https://), return as is
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
+  
+  // Handle relative paths that start with /
+  if (imagePath.startsWith('/')) {
+    return `${baseUrl}${imagePath}`;
+  }
+  
+  // Handle relative paths without leading /
+  return `${baseUrl}/${imagePath}`;
+};
+
 // Helper function to verify JWT and extract user info (optional for guest checkout)
 const verifyAuth = async (authHeader: string | null, supabaseUrl: string, supabaseAnonKey: string) => {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -84,14 +100,17 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
 
-    // Create line items for Stripe
+    // Get the base URL from the request origin
+    const baseUrl = req.headers.get('origin') || 'https://6cc236ee-8c17-42f6-b0da-a561155753fa.lovableproject.com';
+
+    // Create line items for Stripe with absolute image URLs
     const lineItems = items.map(item => ({
       price_data: {
         currency: 'usd',
         product_data: {
           name: item.name,
           description: item.description || '',
-          images: item.image ? [item.image] : [],
+          images: item.image ? [convertToAbsoluteUrl(item.image, baseUrl)] : [],
           metadata: {
             orderId: orderId,
             userId: user?.id || 'guest',
@@ -126,7 +145,8 @@ serve(async (req) => {
     console.log('Stripe session created:', { 
       sessionId: session.id, 
       userType: user ? 'authenticated' : 'guest',
-      contactEmail 
+      contactEmail,
+      imageUrlsConverted: lineItems.map(item => item.price_data.product_data.images?.[0]).filter(Boolean)
     });
 
     return new Response(
