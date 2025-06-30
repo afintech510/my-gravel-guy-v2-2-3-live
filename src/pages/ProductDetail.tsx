@@ -13,6 +13,7 @@ import ProductActions from '@/components/products/ProductActions';
 import ProductTabs from '@/components/products/ProductTabs';
 import MiniCalculator from '@/components/products/MiniCalculator';
 import ProductTrustModule from '@/components/products/ProductTrustModule';
+import PaymentMethodLogos from '@/components/payment/PaymentMethodLogos';
 import TrustBanner from '@/components/products/trust/TrustBanner';
 import { useProduct } from '@/hooks/useProduct';
 import { Product } from '@/services/productTypes';
@@ -160,8 +161,15 @@ const ProductDetail = () => {
               selectedTons={currentTons}
             />
 
-            {/* Trust Module - positioned under Add to Cart button, above calculator */}
+            {/* Trust Module - positioned under Add to Cart button, above payment methods */}
             <ProductTrustModule />
+
+            {/* Payment Method Logos - positioned under trust module */}
+            <Card className="bg-gray-50">
+              <CardContent className="pt-6">
+                <PaymentMethodLogos />
+              </CardContent>
+            </Card>
 
             {/* Keep mini calculator separate */}
             <MiniCalculator
