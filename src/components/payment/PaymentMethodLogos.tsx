@@ -8,20 +8,20 @@ const PaymentMethodLogos = () => {
         Accepted payment methods:
       </div>
       
-      {/* Payment Method Images - Full Width */}
-      <div className="flex items-center justify-center gap-1 flex-wrap w-full">
+      {/* Payment Method Images - Full Width, Each on Own Line */}
+      <div className="flex flex-col items-center justify-center gap-2 w-full">
         {/* Credit Cards (Visa, MC, Amex, Discover) */}
         <img 
           src="https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//visa-mc-amex-disc_pay-logos.png" 
           alt="Visa, Mastercard, American Express, Discover"
-          className="h-10 flex-1 object-contain max-w-[45%]"
+          className="h-10 w-full object-contain"
         />
         
         {/* Digital Payment Methods (Apple Pay, Google Pay, Link) */}
         <img 
           src="https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//app-goog-link_pay-logos.png" 
           alt="Apple Pay, Google Pay, Link"
-          className="h-10 flex-1 object-contain max-w-[45%]"
+          className="h-10 w-full object-contain"
         />
       </div>
       
