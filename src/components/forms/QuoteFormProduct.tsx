@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useZipCode } from "@/contexts/ZipCodeContext";
 import { Product } from '@/services/productTypes';
+import { sendQuoteRequestEmail } from '@/services/quoteEmailService';
 
 interface QuoteFormProductProps {
   selectedProduct?: Product | null;
@@ -40,29 +40,30 @@ const QuoteFormProduct: React.FC<QuoteFormProductProps> = ({ selectedProduct }) 
     setLoading(true);
     
     try {
-      // Log form submission details
-      console.log('Form submitted:', {
+      // Send email to sales team
+      const emailSent = await sendQuoteRequestEmail({
         ...formData,
-        product: selectedProduct ? selectedProduct.name : 'Not specified'
+        selectedProduct: selectedProduct
       });
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Quote request submitted!",
-        description: "We'll contact you shortly with a detailed quote.",
-      });
-      
-      // Reset form
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        message: '',
-        zipCode: zipCode || '',
-        acceptTerms: false,
-      });
+
+      if (emailSent) {
+        toast({
+          title: "Quote request submitted!",
+          description: "We'll contact you shortly with a detailed quote.",
+        });
+        
+        // Reset form
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          message: '',
+          zipCode: zipCode || '',
+          acceptTerms: false,
+        });
+      } else {
+        throw new Error('Failed to send email');
+      }
     } catch (error) {
       console.error('Error submitting form:', error);
       toast({
