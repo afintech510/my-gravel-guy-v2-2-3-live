@@ -4,9 +4,10 @@ const Chat = () => {
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-center mb-4">Haggle with Guy</h1>
-          <p className="text-gray-600 text-center">
-            Get instant answers to your questions about our products and services.
-          </p>
+          <p className="text-gray-600 text-center">Get your Advice on Gravel - Sand - Mulch - Dirt
+Compare Pros / Cons & Pricing
+Haggle
+Lock-in or </p>
         </div>
         
         <div className="w-full">
