@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -26,6 +25,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
+import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Quiz from "./pages/Quiz";
@@ -94,6 +94,7 @@ function App() {
                       <Route path="/contact" element={<Contact />} />
                       <Route path="/cart" element={<Cart />} />
                       <Route path="/checkout" element={<Checkout />} />
+                      <Route path="/chat" element={<Chat />} />
                       <Route path="/quiz" element={<Quiz />} />
                       <Route path="/calculator" element={<Calculator />} />
                       <Route path="/calculator-shop" element={<CalculatorShop />} />
