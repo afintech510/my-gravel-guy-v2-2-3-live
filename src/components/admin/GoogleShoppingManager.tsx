@@ -17,11 +17,14 @@ import {
   AlertTriangle,
   ShoppingCart,
   TrendingUp,
-  Eye
+  Eye,
+  MapPin,
+  Shield
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleShoppingFeedGenerator, GoogleShoppingProduct } from '@/services/googleShopping/feedGenerator';
 import { GoogleMerchantCenterAPI, ProductStatus, MerchantCenterConfig } from '@/services/googleShopping/merchantCenter';
+import { isContinentalUSZipCode, getContinentalUSRegion } from '@/services/googleShopping/usTargeting';
 
 interface GoogleShoppingManagerProps {
   merchantId?: string;
@@ -38,6 +41,7 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
   const [isGenerating, setIsGenerating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [zipCode, setZipCode] = useState('75001');
+  const [zipCodeValid, setZipCodeValid] = useState(true);
   
   const [config, setConfig] = useState<MerchantCenterConfig>({
     merchantId: merchantId || '',
@@ -53,13 +57,36 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
     }
   }, [config]);
 
+  // Validate ZIP code for continental US
+  useEffect(() => {
+    const isValid = isContinentalUSZipCode(zipCode);
+    setZipCodeValid(isValid);
+    
+    if (!isValid && zipCode.length === 5) {
+      toast({
+        title: 'Invalid ZIP Code',
+        description: 'Please enter a ZIP code from the continental United States (48 states)',
+        variant: 'destructive'
+      });
+    }
+  }, [zipCode, toast]);
+
   /**
-   * Generate product feed
+   * Generate product feed with US restrictions
    */
   const handleGenerateFeed = async () => {
+    if (!zipCodeValid) {
+      toast({
+        title: 'Invalid ZIP Code',
+        description: 'Please enter a valid continental US ZIP code before generating the feed',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setIsGenerating(true);
     try {
-      console.log('Generating Google Shopping feed...');
+      console.log('Generating Continental US Google Shopping feed...');
       
       const generatedProducts = await feedGenerator.generateFeed(zipCode);
       setProducts(generatedProducts);
@@ -67,9 +94,11 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
       const xml = await feedGenerator.generateXMLFeed(zipCode);
       setXmlFeed(xml);
       
+      const region = getContinentalUSRegion(zipCode);
+      
       toast({
         title: 'Feed Generated',
-        description: `Successfully generated feed with ${generatedProducts.length} products`
+        description: `Successfully generated Continental US feed with ${generatedProducts.length} products for ${region} region`
       });
     } catch (error) {
       console.error('Error generating feed:', error);
@@ -96,11 +125,12 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
       return;
     }
 
+    const region = getContinentalUSRegion(zipCode);
     const blob = new Blob([xmlFeed], { type: 'application/xml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `google-shopping-feed-${zipCode}-${new Date().toISOString().split('T')[0]}.xml`;
+    a.download = `google-shopping-continental-us-${region}-${new Date().toISOString().split('T')[0]}.xml`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -108,7 +138,7 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
 
     toast({
       title: 'Feed Downloaded',
-      description: 'XML feed has been downloaded successfully'
+      description: 'Continental US XML feed has been downloaded successfully'
     });
   };
 
@@ -222,15 +252,16 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" />
-            Google Shopping Integration
+            Google Shopping Integration - Continental US Only
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Alert>
-            <TrendingUp className="h-4 w-4" />
+            <Shield className="h-4 w-4" />
             <AlertDescription>
-              Manage your Google Shopping product feed and Merchant Center integration. 
-              Generate feeds for different geographic areas to optimize local targeting.
+              This integration is configured for <strong>Continental US delivery only</strong> (48 states). 
+              Products will be restricted to prevent international variations and ensure proper geographic targeting.
+              Alaska, Hawaii, and US territories are excluded from targeting.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -238,7 +269,7 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
 
       <Tabs defaultValue="feed" className="space-y-4">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="feed">Product Feed</TabsTrigger>
+          <TabsTrigger value="feed">Continental US Feed</TabsTrigger>
           <TabsTrigger value="merchant">Merchant Center</TabsTrigger>
           <TabsTrigger value="config">Configuration</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -247,22 +278,49 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
         <TabsContent value="feed">
           <Card>
             <CardHeader>
-              <CardTitle>Generate Product Feed</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Generate Continental US Product Feed
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <Alert>
+                <Shield className="h-4 w-4" />
+                <AlertDescription>
+                  Feed generation is restricted to continental US ZIP codes only. 
+                  This prevents Google from creating international product variations.
+                </AlertDescription>
+              </Alert>
+
               <div className="flex gap-4 items-end">
                 <div className="flex-1">
-                  <Label htmlFor="zipcode">Target Zip Code</Label>
+                  <Label htmlFor="zipcode">Continental US ZIP Code</Label>
                   <Input
                     id="zipcode"
                     value={zipCode}
                     onChange={(e) => setZipCode(e.target.value)}
-                    placeholder="Enter zip code for pricing"
+                    placeholder="Enter continental US ZIP code"
+                    className={!zipCodeValid && zipCode.length === 5 ? 'border-red-500' : ''}
                   />
+                  {zipCode.length === 5 && (
+                    <div className="mt-1 text-sm">
+                      {zipCodeValid ? (
+                        <span className="text-green-600 flex items-center gap-1">
+                          <CheckCircle className="h-3 w-3" />
+                          Valid continental US ZIP - {getContinentalUSRegion(zipCode)} region
+                        </span>
+                      ) : (
+                        <span className="text-red-600 flex items-center gap-1">
+                          <XCircle className="h-3 w-3" />
+                          Invalid - Continental US only (excludes AK, HI, territories)
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <Button 
                   onClick={handleGenerateFeed} 
-                  disabled={isGenerating}
+                  disabled={isGenerating || !zipCodeValid}
                   className="flex items-center gap-2"
                 >
                   {isGenerating ? (
@@ -270,7 +328,7 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
                   ) : (
                     <TrendingUp className="h-4 w-4" />
                   )}
-                  {isGenerating ? 'Generating...' : 'Generate Feed'}
+                  {isGenerating ? 'Generating...' : 'Generate US Feed'}
                 </Button>
               </div>
 
@@ -278,7 +336,7 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">
-                      Generated {products.length} products for zip code {zipCode}
+                      Generated {products.length} continental US products for {getContinentalUSRegion(zipCode)} region
                     </span>
                     <Button
                       onClick={handleDownloadFeed}
@@ -286,7 +344,7 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
                       className="flex items-center gap-2"
                     >
                       <Download className="h-4 w-4" />
-                      Download XML
+                      Download Continental US XML
                     </Button>
                   </div>
 
@@ -295,12 +353,17 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
                       {products.slice(0, 10).map((product) => (
                         <div key={product.id} className="flex justify-between items-center p-2 bg-white rounded text-sm">
                           <span className="font-medium">{product.title}</span>
-                          <Badge variant="outline">{product.price}</Badge>
+                          <div className="flex gap-2">
+                            <Badge variant="outline">{product.price}</Badge>
+                            <Badge variant="secondary" className="text-xs">
+                              {product.custom_label_0}
+                            </Badge>
+                          </div>
                         </div>
                       ))}
                       {products.length > 10 && (
                         <div className="text-center text-gray-500 py-2">
-                          ... and {products.length - 10} more products
+                          ... and {products.length - 10} more continental US products
                         </div>
                       )}
                     </div>

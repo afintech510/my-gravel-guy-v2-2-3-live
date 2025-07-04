@@ -1,5 +1,6 @@
 
 import { GoogleShoppingProduct } from './feedGenerator';
+import { isContinentalUSState } from './usTargeting';
 
 export interface MerchantCenterConfig {
   merchantId: string;
@@ -27,7 +28,7 @@ export class GoogleMerchantCenterAPI {
   }
 
   /**
-   * Upload product to Google Merchant Center
+   * Upload product to Google Merchant Center with US restrictions
    */
   async uploadProduct(product: GoogleShoppingProduct): Promise<any> {
     const url = `${this.baseUrl}/${this.config.merchantId}/products`;
@@ -51,11 +52,28 @@ export class GoogleMerchantCenterAPI {
         value: parseFloat(product.shipping_weight.replace(' lb', '')),
         unit: 'lb'
       },
+      // Enhanced US-specific targeting
+      shipping: [{
+        country: 'US',
+        service: 'Continental US Delivery',
+        price: {
+          value: 0,
+          currency: 'USD'
+        },
+        minDeliveryTime: 1,
+        maxDeliveryTime: 3,
+        // Restrict to continental US states only
+        region: 'US:AL,AZ,AR,CA,CO,CT,DE,FL,GA,ID,IL,IN,IA,KS,KY,LA,ME,MD,MA,MI,MN,MS,MO,MT,NE,NV,NH,NJ,NM,NY,NC,ND,OH,OK,OR,PA,RI,SC,SD,TN,TX,UT,VT,VA,WA,WV,WI,WY'
+      }],
+      shippingLabel: product.shipping_label,
       customLabel0: product.custom_label_0,
       customLabel1: product.custom_label_1,
       customLabel2: product.custom_label_2,
       customLabel3: product.custom_label_3,
       customLabel4: product.custom_label_4,
+      // Explicit destination targeting
+      includedDestinations: ['Shopping'],
+      excludedDestinations: ['Display'],
       channel: 'online',
       contentLanguage: 'en',
       targetCountry: 'US'
@@ -84,7 +102,7 @@ export class GoogleMerchantCenterAPI {
   }
 
   /**
-   * Batch upload multiple products
+   * Batch upload multiple products with US restrictions
    */
   async batchUploadProducts(products: GoogleShoppingProduct[]): Promise<any> {
     const url = `${this.baseUrl}/products/batch`;
@@ -112,11 +130,26 @@ export class GoogleMerchantCenterAPI {
           value: parseFloat(product.shipping_weight.replace(' lb', '')),
           unit: 'lb'
         },
+        // US-specific shipping configuration
+        shipping: [{
+          country: 'US',
+          service: 'Continental US Delivery',
+          price: {
+            value: 0,
+            currency: 'USD'
+          },
+          minDeliveryTime: 1,
+          maxDeliveryTime: 3,
+          region: 'US:AL,AZ,AR,CA,CO,CT,DE,FL,GA,ID,IL,IN,IA,KS,KY,LA,ME,MD,MA,MI,MN,MS,MO,MT,NE,NV,NH,NJ,NM,NY,NC,ND,OH,OK,OR,PA,RI,SC,SD,TN,TX,UT,VT,VA,WA,WV,WI,WY'
+        }],
+        shippingLabel: product.shipping_label,
         customLabel0: product.custom_label_0,
         customLabel1: product.custom_label_1,
         customLabel2: product.custom_label_2,
         customLabel3: product.custom_label_3,
         customLabel4: product.custom_label_4,
+        includedDestinations: ['Shopping'],
+        excludedDestinations: ['Display'],
         channel: 'online',
         contentLanguage: 'en',
         targetCountry: 'US'
