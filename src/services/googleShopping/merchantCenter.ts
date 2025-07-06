@@ -60,8 +60,8 @@ export class GoogleMerchantCenterAPI {
           value: 0,
           currency: 'USD'
         },
-        minDeliveryTime: 1,
-        maxDeliveryTime: 3,
+        minTransitTimeInDays: 1,
+        maxTransitTimeInDays: 3,
         // Restrict to continental US states only
         region: 'US:AL,AZ,AR,CA,CO,CT,DE,FL,GA,ID,IL,IN,IA,KS,KY,LA,ME,MD,MA,MI,MN,MS,MO,MT,NE,NV,NH,NJ,NM,NY,NC,ND,OH,OK,OR,PA,RI,SC,SD,TN,TX,UT,VT,VA,WA,WV,WI,WY'
       }],
@@ -138,8 +138,8 @@ export class GoogleMerchantCenterAPI {
             value: 0,
             currency: 'USD'
           },
-          minDeliveryTime: 1,
-          maxDeliveryTime: 3,
+          minTransitTimeInDays: 1,
+          maxTransitTimeInDays: 3,
           region: 'US:AL,AZ,AR,CA,CO,CT,DE,FL,GA,ID,IL,IN,IA,KS,KY,LA,ME,MD,MA,MI,MN,MS,MO,MT,NE,NV,NH,NJ,NM,NY,NC,ND,OH,OK,OR,PA,RI,SC,SD,TN,TX,UT,VT,VA,WA,WV,WI,WY'
         }],
         shippingLabel: product.shipping_label,
