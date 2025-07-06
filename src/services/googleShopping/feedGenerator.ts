@@ -14,9 +14,13 @@ export interface GoogleShoppingProduct {
   description: string;
   link: string;
   image_link: string;
+  additional_image_link?: string; // For product variants
+  mobile_link?: string; // Mobile-optimized links
   condition: 'new' | 'used' | 'refurbished';
   availability: 'in_stock' | 'out_of_stock' | 'preorder' | 'backorder';
   price: string;
+  sale_price?: string; // For promotional pricing
+  sale_price_effective_date?: string; // Sale period
   brand: string;
   gtin?: string;
   mpn?: string;
@@ -26,11 +30,12 @@ export interface GoogleShoppingProduct {
   // Enhanced US-specific targeting
   shipping: string;
   shipping_label: string;
-  custom_label_0?: string; // For US regional targeting
-  custom_label_1?: string; // For material type
-  custom_label_2?: string; // For size
-  custom_label_3?: string; // For usage type
-  custom_label_4?: string; // For pricing tier
+  // Optimized custom labels for Performance Max
+  custom_label_0?: string; // Campaign Group (Gravel, Sand, Soil, etc.)
+  custom_label_1?: string; // Material Size (Fine, Medium, Large, Various)
+  custom_label_2?: string; // Primary Use (Driveway, Landscaping, Construction, Decorative)
+  custom_label_3?: string; // US Regional targeting
+  custom_label_4?: string; // Pricing tier for bidding optimization
   // Explicit geographic restrictions
   included_destination: string;
   excluded_destination: string;
@@ -79,9 +84,11 @@ export class GoogleShoppingFeedGenerator {
     
     // Generate proper product URL with US-specific slug
     const productUrl = `${this.baseUrl}/products/${encodeURIComponent(product.slug)}?region=continental-us`;
+    const mobileUrl = `${this.baseUrl}/products/${encodeURIComponent(product.slug)}?region=continental-us&mobile=1`;
     
-    // Get primary image with fallback
+    // Get primary and additional images
     const imageUrl = this.getProductImageUrl(product);
+    const additionalImageUrl = this.getAdditionalImageUrl(product);
     
     // Determine Google product category based on material type
     const googleCategory = this.getGoogleProductCategory(product);
@@ -95,15 +102,22 @@ export class GoogleShoppingFeedGenerator {
     // Get US region for targeting
     const usRegion = getContinentalUSRegion(zipCode);
     
+    // Generate promotional pricing if applicable
+    const salePrice = this.generateSalePrice(totalPrice);
+    
     return {
       id: `${product.id}-US-${usRegion}`, // Make ID US-specific
       title: this.createOptimizedTitle(product),
       description: this.createOptimizedDescription(product),
       link: productUrl,
+      mobile_link: mobileUrl,
       image_link: imageUrl,
+      additional_image_link: additionalImageUrl,
       condition: 'new',
       availability: 'in_stock',
       price: `${totalPrice} USD`,
+      sale_price: salePrice ? `${salePrice} USD` : undefined,
+      sale_price_effective_date: salePrice ? this.generateSalePeriod() : undefined,
       brand: this.brandName,
       product_type: productType,
       google_product_category: googleCategory,
@@ -111,11 +125,11 @@ export class GoogleShoppingFeedGenerator {
       // US-specific shipping configuration
       shipping: this.generateShippingInfo(),
       shipping_label: 'Continental US Only',
-      // Enhanced US targeting labels
-      custom_label_0: usRegion,
-      custom_label_1: product.category,
-      custom_label_2: product.size || 'Various',
-      custom_label_3: product.usage || 'Landscaping',
+      // Optimized custom labels for Performance Max
+      custom_label_0: this.getCampaignGroup(product.category),
+      custom_label_1: this.getMaterialSize(product.size, product.specifications?.size),
+      custom_label_2: this.getPrimaryUse(product.usage, product.uses),
+      custom_label_3: usRegion,
       custom_label_4: this.getPricingTier(totalPrice),
       // Explicit geographic restrictions
       included_destination: 'US',
@@ -124,66 +138,233 @@ export class GoogleShoppingFeedGenerator {
   }
 
   /**
-   * Create SEO-optimized title for Google Shopping
+   * Create SEO-optimized title for Google Shopping using format: "Material Type – Size – Use – Delivery"
    */
   private createOptimizedTitle(product: Product): string {
-    let title = product.name;
+    const parts: string[] = [];
     
-    // Add size information if available
-    if (product.size) {
-      title += ` - ${product.size}`;
-    }
+    // Start with high-intent keywords
+    parts.push('Bulk');
     
-    // Add material type for clarity
+    // Add material type with category
+    let materialType = product.name;
     if (product.category === 'gravel') {
-      title += ' Gravel';
+      materialType += ' Gravel';
     } else if (product.category === 'sand') {
-      title += ' Sand';
+      materialType += ' Sand';
     } else if (product.category === 'base') {
-      title += ' Base Material';
+      materialType += ' Base';
+    } else if (product.category === 'dirt' || product.category === 'soil') {
+      materialType += ' Soil';
+    }
+    parts.push(materialType);
+    
+    // Add size if available
+    if (product.size || product.specifications?.size) {
+      const size = product.size || product.specifications?.size || '';
+      parts.push(`${size}`);
     }
     
-    // Add "Bulk Delivery" to indicate service type
-    title += ' - Bulk Delivery';
+    // Add primary use
+    const primaryUse = this.getPrimaryUseForTitle(product.usage, product.uses);
+    parts.push(primaryUse);
     
-    // Ensure title doesn't exceed Google's 150 character limit
+    // Add delivery commitment
+    parts.push('Fast Delivery');
+    
+    // Join with dashes and ensure under 150 characters
+    const title = parts.join(' – ');
     return title.length > 150 ? title.substring(0, 147) + '...' : title;
   }
 
   /**
-   * Create detailed description optimized for Google Shopping
+   * Create mobile-optimized description with HTML stripping and better structure
    */
   private createOptimizedDescription(product: Product): string {
-    let description = product.description;
+    // Strip HTML tags from description
+    let cleanDescription = this.stripHtmlTags(product.description || '');
     
-    // Add key selling points
-    const sellingPoints = [
-      'Bulk delivery available',
-      'Professional grade materials',
-      'Local supplier network',
-      'Competitive pricing'
+    // Start with key selling points
+    const keyPoints = [
+      'Professional grade landscaping materials with fast bulk delivery',
+      'Local supplier network ensures competitive pricing',
+      'Perfect for residential and commercial projects'
     ];
     
-    // Add material specifications
+    let description = keyPoints.join('. ') + '. ';
+    
+    // Add material specifications in mobile-friendly format
     if (product.specifications) {
       if (product.specifications.size) {
-        description += ` Size: ${product.specifications.size}.`;
+        description += `Material Size: ${product.specifications.size}. `;
       }
       if (product.specifications.color) {
-        description += ` Color: ${product.specifications.color}.`;
+        description += `Color: ${product.specifications.color}. `;
+      }
+      if (product.specifications.coverage) {
+        description += `Coverage: ${product.specifications.coverage}. `;
       }
     }
     
     // Add usage information
     if (product.uses && product.uses.length > 0) {
-      description += ` Ideal for: ${product.uses.join(', ')}.`;
+      description += `Ideal Applications: ${product.uses.slice(0, 3).join(', ')}. `;
     }
     
-    // Add selling points
-    description += ` ${sellingPoints.join('. ')}.`;
+    // Add original description if it's clean and not too long
+    if (cleanDescription && cleanDescription.length < 1000) {
+      description += cleanDescription + ' ';
+    }
     
-    // Ensure description doesn't exceed Google's 5000 character limit
-    return description.length > 5000 ? description.substring(0, 4997) + '...' : description;
+    // Add trust signals
+    description += 'Minimum 3-ton orders. Same-day delivery available in most areas. Professional installation guidance included.';
+    
+    // Ensure under 5000 characters and end properly
+    if (description.length > 5000) {
+      description = description.substring(0, 4997) + '...';
+    }
+    
+    return description.trim();
+  }
+
+  /**
+   * Strip HTML tags from text
+   */
+  private stripHtmlTags(html: string): string {
+    return html
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
+      .replace(/&amp;/g, '&') // Decode HTML entities
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#x27;/g, "'")
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .trim();
+  }
+
+  /**
+   * Get additional image URL for product variants
+   */
+  private getAdditionalImageUrl(product: Product): string | undefined {
+    // Use second image from images array if available
+    if (product.images && product.images.length > 1) {
+      const imageUrl = product.images[1];
+      return imageUrl.startsWith('http') ? imageUrl : `${this.baseUrl}${imageUrl}`;
+    }
+    return undefined;
+  }
+
+  /**
+   * Generate promotional sale price (10% off for larger orders)
+   */
+  private generateSalePrice(basePrice: number): number | undefined {
+    // Apply 5% discount for orders over $150
+    if (basePrice > 150) {
+      return Math.round(basePrice * 0.95 * 100) / 100;
+    }
+    return undefined;
+  }
+
+  /**
+   * Generate sale period for promotional pricing
+   */
+  private generateSalePeriod(): string {
+    const now = new Date();
+    const endDate = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 days from now
+    return `${now.toISOString().split('T')[0]}/${endDate.toISOString().split('T')[0]}`;
+  }
+
+  /**
+   * Get campaign group for Performance Max optimization
+   */
+  private getCampaignGroup(category: string): string {
+    const campaignGroups: Record<string, string> = {
+      'gravel': 'Gravel',
+      'sand': 'Sand', 
+      'dirt': 'Soil',
+      'soil': 'Soil',
+      'mulch': 'Mulch',
+      'base': 'Base',
+      'stone': 'Stone',
+      'rock': 'Stone',
+      'crushed-gravel': 'Gravel',
+      'crushed-concrete': 'Base'
+    };
+    
+    return campaignGroups[category] || 'Materials';
+  }
+
+  /**
+   * Get material size category for custom labels
+   */
+  private getMaterialSize(size?: string, specSize?: string): string {
+    const sizeValue = size || specSize || '';
+    
+    if (!sizeValue) return 'Various';
+    
+    // Parse size and categorize
+    if (sizeValue.includes('1/4') || sizeValue.includes('0.25') || sizeValue.includes('fine')) {
+      return 'Fine';
+    } else if (sizeValue.includes('1/2') || sizeValue.includes('3/4') || sizeValue.includes('0.5') || sizeValue.includes('0.75')) {
+      return 'Medium';
+    } else if (sizeValue.includes('1"') || sizeValue.includes('2"') || sizeValue.includes('large')) {
+      return 'Large';
+    }
+    
+    return 'Various';
+  }
+
+  /**
+   * Get primary use for custom labels
+   */
+  private getPrimaryUse(usage?: string, uses?: string[]): string {
+    // Priority order for use cases
+    if (usage === 'driveway' || (uses && uses.some(u => u.toLowerCase().includes('driveway')))) {
+      return 'Driveway';
+    }
+    
+    if (uses && uses.length > 0) {
+      const useString = uses[0].toLowerCase();
+      if (useString.includes('landscape') || useString.includes('garden')) {
+        return 'Landscaping';
+      }
+      if (useString.includes('construction') || useString.includes('building')) {
+        return 'Construction';
+      }
+      if (useString.includes('decorative') || useString.includes('accent')) {
+        return 'Decorative';
+      }
+      if (useString.includes('walkway') || useString.includes('path')) {
+        return 'Walkway';
+      }
+    }
+    
+    return 'Landscaping'; // Default
+  }
+
+  /**
+   * Get primary use for title optimization (shorter format)
+   */
+  private getPrimaryUseForTitle(usage?: string, uses?: string[]): string {
+    if (usage === 'driveway' || (uses && uses.some(u => u.toLowerCase().includes('driveway')))) {
+      return 'Driveway';
+    }
+    
+    if (uses && uses.length > 0) {
+      const useString = uses[0].toLowerCase();
+      if (useString.includes('landscape')) {
+        return 'Landscaping';
+      }
+      if (useString.includes('construction')) {
+        return 'Construction';
+      }
+      if (useString.includes('walkway')) {
+        return 'Walkway';
+      }
+    }
+    
+    return 'Landscaping';
   }
 
   /**
@@ -311,10 +492,31 @@ export class GoogleShoppingFeedGenerator {
       xml += `<g:title>${this.escapeXml(product.title)}</g:title>\n`;
       xml += `<g:description>${this.escapeXml(product.description)}</g:description>\n`;
       xml += `<g:link>${this.escapeXml(product.link)}</g:link>\n`;
+      
+      // Add mobile link if available
+      if (product.mobile_link) {
+        xml += `<g:mobile_link>${this.escapeXml(product.mobile_link)}</g:mobile_link>\n`;
+      }
+      
       xml += `<g:image_link>${this.escapeXml(product.image_link)}</g:image_link>\n`;
+      
+      // Add additional image if available
+      if (product.additional_image_link) {
+        xml += `<g:additional_image_link>${this.escapeXml(product.additional_image_link)}</g:additional_image_link>\n`;
+      }
+      
       xml += `<g:condition>${product.condition}</g:condition>\n`;
       xml += `<g:availability>${product.availability}</g:availability>\n`;
       xml += `<g:price>${product.price}</g:price>\n`;
+      
+      // Add sale price information if available
+      if (product.sale_price) {
+        xml += `<g:sale_price>${product.sale_price}</g:sale_price>\n`;
+      }
+      if (product.sale_price_effective_date) {
+        xml += `<g:sale_price_effective_date>${product.sale_price_effective_date}</g:sale_price_effective_date>\n`;
+      }
+      
       xml += `<g:brand>${this.escapeXml(product.brand)}</g:brand>\n`;
       xml += `<g:product_type>${this.escapeXml(product.product_type)}</g:product_type>\n`;
       xml += `<g:google_product_category>${product.google_product_category}</g:google_product_category>\n`;
