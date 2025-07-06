@@ -58,6 +58,7 @@ const Navbar = () => {
                 />  
               </Link>
             </div>
+          </div>
           
           {/* <div className="flex items-center">
             <Link to="/" className="flex-shrink-0">
