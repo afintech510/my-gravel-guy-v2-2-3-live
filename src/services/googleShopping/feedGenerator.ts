@@ -73,9 +73,9 @@ export class GoogleShoppingFeedGenerator {
    * Convert internal product to Google Shopping format with US restrictions
    */
   private convertToGoogleShoppingProduct(product: Product, zipCode: string): GoogleShoppingProduct {
-    // Calculate price for standard 10-ton quantity
-    const pricingResult = calculateProductExponentialPrice(product, 10);
-    const basePrice = Math.round(pricingResult.pricePerTon * 100) / 100;
+    // Calculate price for minimum 3-ton order quantity
+    const pricingResult = calculateProductExponentialPrice(product, 3);
+    const totalPrice = Math.round(pricingResult.pricePerTon * 3 * 100) / 100;
     
     // Generate proper product URL with US-specific slug
     const productUrl = `${this.baseUrl}/products/${encodeURIComponent(product.slug)}?region=continental-us`;
@@ -103,7 +103,7 @@ export class GoogleShoppingFeedGenerator {
       image_link: imageUrl,
       condition: 'new',
       availability: 'in_stock',
-      price: `${basePrice} USD`,
+      price: `${totalPrice} USD`,
       brand: this.brandName,
       product_type: productType,
       google_product_category: googleCategory,
@@ -116,7 +116,7 @@ export class GoogleShoppingFeedGenerator {
       custom_label_1: product.category,
       custom_label_2: product.size || 'Various',
       custom_label_3: product.usage || 'Landscaping',
-      custom_label_4: this.getPricingTier(basePrice),
+      custom_label_4: this.getPricingTier(totalPrice),
       // Explicit geographic restrictions
       included_destination: 'US',
       excluded_destination: 'AK,HI,PR,VI,GU,AS,MP,CA,AU,MX,International'
@@ -269,9 +269,8 @@ export class GoogleShoppingFeedGenerator {
    * Calculate shipping weight for bulk materials
    */
   private calculateShippingWeight(product: Product): string {
-    // Default weight for 1 ton in pounds (2000 lbs)
-    // This represents minimum order quantity
-    const defaultWeightLbs = 2000;
+    // Default weight for 3 ton minimum order in pounds (6000 lbs)
+    const defaultWeightLbs = 6000;
     
     // Adjust based on material density if ton/yard ratio is available
     if (product.tonYardRatio) {
