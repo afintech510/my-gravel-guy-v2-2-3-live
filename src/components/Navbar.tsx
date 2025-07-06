@@ -43,19 +43,14 @@ const Navbar = () => {
     <nav className="bg-white dark:bg-gray-900 border-b z-40">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14">
-          <div className="flex-1">
-            {/* Theme Toggle positioned to the left of the logo */}
-            <div className="absolute left-4 md:left-[calc((100%-72rem)/2+1rem)] -top-1 z-50 flex items-center gap-2">
-              {/*     <ThemeToggle /> */}
-              {/* Logo floating above banner and navbar */}
-              <Link to="/">
-                <img 
-                  src="/lovable-uploads/04048679-bd9f-42de-b2d0-70fddf60125e.png" 
-                  alt="My Gravel Guy Logo" 
-                  className="h-24 w-auto"
-                />  
-              </Link>
-            </div>
+          <div className="flex items-center">
+            <Link to="/" className="flex-shrink-0">
+              <img 
+                src="https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//mygravelguy_wide_logo.png" 
+                alt="My Gravel Guy Logo" 
+                className="h-10 w-auto max-w-[180px] md:max-w-[200px]"
+              />  
+            </Link>
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
