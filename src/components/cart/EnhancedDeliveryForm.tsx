@@ -1,358 +1,141 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Upload, X, Calendar as CalendarIcon, Loader2 } from "lucide-react";
-import { findZipCodeMatch } from "../../utils/zipCode";
-import { useToast } from "@/hooks/use-toast";
-import { CartItem } from "../../contexts/CartContext";
-import { cn } from "@/lib/utils";
-import { format, addHours } from "date-fns";
-import { useZipCode } from "@/contexts/ZipCodeContext";
-import { supabase } from "@/integrations/supabase/client";
-import { Link } from "react-router-dom";
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Label } from '@/components/ui/label';
+import { CalendarIcon, Upload, X } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { useZipCode } from '@/contexts/ZipCodeContext';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { CartItem } from '@/contexts/CartContext';
+import { trackEvent } from '../../utils/analytics';
 
-const enhancedDeliverySchema = z.object({
+export interface EnhancedDeliveryFormData {
   // Delivery date - required
-  deliveryDate: z.date({
-    required_error: "Delivery date is required",
-  }),
+  deliveryDate: Date;
   // Contact info - all required
-  name: z.string().min(1, "Name is required"),
-  phone: z.string().min(10, "Valid phone number is required"),
-  email: z.string().email("Valid email is required"),
+  name: string;
+  phone: string;
+  email: string;
   // Delivery address - all required
-  street: z.string().min(1, "Street address is required"),
-  city: z.string().min(1, "City is required"),
-  state: z.string().min(1, "State is required"),
-  zip: z.string().min(5, "Valid ZIP code is required"),
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
   // Optional fields
+  deliveryTimePreference?: "anytime" | "morning" | "afternoon";
+  deliveryInstructions?: string;
+  locationPhotoUrl?: string;
+  // Communication consent - required
+  communicationConsent: boolean;
+}
+
+interface EnhancedDeliveryFormProps {
+  onSubmit: (data: EnhancedDeliveryFormData) => void;
+  item?: CartItem;
+}
+
+const formSchema = z.object({
+  deliveryDate: z.date({
+    required_error: "Please select a delivery date.",
+  }),
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Please enter a valid email'),
+  phone: z.string().min(10, 'Please enter a valid phone number'),
+  street: z.string().min(5, 'Please enter a valid street address'),
+  city: z.string().min(2, 'Please enter a valid city'),
+  state: z.string().min(2, 'Please enter a valid state'),
+  zip: z.string().min(5, 'Please enter a valid ZIP code'),
   deliveryTimePreference: z.enum(["anytime", "morning", "afternoon"]).optional(),
   deliveryInstructions: z.string().optional(),
   locationPhotoUrl: z.string().optional(),
-  // Single consolidated communication consent field - required
-  communicationConsent: z.boolean().refine(val => val === true, {
-    message: "Communication consent is required to process your order and send delivery updates"
+  communicationConsent: z.boolean().refine((val) => val === true, {
+    message: 'You must agree to receive delivery communications',
   }),
 });
 
-export type EnhancedDeliveryFormData = z.infer<typeof enhancedDeliverySchema>;
-
-interface EnhancedDeliveryFormProps {
-  item?: CartItem;
-  onSubmit: (data: EnhancedDeliveryFormData) => void;
-}
-
-const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => {
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
-  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string | null>(null);
-  const { toast } = useToast();
-  const [isLoadingZipData, setIsLoadingZipData] = useState(false);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const { setZipCode } = useZipCode();
+const EnhancedDeliveryForm: React.FC<EnhancedDeliveryFormProps> = ({ onSubmit, item }) => {
+  const { zipCode, zipCodeData } = useZipCode();
+  const [uploadedPhoto, setUploadedPhoto] = useState<string | null>(null);
   
-  // Use ref to track the last processed ZIP code to prevent infinite loops
-  const lastProcessedZipRef = useRef<string>('');
-  
-  const form = useForm<EnhancedDeliveryFormData>({
-    resolver: zodResolver(enhancedDeliverySchema),
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      deliveryDate: item?.deliveryDate,
-      name: item?.contactInfo?.name || '',
-      phone: item?.contactInfo?.phone || '',
-      email: item?.contactInfo?.email || '',
-      street: item?.deliveryAddress?.street || '',
-      city: item?.deliveryAddress?.city || '',
-      state: item?.deliveryAddress?.state || '',
-      zip: item?.deliveryAddress?.zip || '',
-      deliveryTimePreference: item?.deliveryTimePreference || "anytime",
-      deliveryInstructions: item?.deliveryInstructions || '',
-      locationPhotoUrl: item?.locationPhotoUrl || '',
+      name: '',
+      email: '',
+      phone: '',
+      street: '',
+      city: zipCodeData?.city || '',
+      state: zipCodeData?.state_id || '',
+      zip: zipCode || '',
+      deliveryTimePreference: 'anytime',
+      deliveryInstructions: '',
+      locationPhotoUrl: '',
       communicationConsent: false,
-    }
+    },
   });
 
-  // Watch for zip code changes to auto-populate city and state
-  const watchedZip = form.watch('zip');
-
-  // Initialize photo preview if item already has a photo
-  useEffect(() => {
-    if (item?.locationPhotoUrl) {
-      setUploadedPhotoUrl(item.locationPhotoUrl);
-      setPhotoPreview(item.locationPhotoUrl);
-    }
-  }, [item?.locationPhotoUrl]);
-
-  // Auto-populate city and state when zip changes AND update pricing context
-  useEffect(() => {
-    const fetchLocationData = async (zipCode: string) => {
-      // Prevent processing the same ZIP code multiple times
-      if (zipCode === lastProcessedZipRef.current) {
-        return;
-      }
-      
-      if (zipCode.length === 5) {
-        setIsLoadingZipData(true);
-        lastProcessedZipRef.current = zipCode; // Mark this ZIP as processed
-        
-        try {
-          const zipData = await findZipCodeMatch(zipCode);
-          if (zipData) {
-            form.setValue('city', zipData.city);
-            form.setValue('state', zipData.state_id);
-            
-            // Update the ZIP code context to trigger price updates
-            setZipCode(zipCode, zipData);
-            
-            /*toast({
-              title: "Location found",
-              description: `${zipData.city}, ${zipData.state_id} detected for ZIP code ${zipCode}`,
-            });*/
-          } else {
-            // Even if we don't find ZIP data, update the context for pricing
-            setZipCode(zipCode);
-          }
-        } catch (error) {
-          console.error("Error finding ZIP data:", error);
-          // Still update ZIP code context for pricing even if lookup fails
-          setZipCode(zipCode);
-        } finally {
-          setIsLoadingZipData(false);
-        }
-      } else {
-        // Reset the processed ZIP when input is not 5 digits
-        lastProcessedZipRef.current = '';
-      }
-    };
-
-    if (watchedZip && watchedZip.length === 5 && watchedZip !== lastProcessedZipRef.current) {
-      fetchLocationData(watchedZip);
-    }
-  }, [watchedZip, form, toast, setZipCode]);
-
-  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setPhotoFile(file);
-      setIsUploadingPhoto(true);
-      
-      try {
-        // Generate unique filename
-        const timestamp = Date.now();
-        const randomString = Math.random().toString(36).substring(2, 9);
-        const fileExtension = file.name.split('.').pop() || 'jpg';
-        const fileName = `delivery-photo-${timestamp}-${randomString}.${fileExtension}`;
-        
-        console.log('Uploading photo to Supabase storage...', fileName);
-        
-        // Upload to Supabase storage
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('customer-uploads')
-          .upload(fileName, file, {
-            cacheControl: '3600',
-            upsert: false
-          });
-        
-        if (uploadError) {
-          console.error('Upload error:', uploadError);
-          throw uploadError;
-        }
-        
-        console.log('Upload successful:', uploadData);
-        
-        // Get public URL
-        const { data: urlData } = supabase.storage
-          .from('customer-uploads')
-          .getPublicUrl(fileName);
-        
-        const publicUrl = urlData.publicUrl;
-        console.log('Public URL:', publicUrl);
-        
-        setUploadedPhotoUrl(publicUrl);
-        setPhotoPreview(publicUrl);
-        
-        toast({
-          title: "Photo uploaded successfully",
-          description: "Your delivery location photo has been uploaded.",
-        });
-        
-      } catch (error) {
-        console.error('Photo upload failed:', error);
-        
-        toast({
-          variant: "destructive",
-          title: "Upload failed",
-          description: error instanceof Error ? error.message : "Failed to upload photo. Please try again.",
-        });
-        
-        // Reset file input and states on error
-        setPhotoFile(null);
-        setPhotoPreview(null);
-        setUploadedPhotoUrl(null);
-        e.target.value = '';
-      } finally {
-        setIsUploadingPhoto(false);
-      }
-    }
-  };
-
-  const handleRemovePhoto = () => {
-    setPhotoFile(null);
-    setPhotoPreview(null);
-    setUploadedPhotoUrl(null);
+  const handleSubmitForm = (data: z.infer<typeof formSchema>) => {
+    console.log('EnhancedDeliveryForm: Form submitted:', data);
     
-    // Clear the file input
-    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-    if (fileInput) {
-      fileInput.value = '';
-    }
-  };
-
-  // Function to scroll to the first field with an error
-  const scrollToFirstError = () => {
-    setTimeout(() => {
-      const firstErrorElement = document.querySelector('[data-invalid="true"]') || 
-                               document.querySelector('.text-destructive') ||
-                               document.querySelector('[aria-invalid="true"]');
-      
-      if (firstErrorElement) {
-        firstErrorElement.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'center',
-          inline: 'nearest'
-        });
-        
-        // Focus the element if it's focusable
-        if (firstErrorElement instanceof HTMLElement && firstErrorElement.focus) {
-          setTimeout(() => firstErrorElement.focus(), 100);
-        }
-      }
-    }, 100);
-  };
-
-  const handleSubmitForm = (data: EnhancedDeliveryFormData) => {
-    // Don't allow submission if photo is still uploading
-    if (isUploadingPhoto) {
-      toast({
-        variant: "destructive",
-        title: "Please wait",
-        description: "Photo is still uploading. Please wait for it to complete.",
-      });
-      return;
+    // Track delivery information saving
+    try {
+      console.log('EnhancedDeliveryForm: Tracking delivery info submission');
+      trackEvent('form_submit', 'Delivery', `Delivery Info - ${item?.name || 'Unknown Product'}`, item?.tons || 0);
+    } catch (error) {
+      console.error('EnhancedDeliveryForm: Failed to track delivery info submission:', error);
     }
     
-    const formData = {
+    onSubmit({
       ...data,
-      locationPhotoUrl: uploadedPhotoUrl || undefined,
-      // Map the single consent to both email and SMS for backward compatibility
-      smsConsent: data.communicationConsent,
-      emailConsent: data.communicationConsent,
-    };
-    
-    console.log('Submitting form with photo URL:', uploadedPhotoUrl);
-    console.log('Communication consent:', data.communicationConsent);
-    onSubmit(formData);
+      locationPhotoUrl: uploadedPhoto || undefined
+    });
   };
 
-  const handleInvalidSubmit = () => {
-    scrollToFirstError();
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // In a real app, you'd upload to a service like Supabase Storage
+      const url = URL.createObjectURL(file);
+      setUploadedPhoto(url);
+    }
   };
 
-  // Get minimum date (60 hours from now)
-  const minDate = addHours(new Date(), 60);
-
-  // Function to disable Sundays and dates before minimum date
-  const isDateDisabled = (date: Date) => {
-    // Check if date is before minimum date
-    if (date < minDate) return true;
-    
-    // Check if date is Sunday (0 = Sunday)
-    if (date.getDay() === 0) return true;
-    
-    return false;
+  const removePhoto = () => {
+    setUploadedPhoto(null);
   };
+
+  const minDate = new Date();
+  minDate.setDate(minDate.getDate() + 1); // Tomorrow at earliest
 
   return (
     <div className="space-y-6">
-      <div className="border-b pb-4">
-        <h3 className="text-lg font-semibold">Delivery Information</h3>
-        <p className="text-sm text-muted-foreground">
-          Complete all required fields (*) - this will automatically proceed to checkout when all items are ready
-        </p>
+      <div>
+        <h3 className="text-lg font-semibold mb-2">Delivery Information</h3>
+        <p className="text-sm text-gray-600">Please provide your delivery details and contact information.</p>
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmitForm, handleInvalidSubmit)} className="space-y-6">
-          {/* Delivery Date */}
-          <FormField
-            control={form.control}
-            name="deliveryDate"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Delivery Date *</FormLabel>
-                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground"
-                        )}
-                      >
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Pick a delivery date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={(date) => {
-                        field.onChange(date);
-                        setIsCalendarOpen(false);
-                      }}
-                      disabled={isDateDisabled}
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-                <p className="text-xs text-muted-foreground">
-                  * Minimum 60-hour lead time required. Sundays unavailable for delivery.
-                </p>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
+        <form onSubmit={form.handleSubmit(handleSubmitForm)} className="space-y-4">
           {/* Contact Information */}
           <div className="space-y-4">
-            <h4 className="font-medium text-base">Delivery Contact Information</h4>
-            
+            <h4 className="font-medium">Contact Information</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Full Name *</FormLabel>
+                    <FormLabel>Full Name</FormLabel>
                     <FormControl>
                       <Input placeholder="John Doe" {...field} />
                     </FormControl>
@@ -366,24 +149,24 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email *</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="john@example.com" {...field} />
+                      <Input placeholder="john@example.com" type="email" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-
+            
             <FormField
               control={form.control}
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone Number *</FormLabel>
+                  <FormLabel>Phone Number</FormLabel>
                   <FormControl>
-                    <Input type="tel" placeholder="(555) 123-4567" {...field} />
+                    <Input placeholder="(555) 123-4567" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -393,60 +176,30 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
 
           {/* Delivery Address */}
           <div className="space-y-4">
-            <h4 className="font-medium text-base">Delivery Address</h4>
+            <h4 className="font-medium">Delivery Address</h4>
+            <FormField
+              control={form.control}
+              name="street"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Street Address</FormLabel>
+                  <FormControl>
+                    <Input placeholder="123 Main St" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="street"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Street Address *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="123 Main St" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="zip"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>ZIP Code *</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="12345" 
-                        {...field} 
-                        className={isLoadingZipData ? "bg-gray-50" : ""}
-                      />
-                    </FormControl>
-                    {isLoadingZipData && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Looking up location and updating prices...
-                      </p>
-                    )}
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="city"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>City *</FormLabel>
+                    <FormLabel>City</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="City" 
-                        {...field} 
-                        className={isLoadingZipData ? "bg-gray-50" : ""}
-                      />
+                      <Input placeholder="City" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -458,186 +211,189 @@ const EnhancedDeliveryForm = ({ item, onSubmit }: EnhancedDeliveryFormProps) => 
                 name="state"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>State *</FormLabel>
+                    <FormLabel>State</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="State" 
-                        {...field}
-                        className={isLoadingZipData ? "bg-gray-50" : ""}
-                      />
+                      <Input placeholder="State" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
-          </div>
-
-          {/* Optional Delivery Preferences */}
-          <div className="space-y-4">
-            <h4 className="font-medium text-base">Delivery Preferences (Optional)</h4>
-            
-            <FormField
-              control={form.control}
-              name="deliveryTimePreference"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Preferred Delivery Time</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a preferred time" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="anytime">Anytime (7pm - 5pm)</SelectItem>
-                      <SelectItem value="morning">Morning (7am - 12pm)</SelectItem>
-                      <SelectItem value="afternoon">Afternoon (12pm - 5pm)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="deliveryInstructions"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Delivery Instructions</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Special instructions for delivery driver" 
-                      className="resize-none" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {/* Photo Upload */}
-            <div className="space-y-2">
-              <FormLabel>Delivery Location Photo</FormLabel>
-              <div className="border border-dashed border-gray-300 rounded-md p-4">
-                {photoPreview ? (
-                  <div className="relative">
-                    <img 
-                      src={photoPreview} 
-                      alt="Delivery location" 
-                      className="h-40 w-full object-cover rounded-md" 
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost" 
-                      size="icon"
-                      className="absolute top-2 right-2 bg-white rounded-full"
-                      onClick={handleRemovePhoto}
-                      disabled={isUploadingPhoto}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center justify-center h-40 cursor-pointer">
-                    {isUploadingPhoto ? (
-                      <>
-                        <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
-                        <span className="mt-2 text-sm text-gray-500 text-center">
-                          Uploading photo...
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="h-8 w-8 text-gray-400" />
-                        <span className="mt-2 text-sm text-gray-500 text-center">
-                          Upload a photo of the delivery location or the gravel you're expecting
-                        </span>
-                      </>
-                    )}
-                    <input
-                      type="file" 
-                      className="hidden" 
-                      accept="image/*" 
-                      onChange={handlePhotoChange}
-                      disabled={isUploadingPhoto}
-                    />
-                  </label>
-                )}
-              </div>
-              {isUploadingPhoto && (
-                <p className="text-xs text-blue-600">
-                  Uploading to secure storage...
-                </p>
-              )}
-              <p className="text-xs text-gray-500">
-                This helps our drivers find the exact location or understand your expectations
-              </p>
-            </div>
-          </div>
-
-          {/* Consolidated Communication Consent Section */}
-          <div className="space-y-4">
-            <h4 className="font-medium text-base">Communication Preferences</h4>
-            <div className="p-4 bg-gray-50 rounded-lg border space-y-4">
-              <p className="text-sm text-gray-600">
-                Please consent to receive order and delivery communications.
-              </p>
               
               <FormField
                 control={form.control}
-                name="communicationConsent"
+                name="zip"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormItem>
+                    <FormLabel>ZIP Code</FormLabel>
                     <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                      <Input placeholder="12345" {...field} />
                     </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel className="text-sm font-normal">
-                        I consent to receive email and SMS/text communications about my order, delivery confirmations, 
-                        driver coordination, and important updates. Message & data rates may apply. Reply STOP to opt out of SMS. *
-                      </FormLabel>
-                      <p className="text-xs text-muted-foreground">
-                        Required for order processing and delivery notifications
-                      </p>
-                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
-              <p className="text-xs text-gray-500">
-                Learn more about our communication practices on our{" "}
-                <Link to="/sms-consent" className="text-blue-600 hover:underline">
-                  SMS Consent page
-                </Link>
-                . You can opt out of communications at any time.
-              </p>
             </div>
           </div>
-          
-          <Button 
-            type="submit" 
-            className="w-full" 
-            size="lg"
-            disabled={isUploadingPhoto}
-          >
-            {isUploadingPhoto ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Uploading photo...
-              </>
-            ) : (
-              'Confirm Delivery Information & Proceed'
+
+          {/* Delivery Date */}
+          <FormField
+            control={form.control}
+            name="deliveryDate"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Preferred Delivery Date</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) => date < minDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
             )}
+          />
+
+          {/* Delivery Time Preference */}
+          <FormField
+            control={form.control}
+            name="deliveryTimePreference"
+            render={({ field }) => (
+              <FormItem className="space-y-3">
+                <FormLabel>Preferred Delivery Time</FormLabel>
+                <FormControl>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="flex space-x-6"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="anytime" id="anytime" />
+                      <Label htmlFor="anytime">Anytime</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="morning" id="morning" />
+                      <Label htmlFor="morning">Morning (8AM-12PM)</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="afternoon" id="afternoon" />
+                      <Label htmlFor="afternoon">Afternoon (12PM-5PM)</Label>
+                    </div>
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Delivery Instructions */}
+          <FormField
+            control={form.control}
+            name="deliveryInstructions"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Delivery Instructions (Optional)</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="Special instructions for delivery (e.g., gate code, specific location, etc.)"
+                    className="min-h-[80px]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Photo Upload */}
+          <div className="space-y-2">
+            <Label>Location Photo (Optional)</Label>
+            <p className="text-sm text-gray-600">Upload a photo of the delivery location to help our drivers.</p>
+            
+            {!uploadedPhoto ? (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                <div className="mt-4">
+                  <Label htmlFor="photo-upload" className="cursor-pointer">
+                    <span className="mt-2 block text-sm font-medium text-gray-900">
+                      Click to upload a photo
+                    </span>
+                  </Label>
+                  <input
+                    id="photo-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoUpload}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="relative">
+                <img src={uploadedPhoto} alt="Delivery location" className="w-full h-48 object-cover rounded-lg" />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  className="absolute top-2 right-2"
+                  onClick={removePhoto}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Communication Consent */}
+          <FormField
+            control={form.control}
+            name="communicationConsent"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel className="text-sm">
+                    I agree to receive SMS and email communications about my delivery (required)
+                  </FormLabel>
+                  <p className="text-xs text-gray-500">
+                    We'll send you updates about your delivery status and timing.
+                  </p>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <Button type="submit" className="w-full" size="lg">
+            Save Delivery Information
           </Button>
         </form>
       </Form>

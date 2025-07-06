@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ToastAction } from '@/components/ui/toast';
 import { Undo } from 'lucide-react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { trackEcommerce } from '../utils/analytics';
 
 export interface DeliveryAddress {
   street: string;
@@ -93,7 +94,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []); // Only run once on mount
 
-  // Modified to add each product as a new cart item (never combine)
+  // Modified to add each product as a new cart item (never combine) with analytics tracking
   const addToCart = useCallback((product: Product & { 
     tons?: number, 
     yards?: number,
@@ -111,6 +112,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const tons = Math.max(3, product.tons || 3); // Enforce minimum of 3 tons
     // Use the provided yards or calculate yards based on tonYardRatio if available
     const yards = product.yards || (product.tonYardRatio ? tons / product.tonYardRatio : undefined);
+    
+    // Track the add to cart event
+    try {
+      console.log('CartContext: Tracking add_to_cart event for:', product.name);
+      trackEcommerce('add_to_cart', [{
+        item_id: product.id.toString(),
+        item_name: product.name,
+        item_category: product.category || 'Bulk Materials',
+        item_category2: product.materialSubcategory,
+        quantity: tons,
+        price: product.price
+      }], product.price * tons);
+    } catch (error) {
+      console.error('CartContext: Failed to track add_to_cart event:', error);
+    }
     
     setItems(currentItems => [
       ...currentItems,

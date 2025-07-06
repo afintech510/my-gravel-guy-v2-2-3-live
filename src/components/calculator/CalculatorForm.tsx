@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Send } from 'lucide-react';
 import { CalculatorFormValues, calculatorFormSchema } from './types';
+import { trackEvent } from '../../utils/analytics';
 
 interface CalculatorFormProps {
   onSubmit: () => void;
@@ -26,9 +27,23 @@ export const CalculatorForm = ({ onSubmit, onZipCodeChange }: CalculatorFormProp
     },
   });
 
+  const handleSubmit = () => {
+    console.log('CalculatorForm: Form submitted');
+    
+    // Track material calculator form submission
+    try {
+      console.log('CalculatorForm: Tracking material calculator form submission');
+      trackEvent('form_submit', 'Quote', 'Material Calculator Form', 1);
+    } catch (error) {
+      console.error('CalculatorForm: Failed to track material calculator form submission:', error);
+    }
+    
+    onSubmit();
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"

@@ -1,213 +1,202 @@
-import React, { useState } from 'react';
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/hooks/use-toast";
-import { useZipCode } from "@/contexts/ZipCodeContext";
+
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useToast } from '@/hooks/use-toast';
 import { Product } from '@/services/productTypes';
-import { sendQuoteRequestEmail } from '@/services/quoteEmailService';
+import { trackEvent } from '../../utils/analytics';
 
 interface QuoteFormProductProps {
   selectedProduct?: Product | null;
 }
 
+const formSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Please enter a valid email'),
+  phone: z.string().min(10, 'Please enter a valid phone number'),
+  zipCode: z.string().min(5, 'Please enter a valid ZIP code'),
+  estimatedTons: z.string().optional(),
+  message: z.string().optional(),
+  consent: z.boolean().refine((val) => val === true, {
+    message: 'You must agree to receive communications',
+  }),
+});
+
 const QuoteFormProduct: React.FC<QuoteFormProductProps> = ({ selectedProduct }) => {
-  const { zipCode } = useZipCode();
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    message: '',
-    zipCode: zipCode || '',
-    acceptTerms: false,
-  });
   const { toast } = useToast();
+  
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      zipCode: '',
+      estimatedTons: '',
+      message: selectedProduct ? `I'm interested in getting a quote for ${selectedProduct.name}.` : '',
+      consent: false,
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const onSubmit = (data: z.infer<typeof formSchema>) => {
+    console.log('QuoteFormProduct: Form submitted:', data);
     
-    if (!formData.acceptTerms) {
-      toast({
-        title: "Terms Not Accepted",
-        description: "Please agree to the terms and conditions to continue.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setLoading(true);
-    
+    // Track product-specific quote form submission
     try {
-      // Send email to sales team
-      const emailSent = await sendQuoteRequestEmail({
-        ...formData,
-        selectedProduct: selectedProduct
-      });
-
-      if (emailSent) {
-        toast({
-          title: "Quote request submitted!",
-          description: "We'll contact you shortly with a detailed quote.",
-        });
-        
-        // Reset form
-        setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          message: '',
-          zipCode: zipCode || '',
-          acceptTerms: false,
-        });
-      } else {
-        throw new Error('Failed to send email');
-      }
+      console.log('QuoteFormProduct: Tracking product quote form submission');
+      trackEvent('form_submit', 'Quote', `Product Quote - ${selectedProduct?.name || 'Unknown'}`, 1);
     } catch (error) {
-      console.error('Error submitting form:', error);
-      toast({
-        title: "Error",
-        description: "There was a problem submitting your request. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+      console.error('QuoteFormProduct: Failed to track product quote form submission:', error);
     }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleCheckboxChange = (checked: boolean) => {
-    setFormData(prev => ({ ...prev, acceptTerms: checked }));
+    
+    // Here you would typically send this data to your backend
+    toast({
+      title: 'Quote request sent!',
+      description: 'We will get back to you with a custom quote within 24 hours.',
+    });
+    
+    form.reset();
   };
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-md max-w-2xl mx-auto">
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold mb-2 font-montserrat">Request a Quote</h2>
-        <p className="text-gray-600 text-sm">
-          For larger orders (over 20 tons) or if you have extra time - send us the details and we can quote a better price!
-          </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold mb-2">Get a Custom Quote</h2>
         {selectedProduct && (
-          <div className="p-3 bg-gray-50 rounded-md mb-4">
-            <p className="text-sm text-gray-700">
-              Selected Material: <span className="font-medium">{selectedProduct.name}</span>
-            </p>
-          </div>
+          <p className="text-gray-600">
+            Interested in <strong>{selectedProduct.name}</strong>? Get a personalized quote for your project.
+          </p>
         )}
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label htmlFor="name" className="text-sm font-medium">
-              Name
-            </label>
-            <Input
-              id="name"
+        {!selectedProduct && (
+          <p className="text-gray-600">
+            Get a personalized quote for your material needs.
+          </p>
+        )}
+      </div>
+      
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
               name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Your full name"
-              required
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Your full name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">
-              Email
-            </label>
-            <Input
-              id="email"
+            
+            <FormField
+              control={form.control}
               name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Your email address"
-              required
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="your@email.com" type="email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label htmlFor="phone" className="text-sm font-medium">
-              Phone
-            </label>
-            <Input
-              id="phone"
+            
+            <FormField
+              control={form.control}
               name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="Your phone number"
-              required
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone</FormLabel>
+                  <FormControl>
+                    <Input placeholder="(555) 123-4567" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="zipCode" className="text-sm font-medium">
-              Delivery ZIP Code
-            </label>
-            <Input
-              id="zipCode"
+            
+            <FormField
+              control={form.control}
               name="zipCode"
-              value={formData.zipCode}
-              onChange={handleChange}
-              placeholder="Delivery ZIP code"
-              required
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>ZIP Code</FormLabel>
+                  <FormControl>
+                    <Input placeholder="12345" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <label htmlFor="message" className="text-sm font-medium">
-            Project Details
-          </label>
-          <Textarea
-            id="message"
+          
+          <FormField
+            control={form.control}
+            name="estimatedTons"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Estimated Tons (Optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. 10" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
             name="message"
-            value={formData.message}
-            onChange={handleChange}
-            placeholder="Tell us about your project and any specific requirements"
-            rows={4}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Project Details (Optional)</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="Tell us more about your project..."
+                    className="min-h-[100px]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-
-        <div className="flex items-start space-x-2 pt-2">
-          <Checkbox
-            id="acceptTerms"
-            checked={formData.acceptTerms}
-            onCheckedChange={handleCheckboxChange}
+          
+          <FormField
+            control={form.control}
+            name="consent"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel className="text-sm">
+                    I agree to receive communications about my quote request
+                  </FormLabel>
+                </div>
+              </FormItem>
+            )}
           />
-          <label
-            htmlFor="acceptTerms"
-            className="text-sm text-gray-600 leading-tight"
-          >
-            I agree to be contacted about my quote request and accept the{" "}
-            <a href="/terms" className="text-primary underline hover:text-primary/80">
-              terms of service
-            </a>
-            .
-          </label>
-        </div>
-
-        <Button 
-          type="submit" 
-          disabled={loading} 
-          className="w-full"
-        >
-          {loading ? "Submitting..." : "Request Quote"}
-        </Button>
-
-        <p className="text-xs text-center text-gray-500 mt-4">
-          We typically respond to quote requests within 24 business hours.
-        </p>
-      </form>
+          
+          <Button type="submit" className="w-full">
+            Get Custom Quote
+          </Button>
+        </form>
+      </Form>
     </div>
   );
 };

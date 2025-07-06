@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { trackEvent } from "../../../utils/analytics";
 
 // Form validation schema
 const formSchema = z.object({
@@ -39,6 +40,16 @@ const DeliveryStep: React.FC = () => {
   });
   
   const onSubmit = (data: FormValues) => {
+    console.log('DeliveryStep: Form submitted:', data);
+    
+    // Track quiz delivery step completion
+    try {
+      console.log('DeliveryStep: Tracking quiz delivery step completion');
+      trackEvent('form_submit', 'Quiz', 'Quiz Delivery Step', 1);
+    } catch (error) {
+      console.error('DeliveryStep: Failed to track quiz delivery step:', error);
+    }
+    
     // Ensure all required fields are present by providing empty strings as fallbacks
     const deliveryInfo = {
       name: data.name,

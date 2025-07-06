@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { trackEvent } from '../../utils/analytics';
 
 interface ContactFormProps {
   productInfo: {
@@ -37,7 +38,15 @@ const ContactForm: React.FC<ContactFormProps> = ({ productInfo }) => {
   });
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
-    console.log('Form submitted:', data);
+    console.log('ContactForm: Form submitted:', data);
+    
+    // Track shop calculator contact form submission
+    try {
+      console.log('ContactForm: Tracking shop calculator contact form submission');
+      trackEvent('form_submit', 'Quote', `Shop Calculator - ${productInfo.name}`, productInfo.quantity);
+    } catch (error) {
+      console.error('ContactForm: Failed to track shop calculator contact form submission:', error);
+    }
     
     // Here you would typically send this data to your backend
     toast({
