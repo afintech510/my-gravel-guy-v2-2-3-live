@@ -41,8 +41,8 @@ const Navbar = () => {
 
   return (
     <>
-      {/* Mobile/Tablet Logo Overlay - positioned absolutely to overlay banner and navbar */}
-      <div className="md:hidden fixed left-4 top-0 z-50 pointer-events-none">
+      {/* Mobile/Tablet Logo Overlay - positioned to not cover top banner text */}
+      <div className="lg:hidden fixed left-4 top-6 z-50 pointer-events-none">
         <Link to="/" className="pointer-events-auto">
           <img 
             src="https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//mygravelguy_logo_150x200.png" 
@@ -58,7 +58,7 @@ const Navbar = () => {
 
             <div className="flex-1">
               {/* Desktop Logo positioned to the left */}
-              <div className="hidden md:block absolute left-4 md:left-[calc((100%-72rem)/2+1rem)] -top-1 z-50 mt-[3px] flex items-center gap-2">
+              <div className="hidden lg:block absolute left-4 lg:left-[calc((100%-72rem)/2+1rem)] -top-1 z-50 mt-[3px] flex items-center gap-2">
                 <Link to="/">
                   <img 
                     src="https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//mygravelguy_wide_logo.png" 
@@ -69,7 +69,7 @@ const Navbar = () => {
               </div>
             </div>
 
-            <div className="hidden md:flex items-center space-x-4">
+            <div className="hidden lg:flex items-center space-x-4">
               {zipCode && zipCodeData && !isSearchLocked && (
                 <Button variant="ghost" size="sm" className="text-xs mr-2 font-playfair">
                   <MapPin className="h-3 w-3 mr-1" />
@@ -99,7 +99,7 @@ const Navbar = () => {
               </Link>
             </div>
 
-            <div className="flex items-center md:hidden gap-2 ml-20">
+            <div className="flex items-center lg:hidden gap-2 ml-20">
               {/* Mobile links with icons */}
               {mobileLinks.map((link) => (
                 <Link
