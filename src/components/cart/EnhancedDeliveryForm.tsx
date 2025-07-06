@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -95,10 +94,23 @@ const EnhancedDeliveryForm: React.FC<EnhancedDeliveryFormProps> = ({ onSubmit, i
       console.error('EnhancedDeliveryForm: Failed to track delivery info submission:', error);
     }
     
-    onSubmit({
-      ...data,
-      locationPhotoUrl: uploadedPhoto || undefined
-    });
+    // Ensure all required fields are present and create properly typed data
+    const enhancedDeliveryData: EnhancedDeliveryFormData = {
+      deliveryDate: data.deliveryDate,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      street: data.street,
+      city: data.city,
+      state: data.state,
+      zip: data.zip,
+      deliveryTimePreference: data.deliveryTimePreference,
+      deliveryInstructions: data.deliveryInstructions,
+      locationPhotoUrl: uploadedPhoto || undefined,
+      communicationConsent: data.communicationConsent,
+    };
+    
+    onSubmit(enhancedDeliveryData);
   };
 
   const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
