@@ -52,7 +52,7 @@ export class GoogleMerchantCenterAPI {
         value: parseFloat(product.shipping_weight.replace(' lb', '')),
         unit: 'lb'
       },
-      // Enhanced US-specific targeting
+      // US-specific shipping configuration
       shipping: [{
         country: 'US',
         service: 'Continental US Delivery',
@@ -60,10 +60,8 @@ export class GoogleMerchantCenterAPI {
           value: 0,
           currency: 'USD'
         },
-        minTransitTimeInDays: 1,
-        maxTransitTimeInDays: 3,
-        // Restrict to continental US states only
-        region: 'US:AL,AZ,AR,CA,CO,CT,DE,FL,GA,ID,IL,IN,IA,KS,KY,LA,ME,MD,MA,MI,MN,MS,MO,MT,NE,NV,NH,NJ,NM,NY,NC,ND,OH,OK,OR,PA,RI,SC,SD,TN,TX,UT,VT,VA,WA,WV,WI,WY'
+        minTransitTime: '1',
+        maxTransitTime: '3'
       }],
       shippingLabel: product.shipping_label,
       customLabel0: product.custom_label_0,
@@ -97,6 +95,9 @@ export class GoogleMerchantCenterAPI {
       return await response.json();
     } catch (error) {
       console.error('Error uploading product to Merchant Center:', error);
+      if (error instanceof Error && error.message.includes('400')) {
+        console.error('API Request Body:', JSON.stringify(requestBody, null, 2));
+      }
       throw error;
     }
   }
@@ -138,9 +139,8 @@ export class GoogleMerchantCenterAPI {
             value: 0,
             currency: 'USD'
           },
-          minTransitTimeInDays: 1,
-          maxTransitTimeInDays: 3,
-          region: 'US:AL,AZ,AR,CA,CO,CT,DE,FL,GA,ID,IL,IN,IA,KS,KY,LA,ME,MD,MA,MI,MN,MS,MO,MT,NE,NV,NH,NJ,NM,NY,NC,ND,OH,OK,OR,PA,RI,SC,SD,TN,TX,UT,VT,VA,WA,WV,WI,WY'
+          minTransitTime: '1',
+          maxTransitTime: '3'
         }],
         shippingLabel: product.shipping_label,
         customLabel0: product.custom_label_0,
@@ -174,6 +174,9 @@ export class GoogleMerchantCenterAPI {
       return await response.json();
     } catch (error) {
       console.error('Error batch uploading products to Merchant Center:', error);
+      if (error instanceof Error && error.message.includes('400')) {
+        console.error('API Request Body:', JSON.stringify({ entries }, null, 2));
+      }
       throw error;
     }
   }
