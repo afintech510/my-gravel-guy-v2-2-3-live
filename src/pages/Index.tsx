@@ -5,6 +5,7 @@ import ShoppingModule from '../components/ShoppingModule';
 import MaterialCalculator from '../components/MaterialCalculator';
 import HowItWorks from '../components/HowItWorks';
 import TestQueryButton from '../components/TestQueryButton';
+import TopProducts from '../components/TopProducts';
 import { Button } from '@/components/ui/button';
 import { useZipCode } from '../contexts/ZipCodeContext';
 import TrustBanner from '../components/products/trust/TrustBanner';
@@ -52,6 +53,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Top Products Module */}
+      <TopProducts />
 
       {/* Shopping Module - New addition replacing LocationProductHero */}
       <ShoppingModule />
