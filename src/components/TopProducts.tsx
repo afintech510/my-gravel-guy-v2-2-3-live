@@ -8,19 +8,19 @@ const TopProducts = () => {
       name: "Driveway Gravel",
       description: "Perfect for driveways and high-traffic areas",
       slug: "driveway-gravel",
-      image: "/assets/crushed-stone.png"
+      image: "https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//driveway-gravel-3-4_cat.jpg"
     },
     {
       name: "Pea Gravel",
       description: "Smooth, rounded stones ideal for walkways",
       slug: "pea-gravel", 
-      image: "/assets/river-rocks.png"
+      image: "https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//3-8-Natural-Pea-Gravel-EDIT.jpg"
     },
     {
       name: "River Rock",
       description: "Decorative option for landscaping features",
       slug: "river-rock-large-2-3in-gravel",
-      image: "/assets/river-rocks.png"
+      image: "https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//river-rocks.png"
     }
   ];
 
