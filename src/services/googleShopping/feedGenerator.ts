@@ -26,7 +26,6 @@ export interface GoogleShoppingProduct {
   mpn?: string;
   product_type: string;
   google_product_category: string;
-  shipping_weight: string;
   // Enhanced US-specific targeting
   shipping: string;
   shipping_label: string;
@@ -96,9 +95,6 @@ export class GoogleShoppingFeedGenerator {
     // Create product type hierarchy
     const productType = this.createProductTypeHierarchy(product);
     
-    // Calculate shipping weight (tons to pounds)
-    const shippingWeight = this.calculateShippingWeight(product);
-    
     // Get US region for targeting
     const usRegion = getContinentalUSRegion(zipCode);
     
@@ -121,7 +117,6 @@ export class GoogleShoppingFeedGenerator {
       brand: this.brandName,
       product_type: productType,
       google_product_category: googleCategory,
-      shipping_weight: shippingWeight,
       // US-specific shipping configuration
       shipping: this.generateShippingInfo(),
       shipping_label: 'Continental US Only',
@@ -446,22 +441,6 @@ export class GoogleShoppingFeedGenerator {
     return hierarchy.join(' > ');
   }
 
-  /**
-   * Calculate shipping weight for bulk materials
-   */
-  private calculateShippingWeight(product: Product): string {
-    // Default weight for 3 ton minimum order in pounds (6000 lbs)
-    const defaultWeightLbs = 6000;
-    
-    // Adjust based on material density if ton/yard ratio is available
-    if (product.tonYardRatio) {
-      // Higher ratio means denser material
-      const adjustedWeight = defaultWeightLbs * (product.tonYardRatio / 1.5);
-      return `${Math.round(adjustedWeight)} lb`;
-    }
-    
-    return `${defaultWeightLbs} lb`;
-  }
 
   /**
    * Determine pricing tier for segmentation
@@ -520,7 +499,6 @@ export class GoogleShoppingFeedGenerator {
       xml += `<g:brand>${this.escapeXml(product.brand)}</g:brand>\n`;
       xml += `<g:product_type>${this.escapeXml(product.product_type)}</g:product_type>\n`;
       xml += `<g:google_product_category>${product.google_product_category}</g:google_product_category>\n`;
-      xml += `<g:shipping_weight>${product.shipping_weight}</g:shipping_weight>\n`;
       xml += `<g:shipping>${this.escapeXml(product.shipping)}</g:shipping>\n`;
       xml += `<g:shipping_label>${this.escapeXml(product.shipping_label)}</g:shipping_label>\n`;
       xml += `<g:custom_label_0>${this.escapeXml(product.custom_label_0 || '')}</g:custom_label_0>\n`;
