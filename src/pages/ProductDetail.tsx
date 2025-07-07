@@ -29,8 +29,8 @@ const ProductDetail = () => {
   const { zipCode } = useZipCode();
   const { addToCart } = useCart();
   
-  // State for selected tons - start with 10 as default
-  const [currentTons, setCurrentTons] = useState<number>(10);
+  // State for selected tons - start with 3 as default
+  const [currentTons, setCurrentTons] = useState<number>(3);
   
   // Use our enhanced useProduct hook with tons parameter
   const { product, adjustedPrice, priceDetails, loading, error } = useProduct(
