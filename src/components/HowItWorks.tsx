@@ -10,17 +10,20 @@ const HowItWorks = () => {
     {
       icon: <Package className="h-10 w-10 text-primary" />,
       title: "Choose Your Product",
-      description: "Browse our selection of gravel, sand, and dirt. Select the perfect material for your project from our extensive catalog."
+      description: "Browse our selection of gravel, sand, and dirt. Select the perfect material for your project from our extensive catalog.",
+      link: "/shop"
     },
     {
       icon: <Calculator className="h-10 w-10 text-primary" />,
       title: "Calculate How Many Tons",
-      description: "Use our calculator to determine exactly how much material you need based on your project dimensions and depth requirements."
+      description: "Use our calculator to determine exactly how much material you need based on your project dimensions and depth requirements.",
+      link: "/product-calculator"
     },
     {
       icon: <Truck className="h-10 w-10 text-primary" />,
       title: "Place Your Order",
-      description: "Complete your order online and allow our team to coordinate with local suppliers for fast delivery — usually within 1–2 business days."
+      description: "Complete your order online and allow our team to coordinate with local suppliers for fast delivery — usually within 1–2 business days.",
+      link: null
     }
   ];
 
@@ -36,7 +39,13 @@ const HowItWorks = () => {
             <Card key={index} className="border border-gray-200 shadow-sm transition-all hover:shadow-md">
               <CardHeader className="pb-2 flex flex-col items-center">
                 <div className="mb-4 p-3 rounded-full bg-primary/10 flex items-center justify-center">
-                  {step.icon}
+                  {step.link ? (
+                    <Link to={step.link} className="hover:scale-110 transition-transform">
+                      {step.icon}
+                    </Link>
+                  ) : (
+                    step.icon
+                  )}
                 </div>
                 <CardTitle className="text-xl font-bold">Step {index + 1}: {step.title}</CardTitle>
               </CardHeader>
