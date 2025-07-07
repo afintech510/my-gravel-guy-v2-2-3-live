@@ -305,6 +305,11 @@ const HomeCalculator = () => {
                             <div className="text-lg">
                               ${totalDeliveredPrice && totalTons > 0 ? (totalDeliveredPrice / totalTons).toFixed(2) : '0.00'} per ton
                             </div>
+                            <div className="mt-1">
+                              <span className="bg-green-500 text-black px-3 py-1 rounded-full text-sm font-medium">
+                                Free Delivery
+                              </span>
+                            </div>
                           </div>
                         </div>
                         
@@ -312,13 +317,6 @@ const HomeCalculator = () => {
                         <p className="text-white/80 mb-4 text-lg">
                           {selectedProductData.short_description || selectedProductData.description || "Perfect for driveways and high-traffic areas"}
                         </p>
-                        
-                        {/* Free Delivery */}
-                        <div className="mb-6">
-                          <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                            Free Delivery
-                          </span>
-                        </div>
                         
                         {/* Action Buttons */}
                         <div className="flex flex-col sm:flex-row gap-3">
