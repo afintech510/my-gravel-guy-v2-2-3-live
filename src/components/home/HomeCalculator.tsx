@@ -268,47 +268,48 @@ const HomeCalculator = () => {
             {selectedProductData && (
               <div className="border-t pt-6">
                 <h3 className="text-lg font-semibold mb-4">Selected Product</h3>
-                <Card className="bg-white border">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col md:flex-row gap-6">
-                      <div className="flex-shrink-0">
-                        <img 
-                          src={selectedProductData.image || '/placeholder.svg'}
-                          alt={selectedProductData.name}
-                          className="w-24 h-24 object-cover rounded-lg"
-                        />
-                      </div>
-                      <div className="flex-grow">
-                        <h4 className="text-xl font-semibold mb-2">{selectedProductData.name}</h4>
-                        <div className="space-y-2 mb-4">
-                          <div className="text-lg">
-                            <span className="text-gray-600">Price per yard:</span>
-                            <span className="font-semibold ml-2">
-                              ${totalDeliveredPrice && totalVolumeYards > 0 ? (totalDeliveredPrice / totalVolumeYards).toFixed(2) : '0.00'}
-                            </span>
-                          </div>
-                          <div className="text-lg">
-                            <span className="text-gray-600">Total price:</span>
-                            <span className="font-semibold ml-2 text-primary">
-                              ${totalDeliveredPrice.toFixed(2)}
-                            </span>
+                <Card className="overflow-hidden border-0 shadow-lg">
+                  <div 
+                    className="relative min-h-[300px] bg-cover bg-center bg-no-repeat"
+                    style={{
+                      backgroundImage: `url(${selectedProductData.image || '/placeholder.svg'})`
+                    }}
+                  >
+                    {/* Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20"></div>
+                    
+                    {/* Content */}
+                    <div className="relative z-10 p-8 flex flex-col justify-end h-full min-h-[300px]">
+                      <div className="text-white">
+                        {/* Product Name and Unit Price on Same Line */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3">
+                          <h4 className="text-2xl font-bold mb-2 sm:mb-0">{selectedProductData.name}</h4>
+                          <div className="text-xl font-semibold">
+                            ${totalDeliveredPrice && totalVolumeYards > 0 ? (totalDeliveredPrice / totalVolumeYards).toFixed(2) : '0.00'}/yard
                           </div>
                         </div>
+                        
+                        {/* Description */}
+                        <p className="text-white/80 mb-6 text-lg">
+                          {selectedProductData.short_description || selectedProductData.description || "Perfect for driveways and high-traffic areas"}
+                        </p>
+                        
+                        {/* Action Buttons */}
                         <div className="flex flex-col sm:flex-row gap-3">
-                          <Link to={`/products/${selectedProductData.slug}`}>
-                            <Button variant="outline" className="w-full sm:w-auto">
+                          <Link to={`/products/${selectedProductData.slug}`} className="flex-1">
+                            <Button variant="outline" className="w-full bg-white/10 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm">
                               <ExternalLink className="h-4 w-4 mr-2" />
                               Explore Product
                             </Button>
                           </Link>
-                          <Button className="w-full sm:w-auto">
+                          <Button className="flex-1 bg-primary hover:bg-primary/90">
                             <ShoppingCart className="h-4 w-4 mr-2" />
-                            Add to Cart
+                            Add to Cart - ${totalDeliveredPrice.toFixed(0)}
                           </Button>
                         </div>
                       </div>
                     </div>
-                  </CardContent>
+                  </div>
                 </Card>
               </div>
             )}
