@@ -24,7 +24,7 @@ const Index = () => {
   return <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       {/* Hero Section */}
      <section 
-        className="py-16 px-4 bg-cover bg-center bg-no-repeat min-h-[500px] flex items-center relative"
+        className="py-16 px-4 bg-cover bg-center bg-no-repeat min-h-screen flex items-center relative"
         style={{
           backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.0)), url('https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//loader-with-driveway-gravel.png')"
         }}
