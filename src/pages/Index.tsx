@@ -17,15 +17,12 @@ const Index = () => {
   } = useZipCode();
   return <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       {/* Hero Section */}
-      <section 
-        className="py-16 px-4 bg-cover bg-center bg-no-repeat min-h-[500px] flex items-center"
+     <section 
+        className="py-16 px-4 bg-cover bg-center bg-no-repeat min-h-[500px] flex items-center relative"
         style={{
-          backgroundImage: "url('https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//loader-with-driveway-gravel.png')"
+          backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//loader-with-driveway-gravel.png')"
         }}
       >
-       {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-        
         <div className="max-w-6xl mx-auto w-full">
           <div className="max-w-2xl">
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">Premium Gravel Delivered to Your Door</h1>
