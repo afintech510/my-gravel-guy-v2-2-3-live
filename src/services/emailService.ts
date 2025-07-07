@@ -10,11 +10,22 @@ interface OrderData {
   customer_name?: string;
 }
 
+interface ContactFormData {
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  propertyAddress: string;
+  projectType: string;
+  approximateArea: string;
+  additionalDetails: string;
+  preferredContact: string;
+}
+
 interface EmailResult {
   success: boolean;
   emailId?: string;
   error?: string;
-  emailType: 'customer_confirmation' | 'internal_notification';
+  emailType: 'customer_confirmation' | 'internal_notification' | 'contact_form';
   recipient: string;
   timestamp: string;
 }
@@ -72,14 +83,14 @@ const extractCustomerEmailFromOrderData = (orderData: any): string | null => {
 
 class EmailService {
   private async logEmailAttempt(
-    orderData: OrderData, 
-    emailType: 'customer_confirmation' | 'internal_notification',
+    orderData: OrderData | ContactFormData, 
+    emailType: 'customer_confirmation' | 'internal_notification' | 'contact_form',
     recipient: string,
     result: EmailResult
   ) {
     console.log(`=== EMAIL LOG ${new Date().toISOString()} ===`);
     console.log('Email Type:', emailType);
-    console.log('Order ID:', orderData.order_id);
+    console.log('Data ID:', (orderData as OrderData).order_id || 'Contact Form');
     console.log('Recipient:', recipient);
     console.log('Success:', result.success);
     console.log('Email ID:', result.emailId);
@@ -94,8 +105,8 @@ class EmailService {
       to: string;
       subject: string;
       html: string;
-      type: 'customer_confirmation' | 'internal_notification';
-      orderData: OrderData;
+      type: 'customer_confirmation' | 'internal_notification' | 'contact_form';
+      orderData: OrderData | ContactFormData;
     },
     maxRetries: number = 3
   ): Promise<EmailResult> {
@@ -342,6 +353,115 @@ class EmailService {
       };
     }
   }
+
+  async sendContactFormEmail(contactData: ContactFormData): Promise<EmailResult> {
+    try {
+      console.log('=== CONTACT FORM EMAIL SERVICE DEBUG ===');
+      console.log('Sending contact form email...');
+      console.log('Contact data:', contactData);
+      
+      // Generate HTML email content for contact form
+      const emailHtml = this.generateContactFormEmailHtml(contactData);
+      
+      return await this.sendEmailWithRetry({
+        to: 'support@mygravelguy.com', // Internal email for contact form submissions
+        subject: `New Contact Form Submission - ${contactData.projectType} Project`,
+        html: emailHtml,
+        type: 'contact_form',
+        orderData: contactData
+      });
+
+    } catch (error) {
+      console.error('Failed to send contact form email:', error);
+      
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        emailType: 'contact_form',
+        recipient: 'support@mygravelguy.com',
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
+
+  private generateContactFormEmailHtml(contactData: ContactFormData): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+            .content { background-color: #fff; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; }
+            .field { margin-bottom: 15px; }
+            .field-label { font-weight: bold; color: #555; }
+            .field-value { margin-top: 5px; padding: 10px; background-color: #f8f9fa; border-radius: 4px; }
+            .highlight { color: #007bff; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h2>🚨 New Contact Form Submission - My Gravel Guy</h2>
+              <p>A new contact form has been submitted on the website.</p>
+            </div>
+            
+            <div class="content">
+              <div class="field">
+                <div class="field-label">Full Name:</div>
+                <div class="field-value">${contactData.fullName}</div>
+              </div>
+              
+              <div class="field">
+                <div class="field-label">Email:</div>
+                <div class="field-value"><a href="mailto:${contactData.email}">${contactData.email}</a></div>
+              </div>
+              
+              <div class="field">
+                <div class="field-label">Phone Number:</div>
+                <div class="field-value"><a href="tel:${contactData.phoneNumber}">${contactData.phoneNumber}</a></div>
+              </div>
+              
+              <div class="field">
+                <div class="field-label">Property Address:</div>
+                <div class="field-value">${contactData.propertyAddress}</div>
+              </div>
+              
+              <div class="field">
+                <div class="field-label">Project Type:</div>
+                <div class="field-value"><span class="highlight">${contactData.projectType}</span></div>
+              </div>
+              
+              <div class="field">
+                <div class="field-label">Approximate Area:</div>
+                <div class="field-value">${contactData.approximateArea} sq ft</div>
+              </div>
+              
+              <div class="field">
+                <div class="field-label">Preferred Contact Method:</div>
+                <div class="field-value">${contactData.preferredContact}</div>
+              </div>
+              
+              <div class="field">
+                <div class="field-label">Additional Details:</div>
+                <div class="field-value">${contactData.additionalDetails || 'No additional details provided'}</div>
+              </div>
+            </div>
+            
+            <div style="margin-top: 20px; padding: 15px; background-color: #e7f3ff; border-radius: 8px;">
+              <p><strong>Next Steps:</strong></p>
+              <ul>
+                <li>Contact the customer within 24 hours</li>
+                <li>Preferred contact method: <strong>${contactData.preferredContact}</strong></li>
+                <li>Prepare quote for <strong>${contactData.projectType}</strong> project</li>
+              </ul>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+  }
 }
 
 // Export a singleton instance
@@ -356,6 +476,9 @@ export const sendInternalNotificationEmail = (orderData: OrderData, salesEmail?:
 export const sendBothOrderEmails = (orderData: OrderData) => 
   emailService.sendBothOrderEmails(orderData);
 
+export const sendContactFormEmail = (contactData: ContactFormData) =>
+  emailService.sendContactFormEmail(contactData);
+
 // Export the service class for testing
 export { EmailService };
-export type { EmailResult, OrderData };
+export type { EmailResult, OrderData, ContactFormData };

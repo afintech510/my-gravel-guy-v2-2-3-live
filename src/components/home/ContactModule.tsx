@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Phone, Mail, MapPin } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { sendContactFormEmail, type ContactFormData } from '@/services/emailService';
 
 const ContactModule = () => {
   const { toast } = useToast();
@@ -30,35 +31,50 @@ const ContactModule = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Basic validation
+    if (!formData.fullName || !formData.email || !formData.propertyAddress) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      // TODO: Replace with actual email service call when Supabase is connected
-      console.log('Form submission:', formData);
+      console.log('Submitting contact form:', formData);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Send contact form email using the email service
+      const result = await sendContactFormEmail(formData as ContactFormData);
       
-      toast({
-        title: "Quote Request Sent!",
-        description: "We'll get back to you within 24 hours with your customized quote.",
-      });
+      if (result.success) {
+        toast({
+          title: "Quote Request Sent!",
+          description: "We'll get back to you within 24 hours with your customized quote.",
+        });
 
-      // Reset form
-      setFormData({
-        fullName: '',
-        email: '',
-        phoneNumber: '',
-        propertyAddress: '',
-        projectType: '',
-        approximateArea: '',
-        additionalDetails: '',
-        preferredContact: 'email'
-      });
+        // Reset form
+        setFormData({
+          fullName: '',
+          email: '',
+          phoneNumber: '',
+          propertyAddress: '',
+          projectType: '',
+          approximateArea: '',
+          additionalDetails: '',
+          preferredContact: 'email'
+        });
+      } else {
+        throw new Error(result.error || 'Failed to send email');
+      }
     } catch (error) {
+      console.error('Contact form submission error:', error);
       toast({
         title: "Error",
-        description: "There was a problem sending your request. Please try again.",
+        description: "There was a problem sending your request. Please try again or call us directly.",
         variant: "destructive"
       });
     } finally {
