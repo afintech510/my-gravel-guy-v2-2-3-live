@@ -75,17 +75,7 @@ const HowItWorks = () => {
           </div>
         </div>
         
-        <div className="mt-12 text-center">
-          <p className="text-lg mb-6">Still have questions?</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/faq">
-              <Button variant="outline" size="lg">See FAQ</Button>
-            </Link>
-            <Link to="/contact">
-              <Button size="lg">Contact Us</Button>
-            </Link>
-          </div>
-        </div>
+        
       </div>
     </section>
   );
