@@ -32,19 +32,19 @@ const Index = () => {
               <Link to="/shop">
               <Button variant="outline" size="lg" className="bg-white hover:bg-primary hover:text-primary-foreground">
                 <Store className="mr-2 h-4 w-4" />
-                Shop Now
+                Shop
               </Button>
             </Link>
             <Link to="/product-calculator">
               <Button variant="outline" size="lg" className="bg-white hover:bg-primary hover:text-primary-foreground">
                 <Calculator className="mr-2 h-4 w-4" />
-                Gravel Guy Calculator
+                Calculator
               </Button>
             </Link>
               <Link to="/contact">
               <Button variant="outline" size="lg" className="bg-white hover:bg-primary hover:text-primary-foreground">
                 <DollarSign className="mr-2 h-4 w-4" />
-                Custom Quote
+                Contact
               </Button>
             </Link>
             </div>
