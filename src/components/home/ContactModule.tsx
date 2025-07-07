@@ -122,7 +122,7 @@ const ContactModule = () => {
           <div className="lg:col-span-2">
             <Card className="shadow-sm border">
               <CardContent className="p-6">
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-4">
                   {/* Name Field */}
                   <div>
                     <Label htmlFor="fullName" className="text-sm font-medium text-gray-700">
@@ -139,7 +139,7 @@ const ContactModule = () => {
                   </div>
 
                   {/* Email and Phone */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <Label htmlFor="email" className="text-sm font-medium text-gray-700">
                         Email
@@ -185,7 +185,7 @@ const ContactModule = () => {
                   </div>
 
                   {/* Project Type and Area */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <Label className="text-sm font-medium text-gray-700">
                         Project Type
@@ -231,14 +231,14 @@ const ContactModule = () => {
                       value={formData.additionalDetails}
                       onChange={(e) => handleInputChange('additionalDetails', e.target.value)}
                       placeholder="Tell us more about your project..."
-                      rows={4}
+                      rows={3}
                       className="mt-1"
                     />
                   </div>
 
                   {/* Preferred Contact Method */}
                   <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-3 block">
+                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
                       Preferred Contact Method
                     </Label>
                     <RadioGroup
@@ -261,7 +261,7 @@ const ContactModule = () => {
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3"
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2"
                   >
                     {isSubmitting ? 'Sending Request...' : 'Request Quote'}
                   </Button>
