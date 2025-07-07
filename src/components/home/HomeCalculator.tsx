@@ -12,10 +12,12 @@ import {
   TooltipTrigger
 } from "@/components/ui/tooltip";
 import { Plus, Trash2, Calculator, ExternalLink, ShoppingCart, Info } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getProducts } from '@/services/products';
 import { Product } from '@/services/products/types';
 import { useZipCode } from '@/contexts/ZipCodeContext';
+import { useCart } from '@/contexts/CartContext';
+import { useToast } from '@/components/ui/use-toast';
 import { calculateProductExponentialPrice } from '@/services/products/exponentialPricing';
 import { calculateFinalPrice } from '@/services/products/pricingUtils';
 
@@ -37,6 +39,9 @@ const HomeCalculator = () => {
   const [totalDeliveredPrice, setTotalDeliveredPrice] = useState<number>(0);
   
   const { zipCode } = useZipCode();
+  const { addToCart } = useCart();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Fetch products on component mount
   useEffect(() => {
@@ -100,6 +105,43 @@ const HomeCalculator = () => {
     setAreas(areas.map(area => 
       area.id === id ? { ...area, [field]: value } : area
     ));
+  };
+
+  // Handle adding product to cart
+  const handleAddToCart = async () => {
+    if (!selectedProductData) {
+      toast({
+        title: "No product selected",
+        description: "Please select a material type first.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      console.log(`HomeCalculator: Adding ${totalTons} tons of ${selectedProductData.name} to cart`);
+      
+      // Recalculate price for the selected tons to get the per-ton price
+      const pricing = await calculateFinalPrice(selectedProductData, totalTons, zipCode || undefined);
+      
+      addToCart({ 
+        ...selectedProductData, 
+        price: pricing.pricePerTon, // Use the per-ton price
+        tons: totalTons,
+        yards: totalTons / tonYardRatio
+      });
+      
+      // Navigate to cart page
+      navigate('/cart');
+      
+    } catch (error) {
+      console.error("HomeCalculator: Error adding to cart:", error);
+      toast({
+        title: "Error adding to cart",
+        description: "There was a problem adding this item to your cart. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -326,7 +368,7 @@ const HomeCalculator = () => {
                               Explore Product
                             </Button>
                           </Link>
-                          <Button className="flex-1 bg-primary hover:bg-primary/90">
+                          <Button className="flex-1 bg-primary hover:bg-primary/90" onClick={handleAddToCart}>
                             <ShoppingCart className="h-4 w-4 mr-2" />
                             Add {totalTons} tons - ${(totalDeliveredPrice / totalTons).toFixed(0)}/ton (${totalDeliveredPrice.toFixed(0)} total)
                           </Button>
