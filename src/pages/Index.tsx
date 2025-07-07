@@ -57,8 +57,9 @@ const Index = () => {
       {/* Top Products Module */}
       <TopProducts />
 
-      {/* Shopping Module - New addition replacing LocationProductHero */}
+      {/* Shopping Module - New addition replacing LocationProductHero 
       <ShoppingModule />
+      */}
 
       {/* Why Choose Us Section */}
       <WhyChooseUs />
