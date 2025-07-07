@@ -14,6 +14,7 @@ import FAQModule from '../components/home/FAQModule';
 import WhyChooseUs from '../components/WhyChooseUs';
 import CustomerReviews from '../components/CustomerReviews';
 import TransformDrivewayCTA from '../components/TransformDrivewayCTA';
+import HomeCalculator from '../components/home/HomeCalculator';
 import { Store, Calculator, DollarSign } from 'lucide-react';
 const Index = () => {
   const {
@@ -94,6 +95,9 @@ const Index = () => {
 
       {/* FAQ Module */}
       <FAQModule />
+
+      {/* Home Calculator */}
+      <HomeCalculator />
 
         {/* Shopping Module   */}
       <ShoppingModule />
