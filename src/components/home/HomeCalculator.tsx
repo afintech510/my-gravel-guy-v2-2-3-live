@@ -110,8 +110,7 @@ const HomeCalculator = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calculator className="h-5 w-5 text-primary" />
-              Material Calculator</br>
-              Calculate exactly how much material you need for your project
+              Material Calculator - Calculate exactly how much material you need for your project
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
