@@ -48,10 +48,6 @@ export class GoogleMerchantCenterAPI {
       brand: product.brand,
       productTypes: [product.product_type],
       googleProductCategory: product.google_product_category,
-      shippingWeight: {
-        value: parseFloat(product.shipping_weight.replace(' lb', '')),
-        unit: 'lb'
-      },
       // US-specific shipping configuration
       shipping: [{
         country: 'US',
@@ -127,10 +123,6 @@ export class GoogleMerchantCenterAPI {
         brand: product.brand,
         productTypes: [product.product_type],
         googleProductCategory: product.google_product_category,
-        shippingWeight: {
-          value: parseFloat(product.shipping_weight.replace(' lb', '')),
-          unit: 'lb'
-        },
         // US-specific shipping configuration
         shipping: [{
           country: 'US',
