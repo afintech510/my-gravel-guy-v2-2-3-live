@@ -11,6 +11,7 @@ import TrustBanner from '../components/products/trust/TrustBanner';
 import GettingBackToRoots from '../components/GettingBackToRoots';
 import FAQModule from '../components/home/FAQModule';
 import WhyChooseUs from '../components/WhyChooseUs';
+import CustomerReviews from '../components/CustomerReviews';
 import { Store, Calculator, DollarSign } from 'lucide-react';
 const Index = () => {
   const {
@@ -60,6 +61,9 @@ const Index = () => {
       
       {/* How It Works Section */}
       <HowItWorks />
+
+      {/* Customer Reviews */}
+      <CustomerReviews />
 
       {/* Trust Signals */}
       <section className="py-16 px-4">
