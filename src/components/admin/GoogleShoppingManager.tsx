@@ -88,10 +88,10 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
     try {
       console.log('Generating Continental US Google Shopping feed...');
       
-      const generatedProducts = await feedGenerator.generateFeed(zipCode);
+      const generatedProducts = await feedGenerator.generateFeed();
       setProducts(generatedProducts);
       
-      const xml = await feedGenerator.generateXMLFeed(zipCode);
+      const xml = await feedGenerator.generateXMLFeed();
       setXmlFeed(xml);
       
       const region = getContinentalUSRegion(zipCode);
