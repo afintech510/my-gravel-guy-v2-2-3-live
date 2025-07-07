@@ -56,7 +56,9 @@ const HomeCalculator = () => {
   const selectedProductData = products.find(p => p.id.toString() === selectedProduct);
   const tonYardRatio = selectedProductData?.tonYardRatio || 1.5;
   const basetons = totalVolumeYards * tonYardRatio;
-  const totalTons = basetons * (1 + orderExtra[0] / 100);
+  const calculatedTons = basetons * (1 + orderExtra[0] / 100);
+  // Round to nearest whole ton with minimum of 3 tons
+  const totalTons = Math.max(3, Math.round(calculatedTons));
 
   // Calculate delivered price using exponential pricing
   useEffect(() => {
@@ -238,9 +240,9 @@ const HomeCalculator = () => {
                 
                 <Card className="bg-orange-50 border-orange-200">
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-orange-900">
-                      {totalTons.toFixed(1)}
-                    </div>
+                     <div className="text-2xl font-bold text-orange-900">
+                       {totalTons}
+                     </div>
                     <div className="text-sm text-orange-700">Tons Needed</div>
                   </CardContent>
                 </Card>
@@ -277,7 +279,7 @@ const HomeCalculator = () => {
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3">
                           <h4 className="text-2xl font-bold mb-2 sm:mb-0">{selectedProductData.name}</h4>
                           <div className="text-right">
-                            <div className="text-2xl font-bold">{totalTons.toFixed(0)} tons</div>
+                            <div className="text-2xl font-bold">{totalTons} tons</div>
                             <div className="text-lg">
                               ${totalDeliveredPrice && totalTons > 0 ? (totalDeliveredPrice / totalTons).toFixed(2) : '0.00'} per ton
                             </div>
