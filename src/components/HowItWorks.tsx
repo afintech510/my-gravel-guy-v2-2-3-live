@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MapPin, Package, Truck, Handshake } from 'lucide-react';
+import { Calculator, Package, Truck, Handshake } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -8,19 +8,19 @@ import { Link } from 'react-router-dom';
 const HowItWorks = () => {
   const steps = [
     {
-      icon: <MapPin className="h-10 w-10 text-primary" />,
-      title: "Enter Your ZIP Code",
-      description: "Check if we deliver to your area and get instant access to local pricing and available materials."
-    },
-    {
       icon: <Package className="h-10 w-10 text-primary" />,
       title: "Choose Your Product",
-      description: "Browse our selection of gravel, sand, and dirt. Select your quantity and review delivery details."
+      description: "Browse our selection of gravel, sand, and dirt. Select the perfect material for your project from our extensive catalog."
+    },
+    {
+      icon: <Calculator className="h-10 w-10 text-primary" />,
+      title: "Calculate How Many Tons",
+      description: "Use our calculator to determine exactly how much material you need based on your project dimensions and depth requirements."
     },
     {
       icon: <Truck className="h-10 w-10 text-primary" />,
       title: "Place Your Order",
-      description: "Complete your order online in minutes. We'll coordinate with a local supplier and get your material delivered fast — usually within 1–2 business days."
+      description: "Complete your order online and allow our team to coordinate with local suppliers for fast delivery — usually within 1–2 business days."
     }
   ];
 
