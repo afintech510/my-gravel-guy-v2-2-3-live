@@ -17,29 +17,28 @@ const Index = () => {
   } = useZipCode();
   return <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       {/* Hero Section */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">AI-Driven Local Gravel Network</h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">Get the lowest prices by instantly connecting with your area's best suppliers—AI finds the deals, you save the money.</p>
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-            <Link to="/shop">
-              <Button variant="outline" size="lg" className="bg-white hover:bg-primary hover:text-primary-foreground">
-                <Store className="mr-2 h-4 w-4" />
-                Shop Now
-              </Button>
-            </Link>
-            <Link to="/product-calculator">
-              <Button variant="outline" size="lg" className="bg-white hover:bg-primary hover:text-primary-foreground">
-                <Calculator className="mr-2 h-4 w-4" />
-                Gravel Guy Calculator
-              </Button>
-            </Link>
-            <Link to="/contact">
-              <Button variant="outline" size="lg" className="bg-white hover:bg-primary hover:text-primary-foreground">
-                <DollarSign className="mr-2 h-4 w-4" />
-                Custom Quote
-              </Button>
-            </Link>
+      <section 
+        className="py-16 px-4 bg-cover bg-center bg-no-repeat min-h-[500px] flex items-center"
+        style={{
+          backgroundImage: "url('https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//loader-with-driveway-gravel.png')"
+        }}
+      >
+        <div className="max-w-6xl mx-auto w-full">
+          <div className="max-w-2xl">
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">Premium Gravel Delivered to Your Door</h1>
+            <p className="text-xl text-white mb-8">Transform your home with high-quality gravel from My Gravel Guy. Fast delivery, competitive pricing, and professional service.</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-end">
+              <Link to="/contact">
+                <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white border-0">
+                  Get a Free Quote
+                </Button>
+              </Link>
+              <Link to="/shop">
+                <Button variant="outline" size="lg" className="bg-white/10 text-white border-white hover:bg-white hover:text-gray-900">
+                  Order Now
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
