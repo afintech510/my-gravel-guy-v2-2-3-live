@@ -241,7 +241,7 @@ const HomeCalculator = () => {
                 <Card className="bg-orange-50 border-orange-200">
                   <CardContent className="p-4 text-center">
                      <div className="text-2xl font-bold text-orange-900">
-                       {totalTons}
+                       {calculatedTons.toFixed(1)}
                      </div>
                     <div className="text-sm text-orange-700">Tons Needed</div>
                   </CardContent>
@@ -301,7 +301,7 @@ const HomeCalculator = () => {
                           </Link>
                           <Button className="flex-1 bg-primary hover:bg-primary/90">
                             <ShoppingCart className="h-4 w-4 mr-2" />
-                            Add to Cart - ${totalDeliveredPrice.toFixed(0)}
+                            Add {totalTons} tons - ${(totalDeliveredPrice / totalTons).toFixed(0)}/ton (${totalDeliveredPrice.toFixed(0)} total)
                           </Button>
                         </div>
                       </div>
