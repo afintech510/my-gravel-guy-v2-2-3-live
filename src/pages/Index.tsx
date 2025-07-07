@@ -16,15 +16,15 @@ import CustomerReviews from '../components/CustomerReviews';
 import TransformDrivewayCTA from '../components/TransformDrivewayCTA';
 import HomeCalculator from '../components/home/HomeCalculator';
 import ContactModule from '../components/home/ContactModule';
-import { Store, Calculator, DollarSign } from 'lucide-react';
+import { Store, Calculator, DollarSign, Mails } from 'lucide-react';
 const Index = () => {
   const {
     zipCode
   } = useZipCode();
   return <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       {/* Hero Section */}
-      <section 
-        className="py-16 px-4 bg-cover bg-center bg-no-repeat min-h-screen flex items-center relative"
+     <section 
+        className="py-16 px-4 bg-cover bg-center bg-no-repeat min-h-[500px] flex items-center relative"
         style={{
           backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.0)), url('https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//loader-with-driveway-gravel.png')"
         }}
@@ -48,7 +48,7 @@ const Index = () => {
             </Link>
               <Link to="/contact">
               <Button variant="outline" size="lg" className="bg-white hover:bg-primary hover:text-primary-foreground">
-                <DollarSign className="mr-2 h-4 w-4" />
+                <Mails className="mr-2 h-4 w-4" />
                 Contact
               </Button>
             </Link>
