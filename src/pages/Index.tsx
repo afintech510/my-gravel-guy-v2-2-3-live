@@ -57,9 +57,6 @@ const Index = () => {
       {/* Top Products Module */}
       <TopProducts />
 
-      {/* Shopping Module - New addition replacing LocationProductHero 
-      <ShoppingModule />
-      */}
 
       {/* Why Choose Us Section */}
       <WhyChooseUs />
@@ -96,6 +93,11 @@ const Index = () => {
 
       {/* FAQ Module */}
       <FAQModule />
+
+        {/* Shopping Module   */}
+      <ShoppingModule />
+      
+    
     </div>;
 };
 export default Index;
