@@ -9,6 +9,7 @@ import { Plus, Trash2, Calculator } from 'lucide-react';
 import { getProducts } from '@/services/products';
 import { Product } from '@/services/products/types';
 import { useZipCode } from '@/contexts/ZipCodeContext';
+import { calculateFinalPrice } from '@/services/products/pricingUtils';
 
 interface AreaInput {
   id: string;
@@ -20,11 +21,12 @@ const HomeCalculator = () => {
   const [areas, setAreas] = useState<AreaInput[]>([
     { id: '1', length: 0, width: 0 }
   ]);
-  const [depth, setDepth] = useState<number>(2);
-  const [orderExtra, setOrderExtra] = useState<number[]>([10]);
+  const [depth, setDepth] = useState<number[]>([2]);
+  const [orderExtra, setOrderExtra] = useState<number[]>([5]);
   const [selectedProduct, setSelectedProduct] = useState<string>('');
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalDeliveredPrice, setTotalDeliveredPrice] = useState<number>(0);
   
   const { zipCode } = useZipCode();
 
@@ -46,13 +48,32 @@ const HomeCalculator = () => {
 
   // Calculations
   const totalAreaSqFt = areas.reduce((sum, area) => sum + (area.length * area.width), 0);
-  const totalVolumeCubicFt = totalAreaSqFt * (depth / 12); // Convert inches to feet
+  const totalVolumeCubicFt = totalAreaSqFt * (depth[0] / 12); // Convert inches to feet
   const totalVolumeYards = totalVolumeCubicFt / 27; // Convert cubic feet to cubic yards
   
   const selectedProductData = products.find(p => p.id.toString() === selectedProduct);
   const tonYardRatio = selectedProductData?.tonYardRatio || 1.5;
   const basetons = totalVolumeYards * tonYardRatio;
   const totalTons = basetons * (1 + orderExtra[0] / 100);
+
+  // Calculate total delivered price using exponential pricing
+  useEffect(() => {
+    const calculatePrice = async () => {
+      if (selectedProductData && totalTons > 0 && zipCode) {
+        try {
+          const priceResult = await calculateFinalPrice(selectedProductData, totalTons, zipCode);
+          setTotalDeliveredPrice(priceResult.finalPrice);
+        } catch (error) {
+          console.error('Error calculating delivered price:', error);
+          setTotalDeliveredPrice(0);
+        }
+      } else {
+        setTotalDeliveredPrice(0);
+      }
+    };
+
+    calculatePrice();
+  }, [selectedProductData, totalTons, zipCode]);
 
   const addArea = () => {
     const newId = (areas.length + 1).toString();
@@ -142,38 +163,24 @@ const HomeCalculator = () => {
               </Button>
             </div>
 
-            {/* Depth Selection */}
+            {/* Depth Slider */}
             <div className="space-y-3">
-              <Label className="text-base font-semibold">Depth (inches)</Label>
-              <Select value={depth.toString()} onValueChange={(value) => setDepth(parseInt(value))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select depth" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 24 }, (_, i) => i + 1).map(inch => (
-                    <SelectItem key={inch} value={inch.toString()}>
-                      {inch}"
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Product Selection */}
-            <div className="space-y-3">
-              <Label className="text-base font-semibold">Material Type</Label>
-              <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select material type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {products.map(product => (
-                    <SelectItem key={product.id} value={product.id.toString()}>
-                      {product.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex justify-between items-center">
+                <Label className="text-base font-semibold">Depth (inches)</Label>
+                <span className="text-sm text-gray-600">{depth[0]}"</span>
+              </div>
+              <Slider
+                value={depth}
+                onValueChange={setDepth}
+                max={24}
+                min={1}
+                step={1}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>1"</span>
+                <span>24"</span>
+              </div>
             </div>
 
             {/* Order Extra Slider */}
@@ -196,10 +203,27 @@ const HomeCalculator = () => {
               </div>
             </div>
 
+            {/* Material Type Selection */}
+            <div className="space-y-3">
+              <Label className="text-base font-semibold">Material Type</Label>
+              <Select value={selectedProduct} onValueChange={setSelectedProduct}>
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="Select material type" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border shadow-lg z-50">
+                  {products.map(product => (
+                    <SelectItem key={product.id} value={product.id.toString()}>
+                      {product.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Results */}
             <div className="border-t pt-6">
               <h3 className="text-lg font-semibold mb-4">Calculation Results</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card className="bg-blue-50 border-blue-200">
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-blue-900">
@@ -221,9 +245,23 @@ const HomeCalculator = () => {
                 <Card className="bg-orange-50 border-orange-200">
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-orange-900">
-                      {totalTons.toFixed(1)}
+                      {totalTons < 3 ? '3 ton min.' : totalTons.toFixed(1)}
                     </div>
-                    <div className="text-sm text-orange-700">Tons Needed</div>
+                    <div className="text-sm text-orange-700">
+                      {totalTons < 3 ? 'order' : 'Tons Needed'}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-purple-50 border-purple-200">
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-purple-900">
+                      {totalDeliveredPrice > 0 && selectedProduct && zipCode ? 
+                        `$${totalDeliveredPrice.toFixed(2)}` : 
+                        'Select Material'
+                      }
+                    </div>
+                    <div className="text-sm text-purple-700">Total Delivered Price</div>
                   </CardContent>
                 </Card>
               </div>
