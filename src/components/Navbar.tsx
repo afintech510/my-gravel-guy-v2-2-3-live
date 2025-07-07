@@ -63,7 +63,7 @@ const Navbar = () => {
                   <img 
                     src="https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//mygravelguy_wide_logo.png" 
                     alt="My Gravel Guy Logo" 
-                    className="h-20 w-auto"
+                    className="h-16 w-auto"
                   />  
                 </Link>
               </div>
