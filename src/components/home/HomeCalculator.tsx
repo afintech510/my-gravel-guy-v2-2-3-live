@@ -5,7 +5,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Calculator, ExternalLink, ShoppingCart } from 'lucide-react';
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/components/ui/tooltip";
+import { Plus, Trash2, Calculator, ExternalLink, ShoppingCart, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getProducts } from '@/services/products';
 import { Product } from '@/services/products/types';
@@ -182,7 +188,23 @@ const HomeCalculator = () => {
             {/* Order Extra Slider */}
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <Label className="text-base font-semibold">Order Extra</Label>
+                <div className="flex items-center gap-2">
+                  <Label className="text-base font-semibold">Order Extra</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="cursor-help">
+                          <Info className="h-4 w-4 text-gray-500" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-sm max-w-xs">
+                          Order 5% extra when over 10 tons, order 10% when less than 10 tons. Consider additional for compaction.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <span className="text-sm text-gray-600">{orderExtra[0]}%</span>
               </div>
               <Slider
@@ -287,9 +309,16 @@ const HomeCalculator = () => {
                         </div>
                         
                         {/* Description */}
-                        <p className="text-white/80 mb-6 text-lg">
+                        <p className="text-white/80 mb-4 text-lg">
                           {selectedProductData.short_description || selectedProductData.description || "Perfect for driveways and high-traffic areas"}
                         </p>
+                        
+                        {/* Free Delivery */}
+                        <div className="mb-6">
+                          <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                            Free Delivery
+                          </span>
+                        </div>
                         
                         {/* Action Buttons */}
                         <div className="flex flex-col sm:flex-row gap-3">
