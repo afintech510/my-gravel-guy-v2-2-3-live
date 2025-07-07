@@ -10,6 +10,7 @@ import { useZipCode } from '../contexts/ZipCodeContext';
 import TrustBanner from '../components/products/trust/TrustBanner';
 import GettingBackToRoots from '../components/GettingBackToRoots';
 import FAQModule from '../components/home/FAQModule';
+import WhyChooseUs from '../components/WhyChooseUs';
 import { Store, Calculator, DollarSign } from 'lucide-react';
 const Index = () => {
   const {
@@ -53,6 +54,9 @@ const Index = () => {
 
       {/* Shopping Module - New addition replacing LocationProductHero */}
       <ShoppingModule />
+
+      {/* Why Choose Us Section */}
+      <WhyChooseUs />
       
       {/* How It Works Section */}
       <HowItWorks />
