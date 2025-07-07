@@ -58,7 +58,7 @@ const Navbar = () => {
 
             <div className="flex-1">
               {/* Desktop Logo positioned to the left */}
-              <div className="hidden lg:block absolute left-4 lg:left-[calc((100%-72rem)/2+1rem)] -top-1 z-50 mt-[6px] flex items-center gap-2">
+              <div className="hidden lg:block absolute left-4 lg:left-[calc((100%-72rem)/2+1rem)] -top-1 z-50 mt-[3px] flex items-center gap-2">
                 <Link to="/">
                   <img 
                     src="https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//mygravelguy_wide_logo.png" 
