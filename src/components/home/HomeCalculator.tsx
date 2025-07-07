@@ -262,7 +262,7 @@ const HomeCalculator = () => {
                 <h3 className="text-lg font-semibold mb-4">Selected Product</h3>
                 <Card className="overflow-hidden border-0 shadow-lg">
                   <div 
-                    className="relative min-h-[300px] bg-cover bg-center bg-no-repeat"
+                    className="relative min-h-[200px] bg-cover bg-center bg-no-repeat"
                     style={{
                       backgroundImage: `url(${selectedProductData.image || '/placeholder.svg'})`
                     }}
@@ -271,13 +271,16 @@ const HomeCalculator = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20"></div>
                     
                     {/* Content */}
-                    <div className="relative z-10 p-8 flex flex-col justify-end h-full min-h-[300px]">
+                    <div className="relative z-10 p-6 flex flex-col justify-end h-full min-h-[200px]">
                       <div className="text-white">
-                        {/* Product Name and Unit Price on Same Line */}
+                        {/* Product Name and Tons Display */}
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3">
                           <h4 className="text-2xl font-bold mb-2 sm:mb-0">{selectedProductData.name}</h4>
-                          <div className="text-xl font-semibold">
-                            ${totalDeliveredPrice && totalVolumeYards > 0 ? (totalDeliveredPrice / totalVolumeYards).toFixed(2) : '0.00'}/yard
+                          <div className="text-right">
+                            <div className="text-2xl font-bold">{totalTons.toFixed(0)} tons</div>
+                            <div className="text-lg">
+                              ${totalDeliveredPrice && totalTons > 0 ? (totalDeliveredPrice / totalTons).toFixed(2) : '0.00'} per ton
+                            </div>
                           </div>
                         </div>
                         
