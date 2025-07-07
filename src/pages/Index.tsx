@@ -15,6 +15,7 @@ import WhyChooseUs from '../components/WhyChooseUs';
 import CustomerReviews from '../components/CustomerReviews';
 import TransformDrivewayCTA from '../components/TransformDrivewayCTA';
 import HomeCalculator from '../components/home/HomeCalculator';
+import ContactModule from '../components/home/ContactModule';
 import { Store, Calculator, DollarSign } from 'lucide-react';
 const Index = () => {
   const {
@@ -104,6 +105,9 @@ const Index = () => {
       
       {/* Transform Driveway CTA */}
       <TransformDrivewayCTA />
+      
+      {/* Contact Module */}
+      <ContactModule />
     
     </div>;
 };
