@@ -56,34 +56,25 @@ export class GoogleShoppingFeedGenerator {
   /**
    * Generate Google Shopping feed for continental US only
    */
-  async generateFeed(zipCode?: string): Promise<GoogleShoppingProduct[]> {
+  async generateFeed(): Promise<GoogleShoppingProduct[]> {
     const products = await getProducts();
-    const targetZip = zipCode || this.defaultZipCode;
     
-    // Validate that target ZIP is in continental US
-    if (!isContinentalUSZipCode(targetZip)) {
-      console.warn(`ZIP code ${targetZip} is not in continental US. Using default.`);
-      const validZip = this.defaultZipCode;
-      console.log(`Generating Google Shopping feed for ${products.length} products in continental US zip code ${validZip}`);
-      return products.map(product => this.convertToGoogleShoppingProduct(product, validZip));
-    }
+    console.log(`Generating Google Shopping feed for ${products.length} products for continental US`);
     
-    console.log(`Generating Google Shopping feed for ${products.length} products in continental US zip code ${targetZip}`);
-    
-    return products.map(product => this.convertToGoogleShoppingProduct(product, targetZip));
+    return products.map(product => this.convertToGoogleShoppingProduct(product));
   }
 
   /**
    * Convert internal product to Google Shopping format with US restrictions
    */
-  private convertToGoogleShoppingProduct(product: Product, zipCode: string): GoogleShoppingProduct {
+  private convertToGoogleShoppingProduct(product: Product): GoogleShoppingProduct {
     // Calculate price for minimum 3-ton order quantity
     const pricingResult = calculateProductExponentialPrice(product, 3);
     const totalPrice = Math.round(pricingResult.pricePerTon * 3 * 100) / 100;
     
-    // Generate proper product URL with US-specific slug
-    const productUrl = `${this.baseUrl}/products/${encodeURIComponent(product.slug)}?region=continental-us`;
-    const mobileUrl = `${this.baseUrl}/products/${encodeURIComponent(product.slug)}?region=continental-us&mobile=1`;
+    // Generate proper product URL
+    const productUrl = `${this.baseUrl}/products/${encodeURIComponent(product.slug)}`;
+    const mobileUrl = `${this.baseUrl}/products/${encodeURIComponent(product.slug)}?mobile=1`;
     
     // Get primary and additional images
     const imageUrl = this.getProductImageUrl(product);
@@ -95,14 +86,11 @@ export class GoogleShoppingFeedGenerator {
     // Create product type hierarchy
     const productType = this.createProductTypeHierarchy(product);
     
-    // Get US region for targeting
-    const usRegion = getContinentalUSRegion(zipCode);
-    
     // Generate promotional pricing if applicable
     const salePrice = this.generateSalePrice(totalPrice);
     
     return {
-      id: `${product.id}-US-${usRegion}`, // Make ID US-specific
+      id: `${product.id}-US`, // Continental US ID
       title: this.createOptimizedTitle(product),
       description: this.createOptimizedDescription(product),
       link: productUrl,
@@ -124,7 +112,7 @@ export class GoogleShoppingFeedGenerator {
       custom_label_0: this.getCampaignGroup(product.category),
       custom_label_1: this.getMaterialSize(product.size, product.specifications?.size),
       custom_label_2: this.getPrimaryUse(product.usage, product.uses),
-      custom_label_3: usRegion,
+      custom_label_3: 'Continental-US',
       custom_label_4: this.getPricingTier(totalPrice),
       // Explicit geographic restrictions
       included_destination: 'US',
@@ -455,8 +443,8 @@ export class GoogleShoppingFeedGenerator {
   /**
    * Generate XML feed format for Google Merchant Center with US restrictions
    */
-  async generateXMLFeed(zipCode?: string): Promise<string> {
-    const products = await this.generateFeed(zipCode);
+  async generateXMLFeed(): Promise<string> {
+    const products = await this.generateFeed();
     
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
     xml += '<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">\n';
