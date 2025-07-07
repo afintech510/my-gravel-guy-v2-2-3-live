@@ -49,6 +49,7 @@ import Sitemap from "./pages/Sitemap";
 import SitemapXML from "./pages/SitemapXML";
 import SMSConsent from "./pages/SMSConsent";
 import GoogleShopping from "./pages/GoogleShopping";
+import AddToCart from "./pages/AddToCart";
 import { Link } from "react-router-dom";
 
 const queryClient = new QueryClient();
@@ -117,6 +118,7 @@ function App() {
                       <Route path="/sitemap" element={<Sitemap />} />
                       <Route path="/sitemap.xml" element={<SitemapXML />} />
                       <Route path="/sms-consent" element={<SMSConsent />} />
+                      <Route path="/add-to-cart" element={<AddToCart />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                     <Footer />
