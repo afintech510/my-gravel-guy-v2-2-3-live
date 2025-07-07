@@ -23,7 +23,9 @@ const Index = () => {
           backgroundImage: "url('https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//loader-with-driveway-gravel.png')"
         }}
       >
-       
+       {/* Dark overlay */}
+        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+        
         <div className="max-w-6xl mx-auto w-full">
           <div className="max-w-2xl">
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">Premium Gravel Delivered to Your Door</h1>
