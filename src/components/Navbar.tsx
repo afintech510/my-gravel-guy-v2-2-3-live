@@ -1,7 +1,7 @@
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, ShoppingCart, NotebookPen, Calculator, Store, ThumbsUp, Phone, House, MapPin, DollarSign, X } from "lucide-react";
+import { Menu, ShoppingCart, NotebookPen, Calculator, Store, ThumbsUp, Phone, House, MapPin, DollarSign, X, Mails } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart } from '../contexts/CartContext';
 import { useZipCode } from '../contexts/ZipCodeContext';
@@ -23,7 +23,7 @@ const Navbar = () => {
     { href: "/product-calculator", label: "Calculator", icon: <Calculator className="h-5 w-5 mr-2" /> },
 //    { href: "/quiz", label: "Plan Project", icon: <NotebookPen className="h-5 w-5 mr-2" /> },
     { href: "/about", label: "About", icon: <ThumbsUp className="h-5 w-5 mr-2" /> },
-    { href: "/contact", label: "Quote", icon: <DollarSign className="h-5 w-5 mr-2" /> },
+    { href: "/contact", label: "Quote", icon: <Mails className="h-5 w-5 mr-2" /> },
   ];
 
   const mobileLinks = [
