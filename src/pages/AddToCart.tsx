@@ -18,12 +18,17 @@ const AddToCart = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [processed, setProcessed] = useState(false);
 
   useEffect(() => {
+    // Prevent multiple executions
+    if (processed) return;
+    
     const processAddToCart = async () => {
       try {
         setLoading(true);
         setError(null);
+        setProcessed(true);
 
         // Extract parameters
         const productParam = searchParams.get('product');
@@ -119,7 +124,7 @@ const AddToCart = () => {
     };
 
     processAddToCart();
-  }, [searchParams, addToCart, setZipCode, navigate, toast]);
+  }, [searchParams]); // Only depend on searchParams to prevent re-runs
 
   if (loading) {
     return (
