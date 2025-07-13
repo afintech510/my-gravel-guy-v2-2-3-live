@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -11,6 +11,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { Product } from '@/services/productTypes';
 import { trackEvent } from '../../utils/analytics';
+import { sendQuoteRequestEmail } from '../../services/quoteEmailService';
+import { Loader2 } from 'lucide-react';
 
 interface QuoteFormProductProps {
   selectedProduct?: Product | null;
@@ -30,6 +32,7 @@ const formSchema = z.object({
 
 const QuoteFormProduct: React.FC<QuoteFormProductProps> = ({ selectedProduct }) => {
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -44,24 +47,45 @@ const QuoteFormProduct: React.FC<QuoteFormProductProps> = ({ selectedProduct }) 
     },
   });
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
     console.log('QuoteFormProduct: Form submitted:', data);
+    setIsSubmitting(true);
     
-    // Track product-specific quote form submission
     try {
+      // Track product-specific quote form submission
       console.log('QuoteFormProduct: Tracking product quote form submission');
       trackEvent('form_submit', 'Quote', `Product Quote - ${selectedProduct?.name || 'Unknown'}`, 1);
+      
+      // Send quote request email with product information
+      console.log('QuoteFormProduct: Sending quote request email');
+      const emailSent = await sendQuoteRequestEmail({
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        message: `${data.estimatedTons ? `Estimated Tons: ${data.estimatedTons}\n` : ''}${data.message || 'No additional details provided'}`,
+        zipCode: data.zipCode,
+        selectedProduct: selectedProduct
+      });
+      
+      if (emailSent) {
+        toast({
+          title: 'Quote request sent!',
+          description: 'We will get back to you with a custom quote within 24 hours.',
+        });
+        form.reset();
+      } else {
+        throw new Error('Failed to send email');
+      }
     } catch (error) {
-      console.error('QuoteFormProduct: Failed to track product quote form submission:', error);
+      console.error('QuoteFormProduct: Failed to submit quote form:', error);
+      toast({
+        title: 'Error sending quote request',
+        description: 'Please try again or contact us directly.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    // Here you would typically send this data to your backend
-    toast({
-      title: 'Quote request sent!',
-      description: 'We will get back to you with a custom quote within 24 hours.',
-    });
-    
-    form.reset();
   };
 
   return (
@@ -192,8 +216,15 @@ const QuoteFormProduct: React.FC<QuoteFormProductProps> = ({ selectedProduct }) 
             )}
           />
           
-          <Button type="submit" className="w-full">
-            Get Custom Quote
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Sending Quote Request...
+              </>
+            ) : (
+              'Get Custom Quote'
+            )}
           </Button>
         </form>
       </Form>
