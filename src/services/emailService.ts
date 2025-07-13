@@ -246,10 +246,31 @@ class EmailService {
       // Extract customer email for internal email context
       const customerEmail = extractCustomerEmailFromOrderData(orderData);
       
+      // Resolve product names from IDs
+      const resolvedItems = await Promise.all((orderData.items || []).map(async (item: any) => {
+        let productName = item.product_name;
+        
+        // If product_name looks like a UUID (contains hyphens), resolve it
+        if (typeof productName === 'string' && productName.includes('-') && productName.length > 30) {
+          try {
+            const { getProductById } = await import('@/services/products/productQueries');
+            const product = await getProductById(productName);
+            productName = product?.name || productName;
+          } catch (error) {
+            console.error('Error resolving product name:', error);
+          }
+        }
+        
+        return {
+          ...item,
+          product_name: productName
+        };
+      }));
+      
       // Create properly formatted order data for internal email
       const formattedOrderData = {
         order_id: orderData.order_id,
-        items: orderData.items || [],
+        items: resolvedItems,
         total_amount: orderData.total_amount || 0,
         customer_email: customerEmail || 'guest@mygravelguy.com',
         customer_name: orderData.customer_name || orderData.customerInfo?.name || 'Guest User'

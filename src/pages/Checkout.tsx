@@ -179,6 +179,25 @@ const Checkout = () => {
 
   // Generate email template for checkout confirmation
   const generateCheckoutConfirmationEmail = (orderData: any) => {
+    const formatDeliveryTime = (preference?: string) => {
+      switch (preference) {
+        case 'anytime': return 'Anytime (7am-5pm)';
+        case 'morning': return 'Morning (7am-12pm)';
+        case 'afternoon': return 'Afternoon (12pm-5pm)';
+        default: return 'Not specified';
+      }
+    };
+
+    const formatDate = (dateString?: string) => {
+      if (!dateString) return 'Not specified';
+      return new Date(dateString).toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    };
+
     return `
       <!DOCTYPE html>
       <html>
@@ -196,17 +215,49 @@ const Checkout = () => {
           <h2 style="color: #dc2626; margin-top: 0;">Order ID: ${orderData.order_id}</h2>
           <p><strong>Customer:</strong> ${orderData.customer_name}</p>
           <p><strong>Email:</strong> ${orderData.customer_email}</p>
+          <p><strong>Phone:</strong> ${items[0]?.contactInfo?.phone || 'Not provided'}</p>
           <p><strong>Total Amount:</strong> $${orderData.total_amount.toFixed(2)}</p>
           <p><strong>Items:</strong> ${orderData.items.length}</p>
           <p><strong>Status:</strong> Proceeding to Stripe Payment</p>
           
           <div style="margin: 20px 0;">
-            <h3>Order Items:</h3>
+            <h3>Order Summary (${orderData.items.length} items)</h3>
             ${orderData.items.map((item: any) => `
               <div style="background: white; padding: 20px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #dc2626;">
                 <h4 style="margin-top: 0; color: #dc2626;">${item.product_name}</h4>
-                <p><strong>Quantity:</strong> ${item.quantity} tons</p>
+                <p><strong>Quantity:</strong> ${item.quantity} tons ${item.delivery_address ? `(${(item.quantity * 0.8).toFixed(1)} cu. yds.)` : ''}</p>
                 <p><strong>Price:</strong> $${item.total_price.toFixed(2)}</p>
+                
+                ${item.delivery_address ? `
+                  <div style="margin-top: 15px; padding: 15px; background: #f0f9ff; border-radius: 6px; border-left: 3px solid #0ea5e9;">
+                    <h5 style="margin: 0 0 10px 0; color: #0c4a6e;">Delivery Details:</h5>
+                    
+                    <div style="margin-bottom: 10px;">
+                      <strong>Contact Information:</strong><br>
+                      ${item.contact_info?.name || 'Not provided'}<br>
+                      ${item.contact_info?.phone || 'Not provided'}<br>
+                      ${item.contact_info?.email || 'Not provided'}
+                    </div>
+                    
+                    <div style="margin-bottom: 10px;">
+                      <strong>Delivery Address:</strong><br>
+                      ${item.delivery_address.street}<br>
+                      ${item.delivery_address.city}, ${item.delivery_address.state} ${item.delivery_address.zip}
+                    </div>
+                    
+                    <div style="margin-bottom: 10px;">
+                      <strong>Delivery Schedule:</strong><br>
+                      ${formatDate(item.delivery_date)}<br>
+                      ${formatDeliveryTime(item.delivery_time_preference)}
+                    </div>
+                    
+                    ${item.delivery_instructions ? `
+                      <div>
+                        <strong>Special Instructions:</strong> ${item.delivery_instructions}
+                      </div>
+                    ` : ''}
+                  </div>
+                ` : ''}
               </div>
             `).join('')}
           </div>
