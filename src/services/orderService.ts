@@ -3,7 +3,8 @@ import type {
   GroupedOrder, 
   OrderFilters, 
   OrderServiceResponse, 
-  OrderRow
+  OrderRow,
+  FulfillmentStatus
 } from '@/types/order.types';
 import { groupOrderRows } from '@/types/order.types';
 import { SupplierService } from './supplierService';
@@ -183,7 +184,7 @@ export class OrderService {
   /**
    * Update order fulfillment status
    */
-  static async updateOrderFulfillmentStatus(orderId: string, fulfillmentStatus: string): Promise<void> {
+  static async updateOrderFulfillmentStatus(orderId: string, fulfillmentStatus: FulfillmentStatus): Promise<void> {
     try {
       console.log('Updating order fulfillment status:', { orderId, fulfillmentStatus });
       

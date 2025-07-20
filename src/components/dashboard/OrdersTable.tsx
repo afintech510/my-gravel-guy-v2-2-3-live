@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { OrderService } from '@/services/orderService';
-import { OrderFilters, GroupedOrder } from '@/types/order.types';
+import { OrderFilters, GroupedOrder, FulfillmentStatus } from '@/types/order.types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Loader2, ChevronLeft, ChevronRight, Eye, ExternalLink } from 'lucide-react';
@@ -51,7 +51,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
 
   const handleFulfillmentStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
-      await OrderService.updateOrderFulfillmentStatus(orderId, newStatus);
+      await OrderService.updateOrderFulfillmentStatus(orderId, newStatus as FulfillmentStatus);
       await refetch();
       toast({
         title: "Fulfillment Status Updated",
