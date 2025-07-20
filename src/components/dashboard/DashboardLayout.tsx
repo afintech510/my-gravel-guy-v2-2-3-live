@@ -1,11 +1,13 @@
 
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, Menu } from 'lucide-react';
+import { Loader2, Power } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardSidebar } from './DashboardSidebar';
 import LoginPrompt from './LoginPrompt';
+import { forceAuthCleanup } from '@/utils/authCleanup';
+import { supabase } from '@/integrations/supabase/client';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -15,6 +17,29 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, title, subtitle }: DashboardLayoutProps) {
   const { user, loading, isAdmin, signOut } = useAuth();
+
+  const handlePowerLogout = async () => {
+    try {
+      console.log('Initiating power logout...');
+      
+      // First clear all auth storage
+      forceAuthCleanup();
+      
+      // Attempt global sign out (ignore errors)
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (error) {
+        console.log('Sign out error (ignored):', error);
+      }
+      
+      // Force page refresh and redirect
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Power logout error:', error);
+      // Force refresh anyway
+      window.location.href = '/';
+    }
+  };
 
   // Loading state - show spinner while checking authentication
   if (loading) {
@@ -78,6 +103,16 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
                   <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
                     SECURE MODE
                   </span>
+                  
+                  {/* Power Logout Button */}
+                  <button
+                    onClick={handlePowerLogout}
+                    title="Force Logout & Clear Cache"
+                    className="flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-full transition-colors"
+                  >
+                    <Power className="h-4 w-4" />
+                  </button>
+                  
                   <button
                     onClick={signOut}
                     className="text-gray-600 hover:text-gray-900"
