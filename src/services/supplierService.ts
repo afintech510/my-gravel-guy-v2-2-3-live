@@ -26,7 +26,7 @@ export class SupplierService {
         phone: supplier.phone || '',
         address: typeof supplier.address === 'string' 
           ? supplier.address 
-          : supplier.address?.street || '',
+          : (supplier.address as { street?: string })?.street || '',
         notes: '', // Not in suppliers table, keeping for compatibility
         created_at: supplier.created_at,
         updated_at: supplier.updated_at,
@@ -72,7 +72,7 @@ export class SupplierService {
         phone: newSupplier.phone || '',
         address: typeof newSupplier.address === 'string' 
           ? newSupplier.address 
-          : newSupplier.address?.street || '',
+          : (newSupplier.address as { street?: string })?.street || '',
         notes: '',
         created_at: newSupplier.created_at,
         updated_at: newSupplier.updated_at,
