@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { trackEvent } from '../../utils/analytics';
+import { sendQuoteRequestEmail } from '../../services/quoteEmailService';
 
 interface ContactFormProps {
   productInfo: {
@@ -21,6 +22,7 @@ const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Please enter a valid email'),
   phone: z.string().optional(),
+  zipCode: z.string().min(5, 'Please enter a valid ZIP code'),
   message: z.string().optional(),
 });
 
@@ -33,28 +35,48 @@ const ContactForm: React.FC<ContactFormProps> = ({ productInfo }) => {
       name: '',
       email: '',
       phone: '',
+      zipCode: '',
       message: `I'm interested in ordering ${Math.round(productInfo.quantity)} tons of ${productInfo.name}.`,
     },
   });
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
     console.log('ContactForm: Form submitted:', data);
     
-    // Track shop calculator contact form submission
     try {
+      // Track shop calculator contact form submission
       console.log('ContactForm: Tracking shop calculator contact form submission');
       trackEvent('form_submit', 'Quote', `Shop Calculator - ${productInfo.name}`, productInfo.quantity);
+      
+      // Send quote request with database insertion
+      const result = await sendQuoteRequestEmail({
+        name: data.name,
+        email: data.email,
+        phone: data.phone || '',
+        message: data.message || `I'm interested in ordering ${Math.round(productInfo.quantity)} tons of ${productInfo.name}.`,
+        zipCode: data.zipCode,
+        estimatedTons: Math.round(productInfo.quantity),
+        sourcePage: 'Shop Calculator',
+        selectedProduct: { name: productInfo.name }
+      });
+      
+      if (result.success) {
+        toast({
+          title: 'Quote request sent!',
+          description: `We will get back to you as soon as possible. Reference ID: ${result.orderId}`,
+        });
+        form.reset();
+      } else {
+        throw new Error(result.error || 'Failed to send quote request');
+      }
     } catch (error) {
-      console.error('ContactForm: Failed to track shop calculator contact form submission:', error);
+      console.error('ContactForm: Failed to submit shop calculator contact form:', error);
+      toast({
+        title: 'Error sending quote request',
+        description: 'Please try again or contact us directly.',
+        variant: 'destructive',
+      });
     }
-    
-    // Here you would typically send this data to your backend
-    toast({
-      title: 'Message sent!',
-      description: 'We will get back to you as soon as possible.',
-    });
-    
-    form.reset();
   };
 
   return (
@@ -89,6 +111,17 @@ const ContactForm: React.FC<ContactFormProps> = ({ productInfo }) => {
           className="w-full"
         />
       </div>
+
+      <div>
+        <Input
+          placeholder="ZIP Code"
+          {...form.register('zipCode')}
+          className="w-full"
+        />
+        {form.formState.errors.zipCode && (
+          <p className="text-xs text-red-500 mt-1">{form.formState.errors.zipCode.message}</p>
+        )}
+      </div>
       
       <div>
         <Textarea
@@ -99,7 +132,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ productInfo }) => {
       </div>
       
       <Button type="submit" className="w-full">
-        Send Message
+        Send Quote Request
       </Button>
     </form>
   );
