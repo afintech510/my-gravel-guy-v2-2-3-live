@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { OrderService } from '@/services/orderService';
 
 interface SalesPersonSelectorProps {
@@ -44,9 +45,9 @@ const SalesPersonSelector: React.FC<SalesPersonSelectorProps> = ({
 
   if (readonly) {
     return (
-      <span className="text-sm text-gray-700">
+      <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">
         {currentPerson || 'Not Assigned'}
-      </span>
+      </Badge>
     );
   }
 
@@ -74,12 +75,12 @@ const SalesPersonSelector: React.FC<SalesPersonSelectorProps> = ({
   }
 
   return (
-    <span 
-      className="cursor-pointer text-sm text-blue-600 hover:text-blue-800 hover:underline"
+    <Badge 
+      className="cursor-pointer bg-gray-100 text-gray-800 hover:bg-gray-200"
       onClick={() => setIsEditing(true)}
     >
       {currentPerson || 'Not Assigned'}
-    </span>
+    </Badge>
   );
 };
 
