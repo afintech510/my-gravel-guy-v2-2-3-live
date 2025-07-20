@@ -1,13 +1,13 @@
 
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, Power } from 'lucide-react';
+import { Loader2, Power, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardSidebar } from './DashboardSidebar';
 import LoginPrompt from './LoginPrompt';
 import { forceAuthCleanup } from '@/utils/authCleanup';
 import { supabase } from '@/integrations/supabase/client';
+import { useState } from 'react';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -17,6 +17,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, title, subtitle }: DashboardLayoutProps) {
   const { user, loading, isAdmin, signOut } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const handlePowerLogout = async () => {
     try {
@@ -83,56 +84,68 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-gray-50 flex w-full">
-        <DashboardSidebar />
-        
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <div className="bg-white shadow">
-            <div className="px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between items-center py-6">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
-                  {subtitle && <p className="text-gray-600">{subtitle}</p>}
-                </div>
-                <div className="flex items-center space-x-4">
-                  <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
-                    SECURE MODE
-                  </span>
-                  
-                  {/* Power Logout Button */}
-                  <button
-                    onClick={handlePowerLogout}
-                    title="Force Logout & Clear Cache"
-                    className="flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-full transition-colors"
-                  >
-                    <Power className="h-4 w-4" />
-                  </button>
-                  
-                  <button
-                    onClick={signOut}
-                    className="text-gray-600 hover:text-gray-900"
-                  >
-                    Sign Out
-                  </button>
-                  <button
-                    onClick={() => window.location.href = '/'}
-                    className="text-gray-600 hover:text-gray-900"
-                  >
-                    Back to Site
-                  </button>
-                </div>
+    <div className="min-h-screen bg-gray-50 flex flex-col w-full">
+      {/* Full Width Header */}
+      <div className="bg-white shadow-sm border-b z-10">
+        <div className="px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center gap-4">
+              {/* Hamburger Menu */}
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+              
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+                {subtitle && <p className="text-sm text-gray-600">{subtitle}</p>}
               </div>
             </div>
+            
+            <div className="flex items-center space-x-4">
+              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                SECURE MODE
+              </span>
+              
+              {/* Power Logout Button */}
+              <button
+                onClick={handlePowerLogout}
+                title="Force Logout & Clear Cache"
+                className="flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-full transition-colors"
+              >
+                <Power className="h-4 w-4" />
+              </button>
+              
+              <button
+                onClick={signOut}
+                className="text-sm text-gray-600 hover:text-gray-900 px-3 py-1 rounded-md hover:bg-gray-100"
+              >
+                Sign Out
+              </button>
+              <button
+                onClick={() => window.location.href = '/'}
+                className="text-sm text-gray-600 hover:text-gray-900 px-3 py-1 rounded-md hover:bg-gray-100"
+              >
+                Back to Site
+              </button>
+            </div>
           </div>
+        </div>
+      </div>
 
-          {/* Main Content */}
-          <div className="flex-1 px-4 sm:px-6 lg:px-8 py-8">
+      {/* Content Area with Sidebar */}
+      <div className="flex flex-1 overflow-hidden">
+        <DashboardSidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+        
+        {/* Main Content */}
+        <div className="flex-1 overflow-auto">
+          <div className="px-4 sm:px-6 lg:px-8 py-6">
             {children}
           </div>
         </div>
       </div>
-    </SidebarProvider>
+    </div>
   );
 }

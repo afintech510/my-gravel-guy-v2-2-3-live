@@ -1,19 +1,7 @@
 
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ShoppingCart, FileText, MessageSquare, Menu } from 'lucide-react';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarHeader,
-  SidebarTrigger,
-  useSidebar,
-} from '@/components/ui/sidebar';
+import { LayoutDashboard, ShoppingCart, FileText, MessageSquare } from 'lucide-react';
 
 const menuItems = [
   {
@@ -38,8 +26,12 @@ const menuItems = [
   },
 ];
 
-export function DashboardSidebar() {
-  const { state } = useSidebar();
+interface DashboardSidebarProps {
+  isOpen: boolean;
+  onToggle: () => void;
+}
+
+export function DashboardSidebar({ isOpen }: DashboardSidebarProps) {
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -50,55 +42,42 @@ export function DashboardSidebar() {
     return currentPath.startsWith(path);
   };
 
-  const isCollapsed = state === 'collapsed';
-
   return (
-    <Sidebar className={`transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'} border-r bg-card`}>
-      {/* Header with hamburger menu */}
-      <SidebarHeader className="border-b p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {!isCollapsed && (
-            <div className="flex flex-col">
-              <h2 className="text-lg font-semibold text-foreground">Admin Panel</h2>
-              <p className="text-xs text-muted-foreground">Management Dashboard</p>
-            </div>
-          )}
+    <div
+      className={`${
+        isOpen ? 'w-64' : 'w-16'
+      } transition-all duration-300 ease-in-out bg-gray-900 border-r border-gray-800 flex-shrink-0`}
+    >
+      <nav className="h-full flex flex-col py-4">
+        <div className="flex-1 px-2 space-y-1">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.title}
+                to={item.url}
+                className={({ isActive: linkActive }) =>
+                  `group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+                    isActive(item.url) || linkActive
+                      ? 'bg-blue-600 text-white shadow-lg'
+                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  } ${!isOpen ? 'justify-center' : ''}`
+                }
+                title={!isOpen ? item.title : undefined}
+              >
+                <Icon 
+                  className={`h-5 w-5 flex-shrink-0 ${
+                    isActive(item.url) ? 'text-white' : 'text-gray-400 group-hover:text-white'
+                  }`} 
+                />
+                {isOpen && (
+                  <span className="ml-3 truncate">{item.title}</span>
+                )}
+              </NavLink>
+            );
+          })}
         </div>
-        <SidebarTrigger className="hover:bg-muted rounded-md p-2">
-          <Menu className="h-4 w-4" />
-        </SidebarTrigger>
-      </SidebarHeader>
-
-      <SidebarContent className="p-2">
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      className={({ isActive: linkActive }) =>
-                        `flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 w-full ${
-                          isActive(item.url) || linkActive
-                            ? 'bg-primary text-primary-foreground shadow-sm'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                        } ${isCollapsed ? 'justify-center' : ''}`
-                      }
-                      title={isCollapsed ? item.title : undefined}
-                    >
-                      <item.icon className="h-5 w-5 flex-shrink-0" />
-                      {!isCollapsed && (
-                        <span className="font-medium">{item.title}</span>
-                      )}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
+      </nav>
+    </div>
   );
 }
