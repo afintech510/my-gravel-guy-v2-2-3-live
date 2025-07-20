@@ -37,7 +37,7 @@ export const createQuoteOrder = async (quoteData: QuoteOrderData) => {
     delivery_phone: quoteData.customerPhone,
     delivery_zip: quoteData.zipCode,
     notes: quoteData.projectDetails,
-    fulfillment_status: 'Quote Needed',
+    fulfillment_status: 'Quote Needed' as const,
     status: 'Quote',
     billing_name: quoteData.customerName,
     billing_email: quoteData.customerEmail,
