@@ -5,12 +5,13 @@ import { OrderService } from '@/services/orderService';
 import { OrderFilters, GroupedOrder } from '@/types/order.types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Loader2, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, Eye, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import OrderTableFilters from './OrderTableFilters';
 import OrderStatusBadge from './OrderStatusBadge';
 import OrderDetailModal from './OrderDetailModal';
 import { format } from 'date-fns';
+import { createGoogleMapsSearchUrl } from '@/utils/googleMapsUtils';
 
 interface OrdersTableProps {
   statusFilter?: 'orders' | 'quotes' | 'all';
@@ -87,6 +88,29 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
     if (!address) return 'N/A';
     
     return `${address.street}, ${address.city}, ${address.state} ${address.zip}`;
+  };
+
+  const renderClickableAddress = (order: any) => {
+    const addressText = formatAddress(order);
+    
+    if (addressText === 'N/A') {
+      return <span className="text-gray-500">N/A</span>;
+    }
+
+    const googleMapsUrl = createGoogleMapsSearchUrl(addressText);
+
+    return (
+      <a
+        href={googleMapsUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 max-w-xs truncate"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <span className="truncate">{addressText}</span>
+        <ExternalLink className="h-3 w-3 flex-shrink-0" />
+      </a>
+    );
   };
 
   const getProductName = (order: any) => {
@@ -198,8 +222,8 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
                         }
                       </TableCell>
                       <TableCell>{order.billing_name || 'N/A'}</TableCell>
-                      <TableCell className="max-w-xs truncate">
-                        {formatAddress(order)}
+                      <TableCell>
+                        {renderClickableAddress(order)}
                       </TableCell>
                       <TableCell>{getProductName(order)}</TableCell>
                       <TableCell>
