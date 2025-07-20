@@ -8,6 +8,8 @@ export interface Supplier {
   notes?: string;
   created_at: string;
   updated_at?: string;
+  service_areas?: string[];
+  materials?: string[];
 }
 
 export interface SupplierInsert {
@@ -16,6 +18,8 @@ export interface SupplierInsert {
   phone?: string;
   address?: string;
   notes?: string;
+  service_areas?: string[];
+  materials?: string[];
 }
 
 export interface SupplierUpdate {
@@ -25,4 +29,6 @@ export interface SupplierUpdate {
   address?: string;
   notes?: string;
   updated_at?: string;
+  service_areas?: string[];
+  materials?: string[];
 }

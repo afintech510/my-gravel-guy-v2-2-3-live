@@ -1,48 +1,38 @@
 
+import { supabase } from '@/integrations/supabase/client';
 import type { Supplier, SupplierInsert, SupplierUpdate } from '@/types/supplier.types';
-
-// Mock supplier data since suppliers table doesn't exist in current schema
-const mockSuppliers: Supplier[] = [
-  {
-    id: '1',
-    name: 'ABC Stone & Gravel Co.',
-    email: 'orders@abcstone.com',
-    phone: '(555) 123-4567',
-    address: '123 Quarry Road, Stone City, TX 75001',
-    notes: 'Reliable delivery, bulk orders preferred',
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: '2', 
-    name: 'Central Texas Materials',
-    email: 'dispatch@ctmaterials.com',
-    phone: '(555) 987-6543',
-    address: '456 Industrial Blvd, Austin, TX 78701',
-    notes: 'Fast turnaround, competitive pricing',
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    name: 'Hill Country Aggregates',
-    email: 'sales@hcaggregates.com', 
-    phone: '(555) 456-7890',
-    address: '789 Limestone Lane, Georgetown, TX 78626',
-    notes: 'Specialty limestone products',
-    created_at: new Date().toISOString(),
-  }
-];
 
 export class SupplierService {
   /**
-   * Fetch all suppliers - using mock data since suppliers table doesn't exist
+   * Fetch all suppliers from the database
    */
   static async fetchSuppliers(): Promise<Supplier[]> {
     try {
-      // Simulate async operation
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Return mock data sorted by name
-      return mockSuppliers.sort((a, b) => a.name.localeCompare(b.name));
+      const { data: suppliers, error } = await supabase
+        .from('suppliers')
+        .select('*')
+        .eq('active', true)
+        .order('name');
+
+      if (error) {
+        console.error('SupplierService.fetchSuppliers error:', error);
+        throw error;
+      }
+
+      return suppliers?.map(supplier => ({
+        id: supplier.id,
+        name: supplier.name,
+        email: supplier.email || '',
+        phone: supplier.phone || '',
+        address: typeof supplier.address === 'string' 
+          ? supplier.address 
+          : supplier.address?.street || '',
+        notes: '', // Not in suppliers table, keeping for compatibility
+        created_at: supplier.created_at,
+        updated_at: supplier.updated_at,
+        service_areas: supplier.service_areas || [],
+        materials: supplier.materials || []
+      })) || [];
     } catch (error) {
       console.error('SupplierService.fetchSuppliers error:', error);
       throw error;
@@ -50,23 +40,45 @@ export class SupplierService {
   }
 
   /**
-   * Create a new supplier - using mock implementation
+   * Create a new supplier in the database
    */
   static async createSupplier(supplier: SupplierInsert): Promise<Supplier> {
     try {
-      // Simulate async operation
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      const newSupplier: Supplier = {
-        id: Date.now().toString(), // Simple ID generation for mock
-        ...supplier,
-        created_at: new Date().toISOString()
+      const supplierData = {
+        name: supplier.name,
+        email: supplier.email || null,
+        phone: supplier.phone || null,
+        address: supplier.address ? { street: supplier.address } : null,
+        service_areas: supplier.service_areas || [],
+        materials: supplier.materials || [],
+        active: true
       };
-      
-      // Add to mock data
-      mockSuppliers.push(newSupplier);
-      
-      return newSupplier;
+
+      const { data: newSupplier, error } = await supabase
+        .from('suppliers')
+        .insert([supplierData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('SupplierService.createSupplier error:', error);
+        throw error;
+      }
+
+      return {
+        id: newSupplier.id,
+        name: newSupplier.name,
+        email: newSupplier.email || '',
+        phone: newSupplier.phone || '',
+        address: typeof newSupplier.address === 'string' 
+          ? newSupplier.address 
+          : newSupplier.address?.street || '',
+        notes: '',
+        created_at: newSupplier.created_at,
+        updated_at: newSupplier.updated_at,
+        service_areas: newSupplier.service_areas || [],
+        materials: newSupplier.materials || []
+      };
     } catch (error) {
       console.error('SupplierService.createSupplier error:', error);
       throw error;
@@ -74,24 +86,32 @@ export class SupplierService {
   }
 
   /**
-   * Update supplier information - using mock implementation
+   * Update supplier information in the database
    */
   static async updateSupplier(id: string, updates: SupplierUpdate): Promise<void> {
     try {
-      // Simulate async operation
-      await new Promise(resolve => setTimeout(resolve, 150));
+      const updateData: any = {};
       
-      const supplierIndex = mockSuppliers.findIndex(s => s.id === id);
-      if (supplierIndex === -1) {
-        throw new Error('Supplier not found');
+      if (updates.name !== undefined) updateData.name = updates.name;
+      if (updates.email !== undefined) updateData.email = updates.email || null;
+      if (updates.phone !== undefined) updateData.phone = updates.phone || null;
+      if (updates.address !== undefined) {
+        updateData.address = updates.address ? { street: updates.address } : null;
       }
+      if (updates.service_areas !== undefined) updateData.service_areas = updates.service_areas;
+      if (updates.materials !== undefined) updateData.materials = updates.materials;
       
-      // Update the supplier in mock data
-      mockSuppliers[supplierIndex] = {
-        ...mockSuppliers[supplierIndex],
-        ...updates,
-        updated_at: new Date().toISOString()
-      };
+      updateData.updated_at = new Date().toISOString();
+
+      const { error } = await supabase
+        .from('suppliers')
+        .update(updateData)
+        .eq('id', id);
+
+      if (error) {
+        console.error('SupplierService.updateSupplier error:', error);
+        throw error;
+      }
     } catch (error) {
       console.error('SupplierService.updateSupplier error:', error);
       throw error;
