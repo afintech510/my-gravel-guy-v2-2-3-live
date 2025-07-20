@@ -33,6 +33,8 @@ export interface OrderItem {
   delivery_date: string;
   delivery_address: DeliveryAddress;
   status: OrderStatus;
+  fulfillment_status?: string; // Added fulfillment status
+  sales_person?: string; // Added sales person
   unit: string; // Added to match schema
   total_price: number;
   delivery_name?: string;
@@ -51,6 +53,8 @@ export interface GroupedOrder {
   created_at: string;
   total_price: number;
   status: OrderStatus;
+  fulfillment_status?: string; // Added fulfillment status
+  sales_person?: string; // Added sales person
   stripe_session_id?: string;
   stripe_payment_intent_id?: string;
   updated_at?: string;
@@ -62,10 +66,10 @@ export interface GroupedOrder {
 // Legacy Order interface for backward compatibility
 export interface Order extends GroupedOrder {}
 
-// Order filters interface
+// Order filters interface - updated to use fulfillment_status
 export interface OrderFilters {
   searchTerm?: string;
-  status?: string;
+  fulfillmentStatus?: string; // Changed from status to fulfillmentStatus
   sortBy?: 'date_desc' | 'date_asc' | 'amount_desc' | 'amount_asc';
   quotesOnly?: boolean;
   excludeQuotes?: boolean;
@@ -94,6 +98,8 @@ export function orderRowToOrderItem(row: OrderRow): OrderItem {
       zip: row.delivery_zip || ''
     },
     status: (row.status as OrderStatus) || 'pending',
+    fulfillment_status: row.fulfillment_status || undefined, // Added fulfillment status
+    sales_person: row.sales_person || undefined, // Added sales person
     unit: row.unit,
     total_price: row.total_price,
     delivery_name: row.delivery_name || undefined,
@@ -120,6 +126,8 @@ export function groupOrderRows(orderRows: OrderRow[]): GroupedOrder[] {
         created_at: row.created_at || new Date().toISOString(),
         total_price: 0, // Will be calculated from items
         status: (row.status as OrderStatus) || 'pending',
+        fulfillment_status: row.fulfillment_status || undefined, // Added fulfillment status
+        sales_person: row.sales_person || undefined, // Added sales person
         stripe_session_id: row.stripe_session_id,
         stripe_payment_intent_id: row.stripe_payment_intent_id || undefined,
         updated_at: row.updated_at || undefined,

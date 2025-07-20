@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { 
   GroupedOrder, 
@@ -46,6 +45,33 @@ export class OrderService {
   }
 
   /**
+   * Get unique sales persons from orders
+   */
+  static async getUniqueSalesPersons(): Promise<string[]> {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('sales_person')
+        .not('sales_person', 'is', null)
+        .neq('sales_person', '');
+
+      if (error) {
+        console.error('Error fetching sales persons:', error);
+        throw new Error(`Failed to fetch sales persons: ${error.message}`);
+      }
+
+      const uniquePersons = Array.from(new Set(
+        data?.map(row => row.sales_person).filter(Boolean) || []
+      )).sort();
+
+      return uniquePersons;
+    } catch (error) {
+      console.error('OrderService.getUniqueSalesPersons error:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Fetch orders with optional filtering and pagination
    */
   static async fetchOrders(
@@ -72,9 +98,9 @@ export class OrderService {
         query = query.or(`order_id.ilike.%${filters.searchTerm}%,product_id.ilike.%${filters.searchTerm}%`);
       }
 
-      // Apply status filter
-      if (filters.status && filters.status !== 'all') {
-        query = query.eq('status', filters.status);
+      // Apply fulfillment status filter
+      if (filters.fulfillmentStatus && filters.fulfillmentStatus !== 'all') {
+        query = query.eq('fulfillment_status', filters.fulfillmentStatus);
       }
 
       // Apply sorting
@@ -150,6 +176,56 @@ export class OrderService {
       return ordersWithProductNames[0] || null;
     } catch (error) {
       console.error('OrderService.fetchOrderById error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update order fulfillment status
+   */
+  static async updateOrderFulfillmentStatus(orderId: string, fulfillmentStatus: string): Promise<void> {
+    try {
+      console.log('Updating order fulfillment status:', { orderId, fulfillmentStatus });
+      
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          fulfillment_status: fulfillmentStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('order_id', orderId);
+
+      if (error) {
+        console.error('Error updating order fulfillment status:', error);
+        throw new Error(`Failed to update order fulfillment status: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('OrderService.updateOrderFulfillmentStatus error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update order sales person
+   */
+  static async updateOrderSalesPerson(orderId: string, salesPerson: string): Promise<void> {
+    try {
+      console.log('Updating order sales person:', { orderId, salesPerson });
+      
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          sales_person: salesPerson || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('order_id', orderId);
+
+      if (error) {
+        console.error('Error updating order sales person:', error);
+        throw new Error(`Failed to update order sales person: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('OrderService.updateOrderSalesPerson error:', error);
       throw error;
     }
   }
