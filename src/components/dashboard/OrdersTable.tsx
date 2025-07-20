@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Loader2, ChevronLeft, ChevronRight, Eye, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import OrderTableFilters from './OrderTableFilters';
-import OrderStatusBadge from './OrderStatusBadge';
+import FulfillmentStatusBadge from './FulfillmentStatusBadge';
+import SalesPersonSelector from './SalesPersonSelector';
 import OrderDetailModal from './OrderDetailModal';
 import { format } from 'date-fns';
 import { createGoogleMapsSearchUrl } from '@/utils/googleMapsUtils';
@@ -22,7 +23,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
   const { toast } = useToast();
   const [filters, setFilters] = useState<OrderFilters>({
     searchTerm: '',
-    status: 'all',
+    fulfillmentStatus: 'all',
     sortBy: 'date_desc'
   });
   const [page, setPage] = useState(1);
@@ -48,19 +49,37 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
     staleTime: 30000, // 30 seconds
   });
 
-  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+  const handleFulfillmentStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
-      await OrderService.updateOrderStatus(orderId, newStatus);
+      await OrderService.updateOrderFulfillmentStatus(orderId, newStatus);
       await refetch();
       toast({
-        title: "Status Updated",
-        description: `Order ${orderId} status updated to ${newStatus}`,
+        title: "Fulfillment Status Updated",
+        description: `Order ${orderId} fulfillment status updated to ${newStatus}`,
       });
     } catch (error) {
-      console.error('Error updating order status:', error);
+      console.error('Error updating fulfillment status:', error);
       toast({
         title: "Error",
-        description: "Failed to update order status",
+        description: "Failed to update fulfillment status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSalesPersonUpdate = async (orderId: string, newPerson: string) => {
+    try {
+      await OrderService.updateOrderSalesPerson(orderId, newPerson);
+      await refetch();
+      toast({
+        title: "Sales Person Updated",
+        description: `Order ${orderId} sales person updated to ${newPerson || 'Not Assigned'}`,
+      });
+    } catch (error) {
+      console.error('Error updating sales person:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update sales person",
         variant: "destructive",
       });
     }
@@ -82,32 +101,39 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
 
   const formatAddress = (order: any) => {
     const items = order.items || [];
-    if (items.length === 0) return 'N/A';
+    if (items.length === 0) return { street: 'N/A', cityStateZip: '' };
     
     const address = items[0].delivery_address;
-    if (!address) return 'N/A';
+    if (!address) return { street: 'N/A', cityStateZip: '' };
     
-    return `${address.street}, ${address.city}, ${address.state} ${address.zip}`;
+    const street = address.street || '';
+    const cityStateZip = `${address.city || ''}, ${address.state || ''} ${address.zip || ''}`.trim();
+    
+    return { street, cityStateZip };
   };
 
   const renderClickableAddress = (order: any) => {
-    const addressText = formatAddress(order);
+    const { street, cityStateZip } = formatAddress(order);
     
-    if (addressText === 'N/A') {
+    if (street === 'N/A') {
       return <span className="text-gray-500">N/A</span>;
     }
 
-    const googleMapsUrl = createGoogleMapsSearchUrl(addressText);
+    const fullAddress = `${street}, ${cityStateZip}`;
+    const googleMapsUrl = createGoogleMapsSearchUrl(fullAddress);
 
     return (
       <a
         href={googleMapsUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 max-w-xs truncate"
+        className="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 max-w-xs"
         onClick={(e) => e.stopPropagation()}
       >
-        <span className="truncate">{addressText}</span>
+        <div className="truncate">
+          <div className="truncate">{street}</div>
+          <div className="text-xs text-gray-500 truncate">{cityStateZip}</div>
+        </div>
         <ExternalLink className="h-3 w-3 flex-shrink-0" />
       </a>
     );
@@ -180,12 +206,13 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Order ID</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Fulfillment Status</TableHead>
                   <TableHead>Delivery Date</TableHead>
                   <TableHead>Billing Name</TableHead>
                   <TableHead>Delivery Address</TableHead>
                   <TableHead>Product(s)</TableHead>
                   <TableHead>Quantity</TableHead>
+                  <TableHead>Sales Person</TableHead>
                   <TableHead>Total Price</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -193,7 +220,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
               <TableBody>
                 {orders.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-12 text-gray-500">
+                    <TableCell colSpan={10} className="text-center py-12 text-gray-500">
                       No {statusFilter === 'quotes' ? 'quotes' : statusFilter === 'orders' ? 'orders' : 'records'} found
                     </TableCell>
                   </TableRow>
@@ -208,11 +235,11 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
                         {order.order_id}
                       </TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>
-                        <OrderStatusBadge 
-                          status={order.status}
+                        <FulfillmentStatusBadge 
+                          status={order.fulfillment_status || null}
                           orderId={order.order_id}
-                          onStatusUpdate={handleStatusUpdate}
-                          readonly={true}
+                          onStatusUpdate={handleFulfillmentStatusUpdate}
+                          readonly={false}
                         />
                       </TableCell>
                       <TableCell>
@@ -228,6 +255,14 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
                       <TableCell>{getProductName(order)}</TableCell>
                       <TableCell>
                         {getTotalQuantity(order)} {getUnit(order)}
+                      </TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <SalesPersonSelector
+                          currentPerson={order.sales_person || null}
+                          orderId={order.order_id}
+                          onPersonUpdate={handleSalesPersonUpdate}
+                          readonly={false}
+                        />
                       </TableCell>
                       <TableCell className="font-semibold">
                         ${order.total_price.toFixed(2)}

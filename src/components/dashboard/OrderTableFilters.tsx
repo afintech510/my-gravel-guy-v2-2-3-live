@@ -27,8 +27,8 @@ const OrderTableFilters: React.FC<OrderTableFiltersProps> = ({
     onFiltersChange({ ...filters, searchTerm: value });
   };
 
-  const handleStatusChange = (value: string) => {
-    onFiltersChange({ ...filters, status: value });
+  const handleFulfillmentStatusChange = (value: string) => {
+    onFiltersChange({ ...filters, fulfillmentStatus: value });
   };
 
   const handleSortChange = (value: string) => {
@@ -38,7 +38,7 @@ const OrderTableFilters: React.FC<OrderTableFiltersProps> = ({
   const clearFilters = () => {
     onFiltersChange({
       searchTerm: '',
-      status: 'all',
+      fulfillmentStatus: 'all',
       sortBy: 'date_desc'
     });
     onDateRangeChange({ from: undefined, to: undefined });
@@ -66,22 +66,24 @@ const OrderTableFilters: React.FC<OrderTableFiltersProps> = ({
           </div>
         </div>
 
-        {/* Status Filter */}
+        {/* Fulfillment Status Filter */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Status</label>
-          <Select value={filters.status || 'all'} onValueChange={handleStatusChange}>
+          <label className="text-sm font-medium text-gray-700">Fulfillment Status</label>
+          <Select value={filters.fulfillmentStatus || 'all'} onValueChange={handleFulfillmentStatusChange}>
             <SelectTrigger>
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="confirmed">Confirmed</SelectItem>
-              <SelectItem value="processing">Processing</SelectItem>
-              <SelectItem value="in_transit">In Transit</SelectItem>
-              <SelectItem value="delivered">Delivered</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-              <SelectItem value="paid">Paid</SelectItem>
+              <SelectItem value="Quote Needed">Quote Needed</SelectItem>
+              <SelectItem value="Quote Sent">Quote Sent</SelectItem>
+              <SelectItem value="New Order">New Order</SelectItem>
+              <SelectItem value="Pending">Pending</SelectItem>
+              <SelectItem value="Assigned">Assigned</SelectItem>
+              <SelectItem value="Scheduled">Scheduled</SelectItem>
+              <SelectItem value="Delivered">Delivered</SelectItem>
+              <SelectItem value="Cancelled">Cancelled</SelectItem>
+              <SelectItem value="Refunded">Refunded</SelectItem>
             </SelectContent>
           </Select>
         </div>
