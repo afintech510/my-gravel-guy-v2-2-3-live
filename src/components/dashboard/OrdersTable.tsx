@@ -36,18 +36,33 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
 
   const limit = 20;
 
-  // Apply status filter based on prop
-  const modifiedFilters = {
-    ...filters,
-    ...(statusFilter === 'orders' && { excludeQuotes: true }),
-    ...(statusFilter === 'quotes' && { quotesOnly: true }),
-  };
+  // Apply status filter based on prop - make sure this creates a new object
+  const modifiedFilters = React.useMemo(() => {
+    const baseFilters = { ...filters };
+    
+    if (statusFilter === 'orders') {
+      baseFilters.excludeQuotes = true;
+      // Remove quotesOnly if it exists
+      delete baseFilters.quotesOnly;
+    } else if (statusFilter === 'quotes') {
+      baseFilters.quotesOnly = true;
+      // Remove excludeQuotes if it exists
+      delete baseFilters.excludeQuotes;
+    }
+    
+    return baseFilters;
+  }, [filters, statusFilter]);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['orders', modifiedFilters, page, dateRange, statusFilter],
     queryFn: () => OrderService.fetchOrders(modifiedFilters, page, limit),
     staleTime: 30000, // 30 seconds
   });
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [filters, dateRange]);
 
   const handleFulfillmentStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
@@ -116,7 +131,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
     const { street, cityStateZip } = formatAddress(order);
     
     if (street === 'N/A') {
-      return <span className="text-gray-500">N/A</span>;
+      return <span className="text-gray-500 text-sm">N/A</span>;
     }
 
     const fullAddress = `${street}, ${cityStateZip}`;
@@ -131,8 +146,8 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="truncate">
-          <div className="truncate">{street}</div>
-          <div className="text-xs text-gray-500 truncate">{cityStateZip}</div>
+          <div className="text-sm truncate">{street}</div>
+          <div className="text-sm text-gray-500 truncate">{cityStateZip}</div>
         </div>
         <ExternalLink className="h-3 w-3 flex-shrink-0" />
       </a>

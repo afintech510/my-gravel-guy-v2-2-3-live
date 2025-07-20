@@ -87,16 +87,17 @@ export class OrderService {
         .from('orders')
         .select('*', { count: 'exact' });
 
-      // Apply quotes/orders filter
+      // Apply quotes/orders filter - fixed logic
       if (filters.quotesOnly) {
         query = query.eq('status', 'Quote');
       } else if (filters.excludeQuotes) {
         query = query.neq('status', 'Quote');
       }
 
-      // Apply search filter - search by order_id or product_id since product_name isn't in orders table
+      // Apply search filter - enhanced search across multiple fields
       if (filters.searchTerm) {
-        query = query.or(`order_id.ilike.%${filters.searchTerm}%,product_id.ilike.%${filters.searchTerm}%`);
+        const searchTerm = filters.searchTerm.toLowerCase();
+        query = query.or(`order_id.ilike.%${searchTerm}%,product_id.ilike.%${searchTerm}%,billing_name.ilike.%${searchTerm}%,billing_email.ilike.%${searchTerm}%,delivery_name.ilike.%${searchTerm}%,delivery_email.ilike.%${searchTerm}%,delivery_phone.ilike.%${searchTerm}%`);
       }
 
       // Apply fulfillment status filter
