@@ -29,6 +29,7 @@ const SalesPersonSelector: React.FC<SalesPersonSelectorProps> = ({
       setIsLoading(true);
       try {
         const uniquePersons = await OrderService.getUniqueSalesPersons();
+        console.log('Loaded unique sales persons:', uniquePersons);
         setSalesPersons(uniquePersons);
       } catch (error) {
         console.error('Error loading sales persons:', error);
@@ -43,15 +44,30 @@ const SalesPersonSelector: React.FC<SalesPersonSelectorProps> = ({
   }, [isEditing]);
 
   const handlePersonChange = (newPerson: string) => {
+    console.log('Sales person changed:', { orderId, newPerson });
     onPersonUpdate(orderId, newPerson);
     setIsEditing(false);
   };
 
   const handleBadgeClick = (e: React.MouseEvent) => {
+    console.log('Badge clicked - preventing default and propagation');
     e.preventDefault();
     e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
+    
     if (!readonly) {
+      console.log('Setting editing to true');
       setIsEditing(true);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!readonly) {
+        setIsEditing(true);
+      }
     }
   };
 
@@ -65,21 +81,29 @@ const SalesPersonSelector: React.FC<SalesPersonSelectorProps> = ({
 
   if (isEditing) {
     return (
-      <div onClick={(e) => e.stopPropagation()}>
+      <div 
+        onClick={(e) => {
+          console.log('Select container clicked - stopping propagation');
+          e.stopPropagation();
+          e.preventDefault();
+        }}
+        className="relative z-50"
+      >
         <Select 
           value={currentPerson || ''} 
           onValueChange={handlePersonChange}
           onOpenChange={(open) => {
+            console.log('Select open state changed:', open);
             if (!open) {
               setIsEditing(false);
             }
           }}
           open={true}
         >
-          <SelectTrigger className="w-32 h-7 text-xs z-50">
+          <SelectTrigger className="w-32 h-7 text-xs bg-white border shadow-sm">
             <SelectValue placeholder={isLoading ? "Loading..." : "Select..."} />
           </SelectTrigger>
-          <SelectContent className="z-50 bg-white border shadow-lg">
+          <SelectContent className="z-[9999] bg-white border shadow-lg min-w-[8rem]">
             <SelectItem value="">Not Assigned</SelectItem>
             {salesPersons.map((person) => (
               <SelectItem key={person} value={person}>
@@ -94,8 +118,12 @@ const SalesPersonSelector: React.FC<SalesPersonSelectorProps> = ({
 
   return (
     <Badge 
-      className="cursor-pointer bg-gray-100 text-gray-800 hover:bg-gray-200 select-none"
+      role="button"
+      tabIndex={0}
+      className="cursor-pointer bg-gray-100 text-gray-800 hover:bg-gray-200 select-none no-underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+      style={{ textDecoration: 'none', color: 'inherit' }}
       onClick={handleBadgeClick}
+      onKeyDown={handleKeyDown}
     >
       {currentPerson || 'Not Assigned'}
     </Badge>
