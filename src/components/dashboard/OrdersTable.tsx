@@ -249,7 +249,13 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
                         {order.order_id}
                       </TableCell>
                       <TableCell>
-                        <div onClick={(e) => e.stopPropagation()}>
+                        <div 
+                          onClick={(e) => {
+                            console.log('Fulfillment status cell clicked - stopping propagation');
+                            e.stopPropagation();
+                            e.preventDefault();
+                          }}
+                        >
                           <FulfillmentStatusBadge 
                             status={order.fulfillment_status || null}
                             orderId={order.order_id}
@@ -273,7 +279,14 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
                         {getTotalQuantity(order)} {getUnit(order)}
                       </TableCell>
                       <TableCell>
-                        <div onClick={(e) => e.stopPropagation()}>
+                        <div 
+                          onClick={(e) => {
+                            console.log('Sales person cell clicked - stopping propagation');
+                            e.stopPropagation();
+                            e.preventDefault();
+                          }}
+                          className="isolate"
+                        >
                           <SalesPersonSelector
                             currentPerson={order.sales_person || null}
                             orderId={order.order_id}
@@ -286,7 +299,13 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
                         ${order.total_price.toFixed(2)}
                       </TableCell>
                       <TableCell>
-                        <div onClick={(e) => e.stopPropagation()}>
+                        <div 
+                          onClick={(e) => {
+                            console.log('Actions cell clicked - stopping propagation');
+                            e.stopPropagation();
+                            e.preventDefault();
+                          }}
+                        >
                           <Button
                             variant="outline"
                             size="sm"
