@@ -67,6 +67,8 @@ export interface OrderFilters {
   searchTerm?: string;
   status?: string;
   sortBy?: 'date_desc' | 'date_asc' | 'amount_desc' | 'amount_asc';
+  quotesOnly?: boolean;
+  excludeQuotes?: boolean;
 }
 
 // Service response interface
