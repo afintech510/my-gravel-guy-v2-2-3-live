@@ -56,25 +56,27 @@ const QuoteFormProduct: React.FC<QuoteFormProductProps> = ({ selectedProduct }) 
       console.log('QuoteFormProduct: Tracking product quote form submission');
       trackEvent('form_submit', 'Quote', `Product Quote - ${selectedProduct?.name || 'Unknown'}`, 1);
       
-      // Send quote request email with product information
-      console.log('QuoteFormProduct: Sending quote request email');
-      const emailSent = await sendQuoteRequestEmail({
+      // Send quote request with database insertion
+      console.log('QuoteFormProduct: Sending quote request with database insertion');
+      const result = await sendQuoteRequestEmail({
         name: data.name,
         email: data.email,
         phone: data.phone,
         message: `${data.estimatedTons ? `Estimated Tons: ${data.estimatedTons}\n` : ''}${data.message || 'No additional details provided'}`,
         zipCode: data.zipCode,
+        estimatedTons: data.estimatedTons ? parseInt(data.estimatedTons) : undefined,
+        sourcePage: 'Product Quote Form',
         selectedProduct: selectedProduct
       });
       
-      if (emailSent) {
+      if (result.success) {
         toast({
           title: 'Quote request sent!',
-          description: 'We will get back to you with a custom quote within 24 hours.',
+          description: `We will get back to you with a custom quote within 24 hours. Reference ID: ${result.orderId}`,
         });
         form.reset();
       } else {
-        throw new Error('Failed to send email');
+        throw new Error(result.error || 'Failed to send quote request');
       }
     } catch (error) {
       console.error('QuoteFormProduct: Failed to submit quote form:', error);

@@ -54,25 +54,28 @@ const QuoteForm = () => {
       console.log('QuoteForm: Tracking quote form submission');
       trackEvent('form_submit', 'Quote', 'General Quote Form', 1);
       
-      // Send quote request email
-      console.log('QuoteForm: Sending quote request email');
-      const emailSent = await sendQuoteRequestEmail({
+      // Send quote request with database insertion
+      console.log('QuoteForm: Sending quote request with database insertion');
+      const result = await sendQuoteRequestEmail({
         name: data.name,
         email: data.email,
         phone: data.phone,
         message: `Project Type: ${data.projectType}\n${data.estimatedTons ? `Estimated Tons: ${data.estimatedTons}\n` : ''}${data.message || 'No additional details provided'}`,
         zipCode: data.zipCode,
-        selectedProduct: null // No specific product selected from contact form
+        estimatedTons: data.estimatedTons ? parseInt(data.estimatedTons) : undefined,
+        projectType: data.projectType,
+        sourcePage: 'General Quote Form',
+        selectedProduct: null
       });
       
-      if (emailSent) {
+      if (result.success) {
         toast({
           title: 'Quote request sent!',
-          description: 'We will get back to you with a custom quote within 24 hours.',
+          description: `We will get back to you with a custom quote within 24 hours. Reference ID: ${result.orderId}`,
         });
         form.reset();
       } else {
-        throw new Error('Failed to send email');
+        throw new Error(result.error || 'Failed to send quote request');
       }
     } catch (error) {
       console.error('QuoteForm: Failed to submit quote form:', error);
