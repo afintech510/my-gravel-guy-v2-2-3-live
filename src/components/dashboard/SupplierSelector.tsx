@@ -2,13 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { SupplierService } from '@/services/supplierService';
-import type { Supplier, SupplierInsert } from '@/types/supplier.types';
+import InlineSupplierForm from './InlineSupplierForm';
+import type { Supplier } from '@/types/supplier.types';
 
 interface SupplierSelectorProps {
   value?: string;
@@ -24,15 +22,7 @@ const SupplierSelector: React.FC<SupplierSelectorProps> = ({
   const { toast } = useToast();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [newSupplier, setNewSupplier] = useState<SupplierInsert>({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    notes: ''
-  });
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     fetchSuppliers();
@@ -55,46 +45,14 @@ const SupplierSelector: React.FC<SupplierSelectorProps> = ({
     }
   };
 
-  const handleCreateSupplier = async () => {
-    if (!newSupplier.name.trim()) {
-      toast({
-        title: "Name Required",
-        description: "Please enter a supplier name",
-        variant: "destructive",
-      });
-      return;
-    }
+  const handleSupplierCreated = (newSupplier: Supplier) => {
+    setSuppliers(prev => [...prev, newSupplier].sort((a, b) => a.name.localeCompare(b.name)));
+    onValueChange(newSupplier.id);
+    setShowForm(false);
+  };
 
-    try {
-      setIsCreating(true);
-      const createdSupplier = await SupplierService.createSupplier(newSupplier);
-      
-      setSuppliers(prev => [...prev, createdSupplier]);
-      onValueChange(createdSupplier.id);
-      
-      setNewSupplier({
-        name: '',
-        email: '',
-        phone: '',
-        address: '',
-        notes: ''
-      });
-      setIsDialogOpen(false);
-      
-      toast({
-        title: "Supplier Created",
-        description: `${createdSupplier.name} has been added successfully`,
-      });
-    } catch (error) {
-      console.error('Error creating supplier:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create supplier",
-        variant: "destructive",
-      });
-    } finally {
-      setIsCreating(false);
-    }
+  const handleCancelForm = () => {
+    setShowForm(false);
   };
 
   if (isLoading) {
@@ -107,7 +65,7 @@ const SupplierSelector: React.FC<SupplierSelectorProps> = ({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
       <div className="flex items-center space-x-2">
         <Select value={value} onValueChange={onValueChange} disabled={disabled}>
           <SelectTrigger className="flex-1">
@@ -116,86 +74,33 @@ const SupplierSelector: React.FC<SupplierSelectorProps> = ({
           <SelectContent>
             {suppliers.map((supplier) => (
               <SelectItem key={supplier.id} value={supplier.id}>
-                {supplier.name}
+                <div className="flex flex-col">
+                  <span className="font-medium">{supplier.name}</span>
+                  {supplier.email && (
+                    <span className="text-xs text-muted-foreground">{supplier.email}</span>
+                  )}
+                </div>
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm" disabled={disabled}>
-              <Plus className="h-4 w-4" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Supplier</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="supplier-name">Name *</Label>
-                <Input
-                  id="supplier-name"
-                  value={newSupplier.name}
-                  onChange={(e) => setNewSupplier(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter supplier name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="supplier-email">Email</Label>
-                <Input
-                  id="supplier-email"
-                  type="email"
-                  value={newSupplier.email}
-                  onChange={(e) => setNewSupplier(prev => ({ ...prev, email: e.target.value }))}
-                  placeholder="Enter email address"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="supplier-phone">Phone</Label>
-                <Input
-                  id="supplier-phone"
-                  value={newSupplier.phone}
-                  onChange={(e) => setNewSupplier(prev => ({ ...prev, phone: e.target.value }))}
-                  placeholder="Enter phone number"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="supplier-address">Address</Label>
-                <Input
-                  id="supplier-address"
-                  value={newSupplier.address}
-                  onChange={(e) => setNewSupplier(prev => ({ ...prev, address: e.target.value }))}
-                  placeholder="Enter address"
-                />
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
-                  disabled={isCreating}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleCreateSupplier}
-                  disabled={isCreating || !newSupplier.name.trim()}
-                >
-                  {isCreating ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Creating...
-                    </>
-                  ) : (
-                    'Create Supplier'
-                  )}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          disabled={disabled}
+          onClick={() => setShowForm(!showForm)}
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
       </div>
+      
+      {showForm && (
+        <InlineSupplierForm
+          onSupplierCreated={handleSupplierCreated}
+          onCancel={handleCancelForm}
+        />
+      )}
     </div>
   );
 };
