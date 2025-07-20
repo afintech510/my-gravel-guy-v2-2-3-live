@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { OrderService } from '@/services/orderService';
@@ -11,7 +12,12 @@ import OrderStatusBadge from './OrderStatusBadge';
 import OrderDetailModal from './OrderDetailModal';
 import { format } from 'date-fns';
 
-const OrdersTable = () => {
+interface OrdersTableProps {
+  statusFilter?: 'orders' | 'quotes' | 'all';
+  title?: string;
+}
+
+const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
   const { toast } = useToast();
   const [filters, setFilters] = useState<OrderFilters>({
     searchTerm: '',
@@ -28,9 +34,16 @@ const OrdersTable = () => {
 
   const limit = 20;
 
+  // Apply status filter based on prop
+  const modifiedFilters = {
+    ...filters,
+    ...(statusFilter === 'orders' && { excludeQuotes: true }),
+    ...(statusFilter === 'quotes' && { quotesOnly: true }),
+  };
+
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['orders', filters, page, dateRange],
-    queryFn: () => OrderService.fetchOrders(filters, page, limit),
+    queryKey: ['orders', modifiedFilters, page, dateRange, statusFilter],
+    queryFn: () => OrderService.fetchOrders(modifiedFilters, page, limit),
     staleTime: 30000, // 30 seconds
   });
 
@@ -101,7 +114,7 @@ const OrdersTable = () => {
   if (error) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-600">Error loading orders: {error.message}</p>
+        <p className="text-red-600">Error loading {statusFilter}: {error.message}</p>
         <Button onClick={() => refetch()} className="mt-4">
           Try Again
         </Button>
@@ -114,6 +127,12 @@ const OrdersTable = () => {
 
   return (
     <div className="space-y-6">
+      {title && (
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+        </div>
+      )}
+
       {/* Filters */}
       <OrderTableFilters 
         filters={filters}
@@ -151,7 +170,7 @@ const OrdersTable = () => {
                 {orders.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center py-12 text-gray-500">
-                      No orders found
+                      No {statusFilter === 'quotes' ? 'quotes' : statusFilter === 'orders' ? 'orders' : 'records'} found
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -210,7 +229,7 @@ const OrdersTable = () => {
           {totalPages > 1 && (
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-700">
-                Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, data?.total || 0)} of {data?.total || 0} orders
+                Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, data?.total || 0)} of {data?.total || 0} {statusFilter === 'quotes' ? 'quotes' : statusFilter === 'orders' ? 'orders' : 'records'}
               </div>
               <div className="flex items-center space-x-2">
                 <Button

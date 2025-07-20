@@ -44,6 +44,8 @@ import BlogCategory from "./pages/BlogCategory";
 import StripeTest from "./pages/StripeTest";
 import Reviews from "./pages/Reviews";
 import Dashboard from "./pages/Dashboard";
+import DashboardOrders from "./pages/DashboardOrders";
+import DashboardQuotes from "./pages/DashboardQuotes";
 import MessagingConsole from "./pages/MessagingConsole";
 import Sitemap from "./pages/Sitemap";
 import SitemapXML from "./pages/SitemapXML";
@@ -79,8 +81,6 @@ function App() {
                       <div className="relative">
                         <TopBanner />
                         <Navbar />
-                        {/* Logo floating above banner and navbar */}
-                       
                       </div>
                     </div>
                     <Routes>
@@ -113,6 +113,8 @@ function App() {
                       <Route path="/stripe-test" element={<StripeTest />} />
                       <Route path="/reviews" element={<Reviews />} />
                       <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/dashboard/orders" element={<DashboardOrders />} />
+                      <Route path="/dashboard/quotes" element={<DashboardQuotes />} />
                       <Route path="/dashboard/comm" element={<MessagingConsole />} />
                       <Route path="/google-shopping" element={<GoogleShopping />} />
                       <Route path="/sitemap" element={<Sitemap />} />

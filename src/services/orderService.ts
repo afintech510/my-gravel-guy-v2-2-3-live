@@ -60,6 +60,13 @@ export class OrderService {
         .from('orders')
         .select('*', { count: 'exact' });
 
+      // Apply quotes/orders filter
+      if (filters.quotesOnly) {
+        query = query.eq('status', 'Quote');
+      } else if (filters.excludeQuotes) {
+        query = query.neq('status', 'Quote');
+      }
+
       // Apply search filter - search by order_id or product_id since product_name isn't in orders table
       if (filters.searchTerm) {
         query = query.or(`order_id.ilike.%${filters.searchTerm}%,product_id.ilike.%${filters.searchTerm}%`);
