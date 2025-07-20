@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -8,111 +7,13 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          operationName?: string
-          query?: string
-          variables?: Json
-          extensions?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+  // Allows to automatically instanciate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
   }
   public: {
     Tables: {
-      messages: {
-        Row: {
-          id: string
-          created_at: string
-          updated_at: string
-          phone_number: string
-          body: string | null
-          media_urls: string[] | null
-          direction: string
-          status: string | null
-          twilio_sid: string | null
-          user_email: string | null
-          customer_name: string | null
-          order_id: string | null
-          is_read: boolean | null
-        }
-        Insert: {
-          id?: string
-          created_at?: string
-          updated_at?: string
-          phone_number: string
-          body?: string | null
-          media_urls?: string[] | null
-          direction: string
-          status?: string | null
-          twilio_sid?: string | null
-          user_email?: string | null
-          customer_name?: string | null
-          order_id?: string | null
-          is_read?: boolean | null
-        }
-        Update: {
-          id?: string
-          created_at?: string
-          updated_at?: string
-          phone_number?: string
-          body?: string | null
-          media_urls?: string[] | null
-          direction?: string
-          status?: string | null
-          twilio_sid?: string | null
-          user_email?: string | null
-          customer_name?: string | null
-          order_id?: string | null
-          is_read?: boolean | null
-        }
-        Relationships: []
-      }
-      
-      price_tiers: {
-        Row: {
-          id: string;
-          product_id: string[];
-          min_tons: number;
-          max_tons: number;
-          multiplier: number;
-          created_at: string;
-        }
-        Insert: {
-          id?: string;
-          product_id: string[];
-          min_tons: number;
-          max_tons?: number;
-          multiplier: number;
-          created_at?: string;
-        }
-        Update: {
-          id?: string;
-          product_id?: string[];
-          min_tons?: number;
-          max_tons?: number;
-          multiplier?: number;
-          created_at?: string;
-        }
-        Relationships: []
-      }
-
-      // ... keep existing code (all other table definitions)
       blog_categories: {
         Row: {
           created_at: string | null
@@ -243,6 +144,42 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          assigned_salesperson: string | null
+          bid_credit_balance: number | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          tags: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_salesperson?: string | null
+          bid_credit_balance?: number | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_salesperson?: string | null
+          bid_credit_balance?: number | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       delivery_locations: {
         Row: {
           city: string
@@ -318,6 +255,269 @@ export type Database = {
         }
         Relationships: []
       }
+      messages: {
+        Row: {
+          body: string | null
+          created_at: string | null
+          customer_name: string | null
+          direction: string
+          id: string
+          is_read: boolean | null
+          media_urls: string[] | null
+          order_id: string | null
+          phone_number: string
+          status: string | null
+          twilio_sid: string | null
+          updated_at: string | null
+          user_email: string | null
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string | null
+          customer_name?: string | null
+          direction: string
+          id?: string
+          is_read?: boolean | null
+          media_urls?: string[] | null
+          order_id?: string | null
+          phone_number: string
+          status?: string | null
+          twilio_sid?: string | null
+          updated_at?: string | null
+          user_email?: string | null
+        }
+        Update: {
+          body?: string | null
+          created_at?: string | null
+          customer_name?: string | null
+          direction?: string
+          id?: string
+          is_read?: boolean | null
+          media_urls?: string[] | null
+          order_id?: string | null
+          phone_number?: string
+          status?: string | null
+          twilio_sid?: string | null
+          updated_at?: string | null
+          user_email?: string | null
+        }
+        Relationships: []
+      }
+      order_status_history: {
+        Row: {
+          change_reason: string | null
+          changed_by: string | null
+          created_at: string | null
+          id: string
+          new_status: string
+          old_status: string | null
+          order_item_id: string | null
+        }
+        Insert: {
+          change_reason?: string | null
+          changed_by?: string | null
+          created_at?: string | null
+          id?: string
+          new_status: string
+          old_status?: string | null
+          order_item_id?: string | null
+        }
+        Update: {
+          change_reason?: string | null
+          changed_by?: string | null
+          created_at?: string | null
+          id?: string
+          new_status?: string
+          old_status?: string | null
+          order_item_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_status_history_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          attachment_files: string[] | null
+          billing_email: string | null
+          billing_name: string | null
+          created_at: string | null
+          delivered_at: string | null
+          delivery_city: string | null
+          delivery_date: string | null
+          delivery_email: string | null
+          delivery_instructions: string | null
+          delivery_name: string | null
+          delivery_phone: string | null
+          delivery_state: string | null
+          delivery_street: string | null
+          delivery_time_preference: string | null
+          delivery_zip: string | null
+          fulfillment_eta: string | null
+          fulfillment_status:
+            | Database["public"]["Enums"]["fulfillment_status_enum"]
+            | null
+          id: string
+          notes: string | null
+          order_id: string
+          product_id: string
+          quantity: number | null
+          quote_converted: boolean | null
+          sales_person: string | null
+          status: string | null
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          supplier_charges: number | null
+          supplier_id: string | null
+          tags: string[] | null
+          total_price: number
+          unit: string
+          unit_price: number
+          updated_at: string | null
+          zip_adjust: number | null
+        }
+        Insert: {
+          attachment_files?: string[] | null
+          billing_email?: string | null
+          billing_name?: string | null
+          created_at?: string | null
+          delivered_at?: string | null
+          delivery_city?: string | null
+          delivery_date?: string | null
+          delivery_email?: string | null
+          delivery_instructions?: string | null
+          delivery_name?: string | null
+          delivery_phone?: string | null
+          delivery_state?: string | null
+          delivery_street?: string | null
+          delivery_time_preference?: string | null
+          delivery_zip?: string | null
+          fulfillment_eta?: string | null
+          fulfillment_status?:
+            | Database["public"]["Enums"]["fulfillment_status_enum"]
+            | null
+          id?: string
+          notes?: string | null
+          order_id: string
+          product_id: string
+          quantity?: number | null
+          quote_converted?: boolean | null
+          sales_person?: string | null
+          status?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          supplier_charges?: number | null
+          supplier_id?: string | null
+          tags?: string[] | null
+          total_price: number
+          unit: string
+          unit_price: number
+          updated_at?: string | null
+          zip_adjust?: number | null
+        }
+        Update: {
+          attachment_files?: string[] | null
+          billing_email?: string | null
+          billing_name?: string | null
+          created_at?: string | null
+          delivered_at?: string | null
+          delivery_city?: string | null
+          delivery_date?: string | null
+          delivery_email?: string | null
+          delivery_instructions?: string | null
+          delivery_name?: string | null
+          delivery_phone?: string | null
+          delivery_state?: string | null
+          delivery_street?: string | null
+          delivery_time_preference?: string | null
+          delivery_zip?: string | null
+          fulfillment_eta?: string | null
+          fulfillment_status?:
+            | Database["public"]["Enums"]["fulfillment_status_enum"]
+            | null
+          id?: string
+          notes?: string | null
+          order_id?: string
+          product_id?: string
+          quantity?: number | null
+          quote_converted?: boolean | null
+          sales_person?: string | null
+          status?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          supplier_charges?: number | null
+          supplier_id?: string | null
+          tags?: string[] | null
+          total_price?: number
+          unit?: string
+          unit_price?: number
+          updated_at?: string | null
+          zip_adjust?: number | null
+        }
+        Relationships: []
+      }
+      price_lookup_table: {
+        Row: {
+          created_at: string | null
+          id: number
+          product_name: string
+          quantity: number
+          unit: string
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: never
+          product_name: string
+          quantity: number
+          unit: string
+          unit_price: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: never
+          product_name?: string
+          quantity?: number
+          unit?: string
+          unit_price?: number
+        }
+        Relationships: []
+      }
+      price_tiers: {
+        Row: {
+          _ext: string[] | null
+          created_at: string | null
+          id: string
+          product_name: string
+          quantity: number
+          unit: string
+          unit_price: number | null
+        }
+        Insert: {
+          _ext?: string[] | null
+          created_at?: string | null
+          id?: string
+          product_name: string
+          quantity: number
+          unit: string
+          unit_price?: number | null
+        }
+        Update: {
+          _ext?: string[] | null
+          created_at?: string | null
+          id?: string
+          product_name?: string
+          quantity?: number
+          unit?: string
+          unit_price?: number | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           application: string | null
@@ -325,15 +525,19 @@ export type Database = {
           color: string | null
           created_at: string | null
           description: string | null
-          short_description: string | null
-          efficiency: string | null
           id: string
-          image: string | null
+          images: string[] | null
           metadata: string | null
           name: string
           price: number
+          pricing_a: number | null
+          pricing_b: number | null
+          pricing_c: number | null
+          short_description: string | null
           size: string | null
+          slug: string | null
           ton_yard_ratio: string | null
+          unit: string | null
           zip_code_ratio: string | null
         }
         Insert: {
@@ -342,15 +546,19 @@ export type Database = {
           color?: string | null
           created_at?: string | null
           description?: string | null
-          short_description?: string | null
-          efficiency?: string | null
           id?: string
-          image?: string | null
+          images?: string[] | null
           metadata?: string | null
           name: string
           price: number
+          pricing_a?: number | null
+          pricing_b?: number | null
+          pricing_c?: number | null
+          short_description?: string | null
           size?: string | null
+          slug?: string | null
           ton_yard_ratio?: string | null
+          unit?: string | null
           zip_code_ratio?: string | null
         }
         Update: {
@@ -359,16 +567,41 @@ export type Database = {
           color?: string | null
           created_at?: string | null
           description?: string | null
-          short_description?: string | null
-          efficiency?: string | null
           id?: string
-          image?: string | null
+          images?: string[] | null
           metadata?: string | null
           name?: string
           price?: number
+          pricing_a?: number | null
+          pricing_b?: number | null
+          pricing_c?: number | null
+          short_description?: string | null
           size?: string | null
+          slug?: string | null
           ton_yard_ratio?: string | null
+          unit?: string | null
           zip_code_ratio?: string | null
+        }
+        Relationships: []
+      }
+      rate_limits: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          function_name: string
+          id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          function_name: string
+          id?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          function_name?: string
+          id?: string
         }
         Relationships: []
       }
@@ -429,115 +662,86 @@ export type Database = {
         }
         Relationships: []
       }
-      orders: {
+      suppliers: {
         Row: {
-          id: string
-          order_id: string
-          stripe_session_id: string | null
-          stripe_payment_intent_id: string | null
-          product_id: string
-          unit: string
-          unit_price: number
-          total_price: number
-          delivery_date: string | null
-          delivery_street: string | null
-          delivery_city: string | null
-          delivery_state: string | null
-          delivery_zip: string | null
-          delivery_time_preference: string | null
-          delivery_instructions: string | null
-          delivery_phone: string | null
-          delivery_name: string | null
-          delivery_email: string | null
-          status: string | null
-          attachment_files: string[] | null
+          active: boolean | null
+          address: Json | null
           created_at: string | null
+          email: string | null
+          id: string
+          materials: string[] | null
+          name: string
+          phone: string | null
+          service_areas: string[] | null
           updated_at: string | null
-          delivered_at: string | null
-          supplier_id: string | null
-          supplier_charges: number | null
-          notes: string | null
-          billing_name: string | null
-          quantity: number | null
-          billing_email: string | null
-          zip_adjust: number | null
         }
         Insert: {
-          id?: string
-          order_id: string
-          stripe_session_id?: string | null
-          stripe_payment_intent_id?: string | null
-          product_id: string
-          unit: string
-          unit_price: number
-          total_price: number
-          delivery_date?: string | null
-          delivery_street?: string | null
-          delivery_city?: string | null
-          delivery_state?: string | null
-          delivery_zip?: string | null
-          delivery_time_preference?: string | null
-          delivery_instructions?: string | null
-          delivery_phone?: string | null
-          delivery_name?: string | null
-          delivery_email?: string | null
-          status?: string | null
-          attachment_files?: string[] | null
+          active?: boolean | null
+          address?: Json | null
           created_at?: string | null
+          email?: string | null
+          id?: string
+          materials?: string[] | null
+          name: string
+          phone?: string | null
+          service_areas?: string[] | null
           updated_at?: string | null
-          delivered_at?: string | null
-          supplier_id?: string | null
-          supplier_charges?: number | null
-          notes?: string | null
-          billing_name?: string | null
-          quantity?: number | null
-          billing_email?: string | null
-          zip_adjust?: number | null
         }
         Update: {
-          id?: string
-          order_id?: string
-          stripe_session_id?: string | null
-          stripe_payment_intent_id?: string | null
-          product_id?: string
-          unit?: string
-          unit_price?: number
-          total_price?: number
-          delivery_date?: string | null
-          delivery_street?: string | null
-          delivery_city?: string | null
-          delivery_state?: string | null
-          delivery_zip?: string | null
-          delivery_time_preference?: string | null
-          delivery_instructions?: string | null
-          delivery_phone?: string | null
-          delivery_name?: string | null
-          delivery_email?: string | null
-          status?: string | null
-          attachment_files?: string[] | null
+          active?: boolean | null
+          address?: Json | null
           created_at?: string | null
+          email?: string | null
+          id?: string
+          materials?: string[] | null
+          name?: string
+          phone?: string | null
+          service_areas?: string[] | null
           updated_at?: string | null
-          delivered_at?: string | null
-          supplier_id?: string | null
-          supplier_charges?: number | null
-          notes?: string | null
-          billing_name?: string | null
-          quantity?: number | null
-          billing_email?: string | null
-          zip_adjust?: number | null
         }
         Relationships: []
       }
-
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_rate_limit: {
+        Args: {
+          p_identifier: string
+          p_function_name: string
+          p_max_requests?: number
+          p_window_minutes?: number
+        }
+        Returns: boolean
+      }
+      check_user_admin_status: {
+        Args: { user_email: string }
+        Returns: boolean
+      }
+      get_tables: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          table_name: string
+          table_schema: string
+        }[]
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      fulfillment_status_enum:
+        | "Quote Needed"
+        | "Quote Sent"
+        | "New Order"
+        | "Pending"
+        | "Assigned"
+        | "Scheduled"
+        | "Delivered"
+        | "Cancelled"
+        | "Refunded"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -545,21 +749,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -577,14 +785,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -600,14 +810,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -623,14 +835,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -638,23 +852,34 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
-    Enums: {},
+    Enums: {
+      fulfillment_status_enum: [
+        "Quote Needed",
+        "Quote Sent",
+        "New Order",
+        "Pending",
+        "Assigned",
+        "Scheduled",
+        "Delivered",
+        "Cancelled",
+        "Refunded",
+      ],
+    },
   },
 } as const
