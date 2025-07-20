@@ -92,12 +92,9 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
           <div className="bg-white shadow">
             <div className="px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between items-center py-6">
-                <div className="flex items-center">
-                  <SidebarTrigger className="mr-4" />
-                  <div>
-                    <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
-                    {subtitle && <p className="text-gray-600">{subtitle}</p>}
-                  </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
+                  {subtitle && <p className="text-gray-600">{subtitle}</p>}
                 </div>
                 <div className="flex items-center space-x-4">
                   <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">

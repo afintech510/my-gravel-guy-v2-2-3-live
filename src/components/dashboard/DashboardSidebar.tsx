@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ShoppingCart, FileText, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, FileText, MessageSquare, Menu } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -10,6 +10,8 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarHeader,
+  SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
 
@@ -48,27 +50,47 @@ export function DashboardSidebar() {
     return currentPath.startsWith(path);
   };
 
+  const isCollapsed = state === 'collapsed';
+
   return (
-    <Sidebar className={state === 'collapsed' ? 'w-14' : 'w-60'}>
-      <SidebarContent>
+    <Sidebar className={`transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'} border-r bg-card`}>
+      {/* Header with hamburger menu */}
+      <SidebarHeader className="border-b p-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {!isCollapsed && (
+            <div className="flex flex-col">
+              <h2 className="text-lg font-semibold text-foreground">Admin Panel</h2>
+              <p className="text-xs text-muted-foreground">Management Dashboard</p>
+            </div>
+          )}
+        </div>
+        <SidebarTrigger className="hover:bg-muted rounded-md p-2">
+          <Menu className="h-4 w-4" />
+        </SidebarTrigger>
+      </SidebarHeader>
+
+      <SidebarContent className="p-2">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
                       className={({ isActive: linkActive }) =>
-                        `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                        `flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 w-full ${
                           isActive(item.url) || linkActive
-                            ? 'bg-primary text-primary-foreground'
+                            ? 'bg-primary text-primary-foreground shadow-sm'
                             : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                        }`
+                        } ${isCollapsed ? 'justify-center' : ''}`
                       }
+                      title={isCollapsed ? item.title : undefined}
                     >
-                      <item.icon className="h-4 w-4" />
-                      {state !== 'collapsed' && <span>{item.title}</span>}
+                      <item.icon className="h-5 w-5 flex-shrink-0" />
+                      {!isCollapsed && (
+                        <span className="font-medium">{item.title}</span>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
