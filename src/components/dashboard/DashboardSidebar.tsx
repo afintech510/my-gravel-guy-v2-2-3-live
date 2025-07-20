@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, ShoppingCart, FileText, MessageSquare } from 'lucide-react';
 
 const menuItems = [
@@ -32,16 +32,6 @@ interface DashboardSidebarProps {
 }
 
 export function DashboardSidebar({ isOpen }: DashboardSidebarProps) {
-  const location = useLocation();
-  const currentPath = location.pathname;
-
-  const isActive = (path: string) => {
-    if (path === '/dashboard') {
-      return currentPath === '/dashboard';
-    }
-    return currentPath.startsWith(path);
-  };
-
   return (
     <div
       className={`${
@@ -56,9 +46,10 @@ export function DashboardSidebar({ isOpen }: DashboardSidebarProps) {
               <NavLink
                 key={item.title}
                 to={item.url}
-                className={({ isActive: linkActive }) =>
+                end={item.url === '/dashboard'}
+                className={({ isActive }) =>
                   `group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-                    isActive(item.url) || linkActive
+                    isActive
                       ? 'bg-blue-600 text-white shadow-lg'
                       : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                   } ${!isOpen ? 'justify-center' : ''}`
@@ -66,9 +57,7 @@ export function DashboardSidebar({ isOpen }: DashboardSidebarProps) {
                 title={!isOpen ? item.title : undefined}
               >
                 <Icon 
-                  className={`h-5 w-5 flex-shrink-0 ${
-                    isActive(item.url) ? 'text-white' : 'text-gray-400 group-hover:text-white'
-                  }`} 
+                  className="h-5 w-5 flex-shrink-0" 
                 />
                 {isOpen && (
                   <span className="ml-3 truncate">{item.title}</span>
