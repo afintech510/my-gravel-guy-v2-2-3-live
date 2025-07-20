@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { OrderService } from '@/services/orderService';
@@ -249,13 +248,15 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
                       <TableCell className="font-mono text-sm">
                         {order.order_id}
                       </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <FulfillmentStatusBadge 
-                          status={order.fulfillment_status || null}
-                          orderId={order.order_id}
-                          onStatusUpdate={handleFulfillmentStatusUpdate}
-                          readonly={false}
-                        />
+                      <TableCell>
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <FulfillmentStatusBadge 
+                            status={order.fulfillment_status || null}
+                            orderId={order.order_id}
+                            onStatusUpdate={handleFulfillmentStatusUpdate}
+                            readonly={false}
+                          />
+                        </div>
                       </TableCell>
                       <TableCell>
                         {order.items?.[0]?.delivery_date 
@@ -271,26 +272,30 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
                       <TableCell>
                         {getTotalQuantity(order)} {getUnit(order)}
                       </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <SalesPersonSelector
-                          currentPerson={order.sales_person || null}
-                          orderId={order.order_id}
-                          onPersonUpdate={handleSalesPersonUpdate}
-                          readonly={false}
-                        />
+                      <TableCell>
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <SalesPersonSelector
+                            currentPerson={order.sales_person || null}
+                            orderId={order.order_id}
+                            onPersonUpdate={handleSalesPersonUpdate}
+                            readonly={false}
+                          />
+                        </div>
                       </TableCell>
                       <TableCell className="font-semibold">
                         ${order.total_price.toFixed(2)}
                       </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleRowClick(order)}
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Button>
+                      <TableCell>
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRowClick(order)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
