@@ -19,10 +19,14 @@ const SalesPersonSelector: React.FC<SalesPersonSelectorProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [salesPersons, setSalesPersons] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Load unique sales persons from the database
+    // Load unique sales persons from the database when editing starts
     const loadSalesPersons = async () => {
+      if (!isEditing) return;
+      
+      setIsLoading(true);
       try {
         const uniquePersons = await OrderService.getUniqueSalesPersons();
         setSalesPersons(uniquePersons);
@@ -30,17 +34,25 @@ const SalesPersonSelector: React.FC<SalesPersonSelectorProps> = ({
         console.error('Error loading sales persons:', error);
         // Fallback to known persons
         setSalesPersons(['Adam', 'Ronnie']);
+      } finally {
+        setIsLoading(false);
       }
     };
     
-    if (isEditing) {
-      loadSalesPersons();
-    }
+    loadSalesPersons();
   }, [isEditing]);
 
   const handlePersonChange = (newPerson: string) => {
     onPersonUpdate(orderId, newPerson);
     setIsEditing(false);
+  };
+
+  const handleBadgeClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!readonly) {
+      setIsEditing(true);
+    }
   };
 
   if (readonly) {
@@ -53,31 +65,37 @@ const SalesPersonSelector: React.FC<SalesPersonSelectorProps> = ({
 
   if (isEditing) {
     return (
-      <Select 
-        value={currentPerson || ''} 
-        onValueChange={handlePersonChange}
-        onOpenChange={(open) => !open && setIsEditing(false)}
-        open={true}
-      >
-        <SelectTrigger className="w-32">
-          <SelectValue placeholder="Select..." />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="">Not Assigned</SelectItem>
-          {salesPersons.map((person) => (
-            <SelectItem key={person} value={person}>
-              {person}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div onClick={(e) => e.stopPropagation()}>
+        <Select 
+          value={currentPerson || ''} 
+          onValueChange={handlePersonChange}
+          onOpenChange={(open) => {
+            if (!open) {
+              setIsEditing(false);
+            }
+          }}
+          open={true}
+        >
+          <SelectTrigger className="w-32 h-7 text-xs z-50">
+            <SelectValue placeholder={isLoading ? "Loading..." : "Select..."} />
+          </SelectTrigger>
+          <SelectContent className="z-50 bg-white border shadow-lg">
+            <SelectItem value="">Not Assigned</SelectItem>
+            {salesPersons.map((person) => (
+              <SelectItem key={person} value={person}>
+                {person}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     );
   }
 
   return (
     <Badge 
-      className="cursor-pointer bg-gray-100 text-gray-800 hover:bg-gray-200"
-      onClick={() => setIsEditing(true)}
+      className="cursor-pointer bg-gray-100 text-gray-800 hover:bg-gray-200 select-none"
+      onClick={handleBadgeClick}
     >
       {currentPerson || 'Not Assigned'}
     </Badge>
