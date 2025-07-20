@@ -7,7 +7,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Search, Filter } from 'lucide-react';
 import { format } from 'date-fns';
-import { OrderFilters } from '@/types/order.types';
+import { OrderFilters, FulfillmentStatus } from '@/types/order.types';
 
 interface OrderTableFiltersProps {
   filters: OrderFilters;
@@ -28,7 +28,7 @@ const OrderTableFilters: React.FC<OrderTableFiltersProps> = ({
   };
 
   const handleFulfillmentStatusChange = (value: string) => {
-    onFiltersChange({ ...filters, fulfillmentStatus: value });
+    onFiltersChange({ ...filters, fulfillmentStatus: value as FulfillmentStatus | 'all' });
   };
 
   const handleSortChange = (value: string) => {

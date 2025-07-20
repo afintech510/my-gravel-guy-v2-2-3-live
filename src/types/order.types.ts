@@ -16,6 +16,18 @@ export type OrderStatus =
   | 'paid'
   | 'test'; // Added test status
 
+// Fulfillment status enum matching the database
+export type FulfillmentStatus = 
+  | 'Quote Needed'
+  | 'Quote Sent' 
+  | 'New Order'
+  | 'Pending'
+  | 'Assigned'
+  | 'Scheduled'
+  | 'Delivered'
+  | 'Cancelled'
+  | 'Refunded';
+
 // Enhanced delivery address interface
 export interface DeliveryAddress {
   street: string;
@@ -33,7 +45,7 @@ export interface OrderItem {
   delivery_date: string;
   delivery_address: DeliveryAddress;
   status: OrderStatus;
-  fulfillment_status?: string; // Added fulfillment status
+  fulfillment_status?: FulfillmentStatus; // Added fulfillment status
   sales_person?: string; // Added sales person
   unit: string; // Added to match schema
   total_price: number;
@@ -53,7 +65,7 @@ export interface GroupedOrder {
   created_at: string;
   total_price: number;
   status: OrderStatus;
-  fulfillment_status?: string; // Added fulfillment status
+  fulfillment_status?: FulfillmentStatus; // Added fulfillment status
   sales_person?: string; // Added sales person
   stripe_session_id?: string;
   stripe_payment_intent_id?: string;
@@ -69,7 +81,7 @@ export interface Order extends GroupedOrder {}
 // Order filters interface - updated to use fulfillment_status
 export interface OrderFilters {
   searchTerm?: string;
-  fulfillmentStatus?: string; // Changed from status to fulfillmentStatus
+  fulfillmentStatus?: FulfillmentStatus | 'all'; // Changed from status to fulfillmentStatus
   sortBy?: 'date_desc' | 'date_asc' | 'amount_desc' | 'amount_asc';
   quotesOnly?: boolean;
   excludeQuotes?: boolean;
