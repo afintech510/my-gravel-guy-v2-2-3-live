@@ -4,16 +4,16 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { OrdersStatsWidget } from './OrdersStatsWidget';
 import { QuotesStatsWidget } from './QuotesStatsWidget';
-import { OrderDetailModal } from './OrderDetailModal';
-import { OrderStatusBadge } from './OrderStatusBadge';
-import { FulfillmentStatusBadge } from './FulfillmentStatusBadge';
+import OrderDetailModal from './OrderDetailModal';
+import OrderStatusBadge from './OrderStatusBadge';
+import FulfillmentStatusBadge from './FulfillmentStatusBadge';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, MapPin, Eye, Calendar, Package, ShoppingCart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
-import { Order } from '@/types/order.types';
+import { Order, OrderRow } from '@/types/order.types';
 import { cn } from '@/lib/utils';
 import OrderTableFilters from './OrderTableFilters';
 import { OrderFilters, FulfillmentStatus } from '@/types/order.types';
@@ -23,7 +23,7 @@ interface OrdersTableProps {
 }
 
 const OrdersTable: React.FC<OrdersTableProps> = ({ statusFilter = 'orders' }) => {
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<OrderRow | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState<OrderFilters>({
@@ -44,15 +44,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ statusFilter = 'orders' }) =>
     queryFn: async () => {
       let query = supabase
         .from('orders')
-        .select(`
-          *,
-          zip_codes (
-            city,
-            state,
-            latitude,
-            longitude
-          )
-        `);
+        .select('*');
 
       // Apply status filter
       if (statusFilter === 'orders') {
@@ -65,9 +57,12 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ statusFilter = 'orders' }) =>
       if (filters.searchTerm) {
         query = query.or(`
           id.ilike.%${filters.searchTerm}%,
-          full_name.ilike.%${filters.searchTerm}%,
-          email.ilike.%${filters.searchTerm}%,
-          phone.ilike.%${filters.searchTerm}%
+          order_id.ilike.%${filters.searchTerm}%,
+          delivery_name.ilike.%${filters.searchTerm}%,
+          delivery_email.ilike.%${filters.searchTerm}%,
+          delivery_phone.ilike.%${filters.searchTerm}%,
+          billing_name.ilike.%${filters.searchTerm}%,
+          billing_email.ilike.%${filters.searchTerm}%
         `);
       }
 
@@ -90,10 +85,10 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ statusFilter = 'orders' }) =>
           query = query.order('created_at', { ascending: true });
           break;
         case 'amount_desc':
-          query = query.order('total_amount', { ascending: false });
+          query = query.order('total_price', { ascending: false });
           break;
         case 'amount_asc':
-          query = query.order('total_amount', { ascending: true });
+          query = query.order('total_price', { ascending: true });
           break;
         default:
           query = query.order('created_at', { ascending: false });
@@ -119,26 +114,23 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ statusFilter = 'orders' }) =>
     return Math.ceil(ordersData.totalCount / itemsPerPage);
   }, [ordersData?.totalCount]);
 
-  const handleViewOrder = (order: Order) => {
+  const handleViewOrder = (order: OrderRow) => {
     setSelectedOrder(order);
     setIsModalOpen(true);
   };
 
-  const formatAddress = (order: Order) => {
+  const formatAddress = (order: any) => {
     const parts = [
-      order.delivery_address,
-      order.zip_codes?.city,
-      order.zip_codes?.state,
-      order.zip_code
+      order.delivery_street,
+      order.delivery_city,
+      order.delivery_state,
+      order.delivery_zip
     ].filter(Boolean);
     
     return parts.join(', ');
   };
 
-  const getGoogleMapsUrl = (order: Order) => {
-    if (order.zip_codes?.latitude && order.zip_codes?.longitude) {
-      return `https://www.google.com/maps?q=${order.zip_codes.latitude},${order.zip_codes.longitude}`;
-    }
+  const getGoogleMapsUrl = (order: any) => {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formatAddress(order))}`;
   };
 
@@ -237,19 +229,29 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ statusFilter = 'orders' }) =>
                     </td>
                     <td className="py-3 px-4">
                       <div className="space-y-1">
-                        <div className="font-medium text-foreground">{order.full_name}</div>
-                        <div className="text-sm text-muted-foreground">{order.email}</div>
-                        <div className="text-sm text-muted-foreground">{order.phone}</div>
+                        <div className="font-medium text-foreground">{order.delivery_name || order.billing_name || 'N/A'}</div>
+                        <div className="text-sm text-muted-foreground">{order.delivery_email || order.billing_email || 'N/A'}</div>
+                        <div className="text-sm text-muted-foreground">{order.delivery_phone || 'N/A'}</div>
                       </div>
                     </td>
                     <td className="py-3 px-4">
-                      <OrderStatusBadge status={order.status} />
+                      <OrderStatusBadge 
+                        status={order.status as any} 
+                        orderId={order.id} 
+                        onStatusUpdate={() => {}} 
+                        readonly={true} 
+                      />
                     </td>
                     <td className="py-3 px-4">
-                      <FulfillmentStatusBadge status={order.fulfillment_status} />
+                      <FulfillmentStatusBadge 
+                        status={order.fulfillment_status} 
+                        orderId={order.id} 
+                        onStatusUpdate={() => {}} 
+                        readonly={true} 
+                      />
                     </td>
                     <td className="py-3 px-4 text-foreground font-medium">
-                      ${order.total_amount?.toFixed(2) || '0.00'}
+                      ${order.total_price?.toFixed(2) || '0.00'}
                     </td>
                     <td className="py-3 px-4">
                       <div className="space-y-1">
@@ -263,9 +265,9 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ statusFilter = 'orders' }) =>
                     </td>
                     <td className="py-3 px-4">
                       <div className="space-y-1">
-                        <div className="text-sm text-foreground">{order.delivery_address}</div>
+                        <div className="text-sm text-foreground">{order.delivery_street || 'N/A'}</div>
                         <div className="text-xs text-muted-foreground">
-                          {order.zip_codes?.city}, {order.zip_codes?.state} {order.zip_code}
+                          {order.delivery_city}, {order.delivery_state} {order.delivery_zip}
                         </div>
                         <a 
                           href={getGoogleMapsUrl(order)}
@@ -282,7 +284,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ statusFilter = 'orders' }) =>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleViewOrder(order)}
+                        onClick={() => handleViewOrder(order as OrderRow)}
                         className="text-muted-foreground hover:text-foreground"
                       >
                         <Eye className="h-4 w-4 mr-1" />
@@ -330,9 +332,10 @@ const OrdersTable: React.FC<OrdersTableProps> = ({ statusFilter = 'orders' }) =>
       </Card>
 
       <OrderDetailModal
-        order={selectedOrder}
+        order={selectedOrder as any}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        onOrderUpdate={() => {}}
       />
     </div>
   );
