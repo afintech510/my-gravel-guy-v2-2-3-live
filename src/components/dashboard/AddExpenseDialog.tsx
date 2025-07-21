@@ -34,9 +34,10 @@ interface ExpenseCategory {
 interface AddExpenseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onComplete?: () => void;
 }
 
-export const AddExpenseDialog = ({ open, onOpenChange }: AddExpenseDialogProps) => {
+export const AddExpenseDialog = ({ open, onOpenChange, onComplete }: AddExpenseDialogProps) => {
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState<Date>(new Date());
@@ -112,6 +113,7 @@ export const AddExpenseDialog = ({ open, onOpenChange }: AddExpenseDialogProps) 
       });
       setDate(new Date());
       onOpenChange(false);
+      onComplete?.();
     } catch (error) {
       console.error('Error adding expense:', error);
       toast({
