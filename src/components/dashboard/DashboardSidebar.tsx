@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, ShoppingCart, FileText, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, FileText, MessageSquare, DollarSign } from 'lucide-react';
 
 const menuItems = [
   {
@@ -18,6 +18,11 @@ const menuItems = [
     title: 'Quotes',
     url: '/dashboard/quotes',
     icon: FileText,
+  },
+  {
+    title: 'Expenses',
+    url: '/dashboard/expenses',
+    icon: DollarSign,
   },
   {
     title: 'Messaging',

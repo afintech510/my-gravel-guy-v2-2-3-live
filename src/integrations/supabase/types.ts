@@ -222,6 +222,101 @@ export type Database = {
         }
         Relationships: []
       }
+      expense_categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category_id: string | null
+          created_at: string
+          expense_date: string
+          expense_type: Database["public"]["Enums"]["expense_type"]
+          id: string
+          is_active: boolean | null
+          name: string
+          notes: string | null
+          payment_method:
+            | Database["public"]["Enums"]["payment_method_type"]
+            | null
+          receipt_url: string | null
+          recurring_day: number | null
+          tax_deductible: boolean | null
+          updated_at: string
+          vendor: string | null
+        }
+        Insert: {
+          amount: number
+          category_id?: string | null
+          created_at?: string
+          expense_date?: string
+          expense_type?: Database["public"]["Enums"]["expense_type"]
+          id?: string
+          is_active?: boolean | null
+          name: string
+          notes?: string | null
+          payment_method?:
+            | Database["public"]["Enums"]["payment_method_type"]
+            | null
+          receipt_url?: string | null
+          recurring_day?: number | null
+          tax_deductible?: boolean | null
+          updated_at?: string
+          vendor?: string | null
+        }
+        Update: {
+          amount?: number
+          category_id?: string | null
+          created_at?: string
+          expense_date?: string
+          expense_type?: Database["public"]["Enums"]["expense_type"]
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          notes?: string | null
+          payment_method?:
+            | Database["public"]["Enums"]["payment_method_type"]
+            | null
+          receipt_url?: string | null
+          recurring_day?: number | null
+          tax_deductible?: boolean | null
+          updated_at?: string
+          vendor?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       location_search: {
         Row: {
           city: string | null
@@ -368,12 +463,14 @@ export type Database = {
           product_id: string
           quantity: number | null
           quote_converted: boolean | null
+          sales_commission: number | null
           sales_person: string | null
           status: string | null
           stripe_payment_intent_id: string | null
           stripe_session_id: string | null
           supplier_charges: number | null
           supplier_id: string | null
+          supplier_paidby: Database["public"]["Enums"]["payment_method"] | null
           tags: string[] | null
           total_price: number
           unit: string
@@ -407,12 +504,14 @@ export type Database = {
           product_id: string
           quantity?: number | null
           quote_converted?: boolean | null
+          sales_commission?: number | null
           sales_person?: string | null
           status?: string | null
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
           supplier_charges?: number | null
           supplier_id?: string | null
+          supplier_paidby?: Database["public"]["Enums"]["payment_method"] | null
           tags?: string[] | null
           total_price: number
           unit: string
@@ -446,12 +545,14 @@ export type Database = {
           product_id?: string
           quantity?: number | null
           quote_converted?: boolean | null
+          sales_commission?: number | null
           sales_person?: string | null
           status?: string | null
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
           supplier_charges?: number | null
           supplier_id?: string | null
+          supplier_paidby?: Database["public"]["Enums"]["payment_method"] | null
           tags?: string[] | null
           total_price?: number
           unit?: string
@@ -732,6 +833,7 @@ export type Database = {
       }
     }
     Enums: {
+      expense_type: "fixed_monthly" | "variable_monthly" | "one_time"
       fulfillment_status_enum:
         | "Quote Needed"
         | "Quote Sent"
@@ -742,6 +844,22 @@ export type Database = {
         | "Delivered"
         | "Cancelled"
         | "Refunded"
+      payment_method:
+        | "Credit Card"
+        | "Check"
+        | "Venmo"
+        | "Zelle"
+        | "USDC"
+        | "Cash"
+        | "Wire"
+      payment_method_type:
+        | "credit_card"
+        | "bank_transfer"
+        | "cash"
+        | "check"
+        | "paypal"
+        | "venmo"
+        | "zelle"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -869,6 +987,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      expense_type: ["fixed_monthly", "variable_monthly", "one_time"],
       fulfillment_status_enum: [
         "Quote Needed",
         "Quote Sent",
@@ -879,6 +998,24 @@ export const Constants = {
         "Delivered",
         "Cancelled",
         "Refunded",
+      ],
+      payment_method: [
+        "Credit Card",
+        "Check",
+        "Venmo",
+        "Zelle",
+        "USDC",
+        "Cash",
+        "Wire",
+      ],
+      payment_method_type: [
+        "credit_card",
+        "bank_transfer",
+        "cash",
+        "check",
+        "paypal",
+        "venmo",
+        "zelle",
       ],
     },
   },
