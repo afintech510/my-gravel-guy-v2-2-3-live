@@ -63,7 +63,7 @@ export const EditExpenseDialog = ({
   const [formData, setFormData] = useState({
     name: '',
     amount: '',
-    expense_type: 'one_time' as const,
+    expense_type: 'one_time' as 'fixed_monthly' | 'variable_monthly' | 'one_time',
     expense_date: '',
     vendor: '',
     category_id: '',
@@ -129,7 +129,7 @@ export const EditExpenseDialog = ({
           category_id: formData.category_id || null,
           tax_deductible: formData.tax_deductible,
           notes: formData.notes || null,
-          payment_method: formData.payment_method || null
+          payment_method: formData.payment_method ? formData.payment_method as 'credit_card' | 'bank_transfer' | 'cash' | 'check' | 'paypal' | 'venmo' | 'zelle' : null
         })
         .eq('id', expense.id);
 
@@ -267,12 +267,15 @@ export const EditExpenseDialog = ({
               <SelectTrigger>
                 <SelectValue placeholder="Select payment method" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cash">Cash</SelectItem>
-                <SelectItem value="credit_card">Credit Card</SelectItem>
-                <SelectItem value="check">Check</SelectItem>
-                <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-              </SelectContent>
+                <SelectContent>
+                  <SelectItem value="credit_card">Credit Card</SelectItem>
+                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="check">Check</SelectItem>
+                  <SelectItem value="paypal">PayPal</SelectItem>
+                  <SelectItem value="venmo">Venmo</SelectItem>
+                  <SelectItem value="zelle">Zelle</SelectItem>
+                </SelectContent>
             </Select>
           </div>
 
