@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { GroupedOrder } from '@/types/order.types';
+import { GroupedOrder, OrderRow } from '@/types/order.types';
 
 export interface SMSTemplateData {
   customerName: string;
@@ -66,20 +66,38 @@ export const useOrderSMS = () => {
       .replace(/{deliveryAddress}/g, data.deliveryAddress);
   };
 
-  const getTemplateData = (order: GroupedOrder): SMSTemplateData => {
-    const deliveryItem = order.items[0];
-    return {
-      customerName: order.billing_name || 'Customer',
-      orderId: order.order_id,
-      status: order.status.charAt(0).toUpperCase() + order.status.slice(1),
-      totalPrice: order.total_price.toFixed(2),
-      deliveryDate: deliveryItem?.delivery_date 
-        ? new Date(deliveryItem.delivery_date).toLocaleDateString()
-        : 'TBD',
-      deliveryAddress: deliveryItem?.delivery_address 
-        ? `${deliveryItem.delivery_address.street}, ${deliveryItem.delivery_address.city}, ${deliveryItem.delivery_address.state}`
-        : 'Address not available'
-    };
+  const getTemplateData = (order: GroupedOrder | OrderRow): SMSTemplateData => {
+    // Handle both GroupedOrder and OrderRow types
+    if ('items' in order) {
+      // GroupedOrder
+      const deliveryItem = order.items[0];
+      return {
+        customerName: order.billing_name || 'Customer',
+        orderId: order.order_id,
+        status: order.status.charAt(0).toUpperCase() + order.status.slice(1),
+        totalPrice: order.total_price.toFixed(2),
+        deliveryDate: deliveryItem?.delivery_date 
+          ? new Date(deliveryItem.delivery_date).toLocaleDateString()
+          : 'TBD',
+        deliveryAddress: deliveryItem?.delivery_address 
+          ? `${deliveryItem.delivery_address.street}, ${deliveryItem.delivery_address.city}, ${deliveryItem.delivery_address.state}`
+          : 'Address not available'
+      };
+    } else {
+      // OrderRow
+      return {
+        customerName: order.billing_name || order.delivery_name || 'Customer',
+        orderId: order.order_id,
+        status: order.status?.charAt(0).toUpperCase() + order.status?.slice(1) || 'Unknown',
+        totalPrice: order.total_price?.toFixed(2) || '0.00',
+        deliveryDate: order.delivery_date 
+          ? new Date(order.delivery_date).toLocaleDateString()
+          : 'TBD',
+        deliveryAddress: order.delivery_street && order.delivery_city && order.delivery_state
+          ? `${order.delivery_street}, ${order.delivery_city}, ${order.delivery_state}`
+          : 'Address not available'
+      };
+    }
   };
 
   const sendOrderSMS = async (
