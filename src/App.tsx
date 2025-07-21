@@ -49,6 +49,7 @@ import Dashboard from "./pages/Dashboard";
 import DashboardOrders from "./pages/DashboardOrders";
 import DashboardQuotes from "./pages/DashboardQuotes";
 import DashboardExpenses from "./pages/DashboardExpenses";
+import DashboardAnalyze from "./pages/DashboardAnalyze";
 import OrderEdit from "./pages/OrderEdit";
 import MessagingConsole from "./pages/MessagingConsole";
 import Sitemap from "./pages/Sitemap";
@@ -141,6 +142,7 @@ function App() {
                       <Route path="/dashboard/orders/edit/:orderId" element={<OrderEdit />} />
                       <Route path="/dashboard/quotes" element={<DashboardQuotes />} />
                       <Route path="/dashboard/expenses" element={<DashboardExpenses />} />
+                      <Route path="/dashboard/analyze" element={<DashboardAnalyze />} />
                       <Route path="/dashboard/comm" element={<MessagingConsole />} />
                       <Route path="/google-shopping" element={<GoogleShopping />} />
                       <Route path="/sitemap" element={<Sitemap />} />
