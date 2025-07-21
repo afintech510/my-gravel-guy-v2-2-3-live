@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -17,7 +16,6 @@ import { Save, ArrowLeft, User, MapPin, Package, UserCheck, DollarSign, FileText
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import SupplierSelector from '@/components/dashboard/SupplierSelector';
-import SalesPersonSelector from '@/components/dashboard/SalesPersonSelector';
 import FulfillmentStatusBadge from '@/components/dashboard/FulfillmentStatusBadge';
 
 const OrderEdit = () => {
@@ -27,6 +25,8 @@ const OrderEdit = () => {
   
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [salesPersons, setSalesPersons] = useState<string[]>([]);
+  const [isLoadingSalesPersons, setIsLoadingSalesPersons] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -56,6 +56,25 @@ const OrderEdit = () => {
     queryFn: () => OrderService.fetchOrderById(orderId!),
     enabled: !!orderId,
   });
+
+  // Load unique sales persons from database
+  useEffect(() => {
+    const loadSalesPersons = async () => {
+      setIsLoadingSalesPersons(true);
+      try {
+        const uniquePersons = await OrderService.getUniqueSalesPersons();
+        setSalesPersons(uniquePersons);
+      } catch (error) {
+        console.error('Error loading sales persons:', error);
+        // Fallback to default options
+        setSalesPersons(['Adam', 'Ronnie']);
+      } finally {
+        setIsLoadingSalesPersons(false);
+      }
+    };
+    
+    loadSalesPersons();
+  }, []);
 
   useEffect(() => {
     if (order) {
@@ -430,11 +449,19 @@ const OrderEdit = () => {
               </div>
               <div>
                 <Label>Sales Person</Label>
-                <SalesPersonSelector
-                  currentPerson={formData.sales_person}
-                  orderId={orderId!}
-                  onPersonUpdate={(orderId, newPerson) => handleInputChange('sales_person', newPerson)}
-                />
+                <Select value={formData.sales_person} onValueChange={(value) => handleInputChange('sales_person', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={isLoadingSalesPersons ? "Loading..." : "Select sales person"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Not Assigned</SelectItem>
+                    {salesPersons.map((person) => (
+                      <SelectItem key={person} value={person}>
+                        {person}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>
