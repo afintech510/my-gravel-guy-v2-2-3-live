@@ -19,6 +19,7 @@ import SupplierSelector from '@/components/dashboard/SupplierSelector';
 import FulfillmentStatusBadge from '@/components/dashboard/FulfillmentStatusBadge';
 
 const OrderEdit = () => {
+  console.log('OrderEdit component starting to render');
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -59,10 +60,13 @@ const OrderEdit = () => {
 
   // Load unique sales persons from database
   useEffect(() => {
+    console.log('Starting to load sales persons');
     const loadSalesPersons = async () => {
       setIsLoadingSalesPersons(true);
       try {
+        console.log('Calling OrderService.getUniqueSalesPersons()');
         const uniquePersons = await OrderService.getUniqueSalesPersons();
+        console.log('Sales persons loaded:', uniquePersons);
         setSalesPersons(uniquePersons);
       } catch (error) {
         console.error('Error loading sales persons:', error);
@@ -208,6 +212,7 @@ const OrderEdit = () => {
     );
   }
 
+  console.log('OrderEdit component about to render JSX');
   return (
     <DashboardLayout title={`Edit Order ${orderId}`} subtitle="Update order details and information">
       <div className="space-y-6">
