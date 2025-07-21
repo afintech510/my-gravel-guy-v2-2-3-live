@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,6 +18,9 @@ import { useZipCode } from '@/contexts/ZipCodeContext';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { CartItem } from '@/contexts/CartContext';
 import { trackEvent } from '../../utils/analytics';
+import { insertCartToDatabase } from '@/services/cartInsertService';
+import { sendCartConfirmationEmail } from '@/services/cartEmailService';
+import { useToast } from '@/hooks/use-toast';
 
 export interface EnhancedDeliveryFormData {
   // Delivery date - required
@@ -64,53 +68,107 @@ const formSchema = z.object({
 
 const EnhancedDeliveryForm: React.FC<EnhancedDeliveryFormProps> = ({ onSubmit, item }) => {
   const { zipCode, zipCodeData } = useZipCode();
-  const [uploadedPhoto, setUploadedPhoto] = useState<string | null>(null);
+  const [uploadedPhoto, setUploadedPhoto] = useState<string | null>(item?.locationPhotoUrl || null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      street: '',
-      city: zipCodeData?.city || '',
-      state: zipCodeData?.state_id || '',
-      zip: zipCode || '',
-      deliveryTimePreference: 'anytime',
-      deliveryInstructions: '',
-      locationPhotoUrl: '',
+      // Pre-populate with existing data if available
+      name: item?.contactInfo?.name || '',
+      email: item?.contactInfo?.email || '',
+      phone: item?.contactInfo?.phone || '',
+      street: item?.deliveryAddress?.street || '',
+      city: item?.deliveryAddress?.city || zipCodeData?.city || '',
+      state: item?.deliveryAddress?.state || zipCodeData?.state_id || '',
+      zip: item?.deliveryAddress?.zip || zipCode || '',
+      deliveryDate: item?.deliveryDate || undefined,
+      deliveryTimePreference: item?.deliveryTimePreference || 'anytime',
+      deliveryInstructions: item?.deliveryInstructions || '',
+      locationPhotoUrl: item?.locationPhotoUrl || '',
       communicationConsent: false,
     },
   });
 
-  const handleSubmitForm = (data: z.infer<typeof formSchema>) => {
+  const handleSubmitForm = async (data: z.infer<typeof formSchema>) => {
     console.log('EnhancedDeliveryForm: Form submitted:', data);
+    setIsSubmitting(true);
     
-    // Track delivery information saving
     try {
+      // Track delivery information saving
       console.log('EnhancedDeliveryForm: Tracking delivery info submission');
       trackEvent('form_submit', 'Delivery', `Delivery Info - ${item?.name || 'Unknown Product'}`, item?.tons || 0);
+      
+      // Create properly typed data for onSubmit
+      const enhancedDeliveryData: EnhancedDeliveryFormData = {
+        deliveryDate: data.deliveryDate,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        street: data.street,
+        city: data.city,
+        state: data.state,
+        zip: data.zip,
+        deliveryTimePreference: data.deliveryTimePreference,
+        deliveryInstructions: data.deliveryInstructions,
+        locationPhotoUrl: uploadedPhoto || undefined,
+        communicationConsent: data.communicationConsent,
+      };
+      
+      // Call the original onSubmit to update the cart state
+      onSubmit(enhancedDeliveryData);
+      
+      // Now create the cart item with complete delivery info for database insert
+      if (item) {
+        const updatedItem: CartItem = {
+          ...item,
+          deliveryDate: data.deliveryDate,
+          deliveryAddress: {
+            street: data.street,
+            city: data.city,
+            state: data.state,
+            zip: data.zip
+          },
+          contactInfo: {
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            zipCode: data.zip
+          },
+          deliveryTimePreference: data.deliveryTimePreference,
+          deliveryInstructions: data.deliveryInstructions,
+          locationPhotoUrl: uploadedPhoto || undefined
+        };
+
+        // Insert cart to database
+        console.log('EnhancedDeliveryForm: Inserting cart to database');
+        const { cartId } = await insertCartToDatabase({ items: [updatedItem] });
+        
+        // Send cart confirmation email
+        console.log('EnhancedDeliveryForm: Sending cart confirmation email');
+        await sendCartConfirmationEmail({
+          items: [updatedItem],
+          cartId,
+          actionType: 'save'
+        });
+        
+        toast({
+          title: "Delivery Information Saved",
+          description: "Your delivery details have been saved successfully.",
+        });
+      }
+      
     } catch (error) {
-      console.error('EnhancedDeliveryForm: Failed to track delivery info submission:', error);
+      console.error('EnhancedDeliveryForm: Error saving delivery info:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to save delivery information. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    // Ensure all required fields are present and create properly typed data
-    const enhancedDeliveryData: EnhancedDeliveryFormData = {
-      deliveryDate: data.deliveryDate,
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      street: data.street,
-      city: data.city,
-      state: data.state,
-      zip: data.zip,
-      deliveryTimePreference: data.deliveryTimePreference,
-      deliveryInstructions: data.deliveryInstructions,
-      locationPhotoUrl: uploadedPhoto || undefined,
-      communicationConsent: data.communicationConsent,
-    };
-    
-    onSubmit(enhancedDeliveryData);
   };
 
   const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -404,8 +462,8 @@ const EnhancedDeliveryForm: React.FC<EnhancedDeliveryFormProps> = ({ onSubmit, i
             )}
           />
 
-          <Button type="submit" className="w-full" size="lg">
-            Save Delivery Information
+          <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : 'Save Delivery Information'}
           </Button>
         </form>
       </Form>
