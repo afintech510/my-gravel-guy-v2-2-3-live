@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,12 +11,13 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Lock, Unlock, Upload, Mail, Save, FileText, User, MapPin, DollarSign, MessageSquare, Phone } from 'lucide-react';
+import { Lock, Unlock, Upload, Mail, Save, FileText, User, MapPin, DollarSign, MessageSquare, Phone, UserCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { GroupedOrder, OrderStatus } from '@/types/order.types';
 import { OrderService } from '@/services/orderService';
 import { useOrderSMS, SMS_TEMPLATES } from '@/hooks/useOrderSMS';
 import SupplierSelector from './SupplierSelector';
+import SalesPersonSelector from './SalesPersonSelector';
 import SMSTemplateSelector from './SMSTemplateSelector';
 import SMSPreview from './SMSPreview';
 import { format } from 'date-fns';
@@ -42,11 +44,13 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   const [internalNotes, setInternalNotes] = useState('');
   const [selectedSupplierId, setSelectedSupplierId] = useState('');
   const [supplierCharges, setSupplierCharges] = useState('');
+  const [selectedSalesPerson, setSelectedSalesPerson] = useState('');
   const [emailNote, setEmailNote] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [isSavingSupplier, setIsSavingSupplier] = useState(false);
+  const [isSavingSalesPerson, setIsSavingSalesPerson] = useState(false);
   
   // SMS state
   const [selectedTemplate, setSelectedTemplate] = useState('');
@@ -60,6 +64,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
       setInternalNotes(order.items[0]?.notes || '');
       setSelectedSupplierId(order.items[0]?.supplier_id || '');
       setSupplierCharges(order.items[0]?.supplier_charges?.toString() || '');
+      setSelectedSalesPerson(order.sales_person || '');
       setEmailNote('');
       setIsUnlocked(false);
       
@@ -185,6 +190,36 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
       });
     } finally {
       setIsSavingSupplier(false);
+    }
+  };
+
+  const handleSaveSalesPerson = async () => {
+    if (!isUnlocked) {
+      toast({
+        title: "Order Locked",
+        description: "Please unlock the order to make changes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsSavingSalesPerson(true);
+      await OrderService.updateOrderSalesPerson(order.order_id, selectedSalesPerson);
+      onOrderUpdate();
+      toast({
+        title: "Sales Person Updated",
+        description: "Sales person has been updated successfully",
+      });
+    } catch (error) {
+      console.error('Error saving sales person:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save sales person",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingSalesPerson(false);
     }
   };
 
@@ -410,6 +445,30 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 </CardContent>
               </Card>
             </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserCheck className="h-4 w-4" />
+                  Sales Person
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Assigned Sales Person</Label>
+                  <SalesPersonSelector
+                    currentPerson={selectedSalesPerson}
+                    orderId={order.order_id}
+                    onPersonUpdate={(_, newPerson) => setSelectedSalesPerson(newPerson)}
+                    readonly={!isUnlocked}
+                  />
+                </div>
+                <Button onClick={handleSaveSalesPerson} disabled={!isUnlocked || isSavingSalesPerson} className="w-full">
+                  <Save className="h-4 w-4 mr-2" />
+                  {isSavingSalesPerson ? 'Saving...' : 'Save Sales Person'}
+                </Button>
+              </CardContent>
+            </Card>
 
             <Card>
               <CardHeader>
