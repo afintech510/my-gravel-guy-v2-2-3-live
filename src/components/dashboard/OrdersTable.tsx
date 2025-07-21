@@ -1,12 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { OrderService } from '@/services/orderService';
 import { OrderFilters, GroupedOrder, FulfillmentStatus } from '@/types/order.types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Loader2, ChevronLeft, ChevronRight, Eye, ExternalLink } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, Eye, ExternalLink, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 import OrderTableFilters from './OrderTableFilters';
 import FulfillmentStatusBadge from './FulfillmentStatusBadge';
 import OrderDetailModal from './OrderDetailModal';
@@ -20,6 +20,7 @@ interface OrdersTableProps {
 
 const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [filters, setFilters] = useState<OrderFilters>({
     searchTerm: '',
     fulfillmentStatus: 'all',
@@ -35,17 +36,14 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
 
   const limit = 20;
 
-  // Apply status filter based on prop - make sure this creates a new object
   const modifiedFilters = React.useMemo(() => {
     const baseFilters = { ...filters };
     
     if (statusFilter === 'orders') {
       baseFilters.excludeQuotes = true;
-      // Remove quotesOnly if it exists
       delete baseFilters.quotesOnly;
     } else if (statusFilter === 'quotes') {
       baseFilters.quotesOnly = true;
-      // Remove excludeQuotes if it exists
       delete baseFilters.excludeQuotes;
     }
     
@@ -55,10 +53,9 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['orders', modifiedFilters, page, dateRange, statusFilter],
     queryFn: () => OrderService.fetchOrders(modifiedFilters, page, limit),
-    staleTime: 30000, // 30 seconds
+    staleTime: 30000,
   });
 
-  // Reset page when filters change
   useEffect(() => {
     setPage(1);
   }, [filters, dateRange]);
@@ -81,9 +78,13 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
     }
   };
 
-  const handleRowClick = (order: GroupedOrder) => {
+  const handleViewOrder = (order: GroupedOrder) => {
     setSelectedOrder(order);
     setIsModalOpen(true);
+  };
+
+  const handleEditOrder = (order: GroupedOrder) => {
+    navigate(`/dashboard/orders/edit/${order.order_id}`);
   };
 
   const handleCloseModal = () => {
@@ -179,7 +180,6 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
         </div>
       )}
 
-      {/* Filters */}
       <OrderTableFilters 
         filters={filters}
         onFiltersChange={setFilters}
@@ -187,14 +187,12 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
         onDateRangeChange={setDateRange}
       />
 
-      {/* Loading State */}
       {isLoading && (
         <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
       )}
 
-      {/* Orders Table */}
       {!isLoading && (
         <>
           <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -225,7 +223,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
                     <TableRow 
                       key={order.order_id}
                       className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleRowClick(order)}
+                      onClick={() => handleViewOrder(order)}
                     >
                       <TableCell className="font-mono text-sm">
                         {order.order_id}
@@ -275,14 +273,29 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
                             e.stopPropagation();
                             e.preventDefault();
                           }}
+                          className="flex items-center gap-2"
                         >
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleRowClick(order)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewOrder(order);
+                            }}
                           >
                             <Eye className="h-4 w-4 mr-1" />
                             View
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditOrder(order);
+                            }}
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit
                           </Button>
                         </div>
                       </TableCell>
@@ -293,7 +306,6 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
             </Table>
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-700">
@@ -325,7 +337,6 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
             </div>
           )}
 
-          {/* Order Detail Modal */}
           <OrderDetailModal
             order={selectedOrder}
             isOpen={isModalOpen}

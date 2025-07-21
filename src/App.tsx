@@ -48,6 +48,7 @@ import Reviews from "./pages/Reviews";
 import Dashboard from "./pages/Dashboard";
 import DashboardOrders from "./pages/DashboardOrders";
 import DashboardQuotes from "./pages/DashboardQuotes";
+import OrderEdit from "./pages/OrderEdit";
 import MessagingConsole from "./pages/MessagingConsole";
 import Sitemap from "./pages/Sitemap";
 import SitemapXML from "./pages/SitemapXML";
@@ -74,7 +75,6 @@ function App() {
     enabled: true
   });
 
-  // Attempt session recovery on app initialization
   React.useEffect(() => {
     const initializeAuth = async () => {
       try {
@@ -137,6 +137,7 @@ function App() {
                       <Route path="/reviews" element={<Reviews />} />
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/dashboard/orders" element={<DashboardOrders />} />
+                      <Route path="/dashboard/orders/edit/:orderId" element={<OrderEdit />} />
                       <Route path="/dashboard/quotes" element={<DashboardQuotes />} />
                       <Route path="/dashboard/comm" element={<MessagingConsole />} />
                       <Route path="/google-shopping" element={<GoogleShopping />} />
