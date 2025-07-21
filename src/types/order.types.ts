@@ -67,6 +67,7 @@ export interface GroupedOrder {
   status: OrderStatus;
   fulfillment_status?: FulfillmentStatus; // Added fulfillment status
   sales_person?: string; // Added sales person
+  sales_commission?: number; // Added sales commission
   stripe_session_id?: string;
   stripe_payment_intent_id?: string;
   updated_at?: string;
@@ -140,6 +141,7 @@ export function groupOrderRows(orderRows: OrderRow[]): GroupedOrder[] {
         status: (row.status as OrderStatus) || 'pending',
         fulfillment_status: row.fulfillment_status || undefined, // Added fulfillment status
         sales_person: row.sales_person || undefined, // Added sales person
+        sales_commission: (row as any).sales_commission || undefined, // Added sales commission
         stripe_session_id: row.stripe_session_id,
         stripe_payment_intent_id: row.stripe_payment_intent_id || undefined,
         updated_at: row.updated_at || undefined,
