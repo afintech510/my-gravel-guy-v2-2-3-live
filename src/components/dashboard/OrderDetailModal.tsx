@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Lock, Unlock, Upload, Mail, Save, FileText, User, MapPin, DollarSign, MessageSquare, Phone, UserCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { GroupedOrder, OrderStatus, FulfillmentStatus } from '@/types/order.types';
+import { GroupedOrder, OrderStatus, FulfillmentStatus, OrderRow } from '@/types/order.types';
 import { OrderService } from '@/services/orderService';
 import { useOrderSMS, SMS_TEMPLATES } from '@/hooks/useOrderSMS';
 import SupplierSelector from './SupplierSelector';
@@ -23,23 +23,23 @@ import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 
 interface OrderDetailModalProps {
-  order: GroupedOrder | null;
+  order: OrderRow | null;
   isOpen: boolean;
   onClose: () => void;
-  onOrderUpdate: () => void;
+  onOrderUpdate?: () => void;
 }
 
 const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   order,
   isOpen,
   onClose,
-  onOrderUpdate
+  onOrderUpdate = () => {}
 }) => {
   const { toast } = useToast();
   const { sendOrderSMS, isLoading: isSendingSMS, formatTemplate, getTemplateData } = useOrderSMS();
   
   const [isUnlocked, setIsUnlocked] = useState(false);
-  const [status, setStatus] = useState<OrderStatus>(order?.status || 'pending');
+  const [status, setStatus] = useState<OrderStatus>((order?.status as OrderStatus) || 'pending');
   const [fulfillmentStatus, setFulfillmentStatus] = useState<FulfillmentStatus | ''>('');
   const [internalNotes, setInternalNotes] = useState('');
   const [selectedSupplierId, setSelectedSupplierId] = useState('');
@@ -61,17 +61,17 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   // Reset form when order changes
   React.useEffect(() => {
     if (order) {
-      setStatus(order.status);
+      setStatus(order.status as OrderStatus);
       setFulfillmentStatus(order.fulfillment_status || '');
-      setInternalNotes(order.items[0]?.notes || '');
-      setSelectedSupplierId(order.items[0]?.supplier_id || '');
-      setSupplierCharges(order.items[0]?.supplier_charges?.toString() || '');
+      setInternalNotes(order.notes || '');
+      setSelectedSupplierId(order.supplier_id || '');
+      setSupplierCharges(order.supplier_charges?.toString() || '');
       setSelectedSalesPerson(order.sales_person || '');
       setEmailNote('');
       setIsUnlocked(false);
       
       // Set default SMS phone number from delivery info
-      const deliveryPhone = order.items[0]?.delivery_phone || '';
+      const deliveryPhone = order.delivery_phone || '';
       setSmsPhoneNumber(deliveryPhone);
       setSelectedTemplate('');
       setCustomMessage('');
@@ -401,7 +401,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               Order Details - {order.order_id}
             </DialogTitle>
             <div className="flex items-center gap-2">
-              <Badge className={getStatusColor(order.status)}>
+              <Badge className={getStatusColor(order.status as OrderStatus)}>
                 {status.charAt(0).toUpperCase() + status.slice(1)}
               </Badge>
               <div className="flex items-center gap-2">
@@ -463,20 +463,20 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {order.items.length > 0 && order.items[0].delivery_address && (
+                  {order.delivery_street && (
                     <>
                       <div>
                         <Label className="text-sm font-medium">Address</Label>
                         <p className="text-sm">
-                          {order.items[0].delivery_address.street}<br />
-                          {order.items[0].delivery_address.city}, {order.items[0].delivery_address.state} {order.items[0].delivery_address.zip}
+                          {order.delivery_street}<br />
+                          {order.delivery_city}, {order.delivery_state} {order.delivery_zip}
                         </p>
                       </div>
                       <div>
                         <Label className="text-sm font-medium">Delivery Date</Label>
                         <p className="text-sm">
-                          {order.items[0].delivery_date 
-                            ? format(new Date(order.items[0].delivery_date), 'MMM d, yyyy')
+                          {order.delivery_date 
+                            ? format(new Date(order.delivery_date), 'MMM d, yyyy')
                             : 'Not set'
                           }
                         </p>
@@ -504,27 +504,25 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
 
             <Card>
               <CardHeader>
-                <CardTitle>Order Items</CardTitle>
+                <CardTitle>Order Item</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {order.items.map((item, index) => (
-                    <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium">{item.product_name}</p>
-                        <p className="text-sm text-gray-600">
-                          {item.quantity} {item.unit} × ${item.unit_price.toFixed(2)}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">${item.total_price.toFixed(2)}</p>
-                      </div>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium">{order.product_id || 'Product'}</p>
+                      <p className="text-sm text-gray-600">
+                        {order.quantity} {order.unit} × ${order.unit_price?.toFixed(2) || '0.00'}
+                      </p>
                     </div>
-                  ))}
+                    <div className="text-right">
+                      <p className="font-medium">${order.total_price?.toFixed(2) || '0.00'}</p>
+                    </div>
+                  </div>
                   <Separator />
                   <div className="flex justify-between items-center font-bold text-lg">
                     <span>Total</span>
-                    <span>${order.total_price.toFixed(2)}</span>
+                    <span>${order.total_price?.toFixed(2) || '0.00'}</span>
                   </div>
                 </div>
               </CardContent>
