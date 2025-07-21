@@ -189,16 +189,8 @@ const DashboardAnalyze = () => {
           )}
         </div>
 
-        {/* Vendor Analysis Chart */}
-        {vendorAnalysis.length > 0 && (
-          <VendorAnalysisChart data={vendorAnalysis} />
-        )}
-
         {/* Reports Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {vendorAnalysis.length > 0 && (
-            <VendorAnalysisTable data={vendorAnalysis} />
-          )}
           {taxSummary && (
             <TaxDeductibleSummary 
               totalDeductible={taxSummary.totalDeductible}
