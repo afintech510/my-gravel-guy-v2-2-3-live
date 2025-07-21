@@ -2,37 +2,44 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, ShoppingCart, FileText, MessageSquare, DollarSign, TrendingUp } from 'lucide-react';
+import { useFinancialAuth } from '@/hooks/useFinancialAuth';
 
 const menuItems = [
   {
     title: 'Dashboard',
     url: '/dashboard',
     icon: LayoutDashboard,
+    requiresFinancialAccess: false,
   },
   {
     title: 'Orders',
     url: '/dashboard/orders',
     icon: ShoppingCart,
+    requiresFinancialAccess: false,
   },
   {
     title: 'Quotes',
     url: '/dashboard/quotes',
     icon: FileText,
+    requiresFinancialAccess: false,
   },
   {
     title: 'Messaging',
     url: '/dashboard/comm',
     icon: MessageSquare,
+    requiresFinancialAccess: false,
   },
   {
     title: 'Expenses',
     url: '/dashboard/expenses',
     icon: DollarSign,
+    requiresFinancialAccess: true,
   },
   {
     title: 'Analyze',
     url: '/dashboard/analyze',
     icon: TrendingUp,
+    requiresFinancialAccess: true,
   },
 ];
 
@@ -42,6 +49,16 @@ interface DashboardSidebarProps {
 }
 
 export function DashboardSidebar({ isOpen }: DashboardSidebarProps) {
+  const { isFinancialAdmin, loading } = useFinancialAuth();
+
+  // Filter menu items based on financial admin access
+  const filteredMenuItems = menuItems.filter(item => {
+    if (item.requiresFinancialAccess && !isFinancialAdmin) {
+      return false;
+    }
+    return true;
+  });
+
   return (
     <div
       className={`${
@@ -50,7 +67,7 @@ export function DashboardSidebar({ isOpen }: DashboardSidebarProps) {
     >
       <nav className="h-full flex flex-col py-4">
         <div className="flex-1 px-2 space-y-1">
-          {menuItems.map((item) => {
+          {filteredMenuItems.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink
