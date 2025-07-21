@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -9,6 +10,7 @@ import { CartProvider } from "./contexts/CartContext";
 import { ZipCodeProvider } from "./contexts/ZipCodeContext";
 import { BlogProvider } from "./contexts/BlogContext";
 import { useFlashingTitle } from "./hooks/useFlashingTitle";
+import { recoverSession } from "./utils/authCleanup";
 import ScrollToTop from "./components/ScrollToTop";
 import RouteTracker from "./components/analytics/RouteTracker";
 import TopBanner from "./components/TopBanner";
@@ -54,7 +56,15 @@ import GoogleShopping from "./pages/GoogleShopping";
 import AddToCart from "./pages/AddToCart";
 import { Link } from "react-router-dom";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 function App() {
   // Enable flashing title globally across all pages
@@ -63,6 +73,19 @@ function App() {
     interval: 2000,
     enabled: true
   });
+
+  // Attempt session recovery on app initialization
+  React.useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        await recoverSession();
+      } catch (error) {
+        console.error('App initialization auth error:', error);
+      }
+    };
+    
+    initializeAuth();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

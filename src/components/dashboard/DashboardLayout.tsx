@@ -16,7 +16,7 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children, title, subtitle }: DashboardLayoutProps) {
-  const { user, loading, isAdmin, signOut } = useAuth();
+  const { user, session, loading, isAdmin, signOut } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const handlePowerLogout = async () => {
@@ -46,13 +46,16 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-sm text-gray-600">Loading session...</p>
+        </div>
       </div>
     );
   }
 
-  // No user - show login prompt
-  if (!user) {
+  // No user or session - show login prompt
+  if (!user || !session) {
     return <LoginPrompt />;
   }
 
@@ -106,8 +109,12 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
             
             <div className="flex items-center space-x-4">
               <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                SECURE MODE
+                AUTHENTICATED
               </span>
+              
+              <div className="text-xs text-gray-500">
+                Session: {session.expires_at ? new Date(session.expires_at * 1000).toLocaleTimeString() : 'Active'}
+              </div>
               
               {/* Power Logout Button */}
               <button
