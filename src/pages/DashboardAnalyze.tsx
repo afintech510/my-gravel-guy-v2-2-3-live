@@ -210,23 +210,23 @@ const DashboardAnalyze = () => {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
-                  <h4 className="font-semibold text-green-400">Revenue</h4>
-                  <p className="text-2xl font-bold text-foreground">${financialSummary.totalRevenue.toLocaleString()}</p>
+                  <h4 className="font-semibold text-green-600">Revenue</h4>
+                  <p className="text-2xl font-bold">${financialSummary.totalRevenue.toLocaleString()}</p>
                 </div>
                 <div className="space-y-2">
-                  <h4 className="font-semibold text-orange-400">Cost of Goods Sold</h4>
-                  <p className="text-lg text-muted-foreground">Supplier Charges: ${financialSummary.supplierCharges.toLocaleString()}</p>
-                  <p className="text-lg text-muted-foreground">Sales Commissions: ${financialSummary.salesCommissions.toLocaleString()}</p>
+                  <h4 className="font-semibold text-orange-600">Cost of Goods Sold</h4>
+                  <p className="text-lg">Supplier Charges: ${financialSummary.supplierCharges.toLocaleString()}</p>
+                  <p className="text-lg">Sales Commissions: ${financialSummary.salesCommissions.toLocaleString()}</p>
                 </div>
                 <div className="space-y-2">
-                  <h4 className="font-semibold text-red-400">Operating Expenses</h4>
-                  <p className="text-lg text-muted-foreground">${financialSummary.totalExpenses.toLocaleString()}</p>
+                  <h4 className="font-semibold text-red-600">Operating Expenses</h4>
+                  <p className="text-lg">${financialSummary.totalExpenses.toLocaleString()}</p>
                 </div>
               </div>
-              <div className="mt-6 pt-6 border-t border-border">
+              <div className="mt-6 pt-6 border-t">
                 <div className="flex justify-between items-center">
-                  <span className="text-xl font-semibold text-foreground">Net Profit:</span>
-                  <span className={`text-2xl font-bold ${financialSummary.netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  <span className="text-xl font-semibold">Net Profit:</span>
+                  <span className={`text-2xl font-bold ${financialSummary.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     ${financialSummary.netProfit.toLocaleString()}
                   </span>
                 </div>

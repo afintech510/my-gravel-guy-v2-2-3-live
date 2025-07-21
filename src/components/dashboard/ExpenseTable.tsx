@@ -134,28 +134,28 @@ export const ExpenseTable = ({ onEditExpense, refreshTrigger }: ExpenseTableProp
   };
 
   if (loading) {
-    return <div className="text-center py-8 text-muted-foreground">Loading expenses...</div>;
+    return <div className="text-center py-8">Loading expenses...</div>;
   }
 
   return (
-    <div className="border rounded-lg border-border">
+    <div className="border rounded-lg">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="text-foreground">Name</TableHead>
-            <TableHead className="text-foreground">Category</TableHead>
-            <TableHead className="text-foreground">Amount</TableHead>
-            <TableHead className="text-foreground">Type</TableHead>
-            <TableHead className="text-foreground">Date</TableHead>
-            <TableHead className="text-foreground">Vendor</TableHead>
-            <TableHead className="text-foreground">Tax Deductible</TableHead>
-            <TableHead className="text-foreground w-[100px]">Actions</TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Category</TableHead>
+            <TableHead>Amount</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Vendor</TableHead>
+            <TableHead>Tax Deductible</TableHead>
+            <TableHead className="w-[100px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {expenses.map((expense) => (
             <TableRow key={expense.id}>
-              <TableCell className="font-medium text-foreground">{expense.name}</TableCell>
+              <TableCell className="font-medium">{expense.name}</TableCell>
               <TableCell>
                 {expense.category && (
                   <div className="flex items-center gap-2">
@@ -163,14 +163,14 @@ export const ExpenseTable = ({ onEditExpense, refreshTrigger }: ExpenseTableProp
                       className="w-3 h-3 rounded-full" 
                       style={{ backgroundColor: expense.category.color }}
                     />
-                    <span className="text-foreground">{expense.category.name}</span>
+                    {expense.category.name}
                   </div>
                 )}
               </TableCell>
-              <TableCell className="text-foreground font-medium">${expense.amount.toFixed(2)}</TableCell>
+              <TableCell>${expense.amount.toFixed(2)}</TableCell>
               <TableCell>{getExpenseTypeBadge(expense.expense_type)}</TableCell>
-              <TableCell className="text-foreground">{format(new Date(expense.expense_date), 'MMM dd, yyyy')}</TableCell>
-              <TableCell className="text-foreground">{expense.vendor || '-'}</TableCell>
+              <TableCell>{format(new Date(expense.expense_date), 'MMM dd, yyyy')}</TableCell>
+              <TableCell>{expense.vendor || '-'}</TableCell>
               <TableCell>
                 <Badge variant={expense.tax_deductible ? 'default' : 'outline'}>
                   {expense.tax_deductible ? 'Yes' : 'No'}
@@ -182,7 +182,6 @@ export const ExpenseTable = ({ onEditExpense, refreshTrigger }: ExpenseTableProp
                     variant="ghost" 
                     size="sm"
                     onClick={() => onEditExpense(expense)}
-                    className="text-muted-foreground hover:text-foreground"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -190,7 +189,6 @@ export const ExpenseTable = ({ onEditExpense, refreshTrigger }: ExpenseTableProp
                     variant="ghost" 
                     size="sm"
                     onClick={() => deleteExpense(expense.id)}
-                    className="text-muted-foreground hover:text-foreground"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
