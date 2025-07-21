@@ -45,10 +45,10 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
   // Loading state - show spinner while checking authentication
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-sm text-gray-600">Loading session...</p>
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-foreground" />
+          <p className="text-sm text-muted-foreground">Loading session...</p>
         </div>
       </div>
     );
@@ -62,21 +62,21 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
   // User authenticated but not admin - show access denied
   if (!isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6 text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
-          <p className="text-gray-600 mb-2">Hello {user.email}</p>
-          <p className="text-gray-600 mb-6">You need to be an authorized admin to access this dashboard.</p>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="max-w-md w-full bg-card rounded-lg shadow-md p-6 text-center border border-border">
+          <h1 className="text-2xl font-bold text-foreground mb-4">Access Denied</h1>
+          <p className="text-muted-foreground mb-2">Hello {user.email}</p>
+          <p className="text-muted-foreground mb-6">You need to be an authorized admin to access this dashboard.</p>
           <div className="space-y-3">
             <button
               onClick={signOut}
-              className="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+              className="w-full bg-secondary text-secondary-foreground px-4 py-2 rounded-lg hover:bg-secondary/80"
             >
               Sign Out
             </button>
             <button
               onClick={() => window.location.href = '/'}
-              className="w-full bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90"
+              className="w-full bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90"
             >
               Return Home
             </button>
@@ -87,32 +87,32 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col w-full">
+    <div className="min-h-screen bg-background flex flex-col w-full dark">
       {/* Full Width Header */}
-      <div className="bg-white shadow-sm border-b z-10">
+      <div className="bg-card shadow-sm border-b border-border z-10">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center gap-4">
               {/* Hamburger Menu */}
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
               >
                 <Menu className="h-5 w-5" />
               </button>
               
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-                {subtitle && <p className="text-sm text-gray-600">{subtitle}</p>}
+                <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+                {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
               </div>
             </div>
             
             <div className="flex items-center space-x-4">
-              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full border border-primary/20">
                 AUTHENTICATED
               </span>
               
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-muted-foreground">
                 Session: {session.expires_at ? new Date(session.expires_at * 1000).toLocaleTimeString() : 'Active'}
               </div>
               
@@ -120,20 +120,20 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
               <button
                 onClick={handlePowerLogout}
                 title="Force Logout & Clear Cache"
-                className="flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-full transition-colors"
+                className="flex items-center justify-center w-8 h-8 text-destructive hover:text-destructive/80 hover:bg-destructive/10 rounded-full transition-colors"
               >
                 <Power className="h-4 w-4" />
               </button>
               
               <button
                 onClick={signOut}
-                className="text-sm text-gray-600 hover:text-gray-900 px-3 py-1 rounded-md hover:bg-gray-100"
+                className="text-sm text-muted-foreground hover:text-foreground px-3 py-1 rounded-md hover:bg-accent"
               >
                 Sign Out
               </button>
               <button
                 onClick={() => window.location.href = '/'}
-                className="text-sm text-gray-600 hover:text-gray-900 px-3 py-1 rounded-md hover:bg-gray-100"
+                className="text-sm text-muted-foreground hover:text-foreground px-3 py-1 rounded-md hover:bg-accent"
               >
                 Back to Site
               </button>
