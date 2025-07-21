@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { 
   GroupedOrder, 
@@ -228,6 +229,31 @@ export class OrderService {
       }
     } catch (error) {
       console.error('OrderService.updateOrderSalesPerson error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update order sales commission
+   */
+  static async updateOrderSalesCommission(orderId: string, salesCommission: number): Promise<void> {
+    try {
+      console.log('Updating order sales commission:', { orderId, salesCommission });
+      
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          sales_commission: salesCommission,
+          updated_at: new Date().toISOString()
+        })
+        .eq('order_id', orderId);
+
+      if (error) {
+        console.error('Error updating order sales commission:', error);
+        throw new Error(`Failed to update order sales commission: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('OrderService.updateOrderSalesCommission error:', error);
       throw error;
     }
   }

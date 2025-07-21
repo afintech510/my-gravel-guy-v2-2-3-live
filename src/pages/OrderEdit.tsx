@@ -46,6 +46,7 @@ const OrderEdit = () => {
     status: 'pending' as OrderStatus,
     fulfillment_status: '' as FulfillmentStatus | '',
     sales_person: 'unassigned',
+    sales_commission: '',
     supplier_id: '',
     supplier_charges: '',
     notes: '',
@@ -96,6 +97,7 @@ const OrderEdit = () => {
         status: order.status,
         fulfillment_status: order.fulfillment_status || '',
         sales_person: order.sales_person || 'unassigned',
+        sales_commission: order.sales_commission?.toString() || '',
         supplier_id: firstItem?.supplier_id || '',
         supplier_charges: firstItem?.supplier_charges?.toString() || '',
         notes: firstItem?.notes || '',
@@ -132,6 +134,13 @@ const OrderEdit = () => {
       const currentSalesPerson = order.sales_person || null;
       if (salesPersonValue !== currentSalesPerson) {
         await OrderService.updateOrderSalesPerson(orderId, salesPersonValue);
+      }
+      
+      // Update sales commission
+      const salesCommissionValue = formData.sales_commission ? parseFloat(formData.sales_commission) : 0;
+      const currentSalesCommission = order.sales_commission || 0;
+      if (salesCommissionValue !== currentSalesCommission) {
+        await OrderService.updateOrderSalesCommission(orderId, salesCommissionValue);
       }
       
       // Update supplier (with error handling)
@@ -502,6 +511,18 @@ const OrderEdit = () => {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div>
+                <Label htmlFor="sales_commission">Sales Commission</Label>
+                <Input
+                  id="sales_commission"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  value={formData.sales_commission}
+                  onChange={(e) => handleInputChange('sales_commission', e.target.value)}
+                />
               </div>
             </CardContent>
           </Card>
