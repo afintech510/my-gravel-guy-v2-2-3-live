@@ -1,9 +1,7 @@
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, ShoppingCart, NotebookPen, Calculator, Store, ThumbsUp, Phone, House, MapPin, DollarSign, X, Mails, Sparkles, Power } from "lucide-react";
-import { forceAuthCleanup } from '@/utils/authCleanup';
-import { supabase } from '@/integrations/supabase/client';
+import { Menu, ShoppingCart, NotebookPen, Calculator, Store, ThumbsUp, Phone, House, MapPin, DollarSign, X, Mails, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart } from '../contexts/CartContext';
 import { useZipCode } from '../contexts/ZipCodeContext';
@@ -41,28 +39,6 @@ const Navbar = () => {
     clearZipCode();
   };
 
-  const handlePowerLogout = async () => {
-    try {
-      console.log('Initiating emergency power logout...');
-      
-      // First clear all auth storage
-      forceAuthCleanup();
-      
-      // Attempt global sign out (ignore errors)
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (error) {
-        console.log('Sign out error (ignored):', error);
-      }
-      
-      // Force page refresh and redirect
-      window.location.href = '/';
-    } catch (error) {
-      console.error('Power logout error:', error);
-      // Force refresh anyway
-      window.location.href = '/';
-    }
-  };
 
   return (
     <>
@@ -122,17 +98,6 @@ const Navbar = () => {
                   )}
                 </Button>
               </Link>
-              
-              {/* Emergency Power Logout Button */}
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={handlePowerLogout}
-                title="Emergency Logout & Clear Cache"
-                className="text-red-600 hover:text-red-800 hover:bg-red-50 rounded-full transition-colors"
-              >
-                <Power className="h-5 w-5" />
-              </Button>
             </div>
 
             <div className="flex items-center lg:hidden gap-2 ml-20">
@@ -160,17 +125,6 @@ const Navbar = () => {
                   )}
                 </Button>
               </Link>
-              
-              {/* Emergency Power Logout Button - Mobile */}
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={handlePowerLogout}
-                title="Emergency Logout & Clear Cache"
-                className="text-red-600 hover:text-red-800 hover:bg-red-50 rounded-full transition-colors"
-              >
-                <Power className="h-5 w-5" />
-              </Button>
               <Sheet open={isOpen} onOpenChange={setIsOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon">
