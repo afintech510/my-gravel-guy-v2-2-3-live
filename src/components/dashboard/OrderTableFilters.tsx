@@ -45,18 +45,18 @@ const OrderTableFilters: React.FC<OrderTableFiltersProps> = ({
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow space-y-4">
+    <div className="bg-card p-6 rounded-lg shadow space-y-4 border border-border">
       <div className="flex items-center gap-2 mb-4">
-        <Filter className="h-5 w-5 text-gray-500" />
-        <h3 className="text-lg font-semibold">Filters</h3>
+        <Filter className="h-5 w-5 text-muted-foreground" />
+        <h3 className="text-lg font-semibold text-foreground">Filters</h3>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Search */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Search</label>
+          <label className="text-sm font-medium text-foreground">Search</label>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Order ID, name, email, phone..."
               value={filters.searchTerm || ''}
@@ -68,7 +68,7 @@ const OrderTableFilters: React.FC<OrderTableFiltersProps> = ({
 
         {/* Fulfillment Status Filter */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Fulfillment Status</label>
+          <label className="text-sm font-medium text-foreground">Fulfillment Status</label>
           <Select value={filters.fulfillmentStatus || 'all'} onValueChange={handleFulfillmentStatusChange}>
             <SelectTrigger>
               <SelectValue placeholder="All statuses" />
@@ -90,7 +90,7 @@ const OrderTableFilters: React.FC<OrderTableFiltersProps> = ({
 
         {/* Sort */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Sort By</label>
+          <label className="text-sm font-medium text-foreground">Sort By</label>
           <Select value={filters.sortBy || 'date_desc'} onValueChange={handleSortChange}>
             <SelectTrigger>
               <SelectValue placeholder="Sort by..." />
@@ -106,7 +106,7 @@ const OrderTableFilters: React.FC<OrderTableFiltersProps> = ({
 
         {/* Date Range */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Delivery Date</label>
+          <label className="text-sm font-medium text-foreground">Delivery Date</label>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="w-full justify-start text-left font-normal">
