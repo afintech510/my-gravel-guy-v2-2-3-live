@@ -117,16 +117,15 @@ const SalesPersonSelector: React.FC<SalesPersonSelectorProps> = ({
   }
 
   return (
-    <Badge 
+    <div 
       role="button"
       tabIndex={0}
-      className="cursor-pointer bg-gray-100 text-gray-800 hover:bg-gray-200 select-none no-underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
-      style={{ textDecoration: 'none', color: 'inherit' }}
+      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 hover:bg-gray-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
       onClick={handleBadgeClick}
       onKeyDown={handleKeyDown}
     >
       {currentPerson || 'Not Assigned'}
-    </Badge>
+    </div>
   );
 };
 
