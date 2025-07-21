@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -25,10 +26,18 @@ interface Expense {
     name: string;
     color: string;
   } | null;
+  category_id: string | null;
   tax_deductible: boolean;
+  notes: string | null;
+  payment_method: string | null;
 }
 
-export const ExpenseTable = () => {
+interface ExpenseTableProps {
+  onEditExpense: (expense: Expense) => void;
+  refreshTrigger: number;
+}
+
+export const ExpenseTable = ({ onEditExpense, refreshTrigger }: ExpenseTableProps) => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -45,6 +54,9 @@ export const ExpenseTable = () => {
           expense_date,
           vendor,
           tax_deductible,
+          notes,
+          payment_method,
+          category_id,
           expense_categories:category_id (
             name,
             color
@@ -99,7 +111,7 @@ export const ExpenseTable = () => {
 
   useEffect(() => {
     fetchExpenses();
-  }, []);
+  }, [refreshTrigger]);
 
   const getExpenseTypeBadge = (type: string) => {
     const variants = {
@@ -166,7 +178,11 @@ export const ExpenseTable = () => {
               </TableCell>
               <TableCell>
                 <div className="flex gap-2">
-                  <Button variant="ghost" size="sm">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => onEditExpense(expense)}
+                  >
                     <Edit className="h-4 w-4" />
                   </Button>
                   <Button 
