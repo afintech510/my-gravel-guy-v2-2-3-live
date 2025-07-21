@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { CartProvider } from "./contexts/CartContext";
 import { ZipCodeProvider } from "./contexts/ZipCodeContext";
@@ -69,6 +68,66 @@ const queryClient = new QueryClient({
   },
 });
 
+function AppContent() {
+  const location = useLocation();
+  const isDashboardRoute = location.pathname.startsWith('/dashboard');
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+      <div className="sticky top-0 z-40 w-full">
+        <div className="relative">
+          <TopBanner />
+          <Navbar />
+        </div>
+      </div>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/products" element={<Products />} />
+        <Route path="/shop" element={<Shop />} />
+        <Route path="/bulk-landscape-materials" element={<BulkLandscapeMaterials />} />
+        <Route path="/products/:slug" element={<ProductDetail />} />
+        <Route path="/locations" element={<LocationsIndex />} />
+        <Route path="/locations/:slug" element={<LocationPage />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/chat" element={<Chat />} />
+        <Route path="/quiz" element={<Quiz />} />
+        <Route path="/calculator" element={<Calculator />} />
+        <Route path="/calculator-shop" element={<CalculatorShop />} />
+        <Route path="/product-calculator" element={<ProductCalculator />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/refund" element={<RefundPolicy />} />
+        <Route path="/delivery-map" element={<DeliveryMap />} />
+        <Route path="/faq" element={<FAQ />} />
+        <Route path="/delivery" element={<DeliveryInfo />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:slug" element={<BlogPost />} />
+        <Route path="/blog/category/:slug" element={<BlogCategory />} />
+        <Route path="/stripe-test" element={<StripeTest />} />
+        <Route path="/reviews" element={<Reviews />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard/orders" element={<DashboardOrders />} />
+        <Route path="/dashboard/orders/edit/:orderId" element={<OrderEdit />} />
+        <Route path="/dashboard/quotes" element={<DashboardQuotes />} />
+        <Route path="/dashboard/expenses" element={<DashboardExpenses />} />
+        <Route path="/dashboard/analyze" element={<DashboardAnalyze />} />
+        <Route path="/dashboard/comm" element={<MessagingConsole />} />
+        <Route path="/google-shopping" element={<GoogleShopping />} />
+        <Route path="/sitemap" element={<Sitemap />} />
+        <Route path="/sitemap.xml" element={<SitemapXML />} />
+        <Route path="/sms-consent" element={<SMSConsent />} />
+        <Route path="/add-to-cart" element={<AddToCart />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      {!isDashboardRoute && <Footer />}
+    </div>
+  );
+}
+
 function App() {
   // Enable flashing title globally across all pages
   useFlashingTitle({
@@ -101,58 +160,7 @@ function App() {
                 <BrowserRouter>
                   <ScrollToTop />
                   <RouteTracker />
-                  <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
-                    <div className="sticky top-0 z-40 w-full">
-                      <div className="relative">
-                        <TopBanner />
-                        <Navbar />
-                      </div>
-                    </div>
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/products" element={<Products />} />
-                      <Route path="/shop" element={<Shop />} />
-                      <Route path="/bulk-landscape-materials" element={<BulkLandscapeMaterials />} />
-                      <Route path="/products/:slug" element={<ProductDetail />} />
-                      <Route path="/locations" element={<LocationsIndex />} />
-                      <Route path="/locations/:slug" element={<LocationPage />} />
-                      <Route path="/about" element={<About />} />
-                      <Route path="/contact" element={<Contact />} />
-                      <Route path="/cart" element={<Cart />} />
-                      <Route path="/checkout" element={<Checkout />} />
-                      <Route path="/chat" element={<Chat />} />
-                      <Route path="/quiz" element={<Quiz />} />
-                      <Route path="/calculator" element={<Calculator />} />
-                      <Route path="/calculator-shop" element={<CalculatorShop />} />
-                      <Route path="/product-calculator" element={<ProductCalculator />} />
-                      <Route path="/payment-success" element={<PaymentSuccess />} />
-                      <Route path="/privacy" element={<PrivacyPolicy />} />
-                      <Route path="/terms" element={<TermsOfService />} />
-                      <Route path="/refund" element={<RefundPolicy />} />
-                      <Route path="/delivery-map" element={<DeliveryMap />} />
-                      <Route path="/faq" element={<FAQ />} />
-                      <Route path="/delivery" element={<DeliveryInfo />} />
-                      <Route path="/blog" element={<Blog />} />
-                      <Route path="/blog/:slug" element={<BlogPost />} />
-                      <Route path="/blog/category/:slug" element={<BlogCategory />} />
-                      <Route path="/stripe-test" element={<StripeTest />} />
-                      <Route path="/reviews" element={<Reviews />} />
-                      <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/dashboard/orders" element={<DashboardOrders />} />
-                      <Route path="/dashboard/orders/edit/:orderId" element={<OrderEdit />} />
-                      <Route path="/dashboard/quotes" element={<DashboardQuotes />} />
-                      <Route path="/dashboard/expenses" element={<DashboardExpenses />} />
-                      <Route path="/dashboard/analyze" element={<DashboardAnalyze />} />
-                      <Route path="/dashboard/comm" element={<MessagingConsole />} />
-                      <Route path="/google-shopping" element={<GoogleShopping />} />
-                      <Route path="/sitemap" element={<Sitemap />} />
-                      <Route path="/sitemap.xml" element={<SitemapXML />} />
-                      <Route path="/sms-consent" element={<SMSConsent />} />
-                      <Route path="/add-to-cart" element={<AddToCart />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                    <Footer />
-                  </div>
+                  <AppContent />
                 </BrowserRouter>
               </TooltipProvider>
             </BlogProvider>
