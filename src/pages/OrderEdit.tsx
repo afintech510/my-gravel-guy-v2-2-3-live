@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -133,10 +134,15 @@ const OrderEdit = () => {
         await OrderService.updateOrderSalesPerson(orderId, salesPersonValue);
       }
       
-      // Update supplier
+      // Update supplier (with error handling)
       if (formData.supplier_id !== order.items[0]?.supplier_id) {
-        const charges = formData.supplier_charges ? parseFloat(formData.supplier_charges) : undefined;
-        await OrderService.updateOrderSupplier(orderId, formData.supplier_id, charges);
+        try {
+          const charges = formData.supplier_charges ? parseFloat(formData.supplier_charges) : undefined;
+          await OrderService.updateOrderSupplier(orderId, formData.supplier_id, charges);
+        } catch (error) {
+          console.error('Error updating supplier:', error);
+          // Continue with other updates even if supplier update fails
+        }
       }
       
       // Update notes
@@ -212,9 +218,9 @@ const OrderEdit = () => {
 
   return (
     <DashboardLayout title={`Edit Order ${orderId}`} subtitle="Update order details and information">
-      <div className="space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Header Actions */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Button variant="outline" onClick={handleCancel}>
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -235,41 +241,9 @@ const OrderEdit = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Customer Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Customer Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="billing_name">Billing Name</Label>
-                <Input
-                  id="billing_name"
-                  value={formData.billing_name}
-                  onChange={(e) => handleInputChange('billing_name', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="billing_email">Billing Email</Label>
-                <Input
-                  id="billing_email"
-                  type="email"
-                  value={formData.billing_email}
-                  onChange={(e) => handleInputChange('billing_email', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium">Order Date</Label>
-                <p className="text-sm text-gray-600">{format(new Date(order.created_at), 'MMM d, yyyy h:mm a')}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Delivery Information */}
+        {/* Single Column Layout */}
+        <div className="space-y-6">
+          {/* 1. Delivery Information */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -278,13 +252,25 @@ const OrderEdit = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="delivery_name">Delivery Contact Name</Label>
-                <Input
-                  id="delivery_name"
-                  value={formData.delivery_name}
-                  onChange={(e) => handleInputChange('delivery_name', e.target.value)}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="delivery_name">Delivery Contact Name</Label>
+                  <Input
+                    id="delivery_name"
+                    value={formData.delivery_name}
+                    readOnly
+                    className="bg-gray-50 cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="delivery_phone">Delivery Phone</Label>
+                  <Input
+                    id="delivery_phone"
+                    value={formData.delivery_phone}
+                    readOnly
+                    className="bg-gray-50 cursor-not-allowed"
+                  />
+                </div>
               </div>
               <div>
                 <Label htmlFor="delivery_email">Delivery Email</Label>
@@ -292,15 +278,8 @@ const OrderEdit = () => {
                   id="delivery_email"
                   type="email"
                   value={formData.delivery_email}
-                  onChange={(e) => handleInputChange('delivery_email', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="delivery_phone">Delivery Phone</Label>
-                <Input
-                  id="delivery_phone"
-                  value={formData.delivery_phone}
-                  onChange={(e) => handleInputChange('delivery_phone', e.target.value)}
+                  readOnly
+                  className="bg-gray-50 cursor-not-allowed"
                 />
               </div>
               <div>
@@ -308,16 +287,18 @@ const OrderEdit = () => {
                 <Input
                   id="delivery_street"
                   value={formData.delivery_street}
-                  onChange={(e) => handleInputChange('delivery_street', e.target.value)}
+                  readOnly
+                  className="bg-gray-50 cursor-not-allowed"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="delivery_city">City</Label>
                   <Input
                     id="delivery_city"
                     value={formData.delivery_city}
-                    onChange={(e) => handleInputChange('delivery_city', e.target.value)}
+                    readOnly
+                    className="bg-gray-50 cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -325,40 +306,44 @@ const OrderEdit = () => {
                   <Input
                     id="delivery_state"
                     value={formData.delivery_state}
-                    onChange={(e) => handleInputChange('delivery_state', e.target.value)}
+                    readOnly
+                    className="bg-gray-50 cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="delivery_zip">ZIP Code</Label>
+                  <Input
+                    id="delivery_zip"
+                    value={formData.delivery_zip}
+                    readOnly
+                    className="bg-gray-50 cursor-not-allowed"
                   />
                 </div>
               </div>
-              <div>
-                <Label htmlFor="delivery_zip">ZIP Code</Label>
-                <Input
-                  id="delivery_zip"
-                  value={formData.delivery_zip}
-                  onChange={(e) => handleInputChange('delivery_zip', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="delivery_date">Delivery Date</Label>
-                <Input
-                  id="delivery_date"
-                  type="date"
-                  value={formData.delivery_date}
-                  onChange={(e) => handleInputChange('delivery_date', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="delivery_time_preference">Time Preference</Label>
-                <Select value={formData.delivery_time_preference} onValueChange={(value) => handleInputChange('delivery_time_preference', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select time preference" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="morning">Morning (8AM - 12PM)</SelectItem>
-                    <SelectItem value="afternoon">Afternoon (12PM - 5PM)</SelectItem>
-                    <SelectItem value="evening">Evening (5PM - 8PM)</SelectItem>
-                    <SelectItem value="anytime">Anytime</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="delivery_date">Delivery Date</Label>
+                  <Input
+                    id="delivery_date"
+                    type="date"
+                    value={formData.delivery_date}
+                    onChange={(e) => handleInputChange('delivery_date', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="delivery_time_preference">Time Preference</Label>
+                  <Select value={formData.delivery_time_preference} onValueChange={(value) => handleInputChange('delivery_time_preference', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select time preference" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="morning">Morning (8AM - 12PM)</SelectItem>
+                      <SelectItem value="afternoon">Afternoon (12PM - 5PM)</SelectItem>
+                      <SelectItem value="evening">Evening (5PM - 8PM)</SelectItem>
+                      <SelectItem value="anytime">Anytime</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div>
                 <Label htmlFor="delivery_instructions">Delivery Instructions</Label>
@@ -372,7 +357,42 @@ const OrderEdit = () => {
             </CardContent>
           </Card>
 
-          {/* Order Items */}
+          {/* 2. Customer Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Customer Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="billing_name">Billing Name</Label>
+                <Input
+                  id="billing_name"
+                  value={formData.billing_name}
+                  readOnly
+                  className="bg-gray-50 cursor-not-allowed"
+                />
+              </div>
+              <div>
+                <Label htmlFor="billing_email">Billing Email</Label>
+                <Input
+                  id="billing_email"
+                  type="email"
+                  value={formData.billing_email}
+                  readOnly
+                  className="bg-gray-50 cursor-not-allowed"
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Order Date</Label>
+                <p className="text-sm text-gray-600 mt-1">{format(new Date(order.created_at), 'MMM d, yyyy h:mm a')}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 3. Order Items */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -404,7 +424,25 @@ const OrderEdit = () => {
             </CardContent>
           </Card>
 
-          {/* Status & Assignment */}
+          {/* 4. Internal Notes */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Internal Notes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                placeholder="Add internal notes about this order..."
+                value={formData.notes}
+                onChange={(e) => handleInputChange('notes', e.target.value)}
+                rows={6}
+              />
+            </CardContent>
+          </Card>
+
+          {/* 5. Status & Assignment */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -468,7 +506,7 @@ const OrderEdit = () => {
             </CardContent>
           </Card>
 
-          {/* Supplier Information */}
+          {/* 6. Supplier Information */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -495,24 +533,6 @@ const OrderEdit = () => {
                   onChange={(e) => handleInputChange('supplier_charges', e.target.value)}
                 />
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Notes */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Internal Notes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="Add internal notes about this order..."
-                value={formData.notes}
-                onChange={(e) => handleInputChange('notes', e.target.value)}
-                rows={6}
-              />
             </CardContent>
           </Card>
         </div>
