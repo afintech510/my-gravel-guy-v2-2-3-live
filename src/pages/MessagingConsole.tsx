@@ -9,10 +9,10 @@ const MessagingConsole = () => {
   
   return (
     <DashboardLayout title="Messaging Console" subtitle="Manage SMS/MMS conversations">
-      <div className="bg-card rounded-lg shadow-lg h-[calc(100vh-200px)] border border-border">
+      <div className="bg-white rounded-lg shadow-lg h-[calc(100vh-200px)]">
         <div className="flex h-full">
           {/* Left sidebar - Message inbox */}
-          <div className={`${selectedPhoneNumber ? 'w-1/3' : 'w-full'} border-r border-border transition-all duration-300`}>
+          <div className={`${selectedPhoneNumber ? 'w-1/3' : 'w-full'} border-r border-gray-200 transition-all duration-300`}>
             <MessageInbox 
               selectedPhoneNumber={selectedPhoneNumber}
               onSelectPhone={setSelectedPhoneNumber}

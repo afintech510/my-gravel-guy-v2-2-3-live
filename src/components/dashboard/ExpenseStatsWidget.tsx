@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -111,7 +110,7 @@ export const ExpenseStatsWidget = () => {
     : 0;
 
   if (loading) {
-    return <div className="text-center py-8 text-muted-foreground">Loading stats...</div>;
+    return <div className="text-center py-8">Loading stats...</div>;
   }
 
   return (

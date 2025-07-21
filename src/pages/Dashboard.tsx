@@ -15,20 +15,20 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-card rounded-lg shadow border border-border p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 border border-border rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors">
-              <h4 className="font-medium text-foreground">Recent Orders</h4>
-              <p className="text-sm text-muted-foreground mt-1">View and manage recent customer orders</p>
+            <div className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <h4 className="font-medium text-gray-900">Recent Orders</h4>
+              <p className="text-sm text-gray-600 mt-1">View and manage recent customer orders</p>
             </div>
-            <div className="p-4 border border-border rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors">
-              <h4 className="font-medium text-foreground">Pending Quotes</h4>
-              <p className="text-sm text-muted-foreground mt-1">Review and respond to quote requests</p>
+            <div className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <h4 className="font-medium text-gray-900">Pending Quotes</h4>
+              <p className="text-sm text-gray-600 mt-1">Review and respond to quote requests</p>
             </div>
-            <div className="p-4 border border-border rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors">
-              <h4 className="font-medium text-foreground">Customer Messages</h4>
-              <p className="text-sm text-muted-foreground mt-1">Manage customer communications</p>
+            <div className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <h4 className="font-medium text-gray-900">Customer Messages</h4>
+              <p className="text-sm text-gray-600 mt-1">Manage customer communications</p>
             </div>
           </div>
         </div>
