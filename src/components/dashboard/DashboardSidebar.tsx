@@ -20,6 +20,11 @@ const menuItems = [
     icon: FileText,
   },
   {
+    title: 'Messaging',
+    url: '/dashboard/comm',
+    icon: MessageSquare,
+  },
+  {
     title: 'Expenses',
     url: '/dashboard/expenses',
     icon: DollarSign,
@@ -28,11 +33,6 @@ const menuItems = [
     title: 'Analyze',
     url: '/dashboard/analyze',
     icon: TrendingUp,
-  },
-  {
-    title: 'Messaging',
-    url: '/dashboard/comm',
-    icon: MessageSquare,
   },
 ];
 
