@@ -453,20 +453,11 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   Sales Person
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Assigned Sales Person</Label>
-                  <SalesPersonSelector
-                    currentPerson={selectedSalesPerson}
-                    orderId={order.order_id}
-                    onPersonUpdate={(_, newPerson) => setSelectedSalesPerson(newPerson)}
-                    readonly={!isUnlocked}
-                  />
+              <CardContent>
+                <div>
+                  <span className="text-sm font-medium text-gray-600">Sales Person: </span>
+                  <span className="text-sm text-gray-900">{order.sales_person || 'Not Assigned'}</span>
                 </div>
-                <Button onClick={handleSaveSalesPerson} disabled={!isUnlocked || isSavingSalesPerson} className="w-full">
-                  <Save className="h-4 w-4 mr-2" />
-                  {isSavingSalesPerson ? 'Saving...' : 'Save Sales Person'}
-                </Button>
               </CardContent>
             </Card>
 
