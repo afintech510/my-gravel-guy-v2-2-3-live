@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { OrderService } from '@/services/orderService';
@@ -8,7 +9,6 @@ import { Loader2, ChevronLeft, ChevronRight, Eye, ExternalLink } from 'lucide-re
 import { useToast } from '@/hooks/use-toast';
 import OrderTableFilters from './OrderTableFilters';
 import FulfillmentStatusBadge from './FulfillmentStatusBadge';
-import SalesPersonSelector from './SalesPersonSelector';
 import OrderDetailModal from './OrderDetailModal';
 import { format } from 'date-fns';
 import { createGoogleMapsSearchUrl } from '@/utils/googleMapsUtils';
@@ -76,24 +76,6 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
       toast({
         title: "Error",
         description: "Failed to update fulfillment status",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleSalesPersonUpdate = async (orderId: string, newPerson: string) => {
-    try {
-      await OrderService.updateOrderSalesPerson(orderId, newPerson);
-      await refetch();
-      toast({
-        title: "Sales Person Updated",
-        description: `Order ${orderId} sales person updated to ${newPerson || 'Not Assigned'}`,
-      });
-    } catch (error) {
-      console.error('Error updating sales person:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update sales person",
         variant: "destructive",
       });
     }
@@ -279,21 +261,9 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
                         {getTotalQuantity(order)} {getUnit(order)}
                       </TableCell>
                       <TableCell>
-                        <div 
-                          onClick={(e) => {
-                            console.log('Sales person cell clicked - stopping propagation');
-                            e.stopPropagation();
-                            e.preventDefault();
-                          }}
-                          className="isolate"
-                        >
-                          <SalesPersonSelector
-                            currentPerson={order.sales_person || null}
-                            orderId={order.order_id}
-                            onPersonUpdate={handleSalesPersonUpdate}
-                            readonly={false}
-                          />
-                        </div>
+                        <span className="text-sm text-gray-700">
+                          {order.sales_person || 'Not Assigned'}
+                        </span>
                       </TableCell>
                       <TableCell className="font-semibold">
                         ${order.total_price.toFixed(2)}
