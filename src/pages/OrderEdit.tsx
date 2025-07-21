@@ -19,7 +19,6 @@ import SupplierSelector from '@/components/dashboard/SupplierSelector';
 import FulfillmentStatusBadge from '@/components/dashboard/FulfillmentStatusBadge';
 
 const OrderEdit = () => {
-  console.log('OrderEdit component starting to render');
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -45,7 +44,7 @@ const OrderEdit = () => {
     delivery_time_preference: '',
     status: 'pending' as OrderStatus,
     fulfillment_status: '' as FulfillmentStatus | '',
-    sales_person: '',
+    sales_person: 'unassigned',
     supplier_id: '',
     supplier_charges: '',
     notes: '',
@@ -60,13 +59,10 @@ const OrderEdit = () => {
 
   // Load unique sales persons from database
   useEffect(() => {
-    console.log('Starting to load sales persons');
     const loadSalesPersons = async () => {
       setIsLoadingSalesPersons(true);
       try {
-        console.log('Calling OrderService.getUniqueSalesPersons()');
         const uniquePersons = await OrderService.getUniqueSalesPersons();
-        console.log('Sales persons loaded:', uniquePersons);
         setSalesPersons(uniquePersons);
       } catch (error) {
         console.error('Error loading sales persons:', error);
@@ -98,7 +94,7 @@ const OrderEdit = () => {
         delivery_time_preference: firstItem?.delivery_time_preference || '',
         status: order.status,
         fulfillment_status: order.fulfillment_status || '',
-        sales_person: order.sales_person || '',
+        sales_person: order.sales_person || 'unassigned',
         supplier_id: firstItem?.supplier_id || '',
         supplier_charges: firstItem?.supplier_charges?.toString() || '',
         notes: firstItem?.notes || '',
@@ -131,8 +127,10 @@ const OrderEdit = () => {
       }
       
       // Update sales person
-      if (formData.sales_person !== order.sales_person) {
-        await OrderService.updateOrderSalesPerson(orderId, formData.sales_person);
+      const salesPersonValue = formData.sales_person === 'unassigned' ? null : formData.sales_person;
+      const currentSalesPerson = order.sales_person || null;
+      if (salesPersonValue !== currentSalesPerson) {
+        await OrderService.updateOrderSalesPerson(orderId, salesPersonValue);
       }
       
       // Update supplier
@@ -212,7 +210,6 @@ const OrderEdit = () => {
     );
   }
 
-  console.log('OrderEdit component about to render JSX');
   return (
     <DashboardLayout title={`Edit Order ${orderId}`} subtitle="Update order details and information">
       <div className="space-y-6">
@@ -459,7 +456,7 @@ const OrderEdit = () => {
                     <SelectValue placeholder={isLoadingSalesPersons ? "Loading..." : "Select sales person"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Not Assigned</SelectItem>
+                    <SelectItem value="unassigned">Not Assigned</SelectItem>
                     {salesPersons.map((person) => (
                       <SelectItem key={person} value={person}>
                         {person}
