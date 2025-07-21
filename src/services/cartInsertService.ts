@@ -30,8 +30,8 @@ export const insertCartToDatabase = async (cartData: CartInsertData) => {
         hasDeliveryDate: !!item.deliveryDate
       });
 
-      const contactInfo = item.contactInfo || {};
-      const deliveryAddress = item.deliveryAddress || {};
+      const contactInfo = item.contactInfo || { name: null, phone: null, email: null };
+      const deliveryAddress = item.deliveryAddress || { street: null, city: null, state: null, zip: null };
       const quantity = item.tons || 1;
 
       const record = {
@@ -49,7 +49,7 @@ export const insertCartToDatabase = async (cartData: CartInsertData) => {
         delivery_email: contactInfo.email || null,
         billing_name: contactInfo.name || null,
         billing_email: contactInfo.email || null,
-        delivery_date: item.deliveryDate || null,
+        delivery_date: item.deliveryDate ? item.deliveryDate.toISOString().split('T')[0] : null,
         delivery_street: deliveryAddress.street || null,
         delivery_city: deliveryAddress.city || null,
         delivery_state: deliveryAddress.state || null,
