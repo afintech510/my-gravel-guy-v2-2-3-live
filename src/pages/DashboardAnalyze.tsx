@@ -26,34 +26,43 @@ const DashboardAnalyze = () => {
     const year = now.getFullYear();
     const month = now.getMonth();
 
-    switch (period) {
-      case 'current-month':
-        return {
-          start: new Date(year, month, 1).toISOString().split('T')[0],
-          end: new Date(year, month + 1, 0).toISOString().split('T')[0],
-        };
-      case 'last-month':
-        return {
-          start: new Date(year, month - 1, 1).toISOString().split('T')[0],
-          end: new Date(year, month, 0).toISOString().split('T')[0],
-        };
-      case 'current-quarter':
-        const quarterStart = new Date(year, Math.floor(month / 3) * 3, 1);
-        const quarterEnd = new Date(year, Math.floor(month / 3) * 3 + 3, 0);
-        return {
-          start: quarterStart.toISOString().split('T')[0],
-          end: quarterEnd.toISOString().split('T')[0],
-        };
-      case 'current-year':
-        return {
-          start: `${year}-01-01`,
-          end: `${year}-12-31`,
-        };
-      default:
-        return {
-          start: new Date(year, month, 1).toISOString().split('T')[0],
-          end: new Date(year, month + 1, 0).toISOString().split('T')[0],
-        };
+    try {
+      switch (period) {
+        case 'current-month':
+          return {
+            start: new Date(year, month, 1).toISOString().split('T')[0],
+            end: new Date(year, month + 1, 0).toISOString().split('T')[0],
+          };
+        case 'last-month':
+          return {
+            start: new Date(year, month - 1, 1).toISOString().split('T')[0],
+            end: new Date(year, month, 0).toISOString().split('T')[0],
+          };
+        case 'current-quarter':
+          const quarterStart = new Date(year, Math.floor(month / 3) * 3, 1);
+          const quarterEnd = new Date(year, Math.floor(month / 3) * 3 + 3, 0);
+          return {
+            start: quarterStart.toISOString().split('T')[0],
+            end: quarterEnd.toISOString().split('T')[0],
+          };
+        case 'current-year':
+          return {
+            start: new Date(year, 0, 1).toISOString().split('T')[0],
+            end: new Date(year, 11, 31).toISOString().split('T')[0],
+          };
+        default:
+          return {
+            start: new Date(year, month, 1).toISOString().split('T')[0],
+            end: new Date(year, month + 1, 0).toISOString().split('T')[0],
+          };
+      }
+    } catch (error) {
+      console.error('Error calculating date range:', error);
+      // Fallback to current month
+      return {
+        start: new Date(year, month, 1).toISOString().split('T')[0],
+        end: new Date(year, month + 1, 0).toISOString().split('T')[0],
+      };
     }
   };
 
@@ -61,6 +70,7 @@ const DashboardAnalyze = () => {
     setDataLoading(true);
     try {
       const { start, end } = getDateRange(timePeriod);
+      console.log('Loading financial data for date range:', { start, end });
 
       const [summary, expenses, trends, vendors, tax] = await Promise.all([
         financialAnalysisService.getFinancialSummary(start, end),

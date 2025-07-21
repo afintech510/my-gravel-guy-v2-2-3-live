@@ -114,17 +114,30 @@ export const financialAnalysisService = {
     const trends: MonthlyTrend[] = [];
 
     for (const month of months) {
-      const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
-      const endDate = `${year}-${month.toString().padStart(2, '0')}-31`;
+      try {
+        const startDate = new Date(year, month - 1, 1).toISOString().split('T')[0];
+        const endDate = new Date(year, month, 0).toISOString().split('T')[0];
 
-      const summary = await this.getFinancialSummary(startDate, endDate);
-      
-      trends.push({
-        month: new Date(year, month - 1).toLocaleDateString('en-US', { month: 'short' }),
-        revenue: summary.totalRevenue,
-        expenses: summary.totalExpenses + summary.supplierCharges + summary.salesCommissions,
-        profit: summary.netProfit,
-      });
+        console.log(`Processing month ${month}: ${startDate} to ${endDate}`);
+
+        const summary = await this.getFinancialSummary(startDate, endDate);
+        
+        trends.push({
+          month: new Date(year, month - 1).toLocaleDateString('en-US', { month: 'short' }),
+          revenue: summary.totalRevenue,
+          expenses: summary.totalExpenses + summary.supplierCharges + summary.salesCommissions,
+          profit: summary.netProfit,
+        });
+      } catch (error) {
+        console.error(`Error processing month ${month}:`, error);
+        // Add empty data for this month to maintain chart structure
+        trends.push({
+          month: new Date(year, month - 1).toLocaleDateString('en-US', { month: 'short' }),
+          revenue: 0,
+          expenses: 0,
+          profit: 0,
+        });
+      }
     }
 
     return trends;
