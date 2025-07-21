@@ -210,14 +210,14 @@ export class OrderService {
   /**
    * Update order sales person
    */
-  static async updateOrderSalesPerson(orderId: string, salesPerson: string): Promise<void> {
+  static async updateOrderSalesPerson(orderId: string, salesPerson: string | null): Promise<void> {
     try {
       console.log('Updating order sales person:', { orderId, salesPerson });
       
       const { error } = await supabase
         .from('orders')
         .update({ 
-          sales_person: salesPerson || null,
+          sales_person: salesPerson,
           updated_at: new Date().toISOString()
         })
         .eq('order_id', orderId);
@@ -283,12 +283,19 @@ export class OrderService {
     try {
       console.log('Updating order supplier:', { orderId, supplierId, supplierCharges });
       
+      // Skip update if supplier ID is empty or not provided
+      if (!supplierId || supplierId.trim() === '') {
+        console.log('Skipping supplier update - no supplier ID provided');
+        return;
+      }
+
       // Fetch the supplier name using the supplier ID
       const suppliers = await SupplierService.fetchSuppliers();
       const supplier = suppliers.find(s => s.id === supplierId);
       
       if (!supplier) {
-        throw new Error('Supplier not found');
+        console.warn('Supplier not found for ID:', supplierId);
+        return; // Don't throw error, just skip the update
       }
 
       const updateData: any = {
