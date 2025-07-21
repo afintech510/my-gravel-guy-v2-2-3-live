@@ -88,11 +88,11 @@ export class OrderService {
         .from('orders')
         .select('*', { count: 'exact' });
 
-      // Apply quotes/orders filter - fixed logic
+      // Apply quotes/orders filter - include both Quote status and CART- orders as quotes
       if (filters.quotesOnly) {
-        query = query.eq('status', 'Quote');
+        query = query.or('status.eq.Quote,order_id.like.CART-%');
       } else if (filters.excludeQuotes) {
-        query = query.neq('status', 'Quote');
+        query = query.neq('status', 'Quote').not('order_id', 'like', 'CART-%');
       }
 
       // Apply search filter - enhanced search across multiple fields
