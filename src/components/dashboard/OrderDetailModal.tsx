@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Lock, Unlock, Upload, Mail, Save, FileText, User, MapPin, DollarSign, MessageSquare, Phone, UserCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { GroupedOrder, OrderStatus } from '@/types/order.types';
+import { GroupedOrder, OrderStatus, FulfillmentStatus } from '@/types/order.types';
 import { OrderService } from '@/services/orderService';
 import { useOrderSMS, SMS_TEMPLATES } from '@/hooks/useOrderSMS';
 import SupplierSelector from './SupplierSelector';
@@ -41,6 +40,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [status, setStatus] = useState<OrderStatus>(order?.status || 'pending');
+  const [fulfillmentStatus, setFulfillmentStatus] = useState<FulfillmentStatus | ''>('');
   const [internalNotes, setInternalNotes] = useState('');
   const [selectedSupplierId, setSelectedSupplierId] = useState('');
   const [supplierCharges, setSupplierCharges] = useState('');
@@ -51,6 +51,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   const [isSavingNotes, setIsSavingNotes] = useState(false);
   const [isSavingSupplier, setIsSavingSupplier] = useState(false);
   const [isSavingSalesPerson, setIsSavingSalesPerson] = useState(false);
+  const [isSavingFulfillmentStatus, setIsSavingFulfillmentStatus] = useState(false);
   
   // SMS state
   const [selectedTemplate, setSelectedTemplate] = useState('');
@@ -61,6 +62,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   React.useEffect(() => {
     if (order) {
       setStatus(order.status);
+      setFulfillmentStatus(order.fulfillment_status || '');
       setInternalNotes(order.items[0]?.notes || '');
       setSelectedSupplierId(order.items[0]?.supplier_id || '');
       setSupplierCharges(order.items[0]?.supplier_charges?.toString() || '');
@@ -120,6 +122,45 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleFulfillmentStatusUpdate = async () => {
+    if (!isUnlocked) {
+      toast({
+        title: "Order Locked",
+        description: "Please unlock the order to make changes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!fulfillmentStatus) {
+      toast({
+        title: "Fulfillment Status Required",
+        description: "Please select a fulfillment status",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsSavingFulfillmentStatus(true);
+      await OrderService.updateOrderFulfillmentStatus(order.order_id, fulfillmentStatus);
+      onOrderUpdate();
+      toast({
+        title: "Fulfillment Status Updated",
+        description: "Fulfillment status has been updated successfully",
+      });
+    } catch (error) {
+      console.error('Error updating fulfillment status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update fulfillment status",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingFulfillmentStatus(false);
     }
   };
 
@@ -496,27 +537,53 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 <CardTitle>Order Status</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select value={status} onValueChange={(value) => setStatus(value as OrderStatus)} disabled={!isUnlocked}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="confirmed">Confirmed</SelectItem>
-                      <SelectItem value="processing">Processing</SelectItem>
-                      <SelectItem value="in_transit">In Transit</SelectItem>
-                      <SelectItem value="delivered">Delivered</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                      <SelectItem value="paid">Paid</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Status</Label>
+                    <Select value={status} onValueChange={(value) => setStatus(value as OrderStatus)} disabled={!isUnlocked}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="confirmed">Confirmed</SelectItem>
+                        <SelectItem value="processing">Processing</SelectItem>
+                        <SelectItem value="in_transit">In Transit</SelectItem>
+                        <SelectItem value="delivered">Delivered</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                        <SelectItem value="paid">Paid</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button onClick={handleStatusUpdate} disabled={!isUnlocked || isSaving} className="w-full">
+                      <Save className="h-4 w-4 mr-2" />
+                      {isSaving ? 'Saving...' : 'Update Status'}
+                    </Button>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Fulfillment Status</Label>
+                    <Select value={fulfillmentStatus} onValueChange={(value) => setFulfillmentStatus(value as FulfillmentStatus)} disabled={!isUnlocked}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select fulfillment status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Quote Needed">Quote Needed</SelectItem>
+                        <SelectItem value="Quote Sent">Quote Sent</SelectItem>
+                        <SelectItem value="New Order">New Order</SelectItem>
+                        <SelectItem value="Pending">Pending</SelectItem>
+                        <SelectItem value="Assigned">Assigned</SelectItem>
+                        <SelectItem value="Scheduled">Scheduled</SelectItem>
+                        <SelectItem value="Delivered">Delivered</SelectItem>
+                        <SelectItem value="Cancelled">Cancelled</SelectItem>
+                        <SelectItem value="Refunded">Refunded</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button onClick={handleFulfillmentStatusUpdate} disabled={!isUnlocked || isSavingFulfillmentStatus} className="w-full">
+                      <Save className="h-4 w-4 mr-2" />
+                      {isSavingFulfillmentStatus ? 'Saving...' : 'Update Fulfillment Status'}
+                    </Button>
+                  </div>
                 </div>
-                <Button onClick={handleStatusUpdate} disabled={!isUnlocked || isSaving} className="w-full">
-                  <Save className="h-4 w-4 mr-2" />
-                  {isSaving ? 'Saving...' : 'Update Status'}
-                </Button>
               </CardContent>
             </Card>
 
