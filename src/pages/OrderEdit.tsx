@@ -431,8 +431,9 @@ const OrderEdit = () => {
               <div>
                 <Label>Sales Person</Label>
                 <SalesPersonSelector
-                  value={formData.sales_person}
-                  onValueChange={(value) => handleInputChange('sales_person', value)}
+                  currentPerson={formData.sales_person}
+                  orderId={orderId!}
+                  onPersonUpdate={(orderId, newPerson) => handleInputChange('sales_person', newPerson)}
                 />
               </div>
             </CardContent>
