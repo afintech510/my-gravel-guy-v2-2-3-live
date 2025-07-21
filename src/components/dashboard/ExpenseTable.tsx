@@ -134,11 +134,11 @@ export const ExpenseTable = ({ onEditExpense, refreshTrigger }: ExpenseTableProp
   };
 
   if (loading) {
-    return <div className="text-center py-8">Loading expenses...</div>;
+    return <div className="text-center py-8 text-muted-foreground">Loading expenses...</div>;
   }
 
   return (
-    <div className="border rounded-lg">
+    <div className="border rounded-lg border-border">
       <Table>
         <TableHeader>
           <TableRow>
@@ -163,14 +163,14 @@ export const ExpenseTable = ({ onEditExpense, refreshTrigger }: ExpenseTableProp
                       className="w-3 h-3 rounded-full" 
                       style={{ backgroundColor: expense.category.color }}
                     />
-                    {expense.category.name}
+                    <span className="text-foreground">{expense.category.name}</span>
                   </div>
                 )}
               </TableCell>
-              <TableCell>${expense.amount.toFixed(2)}</TableCell>
+              <TableCell className="text-foreground">${expense.amount.toFixed(2)}</TableCell>
               <TableCell>{getExpenseTypeBadge(expense.expense_type)}</TableCell>
-              <TableCell>{format(new Date(expense.expense_date), 'MMM dd, yyyy')}</TableCell>
-              <TableCell>{expense.vendor || '-'}</TableCell>
+              <TableCell className="text-foreground">{format(new Date(expense.expense_date), 'MMM dd, yyyy')}</TableCell>
+              <TableCell className="text-foreground">{expense.vendor || '-'}</TableCell>
               <TableCell>
                 <Badge variant={expense.tax_deductible ? 'default' : 'outline'}>
                   {expense.tax_deductible ? 'Yes' : 'No'}

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { OrderService } from '@/services/orderService';
@@ -113,7 +114,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
     const { street, cityStateZip } = formatAddress(order);
     
     if (street === 'N/A') {
-      return <span className="text-gray-500 text-sm">N/A</span>;
+      return <span className="text-muted-foreground text-sm">N/A</span>;
     }
 
     const fullAddress = `${street}, ${cityStateZip}`;
@@ -124,12 +125,12 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
         href={googleMapsUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 max-w-xs"
+        className="text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1 max-w-xs"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="truncate">
           <div className="text-sm truncate">{street}</div>
-          <div className="text-sm text-gray-500 truncate">{cityStateZip}</div>
+          <div className="text-sm text-muted-foreground truncate">{cityStateZip}</div>
         </div>
         <ExternalLink className="h-3 w-3 flex-shrink-0" />
       </a>
@@ -161,7 +162,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
   if (error) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-600">Error loading {statusFilter}: {error.message}</p>
+        <p className="text-destructive">Error loading {statusFilter}: {error.message}</p>
         <Button onClick={() => refetch()} className="mt-4">
           Try Again
         </Button>
@@ -176,7 +177,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
     <div className="space-y-6">
       {title && (
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+          <h2 className="text-2xl font-bold text-foreground">{title}</h2>
         </div>
       )}
 
@@ -195,7 +196,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
 
       {!isLoading && (
         <>
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="bg-card rounded-lg shadow overflow-hidden border border-border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -214,7 +215,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
               <TableBody>
                 {orders.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-12 text-gray-500">
+                    <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
                       No {statusFilter === 'quotes' ? 'quotes' : statusFilter === 'orders' ? 'orders' : 'records'} found
                     </TableCell>
                   </TableRow>
@@ -222,7 +223,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
                   orders.map((order) => (
                     <TableRow 
                       key={order.order_id}
-                      className="cursor-pointer hover:bg-gray-50"
+                      className="cursor-pointer hover:bg-accent"
                       onClick={() => handleViewOrder(order)}
                     >
                       <TableCell className="font-mono text-sm">
@@ -259,7 +260,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
                         {getTotalQuantity(order)} {getUnit(order)}
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm text-gray-700">
+                        <span className="text-sm text-foreground">
                           {order.sales_person || 'Not Assigned'}
                         </span>
                       </TableCell>
@@ -308,7 +309,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-muted-foreground">
                 Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, data?.total || 0)} of {data?.total || 0} {statusFilter === 'quotes' ? 'quotes' : statusFilter === 'orders' ? 'orders' : 'records'}
               </div>
               <div className="flex items-center space-x-2">
