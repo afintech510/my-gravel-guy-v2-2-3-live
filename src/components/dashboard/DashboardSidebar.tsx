@@ -63,7 +63,7 @@ export function DashboardSidebar({ isOpen }: DashboardSidebarProps) {
     <div
       className={`${
         isOpen ? 'w-64' : 'w-16'
-      } transition-all duration-300 ease-in-out bg-gray-900 border-r border-gray-800 flex-shrink-0`}
+      } transition-all duration-300 ease-in-out bg-card border-r border-border flex-shrink-0`}
     >
       <nav className="h-full flex flex-col py-4">
         <div className="flex-1 px-2 space-y-1">
@@ -77,8 +77,8 @@ export function DashboardSidebar({ isOpen }: DashboardSidebarProps) {
                 className={({ isActive }) =>
                   `group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
                     isActive
-                      ? 'bg-blue-600 text-white shadow-lg'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                      ? 'bg-primary text-primary-foreground shadow-lg'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                   } ${!isOpen ? 'justify-center' : ''}`
                 }
                 title={!isOpen ? item.title : undefined}

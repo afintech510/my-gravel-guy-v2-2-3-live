@@ -57,7 +57,7 @@ const DashboardExpenses = () => {
         subtitle="Loading..."
       >
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin" />
+          <Loader2 className="h-8 w-8 animate-spin text-foreground" />
         </div>
       </DashboardLayout>
     );
@@ -72,9 +72,9 @@ const DashboardExpenses = () => {
       >
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
-            <p className="text-gray-600 mb-2">Hello {user?.email}</p>
-            <p className="text-gray-600">You need financial admin permissions to access expense management.</p>
+            <h2 className="text-2xl font-bold text-foreground mb-4">Access Denied</h2>
+            <p className="text-muted-foreground mb-2">Hello {user?.email}</p>
+            <p className="text-muted-foreground">You need financial admin permissions to access expense management.</p>
           </div>
         </div>
       </DashboardLayout>
@@ -92,7 +92,7 @@ const DashboardExpenses = () => {
         
         {/* Add Expense Button */}
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Recent Expenses</h2>
+          <h2 className="text-xl font-semibold text-foreground">Recent Expenses</h2>
           <Button onClick={() => setIsAddDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Add Expense
