@@ -807,6 +807,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_financial_admin_status: {
+        Args: { user_email: string }
+        Returns: boolean
+      }
       check_rate_limit: {
         Args: {
           p_identifier: string
