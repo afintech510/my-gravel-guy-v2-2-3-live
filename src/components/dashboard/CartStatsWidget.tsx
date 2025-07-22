@@ -1,19 +1,17 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, ShoppingCart } from 'lucide-react';
+import { Loader2, ShoppingBag } from 'lucide-react';
 
-export function OrdersStatsWidget() {
+export function CartStatsWidget() {
   const { data: stats, isLoading } = useQuery({
-    queryKey: ['orders-stats'],
+    queryKey: ['cart-stats'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('orders')
         .select('fulfillment_status')
-        .like('order_id', 'ORDER-%')
-        .neq('status', 'Quote');
+        .like('order_id', 'CART-%');
 
       if (error) throw error;
 
@@ -23,8 +21,8 @@ export function OrdersStatsWidget() {
         return acc;
       }, {});
 
-      const totalOrders = data.length;
-      return { statusCounts, totalOrders };
+      const totalCarts = data.length;
+      return { statusCounts, totalCarts };
     },
   });
 
@@ -32,8 +30,8 @@ export function OrdersStatsWidget() {
     return (
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-          <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium">Total Carts</CardTitle>
+          <ShoppingBag className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-4">
@@ -47,11 +45,11 @@ export function OrdersStatsWidget() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-        <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+        <CardTitle className="text-sm font-medium">Total Carts</CardTitle>
+        <ShoppingBag className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold mb-4">{stats?.totalOrders || 0}</div>
+        <div className="text-2xl font-bold mb-4">{stats?.totalCarts || 0}</div>
         <div className="space-y-2">
           {Object.entries(stats?.statusCounts || {}).map(([status, count]) => (
             <div key={status} className="flex justify-between text-sm">

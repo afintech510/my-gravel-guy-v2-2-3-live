@@ -46,7 +46,9 @@ export const financialAnalysisService = {
     // Get revenue, supplier charges, and sales commissions from orders
     const { data: ordersData, error: ordersError } = await supabase
       .from('orders')
-      .select('total_price, supplier_charges, sales_commission')
+      .select('total_price, supplier_charges, sales_commission, order_id, fulfillment_status')
+      .like('order_id', 'ORDER-%')
+      .neq('fulfillment_status', 'Refunded')
       .gte('created_at', startDate)
       .lte('created_at', endDate);
 

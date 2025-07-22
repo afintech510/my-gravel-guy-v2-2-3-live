@@ -2,6 +2,7 @@
 import React from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { OrdersStatsWidget } from '@/components/dashboard/OrdersStatsWidget';
+import { CartStatsWidget } from '@/components/dashboard/CartStatsWidget';
 import { QuotesStatsWidget } from '@/components/dashboard/QuotesStatsWidget';
 
 const Dashboard = () => {
@@ -9,8 +10,9 @@ const Dashboard = () => {
     <DashboardLayout title="Manager Dashboard" subtitle="Welcome to your management console">
       <div className="space-y-6">
         {/* Stats Widgets */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <OrdersStatsWidget />
+          <CartStatsWidget />
           <QuotesStatsWidget />
         </div>
 
