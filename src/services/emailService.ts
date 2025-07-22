@@ -192,13 +192,44 @@ class EmailService {
         throw new Error('Invalid customer email format');
       }
       
+      // Extract coupon information from order data
+      const extractCouponInfo = (orderData: any) => {
+        // Check if coupon info is provided directly
+        if (orderData.coupon_info) {
+          return orderData.coupon_info;
+        }
+        
+        // Calculate coupon information from items
+        const totalCouponDiscount = (orderData.items || []).reduce((sum: number, item: any) => {
+          return sum + (item.coupon_applied && item.coupon_amount ? item.coupon_amount : 0);
+        }, 0);
+        
+        if (totalCouponDiscount > 0) {
+          // Try to get coupon code from localStorage or orderData
+          let couponCode = orderData.coupon_code || 'DISCOUNT_APPLIED';
+          
+          return {
+            code: couponCode,
+            total_discount: totalCouponDiscount,
+            applied: true
+          };
+        }
+        
+        return null;
+      };
+
+      const couponInfo = extractCouponInfo(orderData);
+      const baseTotal = orderData.base_total || (orderData.total_amount + (couponInfo?.total_discount || 0));
+
       // Create properly formatted order data for email template
       const formattedOrderData = {
         order_id: orderData.order_id,
         items: orderData.items || [],
         total_amount: orderData.total_amount || 0,
+        base_total: baseTotal,
         customer_email: customerEmail,
-        customer_name: orderData.customer_name || orderData.customerInfo?.name || 'Valued Customer'
+        customer_name: orderData.customer_name || orderData.customerInfo?.name || 'Valued Customer',
+        coupon_info: couponInfo
       };
       
       console.log('Formatted order data for email:', formattedOrderData);
@@ -267,13 +298,44 @@ class EmailService {
         };
       }));
       
+      // Extract coupon information for internal email
+      const extractCouponInfo = (orderData: any) => {
+        // Check if coupon info is provided directly
+        if (orderData.coupon_info) {
+          return orderData.coupon_info;
+        }
+        
+        // Calculate coupon information from items
+        const totalCouponDiscount = (orderData.items || []).reduce((sum: number, item: any) => {
+          return sum + (item.coupon_applied && item.coupon_amount ? item.coupon_amount : 0);
+        }, 0);
+        
+        if (totalCouponDiscount > 0) {
+          // Try to get coupon code from localStorage or orderData
+          let couponCode = orderData.coupon_code || 'DISCOUNT_APPLIED';
+          
+          return {
+            code: couponCode,
+            total_discount: totalCouponDiscount,
+            applied: true
+          };
+        }
+        
+        return null;
+      };
+
+      const couponInfo = extractCouponInfo(orderData);
+      const baseTotal = orderData.base_total || (orderData.total_amount + (couponInfo?.total_discount || 0));
+
       // Create properly formatted order data for internal email
       const formattedOrderData = {
         order_id: orderData.order_id,
         items: resolvedItems,
         total_amount: orderData.total_amount || 0,
+        base_total: baseTotal,
         customer_email: customerEmail || 'guest@mygravelguy.com',
-        customer_name: orderData.customer_name || orderData.customerInfo?.name || 'Guest User'
+        customer_name: orderData.customer_name || orderData.customerInfo?.name || 'Guest User',
+        coupon_info: couponInfo
       };
       
       console.log('Formatted order data for internal email:', formattedOrderData);
