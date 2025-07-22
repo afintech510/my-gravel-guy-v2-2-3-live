@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Phone, Mail, MapPin } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { sendContactFormEmail, type ContactFormData } from '@/services/emailService';
+import { sendQuoteRequestEmail } from '@/services/quoteEmailService';
 
 const ContactModule = () => {
   const { toast } = useToast();
@@ -47,13 +48,31 @@ const ContactModule = () => {
     try {
       console.log('Submitting contact form:', formData);
       
-      // Send contact form email using the email service
-      const result = await sendContactFormEmail(formData as ContactFormData);
+      // Prepare data for quote email service
+      const quoteFormData = {
+        name: formData.fullName,
+        email: formData.email,
+        phone: formData.phoneNumber,
+        message: `Property Address: ${formData.propertyAddress}
+Project Type: ${formData.projectType || 'Not specified'}
+Approximate Area: ${formData.approximateArea || 'Not specified'}
+Preferred Contact: ${formData.preferredContact}
+
+Additional Details:
+${formData.additionalDetails}`,
+        zipCode: '', // We don't collect ZIP separately, it's in the address
+        sourcePage: 'home-contact-module'
+      };
+      
+      // Send quote request email using the quote service
+      const result = await sendQuoteRequestEmail(quoteFormData);
       
       if (result.success) {
         toast({
           title: "Quote Request Sent!",
-          description: "We'll get back to you within 24 hours with your customized quote.",
+          description: result.orderId 
+            ? `We'll get back to you within 24 hours with your customized quote. Reference ID: ${result.orderId}`
+            : "We'll get back to you within 24 hours with your customized quote.",
         });
 
         // Reset form
@@ -68,7 +87,7 @@ const ContactModule = () => {
           preferredContact: 'email'
         });
       } else {
-        throw new Error(result.error || 'Failed to send email');
+        throw new Error(result.error || 'Failed to send quote request');
       }
     } catch (error) {
       console.error('Contact form submission error:', error);
