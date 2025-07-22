@@ -34,6 +34,11 @@ export const insertCartToDatabase = async (cartData: CartInsertData) => {
       const deliveryAddress = item.deliveryAddress || { street: null, city: null, state: null, zip: null };
       const quantity = item.tons || 1;
 
+      // Calculate pricing with coupon consideration
+      const basePrice = (item.price || 0) * quantity;
+      const couponDiscount = item.couponApplied && item.couponAmount ? item.couponAmount : 0;
+      const finalPrice = basePrice - couponDiscount;
+
       const record = {
         order_id: cartId,
         stripe_session_id: `cart_session_${cartId}_${index}`,
@@ -41,7 +46,7 @@ export const insertCartToDatabase = async (cartData: CartInsertData) => {
         product_id: item.id.toString(),
         unit: 'tons',
         unit_price: item.price || 0,
-        total_price: (item.price || 0) * quantity,
+        total_price: finalPrice, // Store the discounted price
         quantity: quantity,
         status: 'cart',
         delivery_name: contactInfo.name || null,
@@ -55,7 +60,8 @@ export const insertCartToDatabase = async (cartData: CartInsertData) => {
         delivery_state: deliveryAddress.state || null,
         delivery_zip: deliveryAddress.zip || null,
         delivery_time_preference: item.deliveryTimePreference || null,
-        delivery_instructions: item.deliveryInstructions || null
+        delivery_instructions: item.deliveryInstructions || null,
+        coupon: item.couponApplied ? 'APPLIED' : null // Store coupon status for now
       };
 
       console.log('Cart record prepared for insert:', {
