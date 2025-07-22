@@ -148,9 +148,6 @@ serve(async (req) => {
       },
       customer_email: contactEmail,
       billing_address_collection: 'required',
-      shipping_address_collection: {
-        allowed_countries: ['US'],
-      },
     });
 
     console.log('Stripe session created:', { 
