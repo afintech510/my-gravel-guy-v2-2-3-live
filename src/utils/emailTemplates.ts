@@ -25,6 +25,12 @@ interface OrderData {
   total_amount: number;
   customer_email: string;
   customer_name?: string;
+  base_total?: number;
+  coupon_info?: {
+    code: string;
+    total_discount: number;
+    applied: boolean;
+  } | null;
 }
 
 const getEmailStyles = () => `
@@ -225,6 +231,35 @@ export const generateCustomerConfirmationEmail = (orderData: OrderData): string 
                 `).join('')}
             </div>
 
+            <!-- Coupon Information -->
+            ${orderData.coupon_info ? `
+                <div style="background-color: #d1fae5; padding: 20px; border-radius: 8px; border: 2px solid #10b981; margin-bottom: 20px;">
+                    <h3 style="color: #047857; font-size: 18px; margin: 0 0 15px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                        🎟️ Coupon Applied
+                    </h3>
+                    <div style="background-color: white; padding: 15px; border-radius: 6px;">
+                        <div style="display: table; width: 100%;">
+                            <div style="display: table-cell; vertical-align: top; width: 50%;">
+                                <p style="color: #065f46; font-size: 14px; margin: 3px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                                    <strong>Coupon Code:</strong> ${orderData.coupon_info.code}
+                                </p>
+                                <p style="color: #065f46; font-size: 14px; margin: 3px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                                    <strong>Original Total:</strong> $${(orderData.base_total || orderData.total_amount + orderData.coupon_info.total_discount).toFixed(2)}
+                                </p>
+                            </div>
+                            <div style="display: table-cell; vertical-align: top; text-align: right;">
+                                <p style="color: #dc2626; font-size: 16px; font-weight: bold; margin: 3px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                                    Discount: -$${orderData.coupon_info.total_discount.toFixed(2)}
+                                </p>
+                                <p style="color: #047857; font-size: 16px; font-weight: bold; margin: 3px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                                    You Saved: $${orderData.coupon_info.total_discount.toFixed(2)}!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ` : ''}
+
             <!-- Order Total -->
             <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; border: 2px solid #10b981; margin-bottom: 30px;">
                 <div style="text-align: right;">
@@ -360,6 +395,35 @@ export const generateInternalNotificationEmail = (orderData: OrderData): string 
                     </div>
                 </div>
             </div>
+
+            <!-- Coupon Information (Internal) -->
+            ${orderData.coupon_info ? `
+                <div style="background-color: #d1fae5; padding: 20px; border-radius: 8px; border: 2px solid #10b981; margin-bottom: 20px;">
+                    <h3 style="color: #047857; font-size: 16px; margin: 0 0 15px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                        🎟️ Coupon Applied - Revenue Impact
+                    </h3>
+                    <div style="background-color: white; padding: 15px; border-radius: 6px;">
+                        <div style="display: table; width: 100%;">
+                            <div style="display: table-cell; vertical-align: top; width: 50%;">
+                                <p style="color: #065f46; font-size: 14px; margin: 3px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                                    <strong>Coupon Code:</strong> ${orderData.coupon_info.code}
+                                </p>
+                                <p style="color: #065f46; font-size: 14px; margin: 3px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                                    <strong>Original Amount:</strong> $${(orderData.base_total || orderData.total_amount + orderData.coupon_info.total_discount).toFixed(2)}
+                                </p>
+                            </div>
+                            <div style="display: table-cell; vertical-align: top; text-align: right;">
+                                <p style="color: #dc2626; font-size: 16px; font-weight: bold; margin: 3px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                                    Revenue Loss: -$${orderData.coupon_info.total_discount.toFixed(2)}
+                                </p>
+                                <p style="color: #047857; font-size: 14px; margin: 3px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                                    Final Order Value: $${orderData.total_amount.toFixed(2)}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ` : ''}
 
             <!-- Order Items -->
             <div style="margin-bottom: 25px;">
