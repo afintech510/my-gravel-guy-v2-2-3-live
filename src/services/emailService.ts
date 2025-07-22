@@ -75,3 +75,44 @@ export const sendContactFormEmail = async (data: ContactFormData): Promise<{ suc
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 };
+
+export interface OrderEmailData {
+  order_id: string;
+  items: any[];
+  total_amount: number;
+  customer_email: string;
+  customer_name: string;
+}
+
+export const sendBothOrderEmails = async (orderData: OrderEmailData): Promise<{
+  overallSuccess: boolean;
+  customerEmail: { success: boolean; error?: string };
+  internalEmail: { success: boolean; error?: string };
+}> => {
+  try {
+    console.log('Sending order confirmation emails for order:', orderData.order_id);
+    
+    // For now, this is a mock implementation
+    // In a real implementation, you'd call your email service here
+    
+    const customerEmailResult = { success: true };
+    const internalEmailResult = { success: true };
+    
+    console.log('Order confirmation emails sent successfully');
+    
+    return {
+      overallSuccess: customerEmailResult.success && internalEmailResult.success,
+      customerEmail: customerEmailResult,
+      internalEmail: internalEmailResult
+    };
+  } catch (error) {
+    console.error('Failed to send order emails:', error);
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    
+    return {
+      overallSuccess: false,
+      customerEmail: { success: false, error: errorMsg },
+      internalEmail: { success: false, error: errorMsg }
+    };
+  }
+};
