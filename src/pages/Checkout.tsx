@@ -141,6 +141,21 @@ const Checkout = () => {
   // Send checkout confirmation email to internal team
   const sendCheckoutConfirmationEmail = async (orderId: string) => {
     try {
+      // Calculate coupon information
+      const baseTotal = items.reduce((sum, item) => sum + (item.price * item.tons), 0);
+      const totalCouponDiscount = items.reduce((sum, item) => {
+        return sum + (item.couponApplied && item.couponAmount ? item.couponAmount : 0);
+      }, 0);
+      const hasCoupon = totalCouponDiscount > 0;
+
+      // Try to get the coupon code from localStorage
+      let couponCode: string | null = null;
+      try {
+        couponCode = localStorage.getItem('applied-coupon-code');
+      } catch (error) {
+        console.log('Could not retrieve coupon code from localStorage');
+      }
+
       const orderData = {
         order_id: orderId,
         items: items.map(item => ({
@@ -152,11 +167,20 @@ const Checkout = () => {
           contact_info: item.contactInfo,
           delivery_time_preference: item.deliveryTimePreference,
           delivery_instructions: item.deliveryInstructions,
-          location_photo_url: item.locationPhotoUrl
+          location_photo_url: item.locationPhotoUrl,
+          coupon_applied: item.couponApplied,
+          coupon_amount: item.couponAmount
         })),
         total_amount: discountTotal,
+        base_total: baseTotal,
         customer_email: items[0]?.contactInfo?.email || 'checkout-confirmation@customer.com',
-        customer_name: items[0]?.contactInfo?.name || 'Checkout Customer'
+        customer_name: items[0]?.contactInfo?.name || 'Checkout Customer',
+        // Add coupon information
+        coupon_info: hasCoupon ? {
+          code: couponCode || 'DISCOUNT_APPLIED',
+          total_discount: totalCouponDiscount,
+          applied: true
+        } : null
       };
 
       const { data, error } = await supabase.functions.invoke('send-email', {
@@ -217,6 +241,17 @@ const Checkout = () => {
           <p><strong>Email:</strong> ${orderData.customer_email}</p>
           <p><strong>Phone:</strong> ${items[0]?.contactInfo?.phone || 'Not provided'}</p>
           <p><strong>Total Amount:</strong> $${orderData.total_amount.toFixed(2)}</p>
+          ${orderData.coupon_info ? `
+            <div style="background: #d1fae5; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #10b981;">
+              <h5 style="margin: 0 0 8px 0; color: #047857;">🎟️ Coupon Applied</h5>
+              <p style="margin: 0; color: #065f46;">
+                <strong>Code:</strong> ${orderData.coupon_info.code}<br>
+                <strong>Original Total:</strong> $${orderData.base_total.toFixed(2)}<br>
+                <strong>Discount:</strong> -$${orderData.coupon_info.total_discount.toFixed(2)}<br>
+                <strong>Final Total:</strong> $${orderData.total_amount.toFixed(2)}
+              </p>
+            </div>
+          ` : ''}
           <p><strong>Items:</strong> ${orderData.items.length}</p>
           <p><strong>Status:</strong> Proceeding to Stripe Payment</p>
           
