@@ -243,7 +243,7 @@ serve(async (req) => {
       );
     }
 
-    // Database insertion with guest support
+    // Database operation with guest support - update existing cart or create new order
     if (verificationResult.success && backupData && !skipDbInsert) {
       try {
         const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
@@ -258,36 +258,84 @@ serve(async (req) => {
         // Use guest defaults if no user is authenticated
         const billingEmail = user?.email || backupData.customer?.email || 'guest@mygravelguy.com';
         const billingName = backupData.customer?.name || 'Guest User';
-        
-        const orderRecords = backupData.items.map(item => ({
-          order_id: verificationResult.orderId,
-          stripe_payment_intent_id: paymentIntentId || null,
-          product_id: item.product_id,
-          unit: item.unit,
-          unit_price: item.unit_price,
-          total_price: item.total_price,
-          quantity: item.quantity,
-          delivery_date: item.delivery_date,
-          delivery_street: item.delivery_street,
-          delivery_city: item.delivery_city,
-          delivery_state: item.delivery_state,
-          delivery_zip: item.delivery_zip,
-          delivery_name: item.delivery_name,
-          delivery_phone: item.delivery_phone,
-          delivery_email: item.delivery_email,
-          delivery_time_preference: item.delivery_time_preference,
-          delivery_instructions: item.delivery_instructions,
-          billing_name: billingName,
-          billing_email: billingEmail,
-          status: paymentStatus,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }));
 
-        const { data, error: insertError } = await supabase
-          .from('orders')
-          .insert(orderRecords)
-          .select();
+        let data;
+        let insertError;
+
+        // Step 1: Check if cart records exist for this order
+        if (verificationResult.orderId && verificationResult.orderId.startsWith('CART-')) {
+          console.log('=== ATTEMPTING CART TO ORDER CONVERSION ===', { orderId: verificationResult.orderId });
+          
+          // Try to update existing cart records to order status
+          const orderIdFromCart = verificationResult.orderId.replace('CART-', 'ORDER-');
+          
+          const { data: updateData, error: updateError } = await supabase
+            .from('orders')
+            .update({
+              order_id: orderIdFromCart,
+              status: paymentStatus,
+              stripe_payment_intent_id: paymentIntentId || null,
+              stripe_session_id: verificationResult.sessionId || null,
+              updated_at: new Date().toISOString()
+            })
+            .eq('order_id', verificationResult.orderId)
+            .eq('status', 'cart')
+            .select();
+
+          if (updateError) {
+            console.error('Cart update failed, falling back to insert:', updateError);
+          } else if (updateData && updateData.length > 0) {
+            console.log('=== CART TO ORDER CONVERSION SUCCESS ===', { 
+              updatedRecords: updateData.length,
+              newOrderId: orderIdFromCart 
+            });
+            data = updateData;
+            insertError = null;
+            // Update the orderId for response
+            verificationResult.orderId = orderIdFromCart;
+          } else {
+            console.log('No cart records found, falling back to insert');
+          }
+        }
+
+        // Step 2: If cart update failed or no cart existed, create new order records
+        if (!data) {
+          console.log('=== CREATING NEW ORDER RECORDS ===');
+          
+          const orderRecords = backupData.items.map(item => ({
+            order_id: verificationResult.orderId,
+            stripe_payment_intent_id: paymentIntentId || null,
+            stripe_session_id: verificationResult.sessionId || null,
+            product_id: item.product_id,
+            unit: item.unit,
+            unit_price: item.unit_price,
+            total_price: item.total_price,
+            quantity: item.quantity,
+            delivery_date: item.delivery_date,
+            delivery_street: item.delivery_street,
+            delivery_city: item.delivery_city,
+            delivery_state: item.delivery_state,
+            delivery_zip: item.delivery_zip,
+            delivery_name: item.delivery_name,
+            delivery_phone: item.delivery_phone,
+            delivery_email: item.delivery_email,
+            delivery_time_preference: item.delivery_time_preference,
+            delivery_instructions: item.delivery_instructions,
+            billing_name: billingName,
+            billing_email: billingEmail,
+            status: paymentStatus,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }));
+
+          const { data: insertData, error: newInsertError } = await supabase
+            .from('orders')
+            .insert(orderRecords)
+            .select();
+
+          data = insertData;
+          insertError = newInsertError;
+        }
 
         if (insertError) {
           throw new Error(`Database insertion failed: ${insertError.message}`);

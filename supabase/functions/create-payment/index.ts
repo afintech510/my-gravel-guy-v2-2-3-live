@@ -98,6 +98,17 @@ serve(async (req) => {
       );
     }
 
+    // Check if we have an existing cart order to update
+    let finalOrderId = orderId;
+    if (orderId && orderId.startsWith('CART-')) {
+      console.log('Using existing cart order ID:', orderId);
+      finalOrderId = orderId; // Keep the cart ID for now, will be updated in verify-payment
+    } else if (!orderId) {
+      // Generate new order ID if none provided
+      finalOrderId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      console.log('Generated new order ID:', finalOrderId);
+    }
+
     const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
 
     // Get the base URL from the request origin
@@ -112,7 +123,7 @@ serve(async (req) => {
           description: item.description || '',
           images: item.image ? [convertToAbsoluteUrl(item.image, baseUrl)] : [],
           metadata: {
-            orderId: orderId,
+            orderId: finalOrderId,
             userId: user?.id || 'guest',
             ...item.metadata
           }
@@ -127,10 +138,10 @@ serve(async (req) => {
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${req.headers.get('origin')}/payment-success?session_id={CHECKOUT_SESSION_ID}&order_id=${orderId}`,
+      success_url: `${req.headers.get('origin')}/payment-success?session_id={CHECKOUT_SESSION_ID}&order_id=${finalOrderId}`,
       cancel_url: `${req.headers.get('origin')}/cart`,
       metadata: {
-        orderId: orderId,
+        orderId: finalOrderId,
         userId: user?.id || 'guest',
         userEmail: user?.email || contactEmail,
         isGuest: user ? 'false' : 'true'
