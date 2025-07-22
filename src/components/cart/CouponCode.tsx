@@ -62,6 +62,9 @@ const CouponCode: React.FC<CouponCodeProps> = ({ onCouponApplied }) => {
         });
       });
 
+      // Store the coupon code for later retrieval during checkout
+      localStorage.setItem('applied-coupon-code', upperCode);
+
       onCouponApplied?.(upperCode, discount);
 
       toast({
@@ -92,6 +95,9 @@ const CouponCode: React.FC<CouponCodeProps> = ({ onCouponApplied }) => {
         couponAmount: 0
       });
     });
+
+    // Remove stored coupon code
+    localStorage.removeItem('applied-coupon-code');
 
     toast({
       title: "Coupon Removed",

@@ -9,6 +9,11 @@ interface CheckoutBackup {
     email?: string;
     name?: string;
   };
+  couponInfo?: {
+    code: string;
+    discount: number;
+    applied: boolean;
+  } | null;
 }
 
 // Enhanced interface for order data with all required fields that match orders table schema
@@ -79,6 +84,7 @@ export const clearCheckoutBackup = () => {
     localStorage.removeItem('checkout-in-progress');
     localStorage.removeItem('checkout-order-id');
     localStorage.removeItem('stripe-checkout-url');
+    localStorage.removeItem('applied-coupon-code'); // Clear stored coupon code
     console.log('Checkout backup cleared');
   } catch (error) {
     console.error('Failed to clear checkout backup:', error);
@@ -216,6 +222,37 @@ export const prepareItemsForStripe = (cartItems: any[]): OrderItemData[] => {
   });
 };
 
+// Enhanced function to extract coupon information from cart items
+export const extractCouponInfo = (cartItems: any[]): { hasCoupon: boolean; couponCode?: string; totalDiscount: number } => {
+  console.log('=== EXTRACTING COUPON INFO ===');
+  console.log('Cart items count:', cartItems.length);
+  
+  let totalDiscount = 0;
+  let couponCode: string | undefined;
+  let hasCoupon = false;
+  
+  for (const item of cartItems) {
+    if (item.couponApplied && item.couponAmount && item.couponAmount > 0) {
+      totalDiscount += item.couponAmount;
+      hasCoupon = true;
+      // Try to extract coupon code from the cart context or localStorage
+      // For now, we'll look for common coupon patterns or use a default
+      if (!couponCode) {
+        // Check if there's a stored coupon code
+        try {
+          const storedCoupon = localStorage.getItem('applied-coupon-code');
+          couponCode = storedCoupon || 'DISCOUNT_APPLIED';
+        } catch {
+          couponCode = 'DISCOUNT_APPLIED';
+        }
+      }
+    }
+  }
+  
+  console.log('Coupon info extracted:', { hasCoupon, couponCode, totalDiscount });
+  return { hasCoupon, couponCode, totalDiscount };
+};
+
 // Enhanced function to create comprehensive backup data
 export const createEnhancedBackup = (orderId: string, cartItems: any[], customerInfo?: any): CheckoutBackup => {
   console.log('=== CREATING ENHANCED BACKUP ===');
@@ -224,30 +261,43 @@ export const createEnhancedBackup = (orderId: string, cartItems: any[], customer
   console.log('Provided customer info:', customerInfo);
   
   const preparedItems = prepareItemsForStripe(cartItems);
-  const total = preparedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const baseTotal = preparedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  
+  // Extract coupon information
+  const couponInfo = extractCouponInfo(cartItems);
+  const finalTotal = baseTotal - couponInfo.totalDiscount;
   
   // Extract customer info from cart items if not provided
   const extractedCustomerInfo = customerInfo || extractCustomerInfo(cartItems);
   
   console.log('Final customer info for backup:', extractedCustomerInfo);
+  console.log('Pricing info:', { baseTotal, couponDiscount: couponInfo.totalDiscount, finalTotal });
   
   const backup = {
     orderId,
     items: preparedItems,
-    total,
+    total: finalTotal, // Use the discounted total
     timestamp: Date.now(),
     cartItems, // Keep original cart items for reference
     customerInfo: extractedCustomerInfo.email ? extractedCustomerInfo : {
       email: 'guest@mygravelguy.com',
       name: 'Guest User'
-    }
+    },
+    // Add coupon information to backup
+    couponInfo: couponInfo.hasCoupon ? {
+      code: couponInfo.couponCode,
+      discount: couponInfo.totalDiscount,
+      applied: true
+    } : null
   };
   
   console.log('Enhanced backup created:', {
     orderId: backup.orderId,
     itemsCount: backup.items.length,
     hasCustomerEmail: !!backup.customerInfo?.email,
-    customerEmail: backup.customerInfo?.email
+    customerEmail: backup.customerInfo?.email,
+    hasCoupon: !!backup.couponInfo,
+    finalTotal: backup.total
   });
   
   return backup;

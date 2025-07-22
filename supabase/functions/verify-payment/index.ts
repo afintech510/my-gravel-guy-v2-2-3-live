@@ -269,27 +269,39 @@ serve(async (req) => {
           // Try to update existing cart records to order status
           const orderIdFromCart = verificationResult.orderId.replace('CART-', 'ORDER-');
           
-          const { data: updateData, error: updateError } = await supabase
+          // Prepare update data with coupon information
+          const updateData: any = {
+            order_id: orderIdFromCart,
+            status: paymentStatus,
+            stripe_payment_intent_id: paymentIntentId || null,
+            stripe_session_id: verificationResult.sessionId || null,
+            updated_at: new Date().toISOString()
+          };
+
+          // Add coupon information if present
+          if (backupData.couponInfo && backupData.couponInfo.applied) {
+            updateData.coupon = backupData.couponInfo.code;
+            console.log('=== APPLYING COUPON TO CART CONVERSION ===', { 
+              couponCode: backupData.couponInfo.code,
+              discount: backupData.couponInfo.discount 
+            });
+          }
+          
+          const { data: cartUpdateData, error: updateError } = await supabase
             .from('orders')
-            .update({
-              order_id: orderIdFromCart,
-              status: paymentStatus,
-              stripe_payment_intent_id: paymentIntentId || null,
-              stripe_session_id: verificationResult.sessionId || null,
-              updated_at: new Date().toISOString()
-            })
+            .update(updateData)
             .eq('order_id', verificationResult.orderId)
             .eq('status', 'cart')
             .select();
 
           if (updateError) {
             console.error('Cart update failed, falling back to insert:', updateError);
-          } else if (updateData && updateData.length > 0) {
+          } else if (cartUpdateData && cartUpdateData.length > 0) {
             console.log('=== CART TO ORDER CONVERSION SUCCESS ===', { 
-              updatedRecords: updateData.length,
+              updatedRecords: cartUpdateData.length,
               newOrderId: orderIdFromCart 
             });
-            data = updateData;
+            data = cartUpdateData;
             insertError = null;
             // Update the orderId for response
             verificationResult.orderId = orderIdFromCart;
@@ -302,31 +314,50 @@ serve(async (req) => {
         if (!data) {
           console.log('=== CREATING NEW ORDER RECORDS ===');
           
-          const orderRecords = backupData.items.map(item => ({
-            order_id: verificationResult.orderId,
-            stripe_payment_intent_id: paymentIntentId || null,
-            stripe_session_id: verificationResult.sessionId || null,
-            product_id: item.product_id,
-            unit: item.unit,
-            unit_price: item.unit_price,
-            total_price: item.total_price,
-            quantity: item.quantity,
-            delivery_date: item.delivery_date,
-            delivery_street: item.delivery_street,
-            delivery_city: item.delivery_city,
-            delivery_state: item.delivery_state,
-            delivery_zip: item.delivery_zip,
-            delivery_name: item.delivery_name,
-            delivery_phone: item.delivery_phone,
-            delivery_email: item.delivery_email,
-            delivery_time_preference: item.delivery_time_preference,
-            delivery_instructions: item.delivery_instructions,
-            billing_name: billingName,
-            billing_email: billingEmail,
-            status: paymentStatus,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }));
+          // Calculate final prices with coupon discounts
+          let totalCouponDiscount = 0;
+          if (backupData.couponInfo && backupData.couponInfo.applied) {
+            totalCouponDiscount = backupData.couponInfo.discount;
+            console.log('=== APPLYING COUPON TO NEW ORDER ===', {
+              couponCode: backupData.couponInfo.code,
+              totalDiscount: totalCouponDiscount
+            });
+          }
+
+          const orderRecords = backupData.items.map((item, index) => {
+            // Calculate item-level discount proportionally
+            const itemBasePrice = item.total_price;
+            const itemDiscount = totalCouponDiscount > 0 ? 
+              (itemBasePrice / backupData.items.reduce((sum, i) => sum + i.total_price, 0)) * totalCouponDiscount : 0;
+            const finalItemPrice = itemBasePrice - itemDiscount;
+
+            return {
+              order_id: verificationResult.orderId,
+              stripe_payment_intent_id: paymentIntentId || null,
+              stripe_session_id: verificationResult.sessionId || null,
+              product_id: item.product_id,
+              unit: item.unit,
+              unit_price: item.unit_price,
+              total_price: finalItemPrice, // Use discounted price
+              quantity: item.quantity,
+              delivery_date: item.delivery_date,
+              delivery_street: item.delivery_street,
+              delivery_city: item.delivery_city,
+              delivery_state: item.delivery_state,
+              delivery_zip: item.delivery_zip,
+              delivery_name: item.delivery_name,
+              delivery_phone: item.delivery_phone,
+              delivery_email: item.delivery_email,
+              delivery_time_preference: item.delivery_time_preference,
+              delivery_instructions: item.delivery_instructions,
+              billing_name: billingName,
+              billing_email: billingEmail,
+              status: paymentStatus,
+              coupon: backupData.couponInfo?.applied ? backupData.couponInfo.code : null,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            };
+          });
 
           const { data: insertData, error: newInsertError } = await supabase
             .from('orders')
