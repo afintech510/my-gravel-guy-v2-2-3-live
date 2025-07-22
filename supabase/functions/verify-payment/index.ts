@@ -41,7 +41,7 @@ serve(async (req) => {
 
   try {
     // Environment validation
-    const stripeSecretKey = Deno.env.get("stripe");
+    const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
