@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Conversation {
@@ -22,8 +22,9 @@ export const useMessages = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const fetchConversations = async () => {
+  const fetchConversations = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -60,23 +61,40 @@ export const useMessages = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const debouncedRefetch = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    debounceTimerRef.current = setTimeout(() => {
+      fetchConversations();
+    }, 100); // 100ms debounce
+  }, [fetchConversations]);
 
   useEffect(() => {
     fetchConversations();
 
-    // Set up real-time subscription
+    // Set up real-time subscription with debounced updates
     const subscription = supabase
-      .channel('messages')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
-        fetchConversations();
+      .channel('messages-realtime')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'messages' 
+      }, () => {
+        debouncedRefetch();
       })
       .subscribe();
 
     return () => {
       subscription.unsubscribe();
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
     };
-  }, []);
+  }, [fetchConversations, debouncedRefetch]);
 
   return {
     conversations,
