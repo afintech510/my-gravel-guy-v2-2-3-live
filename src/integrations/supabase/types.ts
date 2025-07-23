@@ -441,6 +441,7 @@ export type Database = {
           attachment_files: string[] | null
           billing_email: string | null
           billing_name: string | null
+          coupon: string | null
           created_at: string | null
           delivered_at: string | null
           delivery_city: string | null
@@ -460,9 +461,14 @@ export type Database = {
           id: string
           notes: string | null
           order_id: string
+          original_quote_id: string | null
           product_id: string
           quantity: number | null
           quote_converted: boolean | null
+          quote_expires_at: string | null
+          quote_notes: string | null
+          quote_status: string | null
+          quoted_price: number | null
           sales_commission: number | null
           sales_person: string | null
           status: string | null
@@ -482,6 +488,7 @@ export type Database = {
           attachment_files?: string[] | null
           billing_email?: string | null
           billing_name?: string | null
+          coupon?: string | null
           created_at?: string | null
           delivered_at?: string | null
           delivery_city?: string | null
@@ -501,9 +508,14 @@ export type Database = {
           id?: string
           notes?: string | null
           order_id: string
+          original_quote_id?: string | null
           product_id: string
           quantity?: number | null
           quote_converted?: boolean | null
+          quote_expires_at?: string | null
+          quote_notes?: string | null
+          quote_status?: string | null
+          quoted_price?: number | null
           sales_commission?: number | null
           sales_person?: string | null
           status?: string | null
@@ -523,6 +535,7 @@ export type Database = {
           attachment_files?: string[] | null
           billing_email?: string | null
           billing_name?: string | null
+          coupon?: string | null
           created_at?: string | null
           delivered_at?: string | null
           delivery_city?: string | null
@@ -542,9 +555,14 @@ export type Database = {
           id?: string
           notes?: string | null
           order_id?: string
+          original_quote_id?: string | null
           product_id?: string
           quantity?: number | null
           quote_converted?: boolean | null
+          quote_expires_at?: string | null
+          quote_notes?: string | null
+          quote_status?: string | null
+          quoted_price?: number | null
           sales_commission?: number | null
           sales_person?: string | null
           status?: string | null
@@ -685,6 +703,47 @@ export type Database = {
         }
         Relationships: []
       }
+      quote_links: {
+        Row: {
+          created_at: string | null
+          customer_email: string | null
+          expires_at: string
+          id: string
+          is_active: boolean | null
+          quote_id: string
+          secure_token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_email?: string | null
+          expires_at: string
+          id?: string
+          is_active?: boolean | null
+          quote_id: string
+          secure_token: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_email?: string | null
+          expires_at?: string
+          id?: string
+          is_active?: boolean | null
+          quote_id?: string
+          secure_token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_quote_links_quote_id"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["order_id"]
+          },
+        ]
+      }
       rate_limits: {
         Row: {
           client_id: string
@@ -804,7 +863,21 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      quote_analytics: {
+        Row: {
+          avg_days_to_conversion: number | null
+          conversion_rate_percent: number | null
+          converted_revenue: number | null
+          quote_date: string | null
+          quotes_accepted: number | null
+          quotes_converted: number | null
+          quotes_expired: number | null
+          quotes_sent: number | null
+          total_quoted_value: number | null
+          total_quotes: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_financial_admin_status: {
