@@ -10,6 +10,7 @@ import { detectPaymentSuccess, clearCheckoutBackup, getCheckoutBackup } from '..
 import { insertOrderToDatabase, testEnhancedDatabaseInsert } from '../services/orderInsertService';
 import { sendBothOrderEmails } from '../services/emailService';
 import { useProductNameResolver } from '../hooks/useProductNameResolver';
+import { getProductById } from '../services/products/productQueries';
 
 interface OrderItem {
   id: string;
@@ -54,8 +55,13 @@ const PaymentSuccess = () => {
   const productIds = orderItems.map(item => item.product_name); // product_name currently contains ID
   const { resolveProductName, isLoading: isResolvingNames } = useProductNameResolver(productIds);
   
-  // Transform database records to email format
-  const transformOrderDataForEmail = (insertedOrders: any[], orderId: string) => {
+  // Helper function to check if a string looks like a UUID
+  const isUUID = (str: string): boolean => {
+    return str.includes('-') && str.length > 30;
+  };
+
+  // Transform database records to email format with product name resolution
+  const transformOrderDataForEmail = async (insertedOrders: any[], orderId: string) => {
     console.log('=== TRANSFORMING ORDER DATA FOR EMAIL ===', { insertedOrders, orderId });
     
     if (!insertedOrders || insertedOrders.length === 0) {
@@ -68,25 +74,43 @@ const PaymentSuccess = () => {
       throw new Error('No customer email found in order data');
     }
 
-    // Transform items for email template
-    const emailItems = insertedOrders.map(order => ({
-      product_name: order.product_id,
-      quantity: order.quantity,
-      total_price: order.total_price,
-      delivery_date: order.delivery_date,
-      delivery_address: order.delivery_street ? {
-        street: order.delivery_street,
-        city: order.delivery_city,
-        state: order.delivery_state,
-        zip: order.delivery_zip
-      } : undefined,
-      contact_info: order.delivery_name ? {
-        name: order.delivery_name,
-        email: order.delivery_email,
-        phone: order.delivery_phone
-      } : undefined,
-      delivery_time_preference: order.delivery_time_preference,
-      delivery_instructions: order.delivery_instructions
+    // Transform items for email template with product name resolution
+    const emailItems = await Promise.all(insertedOrders.map(async (order) => {
+      let productName = order.product_id;
+      
+      // If the product_id looks like a UUID, try to resolve it to a readable name
+      if (isUUID(order.product_id)) {
+        try {
+          const product = await getProductById(order.product_id);
+          if (product && product.name) {
+            productName = product.name;
+            console.log(`Resolved product name: ${order.product_id} -> ${productName}`);
+          }
+        } catch (error) {
+          console.warn(`Failed to resolve product name for ${order.product_id}:`, error);
+          // Keep the original product_id as fallback
+        }
+      }
+
+      return {
+        product_name: productName,
+        quantity: order.quantity,
+        total_price: order.total_price,
+        delivery_date: order.delivery_date,
+        delivery_address: order.delivery_street ? {
+          street: order.delivery_street,
+          city: order.delivery_city,
+          state: order.delivery_state,
+          zip: order.delivery_zip
+        } : undefined,
+        contact_info: order.delivery_name ? {
+          name: order.delivery_name,
+          email: order.delivery_email,
+          phone: order.delivery_phone
+        } : undefined,
+        delivery_time_preference: order.delivery_time_preference,
+        delivery_instructions: order.delivery_instructions
+      };
     }));
 
     const totalAmount = insertedOrders.reduce((sum, order) => sum + order.total_price, 0);
@@ -408,8 +432,8 @@ const PaymentSuccess = () => {
     try {
       console.log('=== STARTING EMAIL SENDING ===');
       
-      // Transform order data for email format
-      const orderDataForEmail = transformOrderDataForEmail(insertedOrders, orderId);
+      // Transform order data for email format (now async)
+      const orderDataForEmail = await transformOrderDataForEmail(insertedOrders, orderId);
       
       console.log('Order data transformed for email:', orderDataForEmail);
       
