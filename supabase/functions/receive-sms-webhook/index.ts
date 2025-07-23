@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -13,6 +12,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('=== RECEIVING SMS WEBHOOK ===');
+    
     // Parse Twilio webhook data
     const formData = await req.formData()
     const data: Record<string, string> = {}
@@ -20,6 +21,8 @@ serve(async (req) => {
     for (const [key, value] of formData.entries()) {
       data[key] = value.toString()
     }
+
+    console.log('Webhook data received:', data);
 
     const {
       MessageSid,
@@ -40,6 +43,14 @@ serve(async (req) => {
         mediaUrls.push(mediaUrl)
       }
     }
+
+    console.log('Parsed message data:', {
+      MessageSid,
+      From,
+      To,
+      Body,
+      mediaUrls
+    });
 
     // Initialize Supabase client
     const supabase = createClient(
@@ -64,7 +75,10 @@ serve(async (req) => {
 
     if (error) {
       console.error('Error storing message:', error)
-      return new Response('Error storing message', { status: 500 })
+      return new Response('Error storing message', { 
+        status: 500,
+        headers: corsHeaders
+      })
     }
 
     console.log('Stored incoming message:', messageData.id)
@@ -82,6 +96,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error processing webhook:', error)
-    return new Response('Internal server error', { status: 500 })
+    return new Response('Internal server error', { 
+      status: 500,
+      headers: corsHeaders
+    })
   }
 })
