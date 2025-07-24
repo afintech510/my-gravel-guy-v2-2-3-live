@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Loader2 } from 'lucide-react';
 import FulfillmentStatusBadge from './FulfillmentStatusBadge';
-import { financialAnalysisService } from '@/services/financialAnalysisService';
+import { financialAnalysisService, PROCESSING_FEE_RATE } from '@/services/financialAnalysisService';
 
 interface OrdersFinancialTableProps {
   startDate: string;
@@ -66,6 +66,7 @@ export function OrdersFinancialTable({ startDate, endDate }: OrdersFinancialTabl
                   <TableHead>Customer</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead className="text-right">Total Amount</TableHead>
+                  <TableHead className="text-right">Processing Fee</TableHead>
                   <TableHead className="text-right">Supplier Charges</TableHead>
                   <TableHead className="text-right">Net Revenue</TableHead>
                   <TableHead>Status</TableHead>
@@ -74,7 +75,8 @@ export function OrdersFinancialTable({ startDate, endDate }: OrdersFinancialTabl
               </TableHeader>
               <TableBody>
                 {orders.map((order) => {
-                  const netRevenue = order.total_price - (order.supplier_charges || 0);
+                  const processingFee = order.total_price * PROCESSING_FEE_RATE;
+                  const netRevenue = order.total_price - processingFee - (order.supplier_charges || 0);
                   return (
                     <TableRow key={order.id}>
                       <TableCell className="font-medium">
@@ -88,6 +90,9 @@ export function OrdersFinancialTable({ startDate, endDate }: OrdersFinancialTabl
                       </TableCell>
                       <TableCell className="text-right font-medium">
                         ${order.total_price.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-right text-orange-600">
+                        -${processingFee.toLocaleString()}
                       </TableCell>
                       <TableCell className="text-right">
                         ${(order.supplier_charges || 0).toLocaleString()}
