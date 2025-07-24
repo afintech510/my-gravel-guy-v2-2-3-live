@@ -117,19 +117,9 @@ export function ProductSelector({ onAddProduct }: ProductSelectorProps) {
               onClick={() => setSelectedProduct(product)}
             >
               <CardContent className="p-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-medium">{product.name}</h4>
-                    {product.description && (
-                      <p className="text-sm text-muted-foreground">{product.description}</p>
-                    )}
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline">${product.price.toFixed(2)} per {product.unit}</Badge>
-                      {product.category && (
-                        <Badge variant="secondary">{product.category}</Badge>
-                      )}
-                    </div>
-                  </div>
+                <div className="flex justify-between items-center w-full">
+                  <h4 className="font-medium">{product.name}</h4>
+                  <span className="text-sm text-muted-foreground">${product.price.toFixed(2)} per {product.unit}</span>
                 </div>
               </CardContent>
             </Card>

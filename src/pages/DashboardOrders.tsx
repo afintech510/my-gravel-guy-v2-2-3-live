@@ -14,9 +14,7 @@ const DashboardOrders = () => {
     <DashboardLayout title="Orders Management" subtitle="Manage customer orders and deliveries">
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <div className="w-72">
-            <OrdersStatsWidget />
-          </div>
+          <OrdersStatsWidget />
           <Button onClick={() => navigate('/dashboard/orders/new')} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
             New Order
