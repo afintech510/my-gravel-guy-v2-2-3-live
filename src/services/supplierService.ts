@@ -135,20 +135,45 @@ export class SupplierService {
     try {
       console.log('Looking for supplier with name:', supplierName);
       
-      const { data: supplier, error } = await supabase
+      // First try exact match
+      const { data: exactMatch, error: exactError } = await supabase
         .from('suppliers')
-        .select('id')
-        .eq('name', supplierName)
+        .select('id, name')
+        .eq('name', supplierName.trim())
         .eq('active', true)
         .single();
 
+      if (exactMatch && !exactError) {
+        console.log('Found exact match:', exactMatch);
+        return exactMatch.id;
+      }
+
+      console.log('No exact match, trying case-insensitive search...');
+      
+      // Try case-insensitive match if exact fails
+      const { data: suppliers, error } = await supabase
+        .from('suppliers')
+        .select('id, name')
+        .eq('active', true);
+
       if (error) {
-        console.log('Supplier not found by name:', supplierName, error);
+        console.error('Error fetching suppliers for search:', error);
         return null;
       }
 
-      console.log('Found supplier ID:', supplier?.id);
-      return supplier?.id || null;
+      console.log('All suppliers for matching:', suppliers);
+
+      const matchedSupplier = suppliers?.find(s => 
+        s.name.toLowerCase().trim() === supplierName.toLowerCase().trim()
+      );
+
+      if (matchedSupplier) {
+        console.log('Found case-insensitive match:', matchedSupplier);
+        return matchedSupplier.id;
+      }
+
+      console.warn('No supplier found with name:', supplierName);
+      return null;
     } catch (error) {
       console.error('SupplierService.findSupplierIdByName error:', error);
       return null;
