@@ -87,7 +87,7 @@ const EnhancedDeliveryForm: React.FC<EnhancedDeliveryFormProps> = ({ onSubmit, i
       deliveryTimePreference: item?.deliveryTimePreference || 'anytime',
       deliveryInstructions: item?.deliveryInstructions || '',
       locationPhotoUrl: item?.locationPhotoUrl || '',
-      communicationConsent: false,
+      communicationConsent: true,
     },
   });
 
