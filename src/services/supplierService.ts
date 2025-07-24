@@ -67,7 +67,8 @@ export class SupplierService {
           created_at: supplier.created_at,
           updated_at: supplier.updated_at,
           service_areas: Array.isArray(supplier.service_areas) ? supplier.service_areas : [],
-          materials: Array.isArray(supplier.materials) ? supplier.materials : []
+          materials: Array.isArray(supplier.materials) ? supplier.materials : [],
+          active: supplier.active !== false
         };
 
         console.log('Transformed supplier:', transformed);
@@ -120,7 +121,8 @@ export class SupplierService {
         created_at: newSupplier.created_at,
         updated_at: newSupplier.updated_at,
         service_areas: newSupplier.service_areas || [],
-        materials: newSupplier.materials || []
+        materials: newSupplier.materials || [],
+        active: newSupplier.active !== false
       };
     } catch (error) {
       console.error('SupplierService.createSupplier error:', error);
@@ -195,6 +197,7 @@ export class SupplierService {
       }
       if (updates.service_areas !== undefined) updateData.service_areas = updates.service_areas;
       if (updates.materials !== undefined) updateData.materials = updates.materials;
+      if (updates.active !== undefined) updateData.active = updates.active;
       
       updateData.updated_at = new Date().toISOString();
 
@@ -209,6 +212,125 @@ export class SupplierService {
       }
     } catch (error) {
       console.error('SupplierService.updateSupplier error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get supplier by ID
+   */
+  static async getSupplierById(id: string): Promise<Supplier | null> {
+    try {
+      console.log('[SupplierService] Fetching supplier by ID:', id);
+      
+      const { data, error } = await supabase
+        .from('suppliers')
+        .select('*')
+        .eq('id', id)
+        .eq('active', true)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          console.log('[SupplierService] Supplier not found');
+          return null;
+        }
+        console.error('[SupplierService] Error fetching supplier:', error);
+        throw new Error(`Failed to fetch supplier: ${error.message}`);
+      }
+
+      if (!data) {
+        return null;
+      }
+
+      // Transform the data using the same logic as fetchSuppliers
+      const emailValue = data.email && data.email !== '<nil>' ? data.email : '';
+      const phoneValue = data.phone && data.phone !== '<nil>' ? data.phone : '';
+      
+      let addressString = '';
+      if (data.address) {
+        if (typeof data.address === 'string') {
+          addressString = data.address;
+        } else if (typeof data.address === 'object' && !Array.isArray(data.address)) {
+          const addressObj = data.address as Record<string, any>;
+          if (addressObj.street) {
+            addressString = addressObj.street;
+          } else {
+            addressString = JSON.stringify(data.address);
+          }
+        }
+      }
+
+      return {
+        id: data.id,
+        name: data.name || '',
+        email: emailValue,
+        phone: phoneValue,
+        address: addressString,
+        notes: '',
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        service_areas: Array.isArray(data.service_areas) ? data.service_areas : [],
+        materials: Array.isArray(data.materials) ? data.materials : [],
+        active: data.active !== false
+      };
+    } catch (error) {
+      console.error('[SupplierService] Error in getSupplierById:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get orders for a specific supplier
+   */
+  static async getSupplierOrders(supplierId: string): Promise<any[]> {
+    try {
+      console.log('[SupplierService] Fetching orders for supplier:', supplierId);
+      
+      // This is a placeholder - the actual implementation would depend on how
+      // supplier IDs are stored in the orders table
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .contains('supplier_id', supplierId);
+
+      if (error) {
+        console.error('[SupplierService] Error fetching supplier orders:', error);
+        throw new Error(`Failed to fetch supplier orders: ${error.message}`);
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('[SupplierService] Error in getSupplierOrders:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get supplier analytics/statistics
+   */
+  static async getSupplierStats(supplierId: string): Promise<{
+    totalOrders: number;
+    totalRevenue: number;
+    averageOrderValue: number;
+  }> {
+    try {
+      console.log('[SupplierService] Fetching stats for supplier:', supplierId);
+      
+      // Placeholder implementation
+      const orders = await this.getSupplierOrders(supplierId);
+      
+      const totalOrders = orders.length;
+      const totalRevenue = orders.reduce((sum, order) => sum + (order.total_price || 0), 0);
+      const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+      return {
+        totalOrders,
+        totalRevenue,
+        averageOrderValue
+      };
+    } catch (error) {
+      console.error('[SupplierService] Error in getSupplierStats:', error);
       throw error;
     }
   }

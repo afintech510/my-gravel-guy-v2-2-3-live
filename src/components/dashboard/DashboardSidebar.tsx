@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, ShoppingCart, FileText, MessageSquare, DollarSign, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, FileText, MessageSquare, DollarSign, TrendingUp, Users } from 'lucide-react';
 import { useFinancialAuth } from '@/hooks/useFinancialAuth';
 
 const menuItems = [
@@ -21,6 +21,12 @@ const menuItems = [
     title: 'Quotes',
     url: '/dashboard/quotes',
     icon: FileText,
+    requiresFinancialAccess: false,
+  },
+  {
+    title: 'Suppliers',
+    url: '/dashboard/suppliers',
+    icon: Users,
     requiresFinancialAccess: false,
   },
   {

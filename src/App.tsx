@@ -47,6 +47,7 @@ import Reviews from "./pages/Reviews";
 import Dashboard from "./pages/Dashboard";
 import DashboardOrders from "./pages/DashboardOrders";
 import DashboardQuotes from "./pages/DashboardQuotes";
+import DashboardSuppliers from "./pages/DashboardSuppliers";
 import DashboardExpenses from "./pages/DashboardExpenses";
 import DashboardAnalyze from "./pages/DashboardAnalyze";
 import OrderEdit from "./pages/OrderEdit";
@@ -132,6 +133,7 @@ function AppContent() {
         <Route path="/dashboard/orders" element={<DashboardOrders />} />
         <Route path="/dashboard/orders/edit/:orderId" element={<OrderEdit />} />
         <Route path="/dashboard/quotes" element={<DashboardQuotes />} />
+        <Route path="/dashboard/suppliers" element={<DashboardSuppliers />} />
         <Route path="/dashboard/expenses" element={<DashboardExpenses />} />
         <Route path="/dashboard/analyze" element={<DashboardAnalyze />} />
         <Route path="/dashboard/comm" element={<MessagingConsole />} />
