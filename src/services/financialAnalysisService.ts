@@ -41,7 +41,57 @@ const CATEGORY_COLORS = [
   'hsl(160, 70%, 50%)',
 ];
 
+export interface OrderForFinancialAnalysis {
+  id: string;
+  order_id: string;
+  created_at: string;
+  total_price: number;
+  supplier_charges?: number;
+  sales_commission?: number;
+  fulfillment_status?: string;
+  delivery_name?: string;
+  billing_name?: string;
+  sales_person?: string;
+}
+
 export const financialAnalysisService = {
+  async getOrdersForFinancialAnalysis(startDate: string, endDate: string): Promise<OrderForFinancialAnalysis[]> {
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
+        id,
+        order_id,
+        created_at,
+        total_price,
+        supplier_charges,
+        sales_commission,
+        fulfillment_status,
+        delivery_name,
+        billing_name,
+        sales_person
+      `)
+      .like('order_id', 'ORDER-%')
+      .neq('fulfillment_status', 'Refunded')
+      .gte('created_at', startDate)
+      .lte('created_at', endDate)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return data.map(order => ({
+      id: order.id,
+      order_id: order.order_id,
+      created_at: order.created_at,
+      total_price: Number(order.total_price || 0),
+      supplier_charges: Number(order.supplier_charges || 0),
+      sales_commission: Number(order.sales_commission || 0),
+      fulfillment_status: order.fulfillment_status,
+      delivery_name: order.delivery_name,
+      billing_name: order.billing_name,
+      sales_person: order.sales_person,
+    }));
+  },
+
   async getFinancialSummary(startDate: string, endDate: string): Promise<FinancialSummary> {
     // Get revenue, supplier charges, and sales commissions from orders
     const { data: ordersData, error: ordersError } = await supabase
