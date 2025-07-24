@@ -46,6 +46,7 @@ import StripeTest from "./pages/StripeTest";
 import Reviews from "./pages/Reviews";
 import Dashboard from "./pages/Dashboard";
 import DashboardOrders from "./pages/DashboardOrders";
+import DashboardOrdersNew from "./pages/DashboardOrdersNew";
 import DashboardQuotes from "./pages/DashboardQuotes";
 import DashboardSuppliers from "./pages/DashboardSuppliers";
 import DashboardExpenses from "./pages/DashboardExpenses";
@@ -131,6 +132,7 @@ function AppContent() {
         <Route path="/reviews" element={<Reviews />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/dashboard/orders" element={<DashboardOrders />} />
+        <Route path="/dashboard/orders/new" element={<DashboardOrdersNew />} />
         <Route path="/dashboard/orders/edit/:orderId" element={<OrderEdit />} />
         <Route path="/dashboard/quotes" element={<DashboardQuotes />} />
         <Route path="/dashboard/suppliers" element={<DashboardSuppliers />} />
