@@ -153,12 +153,18 @@ const DashboardAnalyze = () => {
 
         {/* Financial Overview Cards */}
         {financialSummary && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
             <FinancialOverviewCard
-              title="Total Revenue"
-              value={financialSummary.totalRevenue}
+              title="Adjusted Revenue"
+              value={financialSummary.adjustedRevenue}
               formatAsCurrency
               icon={<TrendingUp className="h-4 w-4 text-green-500" />}
+            />
+            <FinancialOverviewCard
+              title="Processing Fee (3%)"
+              value={financialSummary.processingFees}
+              formatAsCurrency
+              icon={<FileText className="h-4 w-4 text-orange-500" />}
             />
             <FinancialOverviewCard
               title="Net Profit"
@@ -218,7 +224,9 @@ const DashboardAnalyze = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="space-y-2">
                     <h4 className="font-semibold text-green-600">Revenue</h4>
-                    <p className="text-2xl font-bold">${financialSummary.totalRevenue.toLocaleString()}</p>
+                    <p className="text-lg">Total Revenue: ${financialSummary.totalRevenue.toLocaleString()}</p>
+                    <p className="text-lg text-orange-600">Processing Fee (3%): -${financialSummary.processingFees.toLocaleString()}</p>
+                    <p className="text-2xl font-bold">Adjusted Revenue: ${financialSummary.adjustedRevenue.toLocaleString()}</p>
                   </div>
                   <div className="space-y-2">
                     <h4 className="font-semibold text-orange-600">Cost of Goods Sold</h4>
@@ -227,7 +235,8 @@ const DashboardAnalyze = () => {
                   </div>
                   <div className="space-y-2">
                     <h4 className="font-semibold text-red-600">Operating Expenses</h4>
-                    <p className="text-lg">${financialSummary.totalExpenses.toLocaleString()}</p>
+                    <p className="text-lg">Processing Fees: ${financialSummary.processingFees.toLocaleString()}</p>
+                    <p className="text-lg">Other Expenses: ${financialSummary.totalExpenses.toLocaleString()}</p>
                   </div>
                 </div>
                 <div className="mt-6 pt-6 border-t">

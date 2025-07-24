@@ -1,7 +1,12 @@
 import { supabase } from '@/integrations/supabase/client';
 
+// Processing fee rate (3%)
+export const PROCESSING_FEE_RATE = 0.03;
+
 export interface FinancialSummary {
   totalRevenue: number;
+  adjustedRevenue: number;
+  processingFees: number;
   totalExpenses: number;
   supplierCharges: number;
   salesCommissions: number;
@@ -118,11 +123,17 @@ export const financialAnalysisService = {
     const salesCommissions = ordersData?.reduce((sum, order) => sum + Number(order.sales_commission || 0), 0) || 0;
     const totalExpenses = expensesData?.reduce((sum, expense) => sum + Number(expense.amount || 0), 0) || 0;
 
-    const netProfit = totalRevenue - supplierCharges - salesCommissions - totalExpenses;
+    // Calculate 3% processing fee
+    const processingFees = totalRevenue * PROCESSING_FEE_RATE;
+    const adjustedRevenue = totalRevenue - processingFees;
+
+    const netProfit = adjustedRevenue - supplierCharges - salesCommissions - totalExpenses;
     const grossProfitMargin = totalRevenue > 0 ? ((totalRevenue - supplierCharges) / totalRevenue) * 100 : 0;
 
     return {
       totalRevenue,
+      adjustedRevenue,
+      processingFees,
       totalExpenses,
       supplierCharges,
       salesCommissions,
@@ -132,6 +143,7 @@ export const financialAnalysisService = {
   },
 
   async getExpensesByCategory(startDate: string, endDate: string): Promise<ExpenseByCategory[]> {
+    // Get regular expenses
     const { data, error } = await supabase
       .from('expenses')
       .select(`
@@ -143,15 +155,35 @@ export const financialAnalysisService = {
 
     if (error) throw error;
 
+    // Get processing fees from orders
+    const { data: ordersData, error: ordersError } = await supabase
+      .from('orders')
+      .select('total_price')
+      .like('order_id', 'ORDER-%')
+      .neq('fulfillment_status', 'Refunded')
+      .gte('created_at', startDate)
+      .lte('created_at', endDate);
+
+    if (ordersError) throw ordersError;
+
     const categoryTotals = new Map<string, number>();
     let totalAmount = 0;
 
+    // Add regular expenses
     data?.forEach(expense => {
       const category = expense.expense_categories?.name || 'Uncategorized';
       const amount = Number(expense.amount || 0);
       categoryTotals.set(category, (categoryTotals.get(category) || 0) + amount);
       totalAmount += amount;
     });
+
+    // Add processing fees
+    const totalRevenue = ordersData?.reduce((sum, order) => sum + Number(order.total_price || 0), 0) || 0;
+    const processingFees = totalRevenue * PROCESSING_FEE_RATE;
+    if (processingFees > 0) {
+      categoryTotals.set('Processing Fees', processingFees);
+      totalAmount += processingFees;
+    }
 
     return Array.from(categoryTotals.entries()).map(([category, amount], index) => ({
       category,
@@ -176,8 +208,8 @@ export const financialAnalysisService = {
         
         trends.push({
           month: new Date(year, month - 1).toLocaleDateString('en-US', { month: 'short' }),
-          revenue: summary.totalRevenue,
-          expenses: summary.totalExpenses + summary.supplierCharges + summary.salesCommissions,
+          revenue: summary.adjustedRevenue,
+          expenses: summary.totalExpenses + summary.supplierCharges + summary.salesCommissions + summary.processingFees,
           profit: summary.netProfit,
         });
       } catch (error) {
