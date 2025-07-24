@@ -10,6 +10,7 @@ export interface Supplier {
   updated_at?: string;
   service_areas?: string[];
   materials?: string[];
+  active?: boolean;
 }
 
 export interface SupplierInsert {
@@ -20,6 +21,7 @@ export interface SupplierInsert {
   notes?: string;
   service_areas?: string[];
   materials?: string[];
+  active?: boolean;
 }
 
 export interface SupplierUpdate {
@@ -31,4 +33,5 @@ export interface SupplierUpdate {
   updated_at?: string;
   service_areas?: string[];
   materials?: string[];
+  active?: boolean;
 }
