@@ -22,6 +22,13 @@ const SuppliersTable = () => {
     staleTime: 30000,
   });
 
+  const { data: supplierStats } = useQuery({
+    queryKey: ['supplier-stats', suppliers],
+    queryFn: () => suppliers ? SupplierService.getSupplierStatsBatch(suppliers) : Promise.resolve({}),
+    enabled: !!suppliers && suppliers.length > 0,
+    staleTime: 30000,
+  });
+
   const handleViewSupplier = (supplier: Supplier) => {
     setSelectedSupplier(supplier);
     setModalMode('view');
@@ -62,8 +69,9 @@ const SuppliersTable = () => {
 
   const supplierList = suppliers || [];
   const activeSuppliers = supplierList.filter(s => s.active !== false);
-  const totalOrders = 0; // TODO: Calculate from order data
-  const totalRevenue = 0; // TODO: Calculate from order data
+  const stats = supplierStats || {};
+  const totalOrders = Object.values(stats).reduce((sum, stat: any) => sum + (stat?.totalOrders || 0), 0);
+  const totalRevenue = Object.values(stats).reduce((sum, stat: any) => sum + (stat?.totalRevenue || 0), 0);
 
   return (
     <div className="space-y-6">
@@ -88,7 +96,7 @@ const SuppliersTable = () => {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalOrders}</div>
+            <div className="text-2xl font-bold">{totalOrders as number}</div>
             <p className="text-xs text-muted-foreground">
               Across all suppliers
             </p>
@@ -101,7 +109,7 @@ const SuppliersTable = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${(totalRevenue as number).toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
               From supplier orders
             </p>
@@ -204,10 +212,10 @@ const SuppliersTable = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm">0</span>
+                        <span className="text-sm">{(stats[supplier.id] as any)?.totalOrders || 0}</span>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm font-medium">$0.00</span>
+                        <span className="text-sm font-medium">${((stats[supplier.id] as any)?.totalRevenue || 0).toFixed(2)}</span>
                       </TableCell>
                       <TableCell>
                         <Badge variant={supplier.active !== false ? "default" : "secondary"}>

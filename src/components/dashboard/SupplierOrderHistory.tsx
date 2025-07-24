@@ -17,12 +17,8 @@ const SupplierOrderHistory: React.FC<SupplierOrderHistoryProps> = ({ supplierId 
   const { data: orders, isLoading, error } = useQuery({
     queryKey: ['supplier-orders', supplierId],
     queryFn: async () => {
-      // For now, we'll fetch all orders and filter by supplier
-      // TODO: Add a specific API endpoint for supplier orders
-      const result = await OrderService.fetchOrders({}, 1, 1000);
-      return result.orders.filter(order => 
-        order.items?.some(item => item.supplier_id === supplierId)
-      );
+      const { SupplierService } = await import('@/services/supplierService');
+      return SupplierService.getSupplierOrders(supplierId);
     },
     staleTime: 30000,
   });
@@ -37,10 +33,8 @@ const SupplierOrderHistory: React.FC<SupplierOrderHistoryProps> = ({ supplierId 
 
   const orderList = orders || [];
   const totalOrders = orderList.length;
-  const totalRevenue = orderList.reduce((sum, order) => sum + order.total_price, 0);
-  const totalSupplierCharges = orderList.reduce((sum, order) => {
-    return sum + (order.items?.reduce((itemSum, item) => itemSum + (item.supplier_charges || 0), 0) || 0);
-  }, 0);
+  const totalRevenue = orderList.reduce((sum, order) => sum + (order.total_price || 0), 0);
+  const totalSupplierCharges = orderList.reduce((sum, order) => sum + (order.supplier_charges || 0), 0);
   const netRevenue = totalRevenue - totalSupplierCharges;
 
   return (
@@ -124,8 +118,8 @@ const SupplierOrderHistory: React.FC<SupplierOrderHistoryProps> = ({ supplierId 
                     </TableRow>
                   ) : (
                     orderList.map((order) => {
-                      const supplierCharges = order.items?.reduce((sum, item) => sum + (item.supplier_charges || 0), 0) || 0;
-                      const netRevenue = order.total_price - supplierCharges;
+                      const supplierCharges = order.supplier_charges || 0;
+                      const netRevenue = (order.total_price || 0) - supplierCharges;
                       
                       return (
                         <TableRow key={order.order_id}>
