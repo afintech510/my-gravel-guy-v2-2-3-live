@@ -8,6 +8,8 @@ export class SupplierService {
    */
   static async fetchSuppliers(): Promise<Supplier[]> {
     try {
+      console.log('Fetching suppliers from database...');
+      
       const { data: suppliers, error } = await supabase
         .from('suppliers')
         .select('*')
@@ -19,20 +21,61 @@ export class SupplierService {
         throw error;
       }
 
-      return suppliers?.map(supplier => ({
-        id: supplier.id,
-        name: supplier.name,
-        email: supplier.email || '',
-        phone: supplier.phone || '',
-        address: typeof supplier.address === 'string' 
-          ? supplier.address 
-          : (supplier.address as { street?: string })?.street || '',
-        notes: '', // Not in suppliers table, keeping for compatibility
-        created_at: supplier.created_at,
-        updated_at: supplier.updated_at,
-        service_areas: supplier.service_areas || [],
-        materials: supplier.materials || []
-      })) || [];
+      console.log('Raw supplier data from database:', suppliers);
+
+      if (!suppliers || suppliers.length === 0) {
+        console.log('No suppliers found in database');
+        return [];
+      }
+
+      const transformedSuppliers = suppliers.map(supplier => {
+        console.log('Transforming supplier:', supplier);
+        
+        // Handle address field - could be string, JSON object, or null
+        let addressString = '';
+        if (supplier.address) {
+          if (typeof supplier.address === 'string') {
+            addressString = supplier.address;
+          } else if (typeof supplier.address === 'object' && !Array.isArray(supplier.address)) {
+            // Handle JSON object address format
+            const addressObj = supplier.address as Record<string, any>;
+            if (addressObj.street) {
+              addressString = addressObj.street;
+            } else {
+              // Handle other potential address formats
+              addressString = JSON.stringify(supplier.address);
+            }
+          } else if (typeof supplier.address === 'object') {
+            // Handle other potential address formats
+            addressString = JSON.stringify(supplier.address);
+          }
+        }
+
+        // Handle email field - filter out null, undefined, and '<nil>' values
+        const emailValue = supplier.email && supplier.email !== '<nil>' ? supplier.email : '';
+        
+        // Handle phone field - filter out null, undefined, and '<nil>' values
+        const phoneValue = supplier.phone && supplier.phone !== '<nil>' ? supplier.phone : '';
+
+        const transformed = {
+          id: supplier.id,
+          name: supplier.name || '',
+          email: emailValue,
+          phone: phoneValue,
+          address: addressString,
+          notes: '', // Not in suppliers table, keeping for compatibility
+          created_at: supplier.created_at,
+          updated_at: supplier.updated_at,
+          service_areas: Array.isArray(supplier.service_areas) ? supplier.service_areas : [],
+          materials: Array.isArray(supplier.materials) ? supplier.materials : []
+        };
+
+        console.log('Transformed supplier:', transformed);
+        return transformed;
+      });
+
+      console.log('All transformed suppliers:', transformedSuppliers);
+      return transformedSuppliers;
     } catch (error) {
       console.error('SupplierService.fetchSuppliers error:', error);
       throw error;
