@@ -1,4 +1,6 @@
 
+import { supabase } from '@/integrations/supabase/client';
+
 export interface EmailData {
   materialCategory: string;
   materialSubcategory: string;
@@ -84,21 +86,82 @@ export interface OrderEmailData {
   customer_name: string;
 }
 
+export const sendOrderConfirmationEmail = async (orderData: OrderEmailData): Promise<{ success: boolean; emailId?: string; error?: any }> => {
+  try {
+    console.log('Sending customer order confirmation email for order:', orderData.order_id);
+    
+    const { generateCustomerConfirmationEmail } = await import('@/utils/emailTemplates');
+    
+    const { data, error } = await supabase.functions.invoke('send-email', {
+      body: {
+        to: orderData.customer_email,
+        subject: `Order Confirmation - ${orderData.order_id}`,
+        html: generateCustomerConfirmationEmail(orderData),
+        type: 'customer_confirmation',
+        orderData
+      }
+    });
+
+    if (error) {
+      console.error('Customer order confirmation email error:', error);
+      return { success: false, error };
+    }
+
+    console.log('Customer order confirmation email sent successfully:', data);
+    return { success: true, emailId: data?.emailId };
+  } catch (error) {
+    console.error('Customer order confirmation email exception:', error);
+    return { success: false, error };
+  }
+};
+
+export const sendInternalNotificationEmail = async (orderData: OrderEmailData, recipientEmail: string = 'order.support@mygravelguy.com'): Promise<{ success: boolean; emailId?: string; error?: any }> => {
+  try {
+    console.log('Sending internal order notification email for order:', orderData.order_id);
+    
+    const { generateInternalNotificationEmail } = await import('@/utils/emailTemplates');
+    
+    const { data, error } = await supabase.functions.invoke('send-email', {
+      body: {
+        to: recipientEmail,
+        subject: `New Order Notification - ${orderData.order_id}`,
+        html: generateInternalNotificationEmail(orderData),
+        type: 'internal_notification',
+        orderData
+      }
+    });
+
+    if (error) {
+      console.error('Internal order notification email error:', error);
+      return { success: false, error };
+    }
+
+    console.log('Internal order notification email sent successfully:', data);
+    return { success: true, emailId: data?.emailId };
+  } catch (error) {
+    console.error('Internal order notification email exception:', error);
+    return { success: false, error };
+  }
+};
+
 export const sendBothOrderEmails = async (orderData: OrderEmailData): Promise<{
   overallSuccess: boolean;
-  customerEmail: { success: boolean; error?: string };
-  internalEmail: { success: boolean; error?: string };
+  customerEmail: { success: boolean; emailId?: string; error?: any };
+  internalEmail: { success: boolean; emailId?: string; error?: any };
 }> => {
   try {
     console.log('Sending order confirmation emails for order:', orderData.order_id);
     
-    // For now, this is a mock implementation
-    // In a real implementation, you'd call your email service here
+    // Send both emails concurrently
+    const [customerEmailResult, internalEmailResult] = await Promise.all([
+      sendOrderConfirmationEmail(orderData),
+      sendInternalNotificationEmail(orderData)
+    ]);
     
-    const customerEmailResult = { success: true };
-    const internalEmailResult = { success: true };
-    
-    console.log('Order confirmation emails sent successfully');
+    console.log('Order confirmation emails processing complete:', {
+      customerSuccess: customerEmailResult.success,
+      internalSuccess: internalEmailResult.success
+    });
     
     return {
       overallSuccess: customerEmailResult.success && internalEmailResult.success,
