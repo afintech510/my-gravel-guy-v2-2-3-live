@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,13 +9,14 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Plus, Trash2, ArrowLeft, CreditCard, Save, FileText } from 'lucide-react';
+import { CalendarIcon, Plus, Trash2, ArrowLeft, CreditCard, Save, FileText, Copy } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ProductSelector } from './ProductSelector';
 import { OrderPricingCalculator } from './OrderPricingCalculator';
+import { OrderService } from '@/services/orderService';
 
 interface OrderItem {
   id: string;
@@ -71,9 +72,24 @@ export function ManualOrderForm() {
   });
   const [notes, setNotes] = useState('');
   const [salesPerson, setSalesPerson] = useState('');
+  const [salesPersons, setSalesPersons] = useState<string[]>(['Adam', 'Ronnie']);
   const [isLoading, setIsLoading] = useState(false);
 
   const totalAmount = orderItems.reduce((sum, item) => sum + item.totalPrice, 0);
+
+  useEffect(() => {
+    const loadSalesPersons = async () => {
+      try {
+        const uniquePersons = await OrderService.getUniqueSalesPersons();
+        if (uniquePersons.length > 0) {
+          setSalesPersons(uniquePersons);
+        }
+      } catch (error) {
+        console.error('Error loading sales persons:', error);
+      }
+    };
+    loadSalesPersons();
+  }, []);
 
   const handleAddProduct = (product: any, quantity: number, customPrice?: number) => {
     const unitPrice = customPrice || product.price;
@@ -109,15 +125,26 @@ export function ManualOrderForm() {
     ));
   };
 
+  const handleCopyCustomerInfo = () => {
+    setDeliveryInfo({
+      ...deliveryInfo,
+      name: customerInfo.name,
+      phone: customerInfo.phone,
+    });
+    toast({
+      title: "Customer info copied",
+      description: "Customer name and phone copied to delivery information.",
+    });
+  };
+
   const validateStep = (step: number) => {
     switch (step) {
       case 1:
-        return customerInfo.name && customerInfo.email && customerInfo.phone;
+        return customerInfo.name && customerInfo.email && customerInfo.phone &&
+               deliveryInfo.street && deliveryInfo.city && deliveryInfo.state && 
+               deliveryInfo.zip && deliveryInfo.date && deliveryInfo.name && deliveryInfo.phone;
       case 2:
         return orderItems.length > 0;
-      case 3:
-        return deliveryInfo.street && deliveryInfo.city && deliveryInfo.state && 
-               deliveryInfo.zip && deliveryInfo.date && deliveryInfo.name && deliveryInfo.phone;
       default:
         return true;
     }
@@ -201,74 +228,219 @@ export function ManualOrderForm() {
     switch (currentStep) {
       case 1:
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Customer Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Customer Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Customer Name *</Label>
+                    <Input
+                      id="name"
+                      value={customerInfo.name}
+                      onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})}
+                      placeholder="Enter customer name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={customerInfo.email}
+                      onChange={(e) => setCustomerInfo({...customerInfo, email: e.target.value})}
+                      placeholder="customer@example.com"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Phone *</Label>
+                    <Input
+                      id="phone"
+                      value={customerInfo.phone}
+                      onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})}
+                      placeholder="(555) 123-4567"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="sales-person">Sales Person</Label>
+                    <Select value={salesPerson} onValueChange={setSalesPerson}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select sales person" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Not Assigned</SelectItem>
+                        {salesPersons.map((person) => (
+                          <SelectItem key={person} value={person}>
+                            {person}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <Separator />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="billing-name">Billing Name (if different)</Label>
+                    <Input
+                      id="billing-name"
+                      value={customerInfo.billingName || ''}
+                      onChange={(e) => setCustomerInfo({...customerInfo, billingName: e.target.value})}
+                      placeholder="Enter billing name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="billing-email">Billing Email (if different)</Label>
+                    <Input
+                      id="billing-email"
+                      type="email"
+                      value={customerInfo.billingEmail || ''}
+                      onChange={(e) => setCustomerInfo({...customerInfo, billingEmail: e.target.value})}
+                      placeholder="billing@example.com"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  Delivery Information
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopyCustomerInfo}
+                    className="flex items-center gap-2"
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy Customer Info
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="delivery-name">Contact Name *</Label>
+                    <Input
+                      id="delivery-name"
+                      value={deliveryInfo.name}
+                      onChange={(e) => setDeliveryInfo({...deliveryInfo, name: e.target.value})}
+                      placeholder="Enter contact name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="delivery-phone">Contact Phone *</Label>
+                    <Input
+                      id="delivery-phone"
+                      value={deliveryInfo.phone}
+                      onChange={(e) => setDeliveryInfo({...deliveryInfo, phone: e.target.value})}
+                      placeholder="(555) 123-4567"
+                    />
+                  </div>
+                </div>
                 <div>
-                  <Label htmlFor="name">Customer Name *</Label>
+                  <Label htmlFor="street">Street Address *</Label>
                   <Input
-                    id="name"
-                    value={customerInfo.name}
-                    onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})}
-                    placeholder="Enter customer name"
+                    id="street"
+                    value={deliveryInfo.street}
+                    onChange={(e) => setDeliveryInfo({...deliveryInfo, street: e.target.value})}
+                    placeholder="Enter street address"
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="city">City *</Label>
+                    <Input
+                      id="city"
+                      value={deliveryInfo.city}
+                      onChange={(e) => setDeliveryInfo({...deliveryInfo, city: e.target.value})}
+                      placeholder="Enter city"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="state">State *</Label>
+                    <Input
+                      id="state"
+                      value={deliveryInfo.state}
+                      onChange={(e) => setDeliveryInfo({...deliveryInfo, state: e.target.value})}
+                      placeholder="Enter state"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="zip">ZIP Code *</Label>
+                    <Input
+                      id="zip"
+                      value={deliveryInfo.zip}
+                      onChange={(e) => setDeliveryInfo({...deliveryInfo, zip: e.target.value})}
+                      placeholder="Enter ZIP code"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Delivery Date *</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !deliveryInfo.date && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {deliveryInfo.date ? format(deliveryInfo.date, "PPP") : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={deliveryInfo.date || undefined}
+                          onSelect={(date) => setDeliveryInfo({...deliveryInfo, date: date || null})}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div>
+                    <Label htmlFor="time-preference">Time Preference</Label>
+                    <Select value={deliveryInfo.timePreference} onValueChange={(value) => setDeliveryInfo({...deliveryInfo, timePreference: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select time preference" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="anytime">Anytime</SelectItem>
+                        <SelectItem value="morning">Morning (8AM - 12PM)</SelectItem>
+                        <SelectItem value="afternoon">Afternoon (12PM - 5PM)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="instructions">Delivery Instructions</Label>
+                  <Textarea
+                    id="instructions"
+                    value={deliveryInfo.instructions}
+                    onChange={(e) => setDeliveryInfo({...deliveryInfo, instructions: e.target.value})}
+                    placeholder="Enter any special delivery instructions"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={customerInfo.email}
-                    onChange={(e) => setCustomerInfo({...customerInfo, email: e.target.value})}
-                    placeholder="customer@example.com"
+                  <Label htmlFor="notes">Internal Notes</Label>
+                  <Textarea
+                    id="notes"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Enter any internal notes about this order"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="phone">Phone *</Label>
-                  <Input
-                    id="phone"
-                    value={customerInfo.phone}
-                    onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})}
-                    placeholder="(555) 123-4567"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="sales-person">Sales Person</Label>
-                  <Input
-                    id="sales-person"
-                    value={salesPerson}
-                    onChange={(e) => setSalesPerson(e.target.value)}
-                    placeholder="Enter sales person name"
-                  />
-                </div>
-              </div>
-              <Separator />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="billing-name">Billing Name (if different)</Label>
-                  <Input
-                    id="billing-name"
-                    value={customerInfo.billingName || ''}
-                    onChange={(e) => setCustomerInfo({...customerInfo, billingName: e.target.value})}
-                    placeholder="Enter billing name"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="billing-email">Billing Email (if different)</Label>
-                  <Input
-                    id="billing-email"
-                    type="email"
-                    value={customerInfo.billingEmail || ''}
-                    onChange={(e) => setCustomerInfo({...customerInfo, billingEmail: e.target.value})}
-                    placeholder="billing@example.com"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         );
 
       case 2:
@@ -339,133 +511,6 @@ export function ManualOrderForm() {
         );
 
       case 3:
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Delivery Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="delivery-name">Contact Name *</Label>
-                  <Input
-                    id="delivery-name"
-                    value={deliveryInfo.name}
-                    onChange={(e) => setDeliveryInfo({...deliveryInfo, name: e.target.value})}
-                    placeholder="Enter contact name"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="delivery-phone">Contact Phone *</Label>
-                  <Input
-                    id="delivery-phone"
-                    value={deliveryInfo.phone}
-                    onChange={(e) => setDeliveryInfo({...deliveryInfo, phone: e.target.value})}
-                    placeholder="(555) 123-4567"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="street">Street Address *</Label>
-                <Input
-                  id="street"
-                  value={deliveryInfo.street}
-                  onChange={(e) => setDeliveryInfo({...deliveryInfo, street: e.target.value})}
-                  placeholder="Enter street address"
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="city">City *</Label>
-                  <Input
-                    id="city"
-                    value={deliveryInfo.city}
-                    onChange={(e) => setDeliveryInfo({...deliveryInfo, city: e.target.value})}
-                    placeholder="Enter city"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="state">State *</Label>
-                  <Input
-                    id="state"
-                    value={deliveryInfo.state}
-                    onChange={(e) => setDeliveryInfo({...deliveryInfo, state: e.target.value})}
-                    placeholder="Enter state"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="zip">ZIP Code *</Label>
-                  <Input
-                    id="zip"
-                    value={deliveryInfo.zip}
-                    onChange={(e) => setDeliveryInfo({...deliveryInfo, zip: e.target.value})}
-                    placeholder="Enter ZIP code"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Delivery Date *</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !deliveryInfo.date && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {deliveryInfo.date ? format(deliveryInfo.date, "PPP") : "Pick a date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={deliveryInfo.date || undefined}
-                        onSelect={(date) => setDeliveryInfo({...deliveryInfo, date: date || null})}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div>
-                  <Label htmlFor="time-preference">Time Preference</Label>
-                  <Select value={deliveryInfo.timePreference} onValueChange={(value) => setDeliveryInfo({...deliveryInfo, timePreference: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select time preference" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="anytime">Anytime</SelectItem>
-                      <SelectItem value="morning">Morning (8AM - 12PM)</SelectItem>
-                      <SelectItem value="afternoon">Afternoon (12PM - 5PM)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="instructions">Delivery Instructions</Label>
-                <Textarea
-                  id="instructions"
-                  value={deliveryInfo.instructions}
-                  onChange={(e) => setDeliveryInfo({...deliveryInfo, instructions: e.target.value})}
-                  placeholder="Enter any special delivery instructions"
-                />
-              </div>
-              <div>
-                <Label htmlFor="notes">Internal Notes</Label>
-                <Textarea
-                  id="notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Enter any internal notes about this order"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      case 4:
         return (
           <div className="space-y-6">
             <Card>
@@ -564,7 +609,7 @@ export function ManualOrderForm() {
     <div className="space-y-6">
       {/* Progress indicator */}
       <div className="flex items-center space-x-4">
-        {[1, 2, 3, 4].map((step) => (
+        {[1, 2, 3].map((step) => (
           <div key={step} className="flex items-center">
             <div
               className={cn(
@@ -576,7 +621,7 @@ export function ManualOrderForm() {
             >
               {step}
             </div>
-            {step < 4 && (
+            {step < 3 && (
               <div
                 className={cn(
                   "w-12 h-0.5 ml-2",
@@ -589,8 +634,8 @@ export function ManualOrderForm() {
       </div>
 
       <div className="text-sm text-muted-foreground">
-        Step {currentStep} of 4: {
-          ['Customer Info', 'Products', 'Delivery', 'Review & Submit'][currentStep - 1]
+        Step {currentStep} of 3: {
+          ['Customer & Delivery Info', 'Products', 'Review & Submit'][currentStep - 1]
         }
       </div>
 
@@ -607,7 +652,7 @@ export function ManualOrderForm() {
           {currentStep === 1 ? 'Cancel' : 'Back'}
         </Button>
         
-        {currentStep < 4 && (
+        {currentStep < 3 && (
           <Button onClick={handleNext} disabled={!validateStep(currentStep)}>
             Next
           </Button>
