@@ -129,6 +129,33 @@ export class SupplierService {
   }
 
   /**
+   * Find supplier ID by name
+   */
+  static async findSupplierIdByName(supplierName: string): Promise<string | null> {
+    try {
+      console.log('Looking for supplier with name:', supplierName);
+      
+      const { data: supplier, error } = await supabase
+        .from('suppliers')
+        .select('id')
+        .eq('name', supplierName)
+        .eq('active', true)
+        .single();
+
+      if (error) {
+        console.log('Supplier not found by name:', supplierName, error);
+        return null;
+      }
+
+      console.log('Found supplier ID:', supplier?.id);
+      return supplier?.id || null;
+    } catch (error) {
+      console.error('SupplierService.findSupplierIdByName error:', error);
+      return null;
+    }
+  }
+
+  /**
    * Update supplier information in the database
    */
   static async updateSupplier(id: string, updates: SupplierUpdate): Promise<void> {
