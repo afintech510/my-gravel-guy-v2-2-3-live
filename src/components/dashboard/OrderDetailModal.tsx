@@ -21,6 +21,7 @@ import SMSTemplateSelector from './SMSTemplateSelector';
 import SMSPreview from './SMSPreview';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
+import { SupplierService } from '@/services/supplierService';
 
 interface OrderDetailModalProps {
   order: GroupedOrder | null;
@@ -60,22 +61,59 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
 
   // Reset form when order changes
   React.useEffect(() => {
-    if (order) {
-      setStatus(order.status);
-      setFulfillmentStatus(order.fulfillment_status || '');
-      setInternalNotes(order.items[0]?.notes || '');
-      setSelectedSupplierId(order.items[0]?.supplier_id || '');
-      setSupplierCharges(order.items[0]?.supplier_charges?.toString() || '');
-      setSelectedSalesPerson(order.sales_person || '');
-      setEmailNote('');
-      setIsUnlocked(false);
-      
-      // Set default SMS phone number from delivery info
-      const deliveryPhone = order.items[0]?.delivery_phone || '';
-      setSmsPhoneNumber(deliveryPhone);
-      setSelectedTemplate('');
-      setCustomMessage('');
-    }
+    const initializeForm = async () => {
+      if (order) {
+        console.log('[OrderDetailModal] Initializing form with order:', order);
+        
+        setStatus(order.status);
+        setFulfillmentStatus(order.fulfillment_status || '');
+        setInternalNotes(order.items[0]?.notes || '');
+        setSupplierCharges(order.items[0]?.supplier_charges?.toString() || '');
+        setSelectedSalesPerson(order.sales_person || '');
+        setEmailNote('');
+        setIsUnlocked(false);
+        
+        // Handle supplier ID conversion (name to UUID)
+        const rawSupplierId = order.items[0]?.supplier_id || '';
+        console.log('[OrderDetailModal] Raw supplier_id from order:', rawSupplierId);
+        
+        if (rawSupplierId) {
+          // Check if it's already a UUID (36 characters with hyphens)
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          
+          if (uuidRegex.test(rawSupplierId)) {
+            console.log('[OrderDetailModal] Supplier ID is already a UUID:', rawSupplierId);
+            setSelectedSupplierId(rawSupplierId);
+          } else {
+            console.log('[OrderDetailModal] Supplier ID is a name, converting to UUID:', rawSupplierId);
+            try {
+              const supplierId = await SupplierService.findSupplierIdByName(rawSupplierId);
+              if (supplierId) {
+                console.log('[OrderDetailModal] Successfully converted supplier name to UUID:', supplierId);
+                setSelectedSupplierId(supplierId);
+              } else {
+                console.warn('[OrderDetailModal] No supplier found for name:', rawSupplierId);
+                setSelectedSupplierId('');
+              }
+            } catch (error) {
+              console.error('[OrderDetailModal] Error converting supplier name to UUID:', error);
+              setSelectedSupplierId('');
+            }
+          }
+        } else {
+          console.log('[OrderDetailModal] No supplier ID found in order');
+          setSelectedSupplierId('');
+        }
+        
+        // Set default SMS phone number from delivery info
+        const deliveryPhone = order.items[0]?.delivery_phone || '';
+        setSmsPhoneNumber(deliveryPhone);
+        setSelectedTemplate('');
+        setCustomMessage('');
+      }
+    };
+
+    initializeForm();
   }, [order]);
 
   if (!order) return null;
