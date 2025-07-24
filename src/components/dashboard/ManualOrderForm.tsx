@@ -270,7 +270,7 @@ export function ManualOrderForm() {
                         <SelectValue placeholder="Select sales person" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Not Assigned</SelectItem>
+                        <SelectItem value="not-assigned">Not Assigned</SelectItem>
                         {salesPersons.map((person) => (
                           <SelectItem key={person} value={person}>
                             {person}
