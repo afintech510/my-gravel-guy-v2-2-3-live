@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import SupplierSelector from '@/components/dashboard/SupplierSelector';
 import FulfillmentStatusBadge from '@/components/dashboard/FulfillmentStatusBadge';
+import { SupplierService } from '@/services/supplierService';
 
 const OrderEdit = () => {
   const { orderId } = useParams<{ orderId: string }>();
@@ -79,31 +80,55 @@ const OrderEdit = () => {
   }, []);
 
   useEffect(() => {
-    if (order) {
-      const firstItem = order.items[0];
-      setFormData({
-        billing_name: order.billing_name || '',
-        billing_email: order.billing_email || '',
-        delivery_name: firstItem?.delivery_name || '',
-        delivery_email: firstItem?.delivery_email || '',
-        delivery_phone: firstItem?.delivery_phone || '',
-        delivery_street: firstItem?.delivery_address?.street || '',
-        delivery_city: firstItem?.delivery_address?.city || '',
-        delivery_state: firstItem?.delivery_address?.state || '',
-        delivery_zip: firstItem?.delivery_address?.zip || '',
-        delivery_date: firstItem?.delivery_date ? format(new Date(firstItem.delivery_date), 'yyyy-MM-dd') : '',
-        delivery_instructions: firstItem?.delivery_instructions || '',
-        delivery_time_preference: firstItem?.delivery_time_preference || '',
-        status: order.status,
-        fulfillment_status: order.fulfillment_status || '',
-        sales_person: order.sales_person || 'unassigned',
-        sales_commission: order.sales_commission?.toString() || '',
-        supplier_id: firstItem?.supplier_id || '',
-        supplier_charges: firstItem?.supplier_charges?.toString() || '',
-        notes: firstItem?.notes || '',
-        fulfillment_eta: ''
-      });
-    }
+    const initializeFormData = async () => {
+      if (order) {
+        const firstItem = order.items[0];
+        let supplierIdToUse = firstItem?.supplier_id || '';
+        
+        // If supplier_id looks like a name (not a UUID), try to convert it to UUID
+        if (supplierIdToUse && !supplierIdToUse.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+          console.log('supplier_id appears to be a name, converting to UUID:', supplierIdToUse);
+          try {
+            const foundSupplierId = await SupplierService.findSupplierIdByName(supplierIdToUse);
+            if (foundSupplierId) {
+              supplierIdToUse = foundSupplierId;
+              console.log('Converted supplier name to UUID:', foundSupplierId);
+            } else {
+              console.log('Could not find supplier UUID for name:', supplierIdToUse);
+              supplierIdToUse = ''; // Clear if we can't find a match
+            }
+          } catch (error) {
+            console.error('Error converting supplier name to UUID:', error);
+            supplierIdToUse = '';
+          }
+        }
+        
+        setFormData({
+          billing_name: order.billing_name || '',
+          billing_email: order.billing_email || '',
+          delivery_name: firstItem?.delivery_name || '',
+          delivery_email: firstItem?.delivery_email || '',
+          delivery_phone: firstItem?.delivery_phone || '',
+          delivery_street: firstItem?.delivery_address?.street || '',
+          delivery_city: firstItem?.delivery_address?.city || '',
+          delivery_state: firstItem?.delivery_address?.state || '',
+          delivery_zip: firstItem?.delivery_address?.zip || '',
+          delivery_date: firstItem?.delivery_date ? format(new Date(firstItem.delivery_date), 'yyyy-MM-dd') : '',
+          delivery_instructions: firstItem?.delivery_instructions || '',
+          delivery_time_preference: firstItem?.delivery_time_preference || '',
+          status: order.status,
+          fulfillment_status: order.fulfillment_status || '',
+          sales_person: order.sales_person || 'unassigned',
+          sales_commission: order.sales_commission?.toString() || '',
+          supplier_id: supplierIdToUse,
+          supplier_charges: firstItem?.supplier_charges?.toString() || '',
+          notes: firstItem?.notes || '',
+          fulfillment_eta: ''
+        });
+      }
+    };
+    
+    initializeFormData();
   }, [order]);
 
   const handleInputChange = (field: string, value: string) => {
