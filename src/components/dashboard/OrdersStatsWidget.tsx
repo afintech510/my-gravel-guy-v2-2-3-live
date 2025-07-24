@@ -13,7 +13,9 @@ export function OrdersStatsWidget() {
         .from('orders')
         .select('fulfillment_status')
         .like('order_id', 'ORDER-%')
-        .neq('status', 'Quote');
+        .neq('status', 'Quote')
+        .neq('status', 'Cancelled')
+        .neq('status', 'Refunded');
 
       if (error) throw error;
 
@@ -32,7 +34,7 @@ export function OrdersStatsWidget() {
     return (
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+        <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
           <ShoppingCart className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -52,6 +54,7 @@ export function OrdersStatsWidget() {
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold mb-4">{stats?.totalOrders || 0}</div>
+        <p className="text-xs text-muted-foreground mb-2">(not cancelled or refunded)</p>
         <div className="space-y-2">
           {Object.entries(stats?.statusCounts || {}).map(([status, count]) => (
             <div key={status} className="flex justify-between text-sm">
