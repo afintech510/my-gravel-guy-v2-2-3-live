@@ -5,6 +5,8 @@ import { financialAnalysisService, FinancialSummary, ExpenseByCategory, MonthlyT
 import { FinancialOverviewCard } from '@/components/dashboard/FinancialOverviewCard';
 import { ExpensePieChart, MonthlyTrendsChart, VendorAnalysisChart } from '@/components/dashboard/FinancialCharts';
 import { VendorAnalysisTable, TaxDeductibleSummary } from '@/components/dashboard/FinancialReportsTable';
+import { OrdersFinancialSummary } from '@/components/dashboard/OrdersFinancialSummary';
+import { OrdersFinancialTable } from '@/components/dashboard/OrdersFinancialTable';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -151,7 +153,7 @@ const DashboardAnalyze = () => {
 
         {/* Financial Overview Cards */}
         {financialSummary && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             <FinancialOverviewCard
               title="Total Revenue"
               value={financialSummary.totalRevenue}
@@ -175,6 +177,10 @@ const DashboardAnalyze = () => {
               value={financialSummary.grossProfitMargin}
               formatAsPercentage
               icon={<FileText className="h-4 w-4 text-purple-500" />}
+            />
+            <OrdersFinancialSummary 
+              startDate={getDateRange(timePeriod).start}
+              endDate={getDateRange(timePeriod).end}
             />
           </div>
         )}
@@ -202,38 +208,45 @@ const DashboardAnalyze = () => {
         </div>
 
         {/* Detailed Financial Breakdown */}
-        {financialSummary && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Detailed Financial Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-green-600">Revenue</h4>
-                  <p className="text-2xl font-bold">${financialSummary.totalRevenue.toLocaleString()}</p>
+        <div className="space-y-6">
+          {financialSummary && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Detailed Financial Breakdown</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-green-600">Revenue</h4>
+                    <p className="text-2xl font-bold">${financialSummary.totalRevenue.toLocaleString()}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-orange-600">Cost of Goods Sold</h4>
+                    <p className="text-lg">Supplier Charges: ${financialSummary.supplierCharges.toLocaleString()}</p>
+                    <p className="text-lg">Sales Commissions: ${financialSummary.salesCommissions.toLocaleString()}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-red-600">Operating Expenses</h4>
+                    <p className="text-lg">${financialSummary.totalExpenses.toLocaleString()}</p>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-orange-600">Cost of Goods Sold</h4>
-                  <p className="text-lg">Supplier Charges: ${financialSummary.supplierCharges.toLocaleString()}</p>
-                  <p className="text-lg">Sales Commissions: ${financialSummary.salesCommissions.toLocaleString()}</p>
+                <div className="mt-6 pt-6 border-t">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xl font-semibold">Net Profit:</span>
+                    <span className={`text-2xl font-bold ${financialSummary.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      ${financialSummary.netProfit.toLocaleString()}
+                    </span>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-red-600">Operating Expenses</h4>
-                  <p className="text-lg">${financialSummary.totalExpenses.toLocaleString()}</p>
-                </div>
-              </div>
-              <div className="mt-6 pt-6 border-t">
-                <div className="flex justify-between items-center">
-                  <span className="text-xl font-semibold">Net Profit:</span>
-                  <span className={`text-2xl font-bold ${financialSummary.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    ${financialSummary.netProfit.toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              </CardContent>
+            </Card>
+          )}
+          
+          <OrdersFinancialTable 
+            startDate={getDateRange(timePeriod).start}
+            endDate={getDateRange(timePeriod).end}
+          />
+        </div>
       </div>
     </DashboardLayout>
   );
