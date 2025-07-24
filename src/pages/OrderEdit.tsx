@@ -82,28 +82,36 @@ const OrderEdit = () => {
   useEffect(() => {
     const initializeFormData = async () => {
       if (order) {
+        console.log('Initializing form data with order:', order);
         const firstItem = order.items[0];
+        console.log('First order item:', firstItem);
         let supplierIdToUse = firstItem?.supplier_id || '';
+        console.log('Initial supplier_id:', supplierIdToUse);
         
         // If supplier_id looks like a name (not a UUID), try to convert it to UUID
-        if (supplierIdToUse && !supplierIdToUse.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (supplierIdToUse && !uuidRegex.test(supplierIdToUse)) {
           console.log('supplier_id appears to be a name, converting to UUID:', supplierIdToUse);
           try {
             const foundSupplierId = await SupplierService.findSupplierIdByName(supplierIdToUse);
+            console.log('SupplierService lookup result:', foundSupplierId);
             if (foundSupplierId) {
               supplierIdToUse = foundSupplierId;
-              console.log('Converted supplier name to UUID:', foundSupplierId);
+              console.log('Successfully converted supplier name to UUID:', foundSupplierId);
             } else {
-              console.log('Could not find supplier UUID for name:', supplierIdToUse);
-              supplierIdToUse = ''; // Clear if we can't find a match
+              console.warn('Could not find supplier UUID for name:', supplierIdToUse);
+              // Keep original value to show the issue
             }
           } catch (error) {
             console.error('Error converting supplier name to UUID:', error);
-            supplierIdToUse = '';
           }
+        } else if (supplierIdToUse) {
+          console.log('supplier_id is already a UUID:', supplierIdToUse);
+        } else {
+          console.log('No supplier_id found in order');
         }
         
-        setFormData({
+        const newFormData = {
           billing_name: order.billing_name || '',
           billing_email: order.billing_email || '',
           delivery_name: firstItem?.delivery_name || '',
@@ -117,14 +125,18 @@ const OrderEdit = () => {
           delivery_instructions: firstItem?.delivery_instructions || '',
           delivery_time_preference: firstItem?.delivery_time_preference || '',
           status: order.status,
-          fulfillment_status: order.fulfillment_status || '',
+          fulfillment_status: (order.fulfillment_status || '') as FulfillmentStatus | '',
           sales_person: order.sales_person || 'unassigned',
           sales_commission: order.sales_commission?.toString() || '',
           supplier_id: supplierIdToUse,
           supplier_charges: firstItem?.supplier_charges?.toString() || '',
           notes: firstItem?.notes || '',
           fulfillment_eta: ''
-        });
+        };
+        
+        console.log('Setting final form data:', newFormData);
+        console.log('Final supplier_id being set:', newFormData.supplier_id);
+        setFormData(newFormData);
       }
     };
     
