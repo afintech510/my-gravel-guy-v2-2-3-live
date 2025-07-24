@@ -281,28 +281,73 @@ export class SupplierService {
   }
 
   /**
-   * Get orders for a specific supplier
+   * Get orders for a specific supplier by supplier name
    */
   static async getSupplierOrders(supplierId: string): Promise<any[]> {
     try {
-      console.log('[SupplierService] Fetching orders for supplier:', supplierId);
+      console.log('[SupplierService] Fetching orders for supplier ID:', supplierId);
       
-      // This is a placeholder - the actual implementation would depend on how
-      // supplier IDs are stored in the orders table
+      // First get the supplier name from the supplier ID
+      const supplier = await this.getSupplierById(supplierId);
+      if (!supplier) {
+        console.log('[SupplierService] Supplier not found');
+        return [];
+      }
+      
+      console.log('[SupplierService] Searching orders for supplier name:', supplier.name);
+      
+      // Search orders by supplier name (stored in supplier_id field in orders table)
       const { data, error } = await supabase
         .from('orders')
         .select('*')
-        .contains('supplier_id', supplierId);
+        .eq('supplier_id', supplier.name);
 
       if (error) {
         console.error('[SupplierService] Error fetching supplier orders:', error);
         throw new Error(`Failed to fetch supplier orders: ${error.message}`);
       }
 
+      console.log('[SupplierService] Found orders:', data?.length || 0);
       return data || [];
     } catch (error) {
       console.error('[SupplierService] Error in getSupplierOrders:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Get supplier statistics by name batch (for table display)
+   */
+  static async getSupplierStatsBatch(suppliers: Supplier[]): Promise<Record<string, { totalOrders: number; totalRevenue: number; }>> {
+    try {
+      console.log('[SupplierService] Fetching batch stats for suppliers:', suppliers.map(s => s.name));
+      
+      // Get all orders to calculate stats
+      const { data: orders, error } = await supabase
+        .from('orders')
+        .select('supplier_id, total_price');
+
+      if (error) {
+        console.error('[SupplierService] Error fetching orders for stats:', error);
+        throw new Error(`Failed to fetch orders for stats: ${error.message}`);
+      }
+
+      // Group orders by supplier name and calculate stats
+      const stats: Record<string, { totalOrders: number; totalRevenue: number; }> = {};
+      
+      suppliers.forEach(supplier => {
+        const supplierOrders = orders?.filter(order => order.supplier_id === supplier.name) || [];
+        stats[supplier.id] = {
+          totalOrders: supplierOrders.length,
+          totalRevenue: supplierOrders.reduce((sum, order) => sum + (order.total_price || 0), 0)
+        };
+      });
+
+      console.log('[SupplierService] Calculated stats:', stats);
+      return stats;
+    } catch (error) {
+      console.error('[SupplierService] Error in getSupplierStatsBatch:', error);
+      return {};
     }
   }
 
@@ -317,7 +362,6 @@ export class SupplierService {
     try {
       console.log('[SupplierService] Fetching stats for supplier:', supplierId);
       
-      // Placeholder implementation
       const orders = await this.getSupplierOrders(supplierId);
       
       const totalOrders = orders.length;
