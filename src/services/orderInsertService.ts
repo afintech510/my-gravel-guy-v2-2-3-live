@@ -199,8 +199,8 @@ export const createManualOrderRecords = async (orderData: {
 }) => {
   console.log('Creating manual order records:', orderData);
 
-  const records = orderData.orderItems.map(item => ({
-    order_id: orderData.orderId,
+  const records = orderData.orderItems.map((item, index) => ({
+    order_id: orderData.orderItems.length > 1 ? `${orderData.orderId}-${index + 1}` : orderData.orderId,
     product_id: item.productId,
     unit: item.unit,
     unit_price: item.unitPrice,

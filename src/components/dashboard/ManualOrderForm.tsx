@@ -258,24 +258,24 @@ export function ManualOrderForm() {
       const expirationDate = new Date();
       expirationDate.setDate(expirationDate.getDate() + 30);
 
-      // Update quote with expiration date
+      // Update quote with expiration date - handle multi-product orders
       const { error: updateError } = await supabase
         .from('orders')
         .update({ 
           quote_expires_at: expirationDate.toISOString(),
           quote_status: 'sent'
         })
-        .eq('order_id', quoteId);
+        .or(`order_id.eq.${quoteId},order_id.like.${quoteId}-%`);
 
       if (updateError) {
         console.error('Error updating quote expiration:', updateError);
       }
 
-      // Get the created quote items for the email
+      // Get the created quote items for the email - handle multi-product orders
       const { data: quoteItems } = await supabase
         .from('orders')
         .select('*')
-        .eq('order_id', quoteId);
+        .or(`order_id.eq.${quoteId},order_id.like.${quoteId}-%`);
 
       // Get product names for the email
       const { data: products } = await supabase
