@@ -185,6 +185,65 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
   }
 };
 
+// Function to create manual order records in database
+export const createManualOrderRecords = async (orderData: {
+  orderId: string;
+  orderItems: any[];
+  customerInfo: any;
+  deliveryInfo: any;
+  status: string;
+  fulfillmentStatus: string;
+  quotedPrice?: number;
+  salesPerson?: string;
+  notes?: string;
+}) => {
+  console.log('Creating manual order records:', orderData);
+
+  const records = orderData.orderItems.map(item => ({
+    order_id: orderData.orderId,
+    product_id: item.id,
+    unit: item.unit,
+    unit_price: item.unitPrice,
+    total_price: item.totalPrice,
+    quantity: item.quantity,
+    delivery_name: orderData.customerInfo.name,
+    delivery_email: orderData.customerInfo.email,
+    delivery_phone: orderData.customerInfo.phone,
+    delivery_street: orderData.deliveryInfo.street,
+    delivery_city: orderData.deliveryInfo.city,
+    delivery_state: orderData.deliveryInfo.state,
+    delivery_zip: orderData.deliveryInfo.zip,
+    delivery_date: orderData.deliveryInfo.date,
+    delivery_time_preference: orderData.deliveryInfo.timePreference,
+    delivery_instructions: orderData.deliveryInfo.instructions,
+    status: orderData.status,
+    fulfillment_status: orderData.fulfillmentStatus as "Quote Needed" | "Quote Sent" | "New Order" | "Pending" | "Assigned" | "Scheduled" | "Delivered" | "Cancelled" | "Refunded",
+    quoted_price: orderData.quotedPrice || null,
+    sales_person: orderData.salesPerson === 'not-assigned' ? null : orderData.salesPerson,
+    notes: orderData.notes,
+    billing_name: orderData.customerInfo.name,
+    billing_email: orderData.customerInfo.email,
+  }));
+
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .insert(records)
+      .select();
+
+    if (error) {
+      console.error('Error creating manual order records:', error);
+      throw error;
+    }
+
+    console.log('Manual order records created successfully:', data);
+    return { success: true, data };
+  } catch (error) {
+    console.error('Failed to create manual order records:', error);
+    throw error;
+  }
+};
+
 // Enhanced test function with complete delivery data
 export const testEnhancedDatabaseInsert = async () => {
   console.log('=== TESTING ENHANCED DATABASE INSERT ===');

@@ -253,6 +253,32 @@ export const extractCouponInfo = (cartItems: any[]): { hasCoupon: boolean; coupo
   return { hasCoupon, couponCode, totalDiscount };
 };
 
+// Helper function to format manual order items for Stripe
+export const formatOrderItemsForStripe = (orderItems: any[], customerInfo: any, deliveryInfo: any): any[] => {
+  return orderItems.map(item => ({
+    id: item.id,
+    name: item.productName,
+    price: item.unitPrice,
+    quantity: item.quantity,
+    tons: item.quantity,
+    unit: item.unit,
+    contactInfo: {
+      name: customerInfo.name,
+      email: customerInfo.email,
+      phone: customerInfo.phone
+    },
+    deliveryAddress: {
+      street: deliveryInfo.street,
+      city: deliveryInfo.city,
+      state: deliveryInfo.state,
+      zip: deliveryInfo.zip
+    },
+    deliveryDate: deliveryInfo.date,
+    deliveryTimePreference: deliveryInfo.timePreference,
+    deliveryInstructions: deliveryInfo.instructions
+  }));
+};
+
 // Enhanced function to create comprehensive backup data
 export const createEnhancedBackup = (orderId: string, cartItems: any[], customerInfo?: any): CheckoutBackup => {
   console.log('=== CREATING ENHANCED BACKUP ===');

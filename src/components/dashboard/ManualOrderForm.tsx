@@ -17,6 +17,9 @@ import { cn } from '@/lib/utils';
 import { ProductSelector } from './ProductSelector';
 import { OrderPricingCalculator } from './OrderPricingCalculator';
 import { OrderService } from '@/services/orderService';
+import { createManualOrderRecords } from '@/services/orderInsertService';
+import { formatOrderItemsForStripe } from '@/utils/paymentUtils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface OrderItem {
   id: string;
@@ -168,13 +171,42 @@ export function ManualOrderForm() {
   const handleSaveAsPending = async () => {
     setIsLoading(true);
     try {
-      // TODO: Implement save as pending order
+      const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      await createManualOrderRecords({
+        orderId,
+        orderItems,
+        customerInfo,
+        deliveryInfo,
+        status: 'pending',
+        fulfillmentStatus: 'Pending',
+        salesPerson,
+        notes
+      });
+
+      // Send confirmation email
+      await supabase.functions.invoke('send-email', {
+        body: {
+          to: customerInfo.email,
+          subject: 'Order Confirmation - Pending Processing',
+          html: `
+            <h2>Order Confirmation</h2>
+            <p>Dear ${customerInfo.name},</p>
+            <p>Your order ${orderId} has been received and is pending processing.</p>
+            <p>We will contact you shortly to confirm details and schedule delivery.</p>
+            <p>Order Total: $${orderItems.reduce((sum, item) => sum + item.totalPrice, 0).toFixed(2)}</p>
+          `,
+          type: 'customer_confirmation'
+        }
+      });
+
       toast({
         title: "Order saved as pending",
-        description: "The order has been saved and can be processed later.",
+        description: `Order ${orderId} has been saved and confirmation email sent.`,
       });
       navigate('/dashboard/orders');
     } catch (error) {
+      console.error('Error saving pending order:', error);
       toast({
         title: "Error saving order",
         description: "There was an error saving the order. Please try again.",
@@ -188,13 +220,44 @@ export function ManualOrderForm() {
   const handleSaveAsQuote = async () => {
     setIsLoading(true);
     try {
-      // TODO: Implement save as quote
+      const quoteId = `QUOTE-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const totalAmount = orderItems.reduce((sum, item) => sum + item.totalPrice, 0);
+      
+      await createManualOrderRecords({
+        orderId: quoteId,
+        orderItems,
+        customerInfo,
+        deliveryInfo,
+        status: 'Quote',
+        fulfillmentStatus: 'Quote Needed',
+        quotedPrice: totalAmount,
+        salesPerson,
+        notes
+      });
+
+      // Send quote email
+      await supabase.functions.invoke('send-email', {
+        body: {
+          to: customerInfo.email,
+          subject: 'Your Material Quote Request',
+          html: `
+            <h2>Quote Request</h2>
+            <p>Dear ${customerInfo.name},</p>
+            <p>Thank you for your quote request ${quoteId}.</p>
+            <p>Estimated Total: $${totalAmount.toFixed(2)}</p>
+            <p>Our team will review your requirements and provide a detailed quote within 24 hours.</p>
+          `,
+          type: 'customer_confirmation'
+        }
+      });
+
       toast({
         title: "Quote created",
-        description: "The quote has been created and can be sent to the customer.",
+        description: `Quote ${quoteId} has been created and sent to customer.`,
       });
       navigate('/dashboard/quotes');
     } catch (error) {
+      console.error('Error creating quote:', error);
       toast({
         title: "Error creating quote",
         description: "There was an error creating the quote. Please try again.",
@@ -208,12 +271,32 @@ export function ManualOrderForm() {
   const handleStripeCheckout = async () => {
     setIsLoading(true);
     try {
-      // TODO: Implement Stripe checkout
-      toast({
-        title: "Processing payment",
-        description: "Redirecting to payment processing...",
+      const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Format items for Stripe
+      const stripeItems = formatOrderItemsForStripe(orderItems, customerInfo, deliveryInfo);
+      
+      // Create Stripe checkout session
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: {
+          items: stripeItems,
+          orderId,
+          customerEmail: customerInfo.email
+        }
       });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        // Open Stripe checkout in new tab
+        window.open(data.url, '_blank');
+        toast({
+          title: "Payment processing",
+          description: "Opening Stripe checkout in new tab...",
+        });
+      }
     } catch (error) {
+      console.error('Error processing payment:', error);
       toast({
         title: "Error processing payment",
         description: "There was an error processing the payment. Please try again.",
