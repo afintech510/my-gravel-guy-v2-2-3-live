@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, MapPin, Calendar, Clock, CreditCard } from 'lucide-react';
+import { useProductNameResolver } from '@/hooks/useProductNameResolver';
 
 interface QuoteItem {
   id: string;
@@ -34,6 +35,10 @@ const QuoteCheckout = () => {
   const [quoteItems, setQuoteItems] = useState<QuoteItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingPayment, setProcessingPayment] = useState(false);
+  
+  // Get product names resolver
+  const productIds = quoteItems.map(item => item.product_id);
+  const { resolveProductName } = useProductNameResolver(productIds);
 
   useEffect(() => {
     if (!quoteId) {
@@ -51,7 +56,7 @@ const QuoteCheckout = () => {
         .from('orders')
         .select('*')
         .eq('order_id', quoteId)
-        .eq('status', 'quote');
+        .eq('status', 'Quote');
 
       if (error) throw error;
       
@@ -165,7 +170,7 @@ const QuoteCheckout = () => {
               {quoteItems.map((item, index) => (
                 <div key={item.id} className="flex justify-between items-start">
                   <div className="flex-1">
-                    <h4 className="font-medium">{item.product_id}</h4>
+                    <h4 className="font-medium">{resolveProductName(item.product_id)}</h4>
                     <p className="text-sm text-muted-foreground">
                       {item.quantity} {item.unit} @ ${item.unit_price.toFixed(2)} per {item.unit}
                     </p>
