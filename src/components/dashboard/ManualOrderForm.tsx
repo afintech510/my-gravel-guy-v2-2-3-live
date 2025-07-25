@@ -277,6 +277,16 @@ export function ManualOrderForm() {
         .select('*')
         .eq('order_id', quoteId);
 
+      // Get product names for the email
+      const { data: products } = await supabase
+        .from('products')
+        .select('id, name');
+      
+      const productNameMap = products?.reduce((map, product) => {
+        map[product.id] = product.name;
+        return map;
+      }, {} as { [key: string]: string }) || {};
+
       // Generate quote proposal email with purchase link
       const { generateQuoteProposalEmail } = await import('@/utils/quoteEmailTemplates');
       const htmlContent = generateQuoteProposalEmail(
@@ -290,7 +300,8 @@ export function ManualOrderForm() {
           orderId: quoteId
         }, 
         quoteItems,
-        window.location.origin
+        window.location.origin,
+        productNameMap
       );
 
       // Send enhanced quote email with purchase link to customer

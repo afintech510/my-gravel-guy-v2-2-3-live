@@ -56,7 +56,7 @@ export const generateQuoteRequestEmail = (formData: QuoteFormData): string => {
   `;
 };
 
-export const generateQuoteProposalEmail = (formData: QuoteFormData, quoteData: any, baseUrl: string = 'https://easternbuilding.supply'): string => {
+export const generateQuoteProposalEmail = (formData: QuoteFormData, quoteData: any, baseUrl: string = 'https://easternbuilding.supply', productNameMap?: { [key: string]: string }): string => {
   const orderIdSection = formData.orderId
     ? `<p><strong>Quote ID:</strong> ${formData.orderId}</p>`
     : '';
@@ -66,14 +66,17 @@ export const generateQuoteProposalEmail = (formData: QuoteFormData, quoteData: a
   expirationDate.setDate(expirationDate.getDate() + 30);
 
   const itemsSection = quoteData && quoteData.length > 0 
-    ? quoteData.map((item: any) => `
+    ? quoteData.map((item: any) => {
+        const productName = productNameMap?.[item.product_id] || item.product_id;
+        return `
         <tr>
-          <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">${item.product_id}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">${productName}</td>
           <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.quantity} ${item.unit}</td>
           <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: right;">$${item.unit_price.toFixed(2)}</td>
           <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: bold;">$${item.total_price.toFixed(2)}</td>
         </tr>
-      `).join('')
+      `;
+      }).join('')
     : '<tr><td colspan="4" style="padding: 10px; text-align: center;">Quote details will be added by our team</td></tr>';
 
   const totalAmount = quoteData && quoteData.length > 0 
@@ -141,8 +144,7 @@ export const generateQuoteProposalEmail = (formData: QuoteFormData, quoteData: a
       <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
         <h4 style="margin: 0 0 15px 0; color: #374151;">Questions or Need Changes?</h4>
         <p style="margin: 0 0 10px 0;">Contact us at:</p>
-        <p style="margin: 0;"><strong>Email:</strong> sales@easternbuilding.supply</p>
-        <p style="margin: 0;"><strong>Phone:</strong> (your phone number)</p>
+        <p style="margin: 0;"><strong>Email:</strong> sales@mygravelguy.com</p>
       </div>
 
       <div style="margin-top: 30px; padding: 20px; text-align: center; color: #6b7280; font-size: 14px;">
