@@ -143,9 +143,8 @@ export function ManualOrderForm() {
   const validateStep = (step: number) => {
     switch (step) {
       case 1:
-        return customerInfo.name && customerInfo.email && customerInfo.phone &&
-               deliveryInfo.street && deliveryInfo.city && deliveryInfo.state && 
-               deliveryInfo.zip && deliveryInfo.date && deliveryInfo.name && deliveryInfo.phone;
+        // Only require at least one contact method (email OR phone)
+        return (customerInfo.email || customerInfo.phone);
       case 2:
         return orderItems.length > 0;
       default:
@@ -158,7 +157,8 @@ export function ManualOrderForm() {
       setCurrentStep(currentStep + 1);
     } else {
       toast({
-        title: "Please complete all required fields",
+        title: "Please provide at least one contact method",
+        description: "Email or phone number is required to proceed",
         variant: "destructive",
       });
     }
@@ -421,7 +421,7 @@ export function ManualOrderForm() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="name">Customer Name *</Label>
+                    <Label htmlFor="name">Customer Name</Label>
                     <Input
                       id="name"
                       value={customerInfo.name}
@@ -430,7 +430,7 @@ export function ManualOrderForm() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="email">Email *</Label>
+                    <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
                       type="email"
@@ -440,7 +440,7 @@ export function ManualOrderForm() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="phone">Phone *</Label>
+                    <Label htmlFor="phone">Phone</Label>
                     <Input
                       id="phone"
                       value={customerInfo.phone}
@@ -509,7 +509,7 @@ export function ManualOrderForm() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="delivery-name">Contact Name *</Label>
+                    <Label htmlFor="delivery-name">Contact Name</Label>
                     <Input
                       id="delivery-name"
                       value={deliveryInfo.name}
@@ -518,7 +518,7 @@ export function ManualOrderForm() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="delivery-phone">Contact Phone *</Label>
+                    <Label htmlFor="delivery-phone">Contact Phone</Label>
                     <Input
                       id="delivery-phone"
                       value={deliveryInfo.phone}
@@ -528,7 +528,7 @@ export function ManualOrderForm() {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="street">Street Address *</Label>
+                  <Label htmlFor="street">Street Address</Label>
                   <Input
                     id="street"
                     value={deliveryInfo.street}
@@ -538,7 +538,7 @@ export function ManualOrderForm() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <Label htmlFor="city">City *</Label>
+                    <Label htmlFor="city">City</Label>
                     <Input
                       id="city"
                       value={deliveryInfo.city}
@@ -547,7 +547,7 @@ export function ManualOrderForm() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="state">State *</Label>
+                    <Label htmlFor="state">State</Label>
                     <Input
                       id="state"
                       value={deliveryInfo.state}
@@ -556,7 +556,7 @@ export function ManualOrderForm() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="zip">ZIP Code *</Label>
+                    <Label htmlFor="zip">ZIP Code</Label>
                     <Input
                       id="zip"
                       value={deliveryInfo.zip}
@@ -567,7 +567,7 @@ export function ManualOrderForm() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label>Delivery Date *</Label>
+                    <Label>Delivery Date</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
