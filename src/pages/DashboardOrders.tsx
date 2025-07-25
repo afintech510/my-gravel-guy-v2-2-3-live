@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { OrdersStatsWidget } from '@/components/dashboard/OrdersStatsWidget';
+
 import OrdersTable from '@/components/dashboard/OrdersTable';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -13,8 +13,7 @@ const DashboardOrders = () => {
   return (
     <DashboardLayout title="Orders Management" subtitle="Manage customer orders and deliveries">
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <OrdersStatsWidget />
+        <div className="flex justify-end items-center">
           <Button onClick={() => navigate('/dashboard/orders/new')} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
             New Order
