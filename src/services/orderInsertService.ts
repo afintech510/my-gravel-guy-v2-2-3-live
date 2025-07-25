@@ -201,7 +201,7 @@ export const createManualOrderRecords = async (orderData: {
 
   const records = orderData.orderItems.map(item => ({
     order_id: orderData.orderId,
-    product_id: item.id,
+    product_id: item.productId,
     unit: item.unit,
     unit_price: item.unitPrice,
     total_price: item.totalPrice,
