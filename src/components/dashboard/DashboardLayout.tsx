@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, Power, Menu } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Loader2, Power, Menu, Plus } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { DashboardSidebar } from './DashboardSidebar';
 import LoginPrompt from './LoginPrompt';
 import { forceAuthCleanup } from '@/utils/authCleanup';
@@ -18,6 +19,8 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children, title, subtitle }: DashboardLayoutProps) {
   const { user, session, loading, isAdmin, signOut } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const handlePowerLogout = async () => {
     try {
@@ -111,6 +114,18 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
               <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
                 AUTHENTICATED
               </span>
+              
+              {/* New Order Button - only show on orders page */}
+              {location.pathname === '/dashboard/orders' && (
+                <Button 
+                  onClick={() => navigate('/dashboard/orders/new')} 
+                  className="flex items-center gap-2"
+                  size="sm"
+                >
+                  <Plus className="h-4 w-4" />
+                  New Order
+                </Button>
+              )}
               
               <div className="text-xs text-gray-500">
                 Session: {session.expires_at ? new Date(session.expires_at * 1000).toLocaleTimeString() : 'Active'}
