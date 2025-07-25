@@ -322,10 +322,24 @@ ${notes ? `Additional Notes: ${notes}` : ''}`;
   const handleStripeCheckout = async () => {
     setIsLoading(true);
     try {
+      // Validation
+      if (!orderItems.length) {
+        throw new Error('No items in order');
+      }
+      
+      if (!customerInfo.email) {
+        throw new Error('Customer email is required');
+      }
+
       const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
-      // Format items for Stripe
-      const stripeItems = formatOrderItemsForStripe(orderItems, customerInfo, deliveryInfo);
+      // Import formatManualOrderForStripe dynamically
+      const { formatManualOrderForStripe } = await import('@/utils/paymentUtils');
+      
+      // Format items for Stripe with proper structure and product details
+      const stripeItems = await formatManualOrderForStripe(orderItems, customerInfo, deliveryInfo);
+      
+      console.log('Manual order Stripe items:', stripeItems);
       
       // Create Stripe checkout session
       const { data, error } = await supabase.functions.invoke('create-payment', {
@@ -336,7 +350,10 @@ ${notes ? `Additional Notes: ${notes}` : ''}`;
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Stripe checkout error:', error);
+        throw new Error(error.message || 'Failed to create payment session');
+      }
 
       if (data?.url) {
         // Open Stripe checkout in new tab
@@ -345,12 +362,14 @@ ${notes ? `Additional Notes: ${notes}` : ''}`;
           title: "Payment processing",
           description: "Opening Stripe checkout in new tab...",
         });
+      } else {
+        throw new Error('No checkout URL received from payment service');
       }
     } catch (error) {
       console.error('Error processing payment:', error);
       toast({
         title: "Error processing payment",
-        description: "There was an error processing the payment. Please try again.",
+        description: error instanceof Error ? error.message : "There was an error processing the payment. Please try again.",
         variant: "destructive",
       });
     } finally {

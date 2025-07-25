@@ -279,6 +279,56 @@ export const formatOrderItemsForStripe = (orderItems: any[], customerInfo: any, 
   }));
 };
 
+// Enhanced function for manual orders to match create-payment edge function expectations
+export const formatManualOrderForStripe = async (orderItems: any[], customerInfo: any, deliveryInfo: any): Promise<any[]> => {
+  // Import product service for product lookups
+  const { getProductById } = await import('@/services/products/productQueries');
+  
+  const formattedItems = await Promise.all(orderItems.map(async (item) => {
+    // Try to get product details for image and description
+    let productImage = '';
+    let productDescription = '';
+    
+    try {
+      if (item.productId) {
+        const product = await getProductById(item.productId);
+        if (product) {
+          productImage = product.images?.[0] || '';
+          productDescription = product.short_description || product.description || '';
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to fetch product details for:', item.productId, error);
+    }
+    
+    return {
+      name: item.productName,
+      price: item.unitPrice,
+      quantity: item.quantity,
+      description: productDescription,
+      image: productImage,
+      metadata: {
+        contactEmail: customerInfo.email,
+        contactName: customerInfo.name,
+        contactPhone: customerInfo.phone,
+        deliveryAddress: JSON.stringify({
+          street: deliveryInfo.street,
+          city: deliveryInfo.city,
+          state: deliveryInfo.state,
+          zip: deliveryInfo.zip
+        }),
+        deliveryDate: deliveryInfo.date,
+        deliveryTimePreference: deliveryInfo.timePreference,
+        deliveryInstructions: deliveryInfo.instructions,
+        productId: item.productId || item.id,
+        unit: item.unit
+      }
+    };
+  }));
+  
+  return formattedItems;
+};
+
 // Enhanced function to create comprehensive backup data
 export const createEnhancedBackup = (orderId: string, cartItems: any[], customerInfo?: any): CheckoutBackup => {
   console.log('=== CREATING ENHANCED BACKUP ===');
