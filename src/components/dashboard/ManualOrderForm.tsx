@@ -792,10 +792,8 @@ ${notes ? `Additional Notes: ${notes}` : ''}`;
         }
       </div>
 
-      {renderStep()}
-
       {/* Navigation buttons */}
-      <div className="flex justify-between">
+      <div className="flex justify-between mb-6">
         <Button
           variant="outline"
           onClick={currentStep === 1 ? () => navigate('/dashboard/orders') : handleBack}
@@ -811,6 +809,8 @@ ${notes ? `Additional Notes: ${notes}` : ''}`;
           </Button>
         )}
       </div>
+
+      {renderStep()}
     </div>
   );
 }
