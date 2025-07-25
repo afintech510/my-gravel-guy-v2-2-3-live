@@ -58,6 +58,7 @@ import SitemapXML from "./pages/SitemapXML";
 import SMSConsent from "./pages/SMSConsent";
 import GoogleShopping from "./pages/GoogleShopping";
 import AddToCart from "./pages/AddToCart";
+import QuoteCheckout from "./pages/QuoteCheckout";
 import { Link } from "react-router-dom";
 
 const queryClient = new QueryClient({
@@ -144,6 +145,7 @@ function AppContent() {
         <Route path="/sitemap.xml" element={<SitemapXML />} />
         <Route path="/sms-consent" element={<SMSConsent />} />
         <Route path="/add-to-cart" element={<AddToCart />} />
+        <Route path="/quote-checkout/:quoteId" element={<QuoteCheckout />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       {!isDashboardPage && <Footer />}

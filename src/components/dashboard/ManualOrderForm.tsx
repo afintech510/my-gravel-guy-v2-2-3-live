@@ -254,58 +254,79 @@ export function ManualOrderForm() {
         notes
       });
 
-      // Format products for quote email
-      const productDetails = orderItems.map(item => 
-        `${item.productName} - Quantity: ${item.quantity} ${item.unit} - $${item.totalPrice.toFixed(2)}`
-      ).join('\n');
+      // Set quote expiration (30 days from now)
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + 30);
 
-      const message = `Delivery Address: ${deliveryInfo.street}, ${deliveryInfo.city}, ${deliveryInfo.state} ${deliveryInfo.zip}
-Delivery Date: ${deliveryInfo.date}
-${deliveryInfo.timePreference ? `Time Preference: ${deliveryInfo.timePreference}` : ''}
-${deliveryInfo.instructions ? `Instructions: ${deliveryInfo.instructions}` : ''}
+      // Update quote with expiration date
+      const { error: updateError } = await supabase
+        .from('orders')
+        .update({ 
+          quote_expires_at: expirationDate.toISOString(),
+          quote_status: 'sent'
+        })
+        .eq('order_id', quoteId);
 
-Products Requested:
-${productDetails}
+      if (updateError) {
+        console.error('Error updating quote expiration:', updateError);
+      }
 
-Total Estimated Amount: $${totalAmount.toFixed(2)}
+      // Get the created quote items for the email
+      const { data: quoteItems } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('order_id', quoteId);
 
-${notes ? `Additional Notes: ${notes}` : ''}`;
+      // Generate quote proposal email with purchase link
+      const { generateQuoteProposalEmail } = await import('@/utils/quoteEmailTemplates');
+      const htmlContent = generateQuoteProposalEmail(
+        {
+          name: customerInfo.name,
+          email: customerInfo.email,
+          phone: customerInfo.phone,
+          message: notes || 'Manual quote created by admin',
+          zipCode: deliveryInfo.zip,
+          selectedProduct: null,
+          orderId: quoteId
+        }, 
+        quoteItems,
+        window.location.origin
+      );
 
-      // Send enhanced quote email to customer
-      const { generateQuoteRequestEmail } = await import('@/utils/quoteEmailTemplates');
-      const customerEmailHtml = generateQuoteRequestEmail({
-        name: customerInfo.name,
-        email: customerInfo.email,
-        phone: customerInfo.phone,
-        zipCode: deliveryInfo.zip,
-        message,
-        orderId: quoteId
-      });
-
-      // Send quote email to customer
-      await supabase.functions.invoke('send-email', {
+      // Send enhanced quote email with purchase link to customer
+      const { data: emailData, error: emailError } = await supabase.functions.invoke('send-email', {
         body: {
           to: customerInfo.email,
-          subject: `Quote Request Confirmation - ${quoteId}`,
-          html: customerEmailHtml,
+          subject: `Your Quote #${quoteId} - Ready for Review & Payment`,
+          html: htmlContent,
           type: 'customer_confirmation'
         }
       });
+
+      if (emailError) {
+        console.error('Email error:', emailError);
+        toast({
+          title: "Quote created with issues",
+          description: `Quote ${quoteId} created but email failed to send`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Quote created successfully",
+          description: `Quote ${quoteId} created and email with purchase link sent to customer.`,
+        });
+      }
 
       // Send internal notification to business
       await supabase.functions.invoke('send-email', {
         body: {
           to: 'sales@mygravelguy.com',
-          subject: `New Quote Request - ${quoteId}`,
-          html: customerEmailHtml,
+          subject: `New Quote Created - ${quoteId}`,
+          html: htmlContent,
           type: 'internal_notification'
         }
       });
 
-      toast({
-        title: "Quote created",
-        description: `Quote ${quoteId} has been created and sent to customer.`,
-      });
       navigate('/dashboard/quotes');
     } catch (error) {
       console.error('Error creating quote:', error);
