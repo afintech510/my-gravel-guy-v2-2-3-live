@@ -99,8 +99,9 @@ export const getStoredOrderId = (): string | null => {
   return localStorage.getItem('checkout-order-id');
 };
 
-export const generateOrderId = (): string => {
-  return `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+export const generateOrderId = (productIndex?: number): string => {
+  const baseId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  return productIndex !== undefined ? `${baseId}-${productIndex + 1}` : baseId;
 };
 
 export const detectPaymentSuccess = (): { 
