@@ -20,8 +20,8 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    const stripeKey = Deno.env.get("stripe");
+    if (!stripeKey) throw new Error("stripe secret key is not set");
     logStep("Stripe key verified");
 
     // Use service role key to access quote data
@@ -40,7 +40,7 @@ serve(async (req) => {
       .from("orders")
       .select("*")
       .eq("order_id", quoteId)
-      .eq("status", "quote");
+      .eq("status", "Quote");
 
     if (quoteError) throw new Error(`Failed to fetch quote: ${quoteError.message}`);
     if (!quoteItems || quoteItems.length === 0) throw new Error("Quote not found or not in quote status");
