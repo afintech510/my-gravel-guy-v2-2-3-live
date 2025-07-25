@@ -184,29 +184,48 @@ export function ManualOrderForm() {
         notes
       });
 
-      // Send confirmation email
-      await supabase.functions.invoke('send-email', {
-        body: {
-          to: customerInfo.email,
-          subject: 'Order Confirmation - Pending Processing',
-          html: `
-            <h2>Order Confirmation</h2>
-            <p>Dear ${customerInfo.name},</p>
-            <p>Your order ${orderId} has been received and is pending processing.</p>
-            <p>We will contact you shortly to confirm details and schedule delivery.</p>
-            <p>Order Total: $${orderItems.reduce((sum, item) => sum + item.totalPrice, 0).toFixed(2)}</p>
-          `,
-          type: 'customer_confirmation'
-        }
-      });
+      // Transform order data for email templates
+      const emailOrderData = {
+        order_id: orderId,
+        items: orderItems.map(item => ({
+          product_name: item.productName,
+          quantity: item.quantity,
+          total_price: item.totalPrice,
+          delivery_date: deliveryInfo.date,
+          delivery_address: {
+            street: deliveryInfo.street,
+            city: deliveryInfo.city,
+            state: deliveryInfo.state,
+            zip: deliveryInfo.zip
+          },
+          contact_info: {
+            name: customerInfo.name,
+            email: customerInfo.email,
+            phone: customerInfo.phone
+          },
+          delivery_time_preference: deliveryInfo.timePreference,
+          delivery_instructions: deliveryInfo.instructions
+        })),
+        total_amount: orderItems.reduce((sum, item) => sum + item.totalPrice, 0),
+        customer_email: customerInfo.email,
+        customer_name: customerInfo.name
+      };
+
+      // Send professional order confirmation emails to both customer and business
+      const { sendBothOrderEmails } = await import('@/services/emailService');
+      const emailResult = await sendBothOrderEmails(emailOrderData);
+
+      if (!emailResult.overallSuccess) {
+        console.warn('Some emails failed to send:', emailResult);
+      }
 
       toast({
-        title: "Order saved as pending",
-        description: `Order ${orderId} has been saved and confirmation email sent.`,
+        title: "Order saved",
+        description: `Order ${orderId} has been saved and confirmation emails sent.`,
       });
       navigate('/dashboard/orders');
     } catch (error) {
-      console.error('Error saving pending order:', error);
+      console.error('Error saving order:', error);
       toast({
         title: "Error saving order",
         description: "There was an error saving the order. Please try again.",
@@ -235,19 +254,51 @@ export function ManualOrderForm() {
         notes
       });
 
-      // Send quote email
+      // Format products for quote email
+      const productDetails = orderItems.map(item => 
+        `${item.productName} - Quantity: ${item.quantity} ${item.unit} - $${item.totalPrice.toFixed(2)}`
+      ).join('\n');
+
+      const message = `Delivery Address: ${deliveryInfo.street}, ${deliveryInfo.city}, ${deliveryInfo.state} ${deliveryInfo.zip}
+Delivery Date: ${deliveryInfo.date}
+${deliveryInfo.timePreference ? `Time Preference: ${deliveryInfo.timePreference}` : ''}
+${deliveryInfo.instructions ? `Instructions: ${deliveryInfo.instructions}` : ''}
+
+Products Requested:
+${productDetails}
+
+Total Estimated Amount: $${totalAmount.toFixed(2)}
+
+${notes ? `Additional Notes: ${notes}` : ''}`;
+
+      // Send enhanced quote email to customer
+      const { generateQuoteRequestEmail } = await import('@/utils/quoteEmailTemplates');
+      const customerEmailHtml = generateQuoteRequestEmail({
+        name: customerInfo.name,
+        email: customerInfo.email,
+        phone: customerInfo.phone,
+        zipCode: deliveryInfo.zip,
+        message,
+        orderId: quoteId
+      });
+
+      // Send quote email to customer
       await supabase.functions.invoke('send-email', {
         body: {
           to: customerInfo.email,
-          subject: 'Your Material Quote Request',
-          html: `
-            <h2>Quote Request</h2>
-            <p>Dear ${customerInfo.name},</p>
-            <p>Thank you for your quote request ${quoteId}.</p>
-            <p>Estimated Total: $${totalAmount.toFixed(2)}</p>
-            <p>Our team will review your requirements and provide a detailed quote within 24 hours.</p>
-          `,
+          subject: `Quote Request Confirmation - ${quoteId}`,
+          html: customerEmailHtml,
           type: 'customer_confirmation'
+        }
+      });
+
+      // Send internal notification to business
+      await supabase.functions.invoke('send-email', {
+        body: {
+          to: 'sales@mygravelguy.com',
+          subject: `New Quote Request - ${quoteId}`,
+          html: customerEmailHtml,
+          type: 'internal_notification'
         }
       });
 
@@ -658,7 +709,7 @@ export function ManualOrderForm() {
                     className="flex items-center gap-2"
                   >
                     <Save className="h-4 w-4" />
-                    Save as Pending
+                    Save Order
                   </Button>
                   <Button
                     onClick={handleSaveAsQuote}
