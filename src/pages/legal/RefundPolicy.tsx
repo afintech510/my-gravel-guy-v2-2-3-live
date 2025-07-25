@@ -1,10 +1,7 @@
-
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
-
 const RefundPolicy = () => {
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <Helmet>
         <title>Refund Policy - My Gravel Guy</title>
         <meta name="description" content="Refund policy for My Gravel Guy - learn about our refund eligibility criteria and processes." />
@@ -34,7 +31,7 @@ const RefundPolicy = () => {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">3. How to Request a Refund</h2>
             <p className="mb-4">Email <a href="mailto:support@mygravelguy.com" className="text-primary hover:underline">support@mygravelguy.com</a> with your order number and reason for the request.</p>
-            <p className="mb-4">Refunds (if approved) will be processed to your original payment method within 5–7 business days.</p>
+            <p className="mb-4">Refunds (if approved) will be processed to your original payment method within 5–7 business days, minus a 10% fee to cover processing costs.</p>
           </section>
           
           <section className="mb-8">
@@ -48,8 +45,6 @@ const RefundPolicy = () => {
           </section>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default RefundPolicy;
