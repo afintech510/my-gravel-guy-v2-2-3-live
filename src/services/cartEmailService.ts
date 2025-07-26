@@ -142,15 +142,18 @@ const generateCartConfirmationEmail = (orderData: any) => {
               ${item.delivery_date ? `
                 <div style="background: #f0f9ff; padding: 15px; border-radius: 6px; margin: 10px 0;">
                   <h5 style="margin-top: 0; color: #1e40af;">✅ Delivery Schedule:</h5>
-                  <p><strong>Date:</strong> ${(() => {
-                    const date = new Date(item.delivery_date + 'T00:00:00');
-                    return date.toLocaleDateString('en-US', {
-                      weekday: 'long',
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
-                    });
-                  })()}</p>
+                   <p><strong>Date:</strong> ${(() => {
+                     if (!item.delivery_date) return 'Not set';
+                     // Handle ISO date string properly
+                     const date = new Date(item.delivery_date);
+                     if (isNaN(date.getTime())) return 'Invalid Date';
+                     return date.toLocaleDateString('en-US', {
+                       weekday: 'long',
+                       month: 'short',
+                       day: 'numeric',
+                       year: 'numeric'
+                     });
+                   })()}</p>
                   ${item.delivery_time_preference ? `
                     <p><strong>Time Preference:</strong> ${
                       item.delivery_time_preference === 'anytime' ? 'Anytime (7am-5pm)' : 
