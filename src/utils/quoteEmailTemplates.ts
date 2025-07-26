@@ -69,15 +69,30 @@ export const generateQuoteProposalEmail = (formData: QuoteFormData, quoteData: a
     ? quoteData.map((item: any) => {
         const productName = productNameMap?.[item.product_id] || item.product_id;
         return `
-        <tr>
-          <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">${productName}</td>
-          <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.quantity} ${item.unit}</td>
-          <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: right;">$${item.unit_price.toFixed(2)}</td>
-          <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: bold;">$${item.total_price.toFixed(2)}</td>
-        </tr>
+        <div style="background-color: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 15px;">
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="font-size: 18px; font-weight: bold; color: #374151; margin-bottom: 8px;">
+              ${productName}
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+              <div style="display: flex; flex-direction: column; min-width: 120px;">
+                <span style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Quantity</span>
+                <span style="font-size: 16px; font-weight: 600; color: #374151;">${item.quantity} ${item.unit}</span>
+              </div>
+              <div style="display: flex; flex-direction: column; min-width: 120px;">
+                <span style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Unit Price</span>
+                <span style="font-size: 16px; font-weight: 600; color: #374151;">$${item.unit_price.toFixed(2)}</span>
+              </div>
+              <div style="display: flex; flex-direction: column; min-width: 120px; text-align: right;">
+                <span style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Total</span>
+                <span style="font-size: 20px; font-weight: bold; color: #2563eb;">$${item.total_price.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       `;
       }).join('')
-    : '<tr><td colspan="4" style="padding: 10px; text-align: center;">Quote details will be added by our team</td></tr>';
+    : '<div style="background-color: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; text-align: center; color: #6b7280;">Quote details will be added by our team</div>';
 
   const totalAmount = quoteData && quoteData.length > 0 
     ? quoteData.reduce((sum: number, item: any) => sum + item.total_price, 0).toFixed(2)
@@ -102,25 +117,14 @@ export const generateQuoteProposalEmail = (formData: QuoteFormData, quoteData: a
         <h2 style="color: #374151; margin-top: 0;">Hello ${formData.name},</h2>
         <p>We're pleased to provide you with a detailed quote for your project. Please review the items and pricing below:</p>
         
-        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-          <thead>
-            <tr style="background-color: #f8f9fa;">
-              <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">Product</th>
-              <th style="padding: 12px; text-align: center; border-bottom: 2px solid #e5e7eb;">Quantity</th>
-              <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e7eb;">Unit Price</th>
-              <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e7eb;">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${itemsSection}
-          </tbody>
-          <tfoot>
-            <tr style="background-color: #f8f9fa; font-weight: bold;">
-              <td colspan="3" style="padding: 15px; text-align: right; border-top: 2px solid #2563eb;">Total Amount:</td>
-              <td style="padding: 15px; text-align: right; border-top: 2px solid #2563eb; font-size: 18px; color: #2563eb;">$${totalAmount}</td>
-            </tr>
-          </tfoot>
-        </table>
+        <div style="margin: 20px 0;">
+          ${itemsSection}
+          
+          <div style="background-color: #2563eb; color: white; padding: 20px; border-radius: 8px; margin-top: 20px; text-align: center;">
+            <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">Total Amount</div>
+            <div style="font-size: 28px; font-weight: bold;">$${totalAmount}</div>
+          </div>
+        </div>
       </div>
 
       <div style="background-color: #059669; color: white; padding: 25px; border-radius: 8px; text-align: center; margin-bottom: 20px;">
