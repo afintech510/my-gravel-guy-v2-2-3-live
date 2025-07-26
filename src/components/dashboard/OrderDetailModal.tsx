@@ -20,6 +20,7 @@ import SalesPersonSelector from './SalesPersonSelector';
 import SMSTemplateSelector from './SMSTemplateSelector';
 import SMSPreview from './SMSPreview';
 import { format } from 'date-fns';
+import { formatDateTime, formatLocalDate } from '@/utils/dateUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { SupplierService } from '@/services/supplierService';
 
@@ -488,7 +489,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   </div>
                   <div>
                     <Label className="text-sm font-medium">Order Date</Label>
-                    <p className="text-sm">{format(new Date(order.created_at), 'MMM d, yyyy h:mm a')}</p>
+                    <p className="text-sm">{formatDateTime(order.created_at, 'MMM d, yyyy h:mm a')}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -514,7 +515,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                         <Label className="text-sm font-medium">Delivery Date</Label>
                         <p className="text-sm">
                           {order.items[0].delivery_date 
-                            ? format(new Date(order.items[0].delivery_date), 'MMM d, yyyy')
+                            ? formatLocalDate(order.items[0].delivery_date, 'MMM d, yyyy')
                             : 'Not set'
                           }
                         </p>

@@ -505,7 +505,7 @@ const Checkout = () => {
                               <h5 className="font-medium text-gray-700 text-sm">Delivery Schedule</h5>
                               <div className="text-sm text-gray-600">
                                 <div className="font-medium">
-                                  {new Date(item.deliveryDate).toLocaleDateString('en-US', {
+                                  {item.deliveryDate.toLocaleDateString('en-US', {
                                     weekday: 'long',
                                     month: 'short',
                                     day: 'numeric',

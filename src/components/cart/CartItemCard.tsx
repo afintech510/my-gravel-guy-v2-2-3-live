@@ -36,7 +36,7 @@ const CartItemCard = ({
   // Format date to display in a readable format
   const formatDate = (date?: Date) => {
     if (!date) return 'Not selected';
-    return new Date(date).toLocaleDateString('en-US', {
+    return date.toLocaleDateString('en-US', {
       weekday: 'long',
       month: 'short',
       day: 'numeric'

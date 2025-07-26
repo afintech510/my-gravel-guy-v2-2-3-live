@@ -130,7 +130,7 @@ const QuoteCheckout = () => {
 
   const firstItem = quoteItems[0];
   const totalAmount = quoteItems.reduce((sum, item) => sum + item.total_price, 0);
-  const isExpired = firstItem.quote_expires_at && new Date(firstItem.quote_expires_at) < new Date();
+  const isExpired = firstItem.quote_expires_at && new Date(firstItem.quote_expires_at + 'T00:00:00') < new Date();
 
   return (
     <div className="min-h-screen bg-background">
@@ -151,7 +151,7 @@ const QuoteCheckout = () => {
             <CardContent className="pt-6">
               <div className="text-center text-destructive">
                 <h3 className="font-semibold mb-2">Quote Expired</h3>
-                <p>This quote expired on {new Date(firstItem.quote_expires_at).toLocaleDateString()}. 
+                <p>This quote expired on {new Date(firstItem.quote_expires_at + 'T00:00:00').toLocaleDateString()}. 
                    Please contact us for a new quote.</p>
               </div>
             </CardContent>
@@ -224,7 +224,7 @@ const QuoteCheckout = () => {
                   <Separator />
                   <div className="flex items-center">
                     <Calendar className="h-4 w-4 mr-2" />
-                    <span>Delivery Date: {new Date(firstItem.delivery_date).toLocaleDateString()}</span>
+                    <span>Delivery Date: {new Date(firstItem.delivery_date + 'T00:00:00').toLocaleDateString()}</span>
                   </div>
                 </>
               )}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
+import { formatDateTime, formatLocalDate } from '@/utils/dateUtils';
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import StarRating from './StarRating';
@@ -20,7 +21,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, className }) => {
   const [helpfulVotes, setHelpfulVotes] = useState(review.helpful_votes);
   const [hasVoted, setHasVoted] = useState(false);
   
-  const formattedDate = format(new Date(review.created_at), 'MMM d, yyyy');
+  const formattedDate = formatDateTime(review.created_at, 'MMM d, yyyy');
   
   const handleHelpfulVote = async () => {
     if (hasVoted) return;
@@ -79,7 +80,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, className }) => {
             </p>
             {review.admin_response_date && (
               <div className="text-xs text-muted-foreground mt-1">
-                {format(new Date(review.admin_response_date), 'MMM d, yyyy')}
+                {formatLocalDate(review.admin_response_date, 'MMM d, yyyy')}
               </div>
             )}
           </div>

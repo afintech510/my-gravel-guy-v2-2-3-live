@@ -11,6 +11,7 @@ import OrderTableFilters from './OrderTableFilters';
 import FulfillmentStatusBadge from './FulfillmentStatusBadge';
 import OrderDetailModal from './OrderDetailModal';
 import { format } from 'date-fns';
+import { formatLocalDate } from '@/utils/dateUtils';
 import { createGoogleMapsSearchUrl } from '@/utils/googleMapsUtils';
 
 interface OrdersTableProps {
@@ -246,7 +247,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
                       </TableCell>
                       <TableCell>
                         {order.items?.[0]?.delivery_date 
-                          ? format(new Date(order.items[0].delivery_date), 'MMM d, yyyy')
+                          ? formatLocalDate(order.items[0].delivery_date, 'MMM d, yyyy')
                           : 'Not set'
                         }
                       </TableCell>
