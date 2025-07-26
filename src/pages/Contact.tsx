@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { ChatDrawer } from '@/components/chat/ChatDrawer';
+
 import QuoteForm from '@/components/forms/QuoteForm';
 
 const Contact = () => {
@@ -99,7 +99,7 @@ const Contact = () => {
           </div>
         </div>
       </section>
-      <ChatDrawer />
+      
     </div>
   );
 };
