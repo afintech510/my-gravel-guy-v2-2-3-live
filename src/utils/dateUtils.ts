@@ -1,3 +1,5 @@
+import { format } from 'date-fns';
+
 /**
  * Date utility functions to handle timezone issues with DATE-only fields from database
  * 
@@ -46,8 +48,6 @@ export const formatLocalDate = (dateString: string | null | undefined, formatStr
   const date = parseLocalDate(dateString);
   if (!date) return 'Not set';
   
-  // Import format from date-fns dynamically to avoid circular imports
-  const { format } = require('date-fns');
   return format(date, formatStr);
 };
 
@@ -58,8 +58,6 @@ export const formatDateTime = (dateTimeString: string | null | undefined, format
   const date = parseDateTime(dateTimeString);
   if (!date) return 'Not set';
   
-  // Import format from date-fns dynamically to avoid circular imports
-  const { format } = require('date-fns');
   return format(date, formatStr);
 };
 
