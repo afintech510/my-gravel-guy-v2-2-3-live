@@ -46,6 +46,32 @@ serve(async (req) => {
     if (!quoteItems || quoteItems.length === 0) throw new Error("Quote not found or not in quote status");
     logStep("Quote data retrieved", { itemCount: quoteItems.length });
 
+    // Get unique product IDs to fetch product names
+    const productIds = [...new Set(quoteItems.map(item => item.product_id))];
+    logStep("Fetching product names", { productIds });
+
+    // Fetch product details for name resolution
+    const { data: products, error: productsError } = await supabaseClient
+      .from("products")
+      .select("id, name, short_description")
+      .in("id", productIds);
+
+    if (productsError) {
+      logStep("Warning: Failed to fetch product names", { error: productsError.message });
+    }
+
+    // Create product name mapping
+    const productNameMap = new Map();
+    if (products) {
+      products.forEach(product => {
+        productNameMap.set(product.id, {
+          name: product.name,
+          description: product.short_description
+        });
+      });
+    }
+    logStep("Product name mapping created", { mappedProducts: productNameMap.size });
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
     // Check if customer exists in Stripe
@@ -59,18 +85,39 @@ serve(async (req) => {
       logStep("Existing Stripe customer found", { customerId });
     }
 
-    // Format line items for Stripe
-    const lineItems = quoteItems.map(item => ({
-      price_data: {
-        currency: "usd",
-        product_data: {
-          name: `${item.product_id} (${item.quantity} ${item.unit})`,
-          description: `Delivery to: ${item.delivery_street}, ${item.delivery_city}, ${item.delivery_state} ${item.delivery_zip}`,
+    // Format line items for Stripe with resolved product names
+    const lineItems = quoteItems.map(item => {
+      // Get product name from mapping or fallback to product ID
+      const productInfo = productNameMap.get(item.product_id);
+      const productName = productInfo?.name || item.product_id;
+      const productDescription = productInfo?.description || '';
+      
+      // Build description with delivery info and product description
+      let description = `Delivery to: ${item.delivery_street}, ${item.delivery_city}, ${item.delivery_state} ${item.delivery_zip}`;
+      if (productDescription) {
+        description = `${productDescription}\n${description}`;
+      }
+      
+      logStep("Creating line item", { 
+        productId: item.product_id, 
+        productName, 
+        totalPrice: item.total_price,
+        unitPrice: item.unit_price,
+        quantity: item.quantity 
+      });
+
+      return {
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: `${productName} (${item.quantity} ${item.unit})`,
+            description: description,
+          },
+          unit_amount: Math.round(item.total_price * 100), // Use total price, not unit price
         },
-        unit_amount: Math.round(item.unit_price * 100), // Convert to cents
-      },
-      quantity: 1, // We handle quantity in the product name
-    }));
+        quantity: 1, // We handle quantity in the product name and use total_price
+      };
+    });
 
     logStep("Line items formatted", { lineItemsCount: lineItems.length });
 
