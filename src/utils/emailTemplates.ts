@@ -123,7 +123,9 @@ export const generateCustomerConfirmationEmail = (orderData: OrderData): string 
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Not specified';
-    return new Date(dateString).toLocaleDateString('en-US', {
+    // Parse DATE-only strings as local dates to avoid timezone issues
+    const date = new Date(dateString + 'T00:00:00');
+    return date.toLocaleDateString('en-US', {
       weekday: 'long',
       month: 'long',
       day: 'numeric',
@@ -459,7 +461,7 @@ export const generateInternalNotificationEmail = (orderData: OrderData): string 
                                     <div class="mobile-stack" style="display: table-cell; vertical-align: top; width: 50%; padding-right: 10px;">
                                         ${item.delivery_date ? `
                                             <p style="color: #92400e; font-size: 13px; margin: 2px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
-                                                <strong>📅 Date:</strong> ${new Date(item.delivery_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                                <strong>📅 Date:</strong> ${new Date(item.delivery_date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                                             </p>
                                         ` : ''}
                                         ${item.delivery_time_preference ? `

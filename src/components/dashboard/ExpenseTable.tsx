@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { formatLocalDate } from '@/utils/dateUtils';
 
 interface Expense {
   id: string;
@@ -169,7 +170,7 @@ export const ExpenseTable = ({ onEditExpense, refreshTrigger }: ExpenseTableProp
               </TableCell>
               <TableCell>${expense.amount.toFixed(2)}</TableCell>
               <TableCell>{getExpenseTypeBadge(expense.expense_type)}</TableCell>
-              <TableCell>{format(new Date(expense.expense_date), 'MMM dd, yyyy')}</TableCell>
+              <TableCell>{formatLocalDate(expense.expense_date, 'MMM dd, yyyy')}</TableCell>
               <TableCell>{expense.vendor || '-'}</TableCell>
               <TableCell>
                 <Badge variant={expense.tax_deductible ? 'default' : 'outline'}>

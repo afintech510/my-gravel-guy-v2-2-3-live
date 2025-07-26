@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Save, ArrowLeft, User, MapPin, Package, UserCheck, DollarSign, FileText, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { formatDateForDatabase, parseLocalDate, formatDateTime } from '@/utils/dateUtils';
 import SupplierSelector from '@/components/dashboard/SupplierSelector';
 import FulfillmentStatusBadge from '@/components/dashboard/FulfillmentStatusBadge';
 import { SupplierService } from '@/services/supplierService';
@@ -121,7 +122,7 @@ const OrderEdit = () => {
           delivery_city: firstItem?.delivery_address?.city || '',
           delivery_state: firstItem?.delivery_address?.state || '',
           delivery_zip: firstItem?.delivery_address?.zip || '',
-          delivery_date: firstItem?.delivery_date ? format(new Date(firstItem.delivery_date), 'yyyy-MM-dd') : '',
+          delivery_date: firstItem?.delivery_date ? formatDateForDatabase(parseLocalDate(firstItem.delivery_date)) || format(new Date(firstItem.delivery_date + 'T00:00:00'), 'yyyy-MM-dd') : '',
           delivery_instructions: firstItem?.delivery_instructions || '',
           delivery_time_preference: firstItem?.delivery_time_preference || '',
           status: order.status,
@@ -433,7 +434,7 @@ const OrderEdit = () => {
               </div>
               <div>
                 <Label className="text-sm font-medium">Order Date</Label>
-                <p className="text-sm text-gray-600 mt-1">{format(new Date(order.created_at), 'MMM d, yyyy h:mm a')}</p>
+                <p className="text-sm text-gray-600 mt-1">{formatDateTime(order.created_at, 'MMM d, yyyy h:mm a')}</p>
               </div>
             </CardContent>
           </Card>

@@ -1152,12 +1152,15 @@ const PaymentSuccess = () => {
                               </h5>
                               <div className="text-sm text-gray-600">
                                 <div className="font-medium">
-                                  {new Date(item.delivery_date).toLocaleDateString('en-US', {
+                                {(() => {
+                                  const date = new Date(item.delivery_date + 'T00:00:00');
+                                  return date.toLocaleDateString('en-US', {
                                     weekday: 'long',
                                     month: 'short',
                                     day: 'numeric',
                                     year: 'numeric'
-                                  })}
+                                  });
+                                })()}
                                 </div>
                                 <div>{formatDeliveryTimePreference(item.delivery_time_preference)}</div>
                               </div>
