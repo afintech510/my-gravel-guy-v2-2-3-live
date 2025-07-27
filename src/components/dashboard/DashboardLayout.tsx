@@ -1,14 +1,15 @@
 
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, Power, Menu, Plus } from 'lucide-react';
+import { Loader2, Power, Menu, Plus, X } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { DashboardSidebar } from './DashboardSidebar';
 import LoginPrompt from './LoginPrompt';
 import { forceAuthCleanup } from '@/utils/authCleanup';
 import { supabase } from '@/integrations/supabase/client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -18,9 +19,15 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, title, subtitle }: DashboardLayoutProps) {
   const { user, session, loading, isAdmin, signOut } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const isMobile = useIsMobile();
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Default to closed
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Set initial sidebar state based on screen size
+  useEffect(() => {
+    setSidebarOpen(!isMobile);
+  }, [isMobile]);
 
   const handlePowerLogout = async () => {
     try {
@@ -91,11 +98,19 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
 
   return (
     <div className="min-h-screen bg-gray-50 w-full">
+      {/* Mobile overlay */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Fixed Header - positioned below main navigation */}
       <div className="fixed top-20 left-0 right-0 bg-white shadow-sm border-b z-20 h-16">
         <div className="px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex justify-between items-center h-full">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               {/* Hamburger Menu */}
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -104,32 +119,35 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
                 <Menu className="h-5 w-5" />
               </button>
               
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-                {subtitle && <p className="text-sm text-gray-600">{subtitle}</p>}
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">{title}</h1>
+                {subtitle && <p className="text-xs sm:text-sm text-gray-600 truncate">{subtitle}</p>}
               </div>
             </div>
             
-            <div className="flex items-center space-x-4">
-              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+            <div className="flex items-center space-x-1 sm:space-x-4">
+              {/* Mobile: Hide session info and auth status, show only essential actions */}
+              <span className="hidden sm:inline text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
                 AUTHENTICATED
               </span>
               
-              {/* New Order Button - show on all dashboard pages except create/edit pages */}
+              {/* New Order Button - responsive sizing */}
               {location.pathname.startsWith('/dashboard') && 
                location.pathname !== '/dashboard/orders/new' && 
                !location.pathname.startsWith('/dashboard/orders/edit') && (
                 <Button 
                   onClick={() => navigate('/dashboard/orders/new')} 
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-1 sm:gap-2"
                   size="sm"
                 >
                   <Plus className="h-4 w-4" />
-                  New Order
+                  <span className="hidden sm:inline">New Order</span>
+                  <span className="sm:hidden">New</span>
                 </Button>
               )}
               
-              <div className="text-xs text-gray-500">
+              {/* Hide session info on mobile */}
+              <div className="hidden lg:block text-xs text-gray-500">
                 Session: {session.expires_at ? new Date(session.expires_at * 1000).toLocaleTimeString() : 'Active'}
               </div>
               
@@ -142,15 +160,16 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
                 <Power className="h-4 w-4" />
               </button>
               
+              {/* Hide regular buttons on mobile, show in dropdown or simplified */}
               <button
                 onClick={signOut}
-                className="text-sm text-gray-600 hover:text-gray-900 px-3 py-1 rounded-md hover:bg-gray-100"
+                className="hidden sm:block text-sm text-gray-600 hover:text-gray-900 px-3 py-1 rounded-md hover:bg-gray-100"
               >
                 Sign Out
               </button>
               <button
                 onClick={() => window.location.href = '/'}
-                className="text-sm text-gray-600 hover:text-gray-900 px-3 py-1 rounded-md hover:bg-gray-100"
+                className="hidden sm:block text-sm text-gray-600 hover:text-gray-900 px-3 py-1 rounded-md hover:bg-gray-100"
               >
                 Back to Site
               </button>
@@ -160,15 +179,23 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
       </div>
 
       {/* Sidebar and Main Content */}
-      <DashboardSidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+      <DashboardSidebar 
+        isOpen={sidebarOpen} 
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
+        isMobile={isMobile}
+      />
       
-      {/* Main Content - positioned to the right of sidebar */}
+      {/* Main Content - responsive layout */}
       <div 
         className={`${
-          sidebarOpen ? 'ml-64' : 'ml-16'
+          isMobile 
+            ? 'ml-0' // No margin on mobile, sidebar overlays
+            : sidebarOpen 
+              ? 'ml-64' 
+              : 'ml-16'
         } transition-all duration-300 ease-in-out pt-36 min-h-screen overflow-auto bg-gray-50`}
       >
-        <div className="px-4 sm:px-6 lg:px-8 py-6">
+        <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           {children}
         </div>
       </div>
