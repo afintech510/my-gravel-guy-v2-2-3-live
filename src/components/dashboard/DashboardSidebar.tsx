@@ -52,9 +52,10 @@ const menuItems = [
 interface DashboardSidebarProps {
   isOpen: boolean;
   onToggle: () => void;
+  isMobile: boolean;
 }
 
-export function DashboardSidebar({ isOpen }: DashboardSidebarProps) {
+export function DashboardSidebar({ isOpen, isMobile }: DashboardSidebarProps) {
   const { isFinancialAdmin, loading } = useFinancialAuth();
 
   // Filter menu items based on financial admin access
@@ -68,8 +69,14 @@ export function DashboardSidebar({ isOpen }: DashboardSidebarProps) {
   return (
     <div
       className={`${
-        isOpen ? 'w-64' : 'w-16'
-      } transition-all duration-300 ease-in-out bg-gray-800 border-r border-gray-700 flex-shrink-0 fixed left-0 top-36 h-[calc(100vh-9rem)] z-10`}
+        isMobile
+          ? `fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-300 ease-in-out ${
+              isOpen ? 'translate-x-0' : '-translate-x-full'
+            } bg-gray-800 border-r border-gray-700 top-36 h-[calc(100vh-9rem)]`
+          : `${
+              isOpen ? 'w-64' : 'w-16'
+            } transition-all duration-300 ease-in-out bg-gray-800 border-r border-gray-700 flex-shrink-0 fixed left-0 top-36 h-[calc(100vh-9rem)] z-10`
+      }`}
     >
       <nav className="h-full flex flex-col py-4">
         <div className="flex-1 px-2 space-y-1">
@@ -80,21 +87,21 @@ export function DashboardSidebar({ isOpen }: DashboardSidebarProps) {
                 key={item.title}
                 to={item.url}
                 end={item.url === '/dashboard'}
-                className={({ isActive }) =>
-                  `group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-                    isActive
-                      ? 'bg-primary text-primary-foreground shadow-lg'
-                      : 'text-gray-300 hover:bg-primary/10 hover:text-primary'
-                  } ${!isOpen ? 'justify-center' : ''}`
-                }
+                 className={({ isActive }) =>
+                   `group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+                     isActive
+                       ? 'bg-primary text-primary-foreground shadow-lg'
+                       : 'text-gray-300 hover:bg-primary/10 hover:text-primary'
+                   } ${!isOpen && !isMobile ? 'justify-center' : ''}`
+                 }
                 title={!isOpen ? item.title : undefined}
               >
-                <Icon 
-                  className="h-5 w-5 flex-shrink-0" 
-                />
-                {isOpen && (
-                  <span className="ml-3 truncate">{item.title}</span>
-                )}
+                 <Icon 
+                   className="h-5 w-5 flex-shrink-0" 
+                 />
+                 {(isOpen || isMobile) && (
+                   <span className="ml-3 truncate">{item.title}</span>
+                 )}
               </NavLink>
             );
           })}

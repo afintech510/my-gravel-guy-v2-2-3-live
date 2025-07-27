@@ -419,7 +419,7 @@ export function ManualOrderForm() {
                 <CardTitle>Customer Information</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="name">Customer Name</Label>
                     <Input
@@ -466,7 +466,7 @@ export function ManualOrderForm() {
                   </div>
                 </div>
                 <Separator />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="billing-name">Billing Name (if different)</Label>
                     <Input
@@ -507,7 +507,7 @@ export function ManualOrderForm() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="delivery-name">Contact Name</Label>
                     <Input
@@ -536,7 +536,7 @@ export function ManualOrderForm() {
                     placeholder="Enter street address"
                   />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="city">City</Label>
                     <Input
@@ -565,7 +565,7 @@ export function ManualOrderForm() {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label>Delivery Date</Label>
                     <Popover>
@@ -648,39 +648,41 @@ export function ManualOrderForm() {
                 <CardContent>
                   <div className="space-y-4">
                     {orderItems.map((item) => (
-                      <div key={item.id} className="flex items-center gap-4 p-4 border rounded-lg">
-                        <div className="flex-1">
+                      <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 border rounded-lg">
+                        <div className="flex-1 w-full sm:w-auto">
                           <h4 className="font-medium">{item.productName}</h4>
                           <p className="text-sm text-muted-foreground">{item.unit}</p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Label>Qty:</Label>
-                          <Input
-                            type="number"
-                            value={item.quantity}
-                            onChange={(e) => handleUpdateQuantity(item.id, parseFloat(e.target.value) || 0)}
-                            className="w-20"
-                          />
+                        <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
+                          <div className="flex items-center gap-2">
+                            <Label>Qty:</Label>
+                            <Input
+                              type="number"
+                              value={item.quantity}
+                              onChange={(e) => handleUpdateQuantity(item.id, parseFloat(e.target.value) || 0)}
+                              className="w-20"
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Label>Price:</Label>
+                            <Input
+                              type="number"
+                              value={item.unitPrice}
+                              onChange={(e) => handleUpdatePrice(item.id, parseFloat(e.target.value) || 0)}
+                              className="w-24"
+                            />
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium">${item.totalPrice.toFixed(2)}</p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRemoveProduct(item.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Label>Price:</Label>
-                          <Input
-                            type="number"
-                            value={item.unitPrice}
-                            onChange={(e) => handleUpdatePrice(item.id, parseFloat(e.target.value) || 0)}
-                            className="w-24"
-                          />
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium">${item.totalPrice.toFixed(2)}</p>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleRemoveProduct(item.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
                       </div>
                     ))}
                     <Separator />
@@ -752,32 +754,35 @@ export function ManualOrderForm() {
                 <CardTitle>Order Actions</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <Button
                     onClick={handleSaveAsPending}
                     disabled={isLoading}
                     variant="outline"
-                    className="flex items-center gap-2"
+                    className="flex items-center justify-center gap-2 w-full"
                   >
                     <Save className="h-4 w-4" />
-                    Save Order
+                    <span className="sm:hidden">Save</span>
+                    <span className="hidden sm:inline">Save Order</span>
                   </Button>
                   <Button
                     onClick={handleSaveAsQuote}
                     disabled={isLoading}
                     variant="outline"
-                    className="flex items-center gap-2"
+                    className="flex items-center justify-center gap-2 w-full"
                   >
                     <FileText className="h-4 w-4" />
-                    Save as Quote
+                    <span className="sm:hidden">Quote</span>
+                    <span className="hidden sm:inline">Save as Quote</span>
                   </Button>
                   <Button
                     onClick={handleStripeCheckout}
                     disabled={isLoading}
-                    className="flex items-center gap-2"
+                    className="flex items-center justify-center gap-2 w-full"
                   >
                     <CreditCard className="h-4 w-4" />
-                    Process Payment
+                    <span className="sm:hidden">Pay</span>
+                    <span className="hidden sm:inline">Process Payment</span>
                   </Button>
                 </div>
               </CardContent>
@@ -824,19 +829,23 @@ export function ManualOrderForm() {
         }
       </div>
 
-      {/* Navigation buttons */}
-      <div className="flex justify-between mb-6">
+      {/* Navigation buttons - mobile optimized */}
+      <div className="flex flex-col-reverse sm:flex-row justify-between gap-4 mb-6">
         <Button
           variant="outline"
           onClick={currentStep === 1 ? () => navigate('/dashboard/orders') : handleBack}
-          className="flex items-center gap-2"
+          className="flex items-center justify-center gap-2 w-full sm:w-auto"
         >
           <ArrowLeft className="h-4 w-4" />
           {currentStep === 1 ? 'Cancel' : 'Back'}
         </Button>
         
         {currentStep < 3 && (
-          <Button onClick={handleNext} disabled={!validateStep(currentStep)}>
+          <Button 
+            onClick={handleNext} 
+            disabled={!validateStep(currentStep)}
+            className="w-full sm:w-auto"
+          >
             Next
           </Button>
         )}
