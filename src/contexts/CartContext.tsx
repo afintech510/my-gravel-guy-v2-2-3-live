@@ -31,8 +31,6 @@ export interface CartItem extends Product {
   locationPhotoUrl?: string;
   contactInfo?: ContactInfo;
   basePrice?: number; // Original product price before ZIP code adjustments
-  couponApplied?: boolean; // Track if a coupon has been applied
-  couponAmount?: number; // Amount of the coupon discount
   
   // Additional material properties that map to orders table
   materialCategory?: string;
@@ -49,8 +47,6 @@ interface CartContextType {
     yards?: number,
     deliveryDate?: Date,
     contactInfo?: ContactInfo,
-    couponApplied?: boolean,
-    couponAmount?: number,
     materialCategory?: string,
     materialSubcategory?: string,
     materialSize?: string,
@@ -69,6 +65,11 @@ interface CartContextType {
   total: number;
   discountTotal: number;
   isDeliveryInfoComplete: (item: CartItem) => boolean;
+  // Cart-level coupon state
+  appliedCoupon: string | null;
+  couponDiscount: number;
+  applyCoupon: (code: string, discount: number) => void;
+  removeCoupon: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -84,6 +85,8 @@ const deserializeCartItems = (items: CartItem[]): CartItem[] => {
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [items, setItems] = useLocalStorage<CartItem[]>('cart-items', []);
   const [lastRemovedItem, setLastRemovedItem] = useLocalStorage<CartItem | null>('last-removed-item', null);
+  const [appliedCoupon, setAppliedCoupon] = useLocalStorage<string | null>('applied-coupon-code', null);
+  const [couponDiscount, setCouponDiscount] = useLocalStorage<number>('coupon-discount', 0);
   const { toast } = useToast();
 
   // Deserialize dates on component mount
@@ -100,8 +103,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     yards?: number,
     deliveryDate?: Date,
     contactInfo?: ContactInfo,
-    couponApplied?: boolean,
-    couponAmount?: number,
     materialCategory?: string,
     materialSubcategory?: string,
     materialSize?: string,
@@ -135,8 +136,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         tons,
         yards,
         basePrice: product.price, // Store original price for potential adjustments later
-        couponApplied: product.couponApplied || false,
-        couponAmount: product.couponAmount || 0,
         // Map category to materialCategory for orders table compatibility
         materialCategory: product.materialCategory || product.category,
         materialSubcategory: product.materialSubcategory,
@@ -230,7 +229,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearCart = useCallback(() => {
     setItems([]);
     setLastRemovedItem(null);
-  }, [setItems, setLastRemovedItem]);
+    setAppliedCoupon(null);
+    setCouponDiscount(0);
+  }, [setItems, setLastRemovedItem, setAppliedCoupon, setCouponDiscount]);
 
   // Helper function to check if delivery info is complete for an item
   const isDeliveryInfoComplete = useCallback((item: CartItem) => {
@@ -244,15 +245,22 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   }, []);
 
+  // Cart-level coupon functions
+  const applyCoupon = useCallback((code: string, discount: number) => {
+    setAppliedCoupon(code);
+    setCouponDiscount(discount);
+  }, [setAppliedCoupon, setCouponDiscount]);
+
+  const removeCoupon = useCallback(() => {
+    setAppliedCoupon(null);
+    setCouponDiscount(0);
+  }, [setAppliedCoupon, setCouponDiscount]);
+
   // Calculate the total before any discounts
   const total = items.reduce((sum, item) => sum + item.price * item.tons, 0);
   
-  // Calculate the total after applying any coupon discounts
-  const discountTotal = items.reduce((sum, item) => {
-    const itemTotal = item.price * item.tons;
-    const discount = item.couponApplied && item.couponAmount ? item.couponAmount : 0;
-    return sum + (itemTotal - discount);
-  }, 0);
+  // Calculate the total after applying cart-level coupon discount
+  const discountTotal = Math.max(0, total - couponDiscount);
 
   return (
     <CartContext.Provider value={{ 
@@ -265,7 +273,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       clearCart, 
       total,
       discountTotal,
-      isDeliveryInfoComplete
+      isDeliveryInfoComplete,
+      appliedCoupon,
+      couponDiscount,
+      applyCoupon,
+      removeCoupon
     }}>
       {children}
     </CartContext.Provider>

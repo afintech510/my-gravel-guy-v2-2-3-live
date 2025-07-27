@@ -191,9 +191,6 @@ const MaterialCalculator = () => {
           phone: formData.phone,
           zipCode: formData.zipCode
         },
-        // Apply the $50 coupon automatically
-        couponApplied: true,
-        couponAmount: 50
       });
     }
   };

@@ -18,11 +18,9 @@ const COUPON_CODES = {
 
 const CouponCode: React.FC<CouponCodeProps> = ({ onCouponApplied }) => {
   const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
-  const [couponDiscount, setCouponDiscount] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
-  const { items, updateDeliveryDetails, total } = useCart();
+  const { total, appliedCoupon, couponDiscount, applyCoupon, removeCoupon } = useCart();
   const { toast } = useToast();
 
   const calculateDiscount = (code: string, orderTotal: number) => {
@@ -36,7 +34,7 @@ const CouponCode: React.FC<CouponCodeProps> = ({ onCouponApplied }) => {
     }
   };
 
-  const applyCoupon = async () => {
+  const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
 
     setIsApplying(true);
@@ -49,21 +47,9 @@ const CouponCode: React.FC<CouponCodeProps> = ({ onCouponApplied }) => {
 
     if (coupon) {
       const discount = calculateDiscount(upperCode, total);
-      setAppliedCoupon(upperCode);
-      setCouponDiscount(discount);
+      applyCoupon(upperCode, discount);
       setIsExpanded(false);
-      
-      // Apply coupon to all items in cart
-      items.forEach(item => {
-        const itemDiscount = discount * (item.price * item.tons / total);
-        updateDeliveryDetails(item.id, {
-          couponApplied: true,
-          couponAmount: itemDiscount
-        });
-      });
-
-      // Store the coupon code for later retrieval during checkout
-      localStorage.setItem('applied-coupon-code', upperCode);
+      setCouponCode('');
 
       onCouponApplied?.(upperCode, discount);
 
@@ -83,21 +69,9 @@ const CouponCode: React.FC<CouponCodeProps> = ({ onCouponApplied }) => {
     setIsApplying(false);
   };
 
-  const removeCoupon = () => {
-    setAppliedCoupon(null);
-    setCouponDiscount(0);
+  const handleRemoveCoupon = () => {
+    removeCoupon();
     setCouponCode('');
-    
-    // Remove coupon from all items in cart
-    items.forEach(item => {
-      updateDeliveryDetails(item.id, {
-        couponApplied: false,
-        couponAmount: 0
-      });
-    });
-
-    // Remove stored coupon code
-    localStorage.removeItem('applied-coupon-code');
 
     toast({
       title: "Coupon Removed",
@@ -107,7 +81,7 @@ const CouponCode: React.FC<CouponCodeProps> = ({ onCouponApplied }) => {
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      applyCoupon();
+      handleApplyCoupon();
     }
   };
 
@@ -127,7 +101,7 @@ const CouponCode: React.FC<CouponCodeProps> = ({ onCouponApplied }) => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={removeCoupon}
+            onClick={handleRemoveCoupon}
             className="h-auto p-1 text-green-600 hover:text-green-700"
           >
             <X className="h-4 w-4" />
@@ -160,7 +134,7 @@ const CouponCode: React.FC<CouponCodeProps> = ({ onCouponApplied }) => {
                   className="flex-1"
                 />
                 <Button
-                  onClick={applyCoupon}
+                  onClick={handleApplyCoupon}
                   disabled={!couponCode.trim() || isApplying}
                   className="px-6"
                 >

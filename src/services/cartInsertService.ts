@@ -34,10 +34,9 @@ export const insertCartToDatabase = async (cartData: CartInsertData) => {
       const deliveryAddress = item.deliveryAddress || { street: null, city: null, state: null, zip: null };
       const quantity = item.tons || 1;
 
-      // Calculate pricing with coupon consideration
+      // Calculate base pricing
       const basePrice = (item.price || 0) * quantity;
-      const couponDiscount = item.couponApplied && item.couponAmount ? item.couponAmount : 0;
-      const finalPrice = basePrice - couponDiscount;
+      const finalPrice = basePrice;
 
       const record = {
         order_id: cartId,
@@ -61,7 +60,7 @@ export const insertCartToDatabase = async (cartData: CartInsertData) => {
         delivery_zip: deliveryAddress.zip || null,
         delivery_time_preference: item.deliveryTimePreference || null,
         delivery_instructions: item.deliveryInstructions || null,
-        coupon: item.couponApplied ? 'APPLIED' : null // Store coupon status for now
+        coupon: null // Coupon is now handled at cart level
       };
 
       console.log('Cart record prepared for insert:', {
