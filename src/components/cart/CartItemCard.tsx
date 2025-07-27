@@ -34,8 +34,21 @@ const CartItemCard = ({
   }, [autoExpandDelivery, isDeliveryComplete]);
 
   // Format date to display in a readable format
-  const formatDate = (date?: Date) => {
+  const formatDate = (date?: Date | string) => {
     if (!date) return 'Not selected';
+    
+    // Handle string dates from database
+    if (typeof date === 'string') {
+      const parsedDate = new Date(date);
+      if (isNaN(parsedDate.getTime())) return 'Invalid date';
+      return parsedDate.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+    
+    // Handle Date objects
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
       month: 'short',
