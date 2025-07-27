@@ -89,13 +89,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [couponDiscount, setCouponDiscount] = useLocalStorage<number>('coupon-discount', 0);
   const { toast } = useToast();
 
-  // Deserialize dates on component mount
+  // Deserialize dates whenever items change from localStorage
   useEffect(() => {
     if (items.length > 0) {
-      const deserializedItems = deserializeCartItems(items);
-      setItems(deserializedItems);
+      const needsDeserialization = items.some(item => 
+        item.deliveryDate && typeof item.deliveryDate === 'string'
+      );
+      if (needsDeserialization) {
+        const deserializedItems = deserializeCartItems(items);
+        setItems(deserializedItems);
+      }
     }
-  }, []); // Only run once on mount
+  }, [setItems]); // Run when setItems changes (but avoid infinite loops)
 
   // Modified to add each product as a new cart item (never combine) with analytics tracking
   const addToCart = useCallback((product: Product & { 

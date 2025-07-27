@@ -475,19 +475,22 @@ const Checkout = () => {
                           )}
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-200">
-                          {item.deliveryDate && (
-                            <div className="space-y-2">
-                              <h5 className="font-medium text-gray-700 text-sm">Delivery Schedule</h5>
-                              <div className="text-sm text-gray-600">
-                                <div className="font-medium">
-                                  {item.deliveryDate.toLocaleDateString('en-US', {
-                                    weekday: 'long',
-                                    month: 'short',
-                                    day: 'numeric',
-                                    year: 'numeric'
-                                  })}
-                                </div>
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-200">
+                           {item.deliveryDate && (
+                             <div className="space-y-2">
+                               <h5 className="font-medium text-gray-700 text-sm">Delivery Schedule</h5>
+                               <div className="text-sm text-gray-600">
+                                 <div className="font-medium">
+                                   {(() => {
+                                     const date = item.deliveryDate instanceof Date ? item.deliveryDate : new Date(item.deliveryDate);
+                                     return date.toLocaleDateString('en-US', {
+                                       weekday: 'long',
+                                       month: 'short',
+                                       day: 'numeric',
+                                       year: 'numeric'
+                                     });
+                                   })()}
+                                 </div>
                                 {item.deliveryTimePreference && (
                                   <div className="flex items-center gap-2 mt-1">
                                     <ClockIcon className="h-3 w-3" />
