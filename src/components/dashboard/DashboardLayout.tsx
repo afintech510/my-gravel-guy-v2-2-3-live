@@ -92,7 +92,7 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
   return (
     <div className="min-h-screen bg-gray-50 w-full">
       {/* Fixed Header */}
-      <div className="fixed top-0 left-0 right-0 bg-white shadow-sm border-b z-30 h-16">
+      <div className="fixed top-0 left-0 right-0 bg-white shadow-sm border-b z-20 h-16">
         <div className="px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex justify-between items-center h-full">
             <div className="flex items-center gap-4">
@@ -160,14 +160,11 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
       </div>
 
       {/* Fixed Sidebar and Scrollable Content */}
-      <div className="flex h-screen">
-        {/* Fixed Sidebar positioned below header */}
-        <div className="fixed left-0 top-16 bottom-0 z-20">
-          <DashboardSidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
-        </div>
+      <div className="flex pt-16 h-screen">
+        <DashboardSidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
         
         {/* Main Content - Only this area scrolls */}
-        <div className={`flex-1 overflow-auto bg-gray-50 mt-16 ${sidebarOpen ? 'ml-64' : 'ml-16'} transition-all duration-300`}>
+        <div className="flex-1 overflow-auto bg-gray-50">
           <div className="px-4 sm:px-6 lg:px-8 py-6">
             {children}
           </div>
