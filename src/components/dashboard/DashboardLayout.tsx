@@ -115,8 +115,10 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
                 AUTHENTICATED
               </span>
               
-              {/* New Order Button - only show on orders page */}
-              {location.pathname === '/dashboard/orders' && (
+              {/* New Order Button - show on all dashboard pages except create/edit pages */}
+              {location.pathname.startsWith('/dashboard') && 
+               location.pathname !== '/dashboard/orders/new' && 
+               !location.pathname.startsWith('/dashboard/orders/edit') && (
                 <Button 
                   onClick={() => navigate('/dashboard/orders/new')} 
                   className="flex items-center gap-2"
