@@ -90,11 +90,11 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col w-full">
-      {/* Full Width Header */}
-      <div className="bg-white shadow-sm border-b z-10">
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
+    <div className="min-h-screen bg-gray-50 w-full">
+      {/* Fixed Header */}
+      <div className="fixed top-0 left-0 right-0 bg-white shadow-sm border-b z-20 h-16">
+        <div className="px-4 sm:px-6 lg:px-8 h-full">
+          <div className="flex justify-between items-center h-full">
             <div className="flex items-center gap-4">
               {/* Hamburger Menu */}
               <button
@@ -159,12 +159,12 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
         </div>
       </div>
 
-      {/* Content Area with Sidebar */}
-      <div className="flex flex-1 overflow-hidden">
+      {/* Fixed Sidebar and Scrollable Content */}
+      <div className="flex pt-16 h-screen">
         <DashboardSidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
         
-        {/* Main Content */}
-        <div className="flex-1 overflow-auto">
+        {/* Main Content - Only this area scrolls */}
+        <div className="flex-1 overflow-auto bg-gray-50">
           <div className="px-4 sm:px-6 lg:px-8 py-6">
             {children}
           </div>
