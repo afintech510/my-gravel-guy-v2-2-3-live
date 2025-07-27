@@ -58,7 +58,6 @@ const CartItemCard = ({
 
   // Calculate total price for this item
   const itemTotal = item.price * item.tons;
-  const discountedTotal = item.couponApplied ? itemTotal - (item.couponAmount || 0) : itemTotal;
 
   // Calculate and display yards if available
   const yards = item.tons / (item.tonYardRatio ? parseFloat(String(item.tonYardRatio)) : 1.5);
@@ -215,17 +214,8 @@ const CartItemCard = ({
 
               {/* Price display */}
               <div className="text-right">
-                {item.couponApplied && item.couponAmount && <>
-                    <div className="text-sm text-muted-foreground line-through">
-                      ${itemTotal.toFixed(2)}
-                    </div>
-                    <div className="flex items-center gap-1 text-green-600 text-sm">
-                      <InfoIcon className="h-3 w-3" />
-                      <span>${item.couponAmount.toFixed(2)} discount applied</span>
-                    </div>
-                  </>}
                 <div className="text-lg font-bold">
-                  ${discountedTotal.toFixed(2)}
+                  ${itemTotal.toFixed(2)}
                 </div>
               </div>
             </div>

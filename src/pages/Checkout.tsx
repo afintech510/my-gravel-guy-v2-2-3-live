@@ -12,7 +12,7 @@ import PaymentMethodLogos from '../components/payment/PaymentMethodLogos';
 import type { OrderInsertData } from '../services/productTypes';
 
 const Checkout = () => {
-  const { items, total, discountTotal, clearCart } = useCart();
+  const { items, total, discountTotal, clearCart, appliedCoupon, couponDiscount } = useCart();
   const [isLoading, setIsLoading] = useState(false);
   const [isTestingDB, setIsTestingDB] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
@@ -112,8 +112,10 @@ const Checkout = () => {
   const formatCartItemsForStripe = () => {
     return items.map(item => {
       const itemTotal = item.price * item.tons;
-      const couponDiscount = item.couponApplied && item.couponAmount ? item.couponAmount : 0;
-      const discountedTotal = itemTotal - couponDiscount;
+      // Apply cart-level discount proportionally across items
+      const itemProportion = itemTotal / total;
+      const itemDiscount = couponDiscount * itemProportion;
+      const discountedTotal = itemTotal - itemDiscount;
       const discountedPricePerTon = discountedTotal / item.tons;
 
       const metadata = {
@@ -143,18 +145,8 @@ const Checkout = () => {
     try {
       // Calculate coupon information
       const baseTotal = items.reduce((sum, item) => sum + (item.price * item.tons), 0);
-      const totalCouponDiscount = items.reduce((sum, item) => {
-        return sum + (item.couponApplied && item.couponAmount ? item.couponAmount : 0);
-      }, 0);
+      const totalCouponDiscount = couponDiscount;
       const hasCoupon = totalCouponDiscount > 0;
-
-      // Try to get the coupon code from localStorage
-      let couponCode: string | null = null;
-      try {
-        couponCode = localStorage.getItem('applied-coupon-code');
-      } catch (error) {
-        console.log('Could not retrieve coupon code from localStorage');
-      }
 
       const orderData = {
         order_id: orderId,
@@ -167,9 +159,7 @@ const Checkout = () => {
           contact_info: item.contactInfo,
           delivery_time_preference: item.deliveryTimePreference,
           delivery_instructions: item.deliveryInstructions,
-          location_photo_url: item.locationPhotoUrl,
-          coupon_applied: item.couponApplied,
-          coupon_amount: item.couponAmount
+          location_photo_url: item.locationPhotoUrl
         })),
         total_amount: discountTotal,
         base_total: baseTotal,
@@ -177,7 +167,7 @@ const Checkout = () => {
         customer_name: items[0]?.contactInfo?.name || 'Checkout Customer',
         // Add coupon information
         coupon_info: hasCoupon ? {
-          code: couponCode || 'DISCOUNT_APPLIED',
+          code: appliedCoupon || 'DISCOUNT_APPLIED',
           total_discount: totalCouponDiscount,
           applied: true
         } : null
@@ -440,22 +430,8 @@ const Checkout = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="space-y-1">
-                          {item.couponApplied && item.couponAmount && item.couponAmount > 0 ? (
-                            <>
-                              <div className="text-sm text-gray-500 line-through">
-                                ${(item.price * item.tons).toFixed(2)}
-                              </div>
-                              <div className="font-medium text-green-600">
-                                ${((item.price * item.tons) - item.couponAmount).toFixed(2)}
-                              </div>
-                              <div className="text-xs text-green-600">
-                                Saved ${item.couponAmount.toFixed(2)}
-                              </div>
-                            </>
-                          ) : (
-                            <div>${(item.price * item.tons).toFixed(2)}</div>
-                          )}
+                        <div className="text-lg font-semibold">
+                          ${(item.price * item.tons).toFixed(2)}
                         </div>
                       </div>
                     </div>
