@@ -92,7 +92,7 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
   return (
     <div className="min-h-screen bg-gray-50 w-full">
       {/* Fixed Header - positioned below main navigation */}
-      <div className="fixed top-[120px] left-0 right-0 bg-white shadow-sm border-b z-20 h-16">
+      <div className="fixed top-16 left-0 right-0 bg-white shadow-sm border-b z-20 h-16">
         <div className="px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex justify-between items-center h-full">
             <div className="flex items-center gap-4">
@@ -166,7 +166,7 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
       <div 
         className={`${
           sidebarOpen ? 'ml-64' : 'ml-16'
-        } transition-all duration-300 ease-in-out pt-[184px] min-h-screen overflow-auto bg-gray-50`}
+        } transition-all duration-300 ease-in-out pt-32 min-h-screen overflow-auto bg-gray-50`}
       >
         <div className="px-4 sm:px-6 lg:px-8 py-6">
           {children}
