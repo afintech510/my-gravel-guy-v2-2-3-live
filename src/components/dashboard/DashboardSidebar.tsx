@@ -69,7 +69,7 @@ export function DashboardSidebar({ isOpen }: DashboardSidebarProps) {
     <div
       className={`${
         isOpen ? 'w-64' : 'w-16'
-      } transition-all duration-300 ease-in-out bg-gray-800 border-r border-gray-700 flex-shrink-0 h-full`}
+      } transition-all duration-300 ease-in-out bg-gray-800 border-r border-gray-700 flex-shrink-0 fixed left-0 top-[120px] h-[calc(100vh-120px)] z-10`}
     >
       <nav className="h-full flex flex-col py-4">
         <div className="flex-1 px-2 space-y-1">
