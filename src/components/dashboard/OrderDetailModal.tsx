@@ -439,6 +439,78 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
     }
   };
 
+  const handleUpdateOrderItem = async (itemId: string, updates: { quantity?: number; unit_price?: number }) => {
+    if (!isUnlocked) {
+      toast({
+        title: "Order Locked",
+        description: "Please unlock the order to make changes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await OrderService.updateOrderItem(order.order_id, itemId, updates);
+      onOrderUpdate(); // Refresh the order data
+      toast({
+        title: "Item Updated",
+        description: "Order item has been updated successfully",
+      });
+    } catch (error) {
+      console.error('Error updating order item:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update order item",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRemoveOrderItem = async (itemId: string) => {
+    if (!isUnlocked) {
+      toast({
+        title: "Order Locked",
+        description: "Please unlock the order to make changes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await OrderService.removeOrderItem(order.order_id, itemId);
+      onOrderUpdate(); // Refresh the order data
+      toast({
+        title: "Item Removed",
+        description: "Order item has been removed successfully",
+      });
+    } catch (error) {
+      console.error('Error removing order item:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove order item",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddOrderItem = async (newItem: any) => {
+    if (!isUnlocked) {
+      toast({
+        title: "Order Locked",
+        description: "Please unlock the order to make changes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // For now, show a message that this feature is not yet implemented
+    toast({
+      title: "Feature Coming Soon",
+      description: "Adding new items to existing orders will be implemented soon",
+      variant: "default",
+    });
+  };
+
   const handleSendQuote = async () => {
     if (!quoteService.canSendQuote(order)) {
       toast({
@@ -485,7 +557,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto p-6">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl font-bold">
@@ -513,13 +585,13 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
         </DialogHeader>
 
         <Tabs defaultValue="details" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="status">Status & Notes</TabsTrigger>
-            <TabsTrigger value="supplier">Supplier</TabsTrigger>
-            <TabsTrigger value="quote">Quote</TabsTrigger>
-            <TabsTrigger value="communication">Email</TabsTrigger>
-            <TabsTrigger value="sms">SMS</TabsTrigger>
+          <TabsList className="w-full flex flex-wrap md:grid md:grid-cols-6 gap-1">
+            <TabsTrigger value="details" className="flex-1 min-w-0 text-xs md:text-sm">Details</TabsTrigger>
+            <TabsTrigger value="status" className="flex-1 min-w-0 text-xs md:text-sm">Status</TabsTrigger>
+            <TabsTrigger value="supplier" className="flex-1 min-w-0 text-xs md:text-sm">Supplier</TabsTrigger>
+            <TabsTrigger value="quote" className="flex-1 min-w-0 text-xs md:text-sm">Quote</TabsTrigger>
+            <TabsTrigger value="communication" className="flex-1 min-w-0 text-xs md:text-sm">Email</TabsTrigger>
+            <TabsTrigger value="sms" className="flex-1 min-w-0 text-xs md:text-sm">SMS</TabsTrigger>
           </TabsList>
 
           <TabsContent value="details" className="space-y-4">
@@ -930,10 +1002,10 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
             {/* Order Items Manager for Quote Editing */}
             <OrderItemsManager
               orderItems={order.items}
-              onUpdateItem={() => {}} // Read-only in modal for now
-              onRemoveItem={() => {}} // Read-only in modal for now  
-              onAddItem={() => {}} // Read-only in modal for now
-              readOnly={true}
+              onUpdateItem={handleUpdateOrderItem}
+              onRemoveItem={handleRemoveOrderItem}
+              onAddItem={handleAddOrderItem}
+              readOnly={!isUnlocked}
             />
           </TabsContent>
         </Tabs>
