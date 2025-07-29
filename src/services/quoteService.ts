@@ -84,7 +84,7 @@ export class QuoteService {
       const { error: emailError } = await supabase.functions.invoke('send-email', {
         body: {
           to: firstItem.delivery_email || order.billing_email,
-          subject: `Your Quote #${baseOrderId} - Ready for Review & Payment`,
+          subject: `MyGravelGuy Quote is ready for review`,
           html: htmlContent,
           type: 'customer_confirmation'
         }
