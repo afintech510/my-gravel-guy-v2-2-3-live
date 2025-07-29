@@ -31,7 +31,7 @@ export class QuoteService {
           quote_expires_at: expirationDate.toISOString(),
           quote_status: 'sent',
           quoted_price: totalAmount,
-          notes: notes || undefined
+          quote_notes: notes || undefined
         })
         .eq('order_id', order.order_id);
 
@@ -62,7 +62,7 @@ export class QuoteService {
         return { success: false, error: 'No order items found' };
       }
 
-      // Generate quote proposal email
+      // Generate quote proposal email using current order items
       const htmlContent = generateQuoteProposalEmail(
         {
           name: firstItem.delivery_name || order.billing_name || 'Customer',
@@ -72,7 +72,7 @@ export class QuoteService {
           zipCode: firstItem.delivery_address?.zip || '',
           orderId: order.order_id
         }, 
-        quoteItems,
+        order.items, // Use current order items instead of stale database data
         window.location.origin,
         productNameMap
       );

@@ -67,7 +67,7 @@ export const generateQuoteProposalEmail = (formData: QuoteFormData, quoteData: a
 
   const itemsSection = quoteData && quoteData.length > 0 
     ? quoteData.map((item: any) => {
-        const productName = productNameMap?.[item.product_id] || item.product_id;
+        const productName = productNameMap?.[item.product_id] || item.product_name || item.product_id;
         return `
         <div style="background-color: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 15px;">
           <div style="display: flex; flex-direction: column; gap: 12px;">

@@ -35,7 +35,7 @@ export function OrderItemsManager({
   }, [orderItems]);
 
   // Debounced update function
-  const debouncedUpdate = useCallback(async (itemId: string, field: string, value: any) => {
+  const debouncedUpdate = useCallback(async (itemId: string, updates: Partial<OrderItem>) => {
     if (updateTimeoutRef.current) {
       clearTimeout(updateTimeoutRef.current);
     }
@@ -43,10 +43,15 @@ export function OrderItemsManager({
     updateTimeoutRef.current = setTimeout(async () => {
       try {
         setIsUpdating(true);
-        // Here you would call the actual API to update the database
-        // For now, we'll just update the parent component
+        
+        // Update database if not a temporary item
+        if (!itemId.startsWith('temp-')) {
+          await OrderService.updateOrderItem(itemId, updates);
+        }
+        
+        // Update parent component
         const updatedItems = localItems.map(item =>
-          item.id === itemId ? { ...item, [field]: value } : item
+          item.id === itemId ? { ...item, ...updates } : item
         );
         onOrderItemsChange(updatedItems);
       } catch (error) {
@@ -72,7 +77,7 @@ export function OrderItemsManager({
       return item;
     });
     setLocalItems(updatedItems);
-    debouncedUpdate(itemId, 'quantity', quantity);
+    debouncedUpdate(itemId, { quantity, total_price: quantity * (localItems.find(item => item.id === itemId)?.unit_price || 0) });
   };
 
   const handlePriceChange = (itemId: string, unitPrice: number) => {
@@ -85,15 +90,14 @@ export function OrderItemsManager({
       return item;
     });
     setLocalItems(updatedItems);
-    debouncedUpdate(itemId, 'unit_price', unitPrice);
+    debouncedUpdate(itemId, { unit_price: unitPrice, total_price: unitPrice * (localItems.find(item => item.id === itemId)?.quantity || 0) });
   };
 
   const handleAddProduct = async (product: Product & { unit: string }, quantity: number, customPrice?: number) => {
     try {
       const unitPrice = customPrice || product.price;
-      const newItem: OrderItem = {
-        id: `temp-${Date.now()}`, // Temporary ID until saved to database
-        product_name: product.name,
+      const newItemData: Omit<OrderItem, 'id'> = {
+        product_name: product.id.toString(), // Store product ID for database
         quantity,
         unit: product.unit,
         unit_price: unitPrice,
@@ -117,6 +121,16 @@ export function OrderItemsManager({
         supplier_charges: orderItems[0]?.supplier_charges || null
       };
 
+      // Add to database
+      const itemId = await OrderService.addOrderItem(orderId, newItemData);
+      
+      // Create new item with real database ID and display name
+      const newItem: OrderItem = {
+        ...newItemData,
+        id: itemId,
+        product_name: product.name // Display name for UI
+      };
+
       const updatedItems = [...localItems, newItem];
       setLocalItems(updatedItems);
       onOrderItemsChange(updatedItems);
@@ -137,6 +151,11 @@ export function OrderItemsManager({
 
   const handleRemoveItem = async (itemId: string) => {
     try {
+      // Remove from database if not a temporary item
+      if (!itemId.startsWith('temp-')) {
+        await OrderService.removeOrderItem(itemId);
+      }
+      
       const updatedItems = localItems.filter(item => item.id !== itemId);
       setLocalItems(updatedItems);
       onOrderItemsChange(updatedItems);

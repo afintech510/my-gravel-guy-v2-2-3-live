@@ -5,6 +5,7 @@ import type {
   OrderFilters, 
   OrderServiceResponse, 
   OrderRow,
+  OrderItem,
   FulfillmentStatus
 } from '@/types/order.types';
 import { groupOrderRows } from '@/types/order.types';
@@ -344,6 +345,149 @@ export class OrderService {
       }
     } catch (error) {
       console.error('OrderService.updateOrderSupplier error:', error);
+      throw error;
+    }
+  }
+
+  static async updateOrderQuoteNotes(orderId: string, quoteNotes: string): Promise<void> {
+    try {
+      console.log('Updating order quote notes:', { orderId, quoteNotes });
+      
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          quote_notes: quoteNotes,
+          updated_at: new Date().toISOString()
+        })
+        .eq('order_id', orderId);
+
+      if (error) {
+        console.error('Error updating order quote notes:', error);
+        throw new Error(`Failed to update order quote notes: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('OrderService.updateOrderQuoteNotes error:', error);
+      throw error;
+    }
+  }
+
+  static async updateOrderItem(itemId: string, updates: Partial<OrderItem>): Promise<void> {
+    try {
+      console.log('Updating order item:', { itemId, updates });
+      
+      const updateData: any = {
+        ...updates,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('orders')
+        .update(updateData)
+        .eq('id', itemId);
+
+      if (error) {
+        console.error('Error updating order item:', error);
+        throw new Error(`Failed to update order item: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('OrderService.updateOrderItem error:', error);
+      throw error;
+    }
+  }
+
+  static async removeOrderItem(itemId: string): Promise<void> {
+    try {
+      console.log('Removing order item:', { itemId });
+      
+      const { error } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', itemId);
+
+      if (error) {
+        console.error('Error removing order item:', error);
+        throw new Error(`Failed to remove order item: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('OrderService.removeOrderItem error:', error);
+      throw error;
+    }
+  }
+
+  static async addOrderItem(orderId: string, itemData: Omit<OrderItem, 'id'>): Promise<string> {
+    try {
+      console.log('Adding order item:', { orderId, itemData });
+      
+      const { data, error } = await supabase
+        .from('orders')
+        .insert({
+          order_id: orderId,
+          product_id: itemData.product_name, // Store product ID in product_id field
+          quantity: itemData.quantity,
+          unit: itemData.unit,
+          unit_price: itemData.unit_price,
+          total_price: itemData.total_price,
+          delivery_date: itemData.delivery_date,
+          delivery_street: itemData.delivery_address.street,
+          delivery_city: itemData.delivery_address.city,
+          delivery_state: itemData.delivery_address.state,
+          delivery_zip: itemData.delivery_address.zip,
+          delivery_name: itemData.delivery_name,
+          delivery_email: itemData.delivery_email,
+          delivery_phone: itemData.delivery_phone,
+          delivery_instructions: itemData.delivery_instructions,
+          delivery_time_preference: itemData.delivery_time_preference,
+          status: itemData.status,
+          fulfillment_status: itemData.fulfillment_status,
+          notes: itemData.notes,
+          supplier_id: itemData.supplier_id,
+          supplier_charges: itemData.supplier_charges,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error adding order item:', error);
+        throw new Error(`Failed to add order item: ${error.message}`);
+      }
+
+      return data.id;
+    } catch (error) {
+      console.error('OrderService.addOrderItem error:', error);
+      throw error;
+    }
+  }
+
+  static async updateDeliveryInfo(orderId: string, deliveryData: {
+    delivery_name?: string;
+    delivery_email?: string;
+    delivery_phone?: string;
+    delivery_street?: string;
+    delivery_city?: string;
+    delivery_state?: string;
+    delivery_zip?: string;
+    delivery_instructions?: string;
+    delivery_time_preference?: string;
+  }): Promise<void> {
+    try {
+      console.log('Updating delivery info:', { orderId, deliveryData });
+      
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          ...deliveryData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('order_id', orderId);
+
+      if (error) {
+        console.error('Error updating delivery info:', error);
+        throw new Error(`Failed to update delivery info: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('OrderService.updateDeliveryInfo error:', error);
       throw error;
     }
   }
