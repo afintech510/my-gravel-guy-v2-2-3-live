@@ -60,7 +60,7 @@ serve(async (req) => {
     console.log(`Sending ${type} email to: ${to}`);
 
     const emailPayload = {
-      from: "team@mygravelguy.com",
+      from: "MyGravelGuy <team@mygravelguy.com>",
       to: [to],
       subject: subject,
       html: html,
