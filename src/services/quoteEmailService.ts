@@ -51,7 +51,7 @@ export const sendQuoteRequestEmail = async (formData: QuoteFormData): Promise<{ 
     const { data, error } = await supabase.functions.invoke('send-email', {
       body: {
         to: 'sales@mygravelguy.com',
-        subject: `Quote Request from ${formData.name} - ${formData.selectedProduct?.name || 'General Inquiry'} (${dbResult.orderId})`,
+        subject: `Quote Request from ${formData.name} - ${formData.selectedProduct?.name || 'General Inquiry'}`,
         html: emailHtml,
         type: 'internal_notification',
         orderData: {
