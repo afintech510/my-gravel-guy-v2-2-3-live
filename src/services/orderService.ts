@@ -418,10 +418,44 @@ export class OrderService {
     try {
       console.log('Adding order item:', { orderId, itemData });
       
+      // Check if base orderId already exists to determine unique order_id
+      const { data: existingOrders, error: checkError } = await supabase
+        .from('orders')
+        .select('order_id')
+        .like('order_id', `${orderId}%`)
+        .order('order_id', { ascending: false });
+
+      if (checkError) {
+        console.error('Error checking existing orders:', checkError);
+        throw new Error(`Failed to check existing orders: ${checkError.message}`);
+      }
+
+      // Generate unique order_id
+      let uniqueOrderId = orderId;
+      if (existingOrders && existingOrders.length > 0) {
+        // Find the highest suffix number
+        let maxSuffix = 0;
+        existingOrders.forEach(order => {
+          if (order.order_id === orderId) {
+            maxSuffix = Math.max(maxSuffix, 1);
+          } else if (order.order_id.startsWith(`${orderId}-`)) {
+            const suffix = parseInt(order.order_id.split('-').pop() || '0');
+            if (!isNaN(suffix)) {
+              maxSuffix = Math.max(maxSuffix, suffix);
+            }
+          }
+        });
+        
+        // If base orderId exists, start with suffix
+        if (maxSuffix > 0) {
+          uniqueOrderId = `${orderId}-${maxSuffix + 1}`;
+        }
+      }
+
       const { data, error } = await supabase
         .from('orders')
         .insert({
-          order_id: orderId,
+          order_id: uniqueOrderId,
           product_id: itemData.product_name, // Store product ID in product_id field
           quantity: itemData.quantity,
           unit: itemData.unit,
@@ -453,6 +487,7 @@ export class OrderService {
         throw new Error(`Failed to add order item: ${error.message}`);
       }
 
+      console.log('Order item added successfully with order_id:', uniqueOrderId);
       return data.id;
     } catch (error) {
       console.error('OrderService.addOrderItem error:', error);
