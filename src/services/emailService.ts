@@ -124,7 +124,7 @@ export const sendInternalNotificationEmail = async (orderData: OrderEmailData, r
     const { data, error } = await supabase.functions.invoke('send-email', {
       body: {
         to: recipientEmail,
-        subject: `New Order Notification - ${customerName}`,
+        subject: `New Order Notification - ${orderData.customer_name}`,
         html: generateInternalNotificationEmail(orderData),
         type: 'internal_notification',
         orderData
