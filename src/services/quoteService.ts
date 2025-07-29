@@ -75,7 +75,7 @@ export class QuoteService {
           zipCode: firstItem.delivery_address?.zip || '',
           orderId: baseOrderId
         }, 
-        order.items, // Use ALL current order items including suffixed ones
+        allQuoteItems || [], // Use the fresh database items with quote_notes
         window.location.origin,
         productNameMap
       );
