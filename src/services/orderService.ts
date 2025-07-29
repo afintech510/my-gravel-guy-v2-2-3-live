@@ -75,28 +75,32 @@ export class OrderService {
   }
 
   /**
-   * Get a list of unique fulfillment statuses from the orders table
+   * Get a list of fulfillment status enum values from the database
    */
   static async getUniqueFulfillmentStatuses(): Promise<string[]> {
     try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('fulfillment_status')
-        .not('fulfillment_status', 'is', null);
+      const { data, error } = await supabase.rpc('get_fulfillment_status_enum_values');
 
       if (error) {
-        console.error('Error fetching fulfillment statuses:', error);
-        return [];
+        console.error('Error fetching fulfillment status enum values:', error);
+        // Fallback to querying distinct values from orders table
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('orders')
+          .select('fulfillment_status')
+          .not('fulfillment_status', 'is', null);
+
+        if (fallbackError) {
+          console.error('Error in fallback query:', fallbackError);
+          return [];
+        }
+
+        const uniqueStatuses = Array.from(
+          new Set(fallbackData.map(item => item.fulfillment_status).filter(Boolean))
+        );
+        return uniqueStatuses;
       }
 
-      // Extract unique statuses and filter out null/undefined values
-      const uniqueStatuses = [...new Set(
-        data
-          .map(row => row.fulfillment_status)
-          .filter(status => status !== null && status !== undefined)
-      )];
-
-      return uniqueStatuses;
+      return data?.map(row => row.enumlabel) || [];
     } catch (error) {
       console.error('Error in getUniqueFulfillmentStatuses:', error);
       return [];
