@@ -142,6 +142,9 @@ const OrderEdit = () => {
         console.log('Setting final form data:', newFormData);
         console.log('Final supplier_id being set:', newFormData.supplier_id);
         setFormData(newFormData);
+        
+        // Initialize quote notes from order data
+        setQuoteNotes(order.quote_notes || '');
       }
     };
     
