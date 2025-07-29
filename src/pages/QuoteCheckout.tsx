@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, MapPin, Calendar, Clock, CreditCard } from 'lucide-react';
+import { Loader2, MapPin, Calendar, Clock, CreditCard, MessageSquare } from 'lucide-react';
 import { useProductNameResolver } from '@/hooks/useProductNameResolver';
 
 interface QuoteItem {
@@ -26,6 +26,7 @@ interface QuoteItem {
   delivery_time_preference: string;
   delivery_instructions: string;
   quote_expires_at: string;
+  quote_notes: string;
   notes: string;
 }
 
@@ -159,7 +160,24 @@ const QuoteCheckout = () => {
           </Card>
         )}
 
-        <div className="grid lg:grid-cols-2 gap-6">
+        {/* Quote Notes */}
+        {firstItem.quote_notes && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <MessageSquare className="h-5 w-5 mr-2" />
+                Quote Notes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <p className="text-sm leading-relaxed">{firstItem.quote_notes}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <div className="grid gap-6 lg:grid-cols-2">
           {/* Quote Items */}
           <Card>
             <CardHeader>
