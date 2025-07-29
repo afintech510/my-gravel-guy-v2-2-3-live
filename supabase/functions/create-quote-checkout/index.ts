@@ -35,11 +35,11 @@ serve(async (req) => {
     if (!quoteId) throw new Error("Quote ID is required");
     logStep("Quote ID received", { quoteId });
 
-    // Fetch quote details from database
+    // Fetch quote details from database (use pattern matching to get all related items)
     const { data: quoteItems, error: quoteError } = await supabaseClient
       .from("orders")
       .select("*")
-      .eq("order_id", quoteId)
+      .like("order_id", `${quoteId}%`)
       .eq("status", "Quote");
 
     if (quoteError) throw new Error(`Failed to fetch quote: ${quoteError.message}`);
