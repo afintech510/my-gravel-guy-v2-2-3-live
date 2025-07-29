@@ -201,6 +201,52 @@ const OrderEdit = () => {
         await OrderService.updateOrderNotes(orderId, formData.notes);
       }
       
+      // Update delivery information
+      const firstItem = order.items[0];
+      const deliveryUpdates: any = {};
+      let hasDeliveryChanges = false;
+
+      if (formData.delivery_name !== firstItem?.delivery_name) {
+        deliveryUpdates.delivery_name = formData.delivery_name;
+        hasDeliveryChanges = true;
+      }
+      if (formData.delivery_email !== firstItem?.delivery_email) {
+        deliveryUpdates.delivery_email = formData.delivery_email;
+        hasDeliveryChanges = true;
+      }
+      if (formData.delivery_phone !== firstItem?.delivery_phone) {
+        deliveryUpdates.delivery_phone = formData.delivery_phone;
+        hasDeliveryChanges = true;
+      }
+      if (formData.delivery_street !== firstItem?.delivery_address?.street) {
+        deliveryUpdates.delivery_street = formData.delivery_street;
+        hasDeliveryChanges = true;
+      }
+      if (formData.delivery_city !== firstItem?.delivery_address?.city) {
+        deliveryUpdates.delivery_city = formData.delivery_city;
+        hasDeliveryChanges = true;
+      }
+      if (formData.delivery_state !== firstItem?.delivery_address?.state) {
+        deliveryUpdates.delivery_state = formData.delivery_state;
+        hasDeliveryChanges = true;
+      }
+      if (formData.delivery_zip !== firstItem?.delivery_address?.zip) {
+        deliveryUpdates.delivery_zip = formData.delivery_zip;
+        hasDeliveryChanges = true;
+      }
+      if (formData.delivery_instructions !== firstItem?.delivery_instructions) {
+        deliveryUpdates.delivery_instructions = formData.delivery_instructions;
+        hasDeliveryChanges = true;
+      }
+      if (formData.delivery_time_preference !== firstItem?.delivery_time_preference) {
+        deliveryUpdates.delivery_time_preference = formData.delivery_time_preference;
+        hasDeliveryChanges = true;
+      }
+
+      if (hasDeliveryChanges) {
+        await OrderService.updateDeliveryInfo(orderId, deliveryUpdates);
+      }
+      
       await refetch();
       setHasChanges(false);
       
@@ -370,8 +416,7 @@ const OrderEdit = () => {
                   <Input
                     id="delivery_name"
                     value={formData.delivery_name}
-                    readOnly
-                    className="bg-gray-50 cursor-not-allowed"
+                    onChange={(e) => handleInputChange('delivery_name', e.target.value)}
                   />
                 </div>
                 <div>
@@ -379,8 +424,7 @@ const OrderEdit = () => {
                   <Input
                     id="delivery_phone"
                     value={formData.delivery_phone}
-                    readOnly
-                    className="bg-gray-50 cursor-not-allowed"
+                    onChange={(e) => handleInputChange('delivery_phone', e.target.value)}
                   />
                 </div>
               </div>
@@ -390,8 +434,7 @@ const OrderEdit = () => {
                   id="delivery_email"
                   type="email"
                   value={formData.delivery_email}
-                  readOnly
-                  className="bg-gray-50 cursor-not-allowed"
+                  onChange={(e) => handleInputChange('delivery_email', e.target.value)}
                 />
               </div>
               <div>
@@ -399,8 +442,7 @@ const OrderEdit = () => {
                 <Input
                   id="delivery_street"
                   value={formData.delivery_street}
-                  readOnly
-                  className="bg-gray-50 cursor-not-allowed"
+                  onChange={(e) => handleInputChange('delivery_street', e.target.value)}
                 />
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -409,8 +451,7 @@ const OrderEdit = () => {
                   <Input
                     id="delivery_city"
                     value={formData.delivery_city}
-                    readOnly
-                    className="bg-gray-50 cursor-not-allowed"
+                    onChange={(e) => handleInputChange('delivery_city', e.target.value)}
                   />
                 </div>
                 <div>
@@ -418,8 +459,7 @@ const OrderEdit = () => {
                   <Input
                     id="delivery_state"
                     value={formData.delivery_state}
-                    readOnly
-                    className="bg-gray-50 cursor-not-allowed"
+                    onChange={(e) => handleInputChange('delivery_state', e.target.value)}
                   />
                 </div>
                 <div>
@@ -427,8 +467,7 @@ const OrderEdit = () => {
                   <Input
                     id="delivery_zip"
                     value={formData.delivery_zip}
-                    readOnly
-                    className="bg-gray-50 cursor-not-allowed"
+                    onChange={(e) => handleInputChange('delivery_zip', e.target.value)}
                   />
                 </div>
               </div>
@@ -536,39 +575,8 @@ const OrderEdit = () => {
             isEditable={true}
           />
 
-          {/* 5. Order Items Summary (keeping original for compatibility) */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                Order Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {order.items.map((item, index) => (
-                  <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium">{item.product_name}</p>
-                      <p className="text-sm text-gray-600">
-                        {item.quantity} {item.unit} × ${item.unit_price.toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">${item.total_price.toFixed(2)}</p>
-                    </div>
-                  </div>
-                ))}
-                <Separator />
-                <div className="flex justify-between items-center font-bold text-lg">
-                  <span>Total</span>
-                  <span>${order.total_price.toFixed(2)}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* 4. Internal Notes */}
+          {/* 5. Internal Notes */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -586,7 +594,7 @@ const OrderEdit = () => {
             </CardContent>
           </Card>
 
-          {/* 5. Status & Assignment */}
+          {/* 6. Status & Assignment */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -662,7 +670,7 @@ const OrderEdit = () => {
             </CardContent>
           </Card>
 
-          {/* 6. Supplier Information */}
+          {/* 7. Supplier Information */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
