@@ -31,7 +31,7 @@ export const SMS_TEMPLATES: SMSTemplate[] = [
     id: 'order_processing',
     name: 'Order Processing',
     type: 'order_update',
-    message: 'Your order {orderId} is now being processed. We\'ll update you when it\'s ready for delivery. Questions? Reply to this message!'
+    message: 'Hi, it\'s MyGravelGuy! Your order is now being processed. We\'ll update you when it\'s ready for delivery. Questions? Reply to this message, we are happy to help. Thanks for choosing us!'
   },
   {
     id: 'in_transit',
