@@ -13,13 +13,15 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Save, ArrowLeft, User, MapPin, Package, UserCheck, DollarSign, FileText, Calendar } from 'lucide-react';
+import { Save, ArrowLeft, User, MapPin, Package, UserCheck, DollarSign, FileText, Calendar, Send, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { formatDateForDatabase, parseLocalDate, formatDateTime } from '@/utils/dateUtils';
 import SupplierSelector from '@/components/dashboard/SupplierSelector';
 import FulfillmentStatusBadge from '@/components/dashboard/FulfillmentStatusBadge';
 import { SupplierService } from '@/services/supplierService';
+import { OrderItemsManager } from '@/components/dashboard/OrderItemsManager';
+import { QuoteService } from '@/services/quoteService';
 
 const OrderEdit = () => {
   const { orderId } = useParams<{ orderId: string }>();
@@ -30,6 +32,8 @@ const OrderEdit = () => {
   const [hasChanges, setHasChanges] = useState(false);
   const [salesPersons, setSalesPersons] = useState<string[]>([]);
   const [isLoadingSalesPersons, setIsLoadingSalesPersons] = useState(false);
+  const [isSendingQuote, setIsSendingQuote] = useState(false);
+  const [quoteNotes, setQuoteNotes] = useState('');
   
   // Form state
   const [formData, setFormData] = useState({
@@ -226,6 +230,56 @@ const OrderEdit = () => {
     }
   };
 
+  const handleSendQuote = async () => {
+    if (!order) return;
+    
+    setIsSendingQuote(true);
+    try {
+      const result = await QuoteService.sendQuoteFromExistingOrder(order, {
+        notes: quoteNotes,
+        expirationDays: 30
+      });
+
+      if (result.success) {
+        toast({
+          title: "Quote sent successfully",
+          description: `Quote ${order.order_id} has been sent to the customer via email.`,
+        });
+        setQuoteNotes('');
+        await refetch(); // Refresh order data to show updated status
+      } else {
+        toast({
+          title: "Error sending quote",
+          description: result.error || "Failed to send quote",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error sending quote:', error);
+      toast({
+        title: "Error sending quote",
+        description: "An unexpected error occurred while sending the quote.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSendingQuote(false);
+    }
+  };
+
+  const handleOrderItemsChange = (updatedItems: any[]) => {
+    // This will be called when order items are modified
+    // For now, we'll trigger a refetch to get the latest data
+    refetch();
+    setHasChanges(true);
+  };
+
+  const canSendQuote = () => {
+    if (!order) return false;
+    // Allow sending quotes for most statuses except delivered/cancelled
+    const allowedStatuses = ['pending', 'confirmed', 'processing', 'Quote'];
+    return allowedStatuses.includes(order.status);
+  };
+
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
       case 'pending': return 'bg-yellow-100 text-yellow-800';
@@ -278,6 +332,17 @@ const OrderEdit = () => {
             </Badge>
           </div>
           <div className="flex items-center gap-2">
+            {canSendQuote() && (
+              <Button 
+                variant="outline" 
+                onClick={handleSendQuote} 
+                disabled={isSendingQuote}
+                className="flex items-center gap-2"
+              >
+                <Send className="h-4 w-4" />
+                {isSendingQuote ? 'Sending...' : 'Send Quote'}
+              </Button>
+            )}
             <Button variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
@@ -439,12 +504,44 @@ const OrderEdit = () => {
             </CardContent>
           </Card>
 
-          {/* 3. Order Items */}
+          {/* 3. Quote Notes (if sending quote) */}
+          {canSendQuote() && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="h-5 w-5" />
+                  Quote Notes
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div>
+                  <Label htmlFor="quote_notes">Additional notes for quote email (optional)</Label>
+                  <Textarea
+                    id="quote_notes"
+                    value={quoteNotes}
+                    onChange={(e) => setQuoteNotes(e.target.value)}
+                    placeholder="Add any special notes or terms for this quote..."
+                    rows={3}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* 4. Product Selection & Order Items */}
+          <OrderItemsManager
+            orderId={orderId!}
+            orderItems={order?.items || []}
+            onOrderItemsChange={handleOrderItemsChange}
+            isEditable={true}
+          />
+
+          {/* 5. Order Items Summary (keeping original for compatibility) */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Package className="h-5 w-5" />
-                Order Items
+                Order Summary
               </CardTitle>
             </CardHeader>
             <CardContent>
