@@ -304,7 +304,7 @@ export function ManualOrderForm() {
       const { data: emailData, error: emailError } = await supabase.functions.invoke('send-email', {
         body: {
           to: customerInfo.email,
-          subject: `Your Quote #${quoteId} - Ready for Review & Payment`,
+          subject: `MyGravelGuy Quote is ready for review`,
           html: htmlContent,
           type: 'customer_confirmation'
         }

@@ -68,6 +68,8 @@ export const generateQuoteProposalEmail = (formData: QuoteFormData, quoteData: a
     : false;
 
   // Get quote notes from the first item
+  console.log('QuoteData for email:', quoteData);
+  console.log('First item quote_notes:', quoteData && quoteData.length > 0 ? quoteData[0].quote_notes : 'No quote data');
   const quoteNotes = quoteData && quoteData.length > 0 && quoteData[0].quote_notes ? quoteData[0].quote_notes : null;
 
   // Get delivery information from the first item
@@ -103,14 +105,14 @@ export const generateQuoteProposalEmail = (formData: QuoteFormData, quoteData: a
         const productName = productNameMap?.[item.product_id] || item.product_name || item.product_id;
         return `
          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; margin-bottom: ${index === quoteData.length - 1 ? '0' : '20px'};">
-           <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px;">
-             <div style="flex: 1;">
+           <div class="item-container" style="display: flex; justify-content: space-between; align-items: center; gap: 20px;">
+             <div class="item-info" style="flex: 1;">
                <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin: 0 0 8px 0;">${productName}</h3>
                <div style="color: #64748b; font-size: 14px;">
                  ${item.quantity} ${item.unit} × $${item.unit_price.toFixed(2)}
                </div>
              </div>
-             <div style="font-size: 24px; font-weight: 700; color: #2563eb; text-align: right; min-width: 140px; padding-left: 24px; white-space: nowrap;">$${item.total_price.toFixed(2)}</div>
+             <div class="item-price" style="font-size: 24px; font-weight: 700; color: #2563eb; text-align: right; min-width: 140px; padding-left: 24px; white-space: nowrap;">$${item.total_price.toFixed(2)}</div>
            </div>
           ${item.notes ? `
           <div style="margin-top: 16px; padding: 16px; background-color: #f1f5f9; border-radius: 6px; border-left: 4px solid #10b981;">
@@ -191,6 +193,23 @@ export const generateQuoteProposalEmail = (formData: QuoteFormData, quoteData: a
             text-align: left !important;
             margin-top: 8px !important;
           }
+          .item-price {
+            font-size: 18px !important;
+            min-width: 100px !important;
+            padding-left: 12px !important;
+          }
+          .total-price {
+            font-size: 24px !important;
+            min-width: 120px !important;
+          }
+          .item-container {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 8px !important;
+          }
+          .item-info {
+            width: 100% !important;
+          }
         }
       </style>
     </head>
@@ -233,7 +252,7 @@ export const generateQuoteProposalEmail = (formData: QuoteFormData, quoteData: a
             <div style="background: #f1f5f9; border: 2px solid #e2e8f0; border-radius: 8px; padding: 24px; margin-top: 24px;">
               <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                 <span style="font-size: 20px; font-weight: 600; color: #475569;">Total Amount</span>
-                <span style="font-size: 32px; font-weight: 700; color: #2563eb; min-width: 160px; text-align: right; white-space: nowrap;">$${totalAmount}</span>
+                <span class="total-price" style="font-size: 32px; font-weight: 700; color: #2563eb; min-width: 160px; text-align: right; white-space: nowrap;">$${totalAmount}</span>
               </div>
             </div>
           </div>
