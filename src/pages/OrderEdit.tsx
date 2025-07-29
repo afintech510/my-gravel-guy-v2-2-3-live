@@ -201,6 +201,11 @@ const OrderEdit = () => {
         await OrderService.updateOrderNotes(orderId, formData.notes);
       }
       
+      // Update quote notes
+      if (quoteNotes !== (order.quote_notes || '')) {
+        await OrderService.updateOrderQuoteNotes(orderId, quoteNotes);
+      }
+      
       // Update delivery information
       const firstItem = order.items[0];
       const deliveryUpdates: any = {};
