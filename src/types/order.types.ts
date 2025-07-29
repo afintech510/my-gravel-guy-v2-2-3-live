@@ -128,15 +128,32 @@ export function orderRowToOrderItem(row: OrderRow): OrderItem {
 }
 
 // Helper function to group order rows by order_id
-export function groupOrderRows(orderRows: OrderRow[]): GroupedOrder[] {
+export function groupOrderRows(orderRows: OrderRow[], useBaseOrderId: boolean = false): GroupedOrder[] {
   const orderMap = new Map<string, GroupedOrder>();
 
-  orderRows.forEach(row => {
-    const orderId = row.order_id;
+  // Helper function to extract base order ID (remove suffixes like -1, -2, etc.)
+  const extractBaseOrderId = (orderId: string): string => {
+    if (!useBaseOrderId) return orderId;
     
-    if (!orderMap.has(orderId)) {
-      orderMap.set(orderId, {
-        order_id: orderId,
+    // Split by dash and check if last part is a number
+    const parts = orderId.split('-');
+    if (parts.length > 1) {
+      const lastPart = parts[parts.length - 1];
+      // If last part is just a number, remove it to get base order ID
+      if (/^\d+$/.test(lastPart)) {
+        return parts.slice(0, -1).join('-');
+      }
+    }
+    return orderId;
+  };
+
+  orderRows.forEach(row => {
+    const displayOrderId = useBaseOrderId ? extractBaseOrderId(row.order_id) : row.order_id;
+    const groupingKey = displayOrderId;
+    
+    if (!orderMap.has(groupingKey)) {
+      orderMap.set(groupingKey, {
+        order_id: displayOrderId,
         created_at: row.created_at || new Date().toISOString(),
         total_price: 0, // Will be calculated from items
         status: (row.status as OrderStatus) || 'pending',
@@ -153,7 +170,7 @@ export function groupOrderRows(orderRows: OrderRow[]): GroupedOrder[] {
       });
     }
 
-    const order = orderMap.get(orderId)!;
+    const order = orderMap.get(groupingKey)!;
     const orderItem = orderRowToOrderItem(row);
     
     order.items.push(orderItem);
