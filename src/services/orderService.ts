@@ -124,7 +124,7 @@ export class OrderService {
 
       // Apply quotes/orders filter - include both Quote and cart statuses as quotes
       if (filters.quotesOnly) {
-        query = query.or('status.eq.Quote,status.eq.cart').neq('fulfillment_status', 'Archived');
+        query = query.or('status.eq.Quote,status.eq.cart').or('fulfillment_status.is.null,fulfillment_status.neq.Archived');
       } else if (filters.excludeQuotes) {
         query = query.neq('status', 'Quote').neq('status', 'cart');
       }
