@@ -26,7 +26,11 @@ export type FulfillmentStatus =
   | 'Scheduled'
   | 'Delivered'
   | 'Cancelled'
-  | 'Refunded';
+  | 'Refunded'
+  | 'On Hold'
+  | 'Call to Schedule'
+  | 'Archived'
+  | 'Converted to Order';
 
 // Enhanced delivery address interface
 export interface DeliveryAddress {

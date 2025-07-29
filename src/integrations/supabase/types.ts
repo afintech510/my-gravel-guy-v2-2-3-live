@@ -897,6 +897,12 @@ export type Database = {
         Args: { user_email: string }
         Returns: boolean
       }
+      get_fulfillment_status_enum_values: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          enumlabel: string
+        }[]
+      }
       get_tables: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -921,6 +927,10 @@ export type Database = {
         | "Delivered"
         | "Cancelled"
         | "Refunded"
+        | "On Hold"
+        | "Call to Schedule"
+        | "Archived"
+        | "Converted to Order"
       payment_method:
         | "Credit Card"
         | "Check"
@@ -1075,6 +1085,10 @@ export const Constants = {
         "Delivered",
         "Cancelled",
         "Refunded",
+        "On Hold",
+        "Call to Schedule",
+        "Archived",
+        "Converted to Order",
       ],
       payment_method: [
         "Credit Card",
