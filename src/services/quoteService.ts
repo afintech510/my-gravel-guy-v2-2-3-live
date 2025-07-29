@@ -15,14 +15,17 @@ export class QuoteService {
     try {
       const { notes = '', expirationDays = 30 } = options;
       
-      // Calculate total amount from order items
+      // Calculate total amount from ALL order items
       const totalAmount = order.items.reduce((sum, item) => sum + item.total_price, 0);
       
       // Set quote expiration date
       const expirationDate = new Date();
       expirationDate.setDate(expirationDate.getDate() + expirationDays);
 
-      // Update order to quote status with expiration
+      // Extract base order ID to update all related items
+      const baseOrderId = this.extractBaseOrderId(order.order_id);
+      
+      // Update ALL related order items to quote status with expiration
       const { error: updateError } = await supabase
         .from('orders')
         .update({ 
@@ -33,18 +36,18 @@ export class QuoteService {
           quoted_price: totalAmount,
           quote_notes: notes || undefined
         })
-        .eq('order_id', order.order_id);
+        .or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
 
       if (updateError) {
         console.error('Error updating order to quote:', updateError);
         return { success: false, error: 'Failed to update order status' };
       }
 
-      // Get updated order items for email
-      const { data: quoteItems } = await supabase
+      // Get ALL related order items for email
+      const { data: allQuoteItems } = await supabase
         .from('orders')
         .select('*')
-        .eq('order_id', order.order_id);
+        .or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
 
       // Get product names for the email
       const { data: products } = await supabase
@@ -62,7 +65,7 @@ export class QuoteService {
         return { success: false, error: 'No order items found' };
       }
 
-      // Generate quote proposal email using current order items
+      // Generate quote proposal email using ALL order items
       const htmlContent = generateQuoteProposalEmail(
         {
           name: firstItem.delivery_name || order.billing_name || 'Customer',
@@ -70,9 +73,9 @@ export class QuoteService {
           phone: firstItem.delivery_phone || '',
           message: notes || 'Quote generated from existing order',
           zipCode: firstItem.delivery_address?.zip || '',
-          orderId: order.order_id
+          orderId: baseOrderId
         }, 
-        order.items, // Use current order items instead of stale database data
+        order.items, // Use ALL current order items including suffixed ones
         window.location.origin,
         productNameMap
       );
@@ -81,7 +84,7 @@ export class QuoteService {
       const { error: emailError } = await supabase.functions.invoke('send-email', {
         body: {
           to: firstItem.delivery_email || order.billing_email,
-          subject: `Your Quote #${order.order_id} - Ready for Review & Payment`,
+          subject: `Your Quote #${baseOrderId} - Ready for Review & Payment`,
           html: htmlContent,
           type: 'customer_confirmation'
         }
@@ -99,7 +102,7 @@ export class QuoteService {
       await supabase.functions.invoke('send-email', {
         body: {
           to: 'sales@mygravelguy.com',
-          subject: `Quote Sent - ${order.order_id}`,
+          subject: `Quote Sent - ${baseOrderId}`,
           html: htmlContent,
           type: 'internal_notification'
         }
@@ -113,5 +116,20 @@ export class QuoteService {
         error: error instanceof Error ? error.message : 'Unknown error occurred' 
       };
     }
+  }
+
+  /**
+   * Extract base order ID from a potentially suffixed order ID
+   */
+  private static extractBaseOrderId(orderId: string): string {
+    const parts = orderId.split('-');
+    if (parts.length > 1) {
+      const lastPart = parts[parts.length - 1];
+      // If last part is a number, remove it to get base order ID
+      if (!isNaN(parseInt(lastPart))) {
+        return parts.slice(0, -1).join('-');
+      }
+    }
+    return orderId;
   }
 }

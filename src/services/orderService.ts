@@ -155,16 +155,21 @@ export class OrderService {
   }
 
   /**
-   * Fetch a single order by order ID
+   * Fetch a single order by order ID - includes all related order items (base + suffixed)
    */
   static async fetchOrderById(orderId: string): Promise<GroupedOrder | null> {
     try {
-      console.log('Fetching order by ID:', orderId);
+      console.log('Fetching order by ID (including related items):', orderId);
       
+      // Extract base order ID (remove any suffix after last dash if it's a number)
+      const baseOrderId = this.extractBaseOrderId(orderId);
+      console.log('Base order ID:', baseOrderId);
+      
+      // Fetch all related orders using pattern matching
       const { data, error } = await supabase
         .from('orders')
         .select('*')
-        .eq('order_id', orderId);
+        .or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
 
       if (error) {
         console.error('Error fetching order by ID:', error);
@@ -182,6 +187,21 @@ export class OrderService {
       console.error('OrderService.fetchOrderById error:', error);
       throw error;
     }
+  }
+
+  /**
+   * Extract base order ID from a potentially suffixed order ID
+   */
+  private static extractBaseOrderId(orderId: string): string {
+    const parts = orderId.split('-');
+    if (parts.length > 1) {
+      const lastPart = parts[parts.length - 1];
+      // If last part is a number, remove it to get base order ID
+      if (!isNaN(parseInt(lastPart))) {
+        return parts.slice(0, -1).join('-');
+      }
+    }
+    return orderId;
   }
 
   /**
@@ -351,7 +371,10 @@ export class OrderService {
 
   static async updateOrderQuoteNotes(orderId: string, quoteNotes: string): Promise<void> {
     try {
-      console.log('Updating order quote notes:', { orderId, quoteNotes });
+      console.log('Updating order quote notes (all related items):', { orderId, quoteNotes });
+      
+      // Get base order ID to update all related items
+      const baseOrderId = this.extractBaseOrderId(orderId);
       
       const { error } = await supabase
         .from('orders')
@@ -359,7 +382,7 @@ export class OrderService {
           quote_notes: quoteNotes,
           updated_at: new Date().toISOString()
         })
-        .eq('order_id', orderId);
+        .or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
 
       if (error) {
         console.error('Error updating order quote notes:', error);
@@ -418,6 +441,19 @@ export class OrderService {
     try {
       console.log('Adding order item:', { orderId, itemData });
       
+      // Get base order ID and fetch billing/delivery data from existing order
+      const baseOrderId = this.extractBaseOrderId(orderId);
+      const { data: baseOrder, error: baseOrderError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('order_id', baseOrderId)
+        .single();
+
+      if (baseOrderError) {
+        console.error('Error fetching base order for data inheritance:', baseOrderError);
+        // Continue without data inheritance if base order not found
+      }
+
       // Check if base orderId already exists to determine unique order_id
       const { data: existingOrders, error: checkError } = await supabase
         .from('orders')
@@ -452,6 +488,31 @@ export class OrderService {
         }
       }
 
+      // Inherit billing and delivery data from base order if available
+      const inheritedData = baseOrder ? {
+        billing_name: baseOrder.billing_name,
+        billing_email: baseOrder.billing_email,
+        delivery_name: baseOrder.delivery_name || itemData.delivery_name,
+        delivery_email: baseOrder.delivery_email || itemData.delivery_email,
+        delivery_phone: baseOrder.delivery_phone || itemData.delivery_phone,
+        delivery_street: baseOrder.delivery_street || itemData.delivery_address.street,
+        delivery_city: baseOrder.delivery_city || itemData.delivery_address.city,
+        delivery_state: baseOrder.delivery_state || itemData.delivery_address.state,
+        delivery_zip: baseOrder.delivery_zip || itemData.delivery_address.zip,
+        delivery_instructions: baseOrder.delivery_instructions || itemData.delivery_instructions,
+        delivery_time_preference: baseOrder.delivery_time_preference || itemData.delivery_time_preference
+      } : {
+        delivery_name: itemData.delivery_name,
+        delivery_email: itemData.delivery_email,
+        delivery_phone: itemData.delivery_phone,
+        delivery_street: itemData.delivery_address.street,
+        delivery_city: itemData.delivery_address.city,
+        delivery_state: itemData.delivery_address.state,
+        delivery_zip: itemData.delivery_address.zip,
+        delivery_instructions: itemData.delivery_instructions,
+        delivery_time_preference: itemData.delivery_time_preference
+      };
+
       const { data, error } = await supabase
         .from('orders')
         .insert({
@@ -462,15 +523,7 @@ export class OrderService {
           unit_price: itemData.unit_price,
           total_price: itemData.total_price,
           delivery_date: itemData.delivery_date,
-          delivery_street: itemData.delivery_address.street,
-          delivery_city: itemData.delivery_address.city,
-          delivery_state: itemData.delivery_address.state,
-          delivery_zip: itemData.delivery_address.zip,
-          delivery_name: itemData.delivery_name,
-          delivery_email: itemData.delivery_email,
-          delivery_phone: itemData.delivery_phone,
-          delivery_instructions: itemData.delivery_instructions,
-          delivery_time_preference: itemData.delivery_time_preference,
+          ...inheritedData,
           status: itemData.status,
           fulfillment_status: itemData.fulfillment_status,
           notes: itemData.notes,
