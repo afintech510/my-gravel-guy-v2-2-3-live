@@ -110,7 +110,7 @@ export const generateQuoteProposalEmail = (formData: QuoteFormData, quoteData: a
                  ${item.quantity} ${item.unit} × $${item.unit_price.toFixed(2)}
                </div>
              </div>
-             <div style="font-size: 24px; font-weight: 700; color: #2563eb; text-align: right; min-width: 120px; padding-left: 20px;">$${item.total_price.toFixed(2)}</div>
+             <div style="font-size: 24px; font-weight: 700; color: #2563eb; text-align: right; min-width: 140px; padding-left: 24px; white-space: nowrap;">$${item.total_price.toFixed(2)}</div>
            </div>
           ${item.notes ? `
           <div style="margin-top: 16px; padding: 16px; background-color: #f1f5f9; border-radius: 6px; border-left: 4px solid #10b981;">
@@ -199,7 +199,7 @@ export const generateQuoteProposalEmail = (formData: QuoteFormData, quoteData: a
         
         <!-- Logo Section -->
         <div style="text-align: center; padding: 32px 32px 0 32px;">
-          <img src="https://6cc236ee-8c17-42f6-b0da-a561155753fa.lovableproject.com/lovable-uploads/f23c416b-3342-4c17-b925-4c144883da04.png" alt="My Gravel Guy" style="max-width: 250px; height: auto;">
+          <h1 style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 32px; font-weight: 700; color: #2563eb; margin: 0; letter-spacing: -0.5px;">My Gravel Guy</h1>
         </div>
 
         <div style="padding: 32px;">
@@ -233,7 +233,7 @@ export const generateQuoteProposalEmail = (formData: QuoteFormData, quoteData: a
             <div style="background: #f1f5f9; border: 2px solid #e2e8f0; border-radius: 8px; padding: 24px; margin-top: 24px;">
               <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                 <span style="font-size: 20px; font-weight: 600; color: #475569;">Total Amount</span>
-                <span style="font-size: 28px; font-weight: 700; color: #2563eb;">$${totalAmount}</span>
+                <span style="font-size: 32px; font-weight: 700; color: #2563eb; min-width: 160px; text-align: right; white-space: nowrap;">$${totalAmount}</span>
               </div>
             </div>
           </div>
