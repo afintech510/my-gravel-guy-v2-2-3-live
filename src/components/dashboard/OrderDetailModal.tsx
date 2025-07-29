@@ -23,6 +23,8 @@ import { format } from 'date-fns';
 import { formatDateTime, formatLocalDate } from '@/utils/dateUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { SupplierService } from '@/services/supplierService';
+import { quoteService, QuoteOptions } from '@/services/quoteService';
+import { OrderItemsManager } from './OrderItemsManager';
 
 interface OrderDetailModalProps {
   order: GroupedOrder | null;
@@ -59,6 +61,12 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [customMessage, setCustomMessage] = useState('');
   const [smsPhoneNumber, setSmsPhoneNumber] = useState('');
+  
+  // Quote state
+  const [quoteMessage, setQuoteMessage] = useState('');
+  const [quoteExpirationDays, setQuoteExpirationDays] = useState(30);
+  const [customQuotePrice, setCustomQuotePrice] = useState('');
+  const [isSendingQuote, setIsSendingQuote] = useState(false);
 
   // Reset form when order changes
   React.useEffect(() => {
@@ -431,6 +439,50 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
     }
   };
 
+  const handleSendQuote = async () => {
+    if (!quoteService.canSendQuote(order)) {
+      toast({
+        title: "Cannot Send Quote",
+        description: "Order missing required information for quote",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsSendingQuote(true);
+      
+      const options: QuoteOptions = {
+        customMessage: quoteMessage.trim() || undefined,
+        expirationDays: quoteExpirationDays,
+        customPrice: customQuotePrice ? parseFloat(customQuotePrice) : undefined
+      };
+
+      const result = await quoteService.sendQuoteFromExistingOrder(order, options);
+      
+      onOrderUpdate(); // Refresh the order data
+      
+      toast({
+        title: "Quote Sent Successfully",
+        description: `Quote ${result.quoteId} sent to customer`,
+      });
+      
+      // Reset form
+      setQuoteMessage('');
+      setCustomQuotePrice('');
+      
+    } catch (error) {
+      console.error('Error sending quote:', error);
+      toast({
+        title: "Error Sending Quote",
+        description: error instanceof Error ? error.message : "Failed to send quote",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSendingQuote(false);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -461,10 +513,11 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
         </DialogHeader>
 
         <Tabs defaultValue="details" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="details">Details</TabsTrigger>
             <TabsTrigger value="status">Status & Notes</TabsTrigger>
             <TabsTrigger value="supplier">Supplier</TabsTrigger>
+            <TabsTrigger value="quote">Quote</TabsTrigger>
             <TabsTrigger value="communication">Email</TabsTrigger>
             <TabsTrigger value="sms">SMS</TabsTrigger>
           </TabsList>
@@ -804,6 +857,84 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 </Button>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="quote" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Send Quote
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="quote-expiration">Quote Expiration (Days)</Label>
+                    <Input
+                      id="quote-expiration"
+                      type="number"
+                      value={quoteExpirationDays}
+                      onChange={(e) => setQuoteExpirationDays(parseInt(e.target.value) || 30)}
+                      min="1"
+                      max="365"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="custom-quote-price">Custom Quote Price (Optional)</Label>
+                    <Input
+                      id="custom-quote-price"
+                      type="number"
+                      value={customQuotePrice}
+                      onChange={(e) => setCustomQuotePrice(e.target.value)}
+                      placeholder={`Default: $${order.total_price.toFixed(2)}`}
+                      step="0.01"
+                      min="0"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="quote-message">Quote Message (Optional)</Label>
+                  <Textarea
+                    id="quote-message"
+                    value={quoteMessage}
+                    onChange={(e) => setQuoteMessage(e.target.value)}
+                    placeholder="Add a custom message for the customer..."
+                    rows={4}
+                  />
+                </div>
+
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2">Quote Summary</h4>
+                  <div className="text-sm text-blue-800 space-y-1">
+                    <p><strong>Customer:</strong> {order.billing_name}</p>
+                    <p><strong>Email:</strong> {order.billing_email}</p>
+                    <p><strong>Items:</strong> {order.items.length} product(s)</p>
+                    <p><strong>Total:</strong> ${customQuotePrice ? parseFloat(customQuotePrice).toFixed(2) : order.total_price.toFixed(2)}</p>
+                    <p><strong>Expires:</strong> {quoteExpirationDays} days from now</p>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={handleSendQuote}
+                  disabled={isSendingQuote || !quoteService.canSendQuote(order)}
+                  className="w-full"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  {isSendingQuote ? 'Sending Quote...' : 'Send Quote'}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Order Items Manager for Quote Editing */}
+            <OrderItemsManager
+              orderItems={order.items}
+              onUpdateItem={() => {}} // Read-only in modal for now
+              onRemoveItem={() => {}} // Read-only in modal for now  
+              onAddItem={() => {}} // Read-only in modal for now
+              readOnly={true}
+            />
           </TabsContent>
         </Tabs>
       </DialogContent>
