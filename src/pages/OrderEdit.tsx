@@ -20,8 +20,6 @@ import { formatDateForDatabase, parseLocalDate, formatDateTime } from '@/utils/d
 import SupplierSelector from '@/components/dashboard/SupplierSelector';
 import FulfillmentStatusBadge from '@/components/dashboard/FulfillmentStatusBadge';
 import { SupplierService } from '@/services/supplierService';
-import { quoteService, QuoteOptions } from '@/services/quoteService';
-import { OrderItemsManager } from '@/components/dashboard/OrderItemsManager';
 
 const OrderEdit = () => {
   const { orderId } = useParams<{ orderId: string }>();
@@ -32,12 +30,6 @@ const OrderEdit = () => {
   const [hasChanges, setHasChanges] = useState(false);
   const [salesPersons, setSalesPersons] = useState<string[]>([]);
   const [isLoadingSalesPersons, setIsLoadingSalesPersons] = useState(false);
-  
-  // Quote state
-  const [quoteMessage, setQuoteMessage] = useState('');
-  const [quoteExpirationDays, setQuoteExpirationDays] = useState(30);
-  const [customQuotePrice, setCustomQuotePrice] = useState('');
-  const [isSendingQuote, setIsSendingQuote] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -247,50 +239,6 @@ const OrderEdit = () => {
     }
   };
 
-  const handleSendQuote = async () => {
-    if (!order || !quoteService.canSendQuote(order)) {
-      toast({
-        title: "Cannot Send Quote",
-        description: "Order missing required information for quote",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      setIsSendingQuote(true);
-      
-      const options: QuoteOptions = {
-        customMessage: quoteMessage.trim() || undefined,
-        expirationDays: quoteExpirationDays,
-        customPrice: customQuotePrice ? parseFloat(customQuotePrice) : undefined
-      };
-
-      const result = await quoteService.sendQuoteFromExistingOrder(order, options);
-      
-      await refetch(); // Refresh the order data
-      
-      toast({
-        title: "Quote Sent Successfully",
-        description: `Quote ${result.quoteId} sent to customer`,
-      });
-      
-      // Reset form
-      setQuoteMessage('');
-      setCustomQuotePrice('');
-      
-    } catch (error) {
-      console.error('Error sending quote:', error);
-      toast({
-        title: "Error Sending Quote",
-        description: error instanceof Error ? error.message : "Failed to send quote",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSendingQuote(false);
-    }
-  };
-
   if (isLoading) {
     return (
       <DashboardLayout title="Edit Order" subtitle="Loading order details...">
@@ -332,14 +280,6 @@ const OrderEdit = () => {
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={handleCancel}>
               Cancel
-            </Button>
-            <Button 
-              onClick={handleSendQuote}
-              disabled={isSendingQuote || !quoteService.canSendQuote(order)}
-              variant="outline"
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              {isSendingQuote ? 'Sending Quote...' : 'Send Quote'}
             </Button>
             <Button onClick={handleSave} disabled={isSaving || !hasChanges}>
               <Save className="h-4 w-4 mr-2" />
