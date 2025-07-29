@@ -180,7 +180,8 @@ export class OrderService {
         return null;
       }
 
-      const groupedOrders = groupOrderRows(data as OrderRow[]);
+      // Use base order grouping mode to group all related items under the base order ID
+      const groupedOrders = groupOrderRows(data as OrderRow[], true);
       const ordersWithProductNames = await this.resolveProductNames(groupedOrders);
       return ordersWithProductNames[0] || null;
     } catch (error) {
