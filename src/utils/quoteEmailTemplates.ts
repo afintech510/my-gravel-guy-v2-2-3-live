@@ -102,16 +102,16 @@ export const generateQuoteProposalEmail = (formData: QuoteFormData, quoteData: a
     ? quoteData.map((item: any, index: number) => {
         const productName = productNameMap?.[item.product_id] || item.product_name || item.product_id;
         return `
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; margin-bottom: ${index === quoteData.length - 1 ? '0' : '20px'};">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
-            <div style="flex: 1; min-width: 200px;">
-              <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin: 0 0 8px 0;">${productName}</h3>
-              <div style="color: #64748b; font-size: 14px;">
-                ${item.quantity} ${item.unit} × $${item.unit_price.toFixed(2)}
-              </div>
-            </div>
-            <div style="font-size: 24px; font-weight: 700; color: #2563eb; text-align: right;">$${item.total_price.toFixed(2)}</div>
-          </div>
+         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; margin-bottom: ${index === quoteData.length - 1 ? '0' : '20px'};">
+           <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px;">
+             <div style="flex: 1;">
+               <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin: 0 0 8px 0;">${productName}</h3>
+               <div style="color: #64748b; font-size: 14px;">
+                 ${item.quantity} ${item.unit} × $${item.unit_price.toFixed(2)}
+               </div>
+             </div>
+             <div style="font-size: 24px; font-weight: 700; color: #2563eb; text-align: right; min-width: 120px; padding-left: 20px;">$${item.total_price.toFixed(2)}</div>
+           </div>
           ${item.notes ? `
           <div style="margin-top: 16px; padding: 16px; background-color: #f1f5f9; border-radius: 6px; border-left: 4px solid #10b981;">
             <p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.5;">
@@ -199,7 +199,7 @@ export const generateQuoteProposalEmail = (formData: QuoteFormData, quoteData: a
         
         <!-- Logo Section -->
         <div style="text-align: center; padding: 32px 32px 0 32px;">
-          <img src="https://your-domain.com/logo.png" alt="My Gravel Guy" style="max-width: 200px; height: auto;">
+          <img src="https://6cc236ee-8c17-42f6-b0da-a561155753fa.lovableproject.com/lovable-uploads/f23c416b-3342-4c17-b925-4c144883da04.png" alt="My Gravel Guy" style="max-width: 250px; height: auto;">
         </div>
 
         <div style="padding: 32px;">
