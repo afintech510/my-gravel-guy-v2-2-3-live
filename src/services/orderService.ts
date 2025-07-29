@@ -347,4 +347,73 @@ export class OrderService {
       throw error;
     }
   }
+
+  static async updateOrderItem(orderId: string, itemId: string, updates: { quantity?: number; unit_price?: number }): Promise<void> {
+    try {
+      console.log('Updating order item:', { orderId, itemId, updates });
+      
+      const updateData: any = {
+        updated_at: new Date().toISOString()
+      };
+
+      if (updates.quantity !== undefined) {
+        updateData.quantity = updates.quantity;
+      }
+      if (updates.unit_price !== undefined) {
+        updateData.unit_price = updates.unit_price;
+      }
+
+      // Recalculate total_price if either quantity or unit_price is updated
+      if (updates.quantity !== undefined || updates.unit_price !== undefined) {
+        const { data: currentItem, error: fetchError } = await supabase
+          .from('orders')
+          .select('quantity, unit_price')
+          .eq('order_id', orderId)
+          .eq('id', itemId)
+          .single();
+
+        if (fetchError) {
+          throw new Error(`Failed to fetch current item data: ${fetchError.message}`);
+        }
+
+        const newQuantity = updates.quantity ?? currentItem.quantity;
+        const newUnitPrice = updates.unit_price ?? currentItem.unit_price;
+        updateData.total_price = newQuantity * newUnitPrice;
+      }
+
+      const { error } = await supabase
+        .from('orders')
+        .update(updateData)
+        .eq('order_id', orderId)
+        .eq('id', itemId);
+
+      if (error) {
+        console.error('Error updating order item:', error);
+        throw new Error(`Failed to update order item: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('OrderService.updateOrderItem error:', error);
+      throw error;
+    }
+  }
+
+  static async removeOrderItem(orderId: string, itemId: string): Promise<void> {
+    try {
+      console.log('Removing order item:', { orderId, itemId });
+      
+      const { error } = await supabase
+        .from('orders')
+        .delete()
+        .eq('order_id', orderId)
+        .eq('id', itemId);
+
+      if (error) {
+        console.error('Error removing order item:', error);
+        throw new Error(`Failed to remove order item: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('OrderService.removeOrderItem error:', error);
+      throw error;
+    }
+  }
 }
