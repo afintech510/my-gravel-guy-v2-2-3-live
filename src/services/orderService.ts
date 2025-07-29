@@ -489,27 +489,40 @@ export class OrderService {
         }
       }
 
-      // Inherit billing and delivery data from base order if available
+      // Inherit ALL billing and delivery data from base order if available
       const inheritedData = baseOrder ? {
-        billing_name: baseOrder.billing_name,
-        billing_email: baseOrder.billing_email,
+        // Billing information
+        billing_name: baseOrder.billing_name || itemData.delivery_name,
+        billing_email: baseOrder.billing_email || itemData.delivery_email,
+        
+        // Delivery information  
         delivery_name: baseOrder.delivery_name || itemData.delivery_name,
         delivery_email: baseOrder.delivery_email || itemData.delivery_email,
         delivery_phone: baseOrder.delivery_phone || itemData.delivery_phone,
-        delivery_street: baseOrder.delivery_street || itemData.delivery_address.street,
-        delivery_city: baseOrder.delivery_city || itemData.delivery_address.city,
-        delivery_state: baseOrder.delivery_state || itemData.delivery_address.state,
-        delivery_zip: baseOrder.delivery_zip || itemData.delivery_address.zip,
+        delivery_street: baseOrder.delivery_street || itemData.delivery_address?.street,
+        delivery_city: baseOrder.delivery_city || itemData.delivery_address?.city,
+        delivery_state: baseOrder.delivery_state || itemData.delivery_address?.state,
+        delivery_zip: baseOrder.delivery_zip || itemData.delivery_address?.zip,
         delivery_instructions: baseOrder.delivery_instructions || itemData.delivery_instructions,
-        delivery_time_preference: baseOrder.delivery_time_preference || itemData.delivery_time_preference
+        delivery_time_preference: baseOrder.delivery_time_preference || itemData.delivery_time_preference,
+        
+        // Other inherited fields
+        sales_person: baseOrder.sales_person,
+        fulfillment_status: baseOrder.fulfillment_status,
+        quote_notes: baseOrder.quote_notes,
+        quoted_price: baseOrder.quoted_price,
+        quote_expires_at: baseOrder.quote_expires_at
       } : {
+        // Fallback to item data if no base order
+        billing_name: itemData.delivery_name,
+        billing_email: itemData.delivery_email,
         delivery_name: itemData.delivery_name,
         delivery_email: itemData.delivery_email,
         delivery_phone: itemData.delivery_phone,
-        delivery_street: itemData.delivery_address.street,
-        delivery_city: itemData.delivery_address.city,
-        delivery_state: itemData.delivery_address.state,
-        delivery_zip: itemData.delivery_address.zip,
+        delivery_street: itemData.delivery_address?.street,
+        delivery_city: itemData.delivery_address?.city,
+        delivery_state: itemData.delivery_address?.state,
+        delivery_zip: itemData.delivery_address?.zip,
         delivery_instructions: itemData.delivery_instructions,
         delivery_time_preference: itemData.delivery_time_preference
       };

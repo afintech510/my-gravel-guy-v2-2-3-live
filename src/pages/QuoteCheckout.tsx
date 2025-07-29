@@ -52,10 +52,11 @@ const QuoteCheckout = () => {
 
   const fetchQuoteData = async () => {
     try {
+      // Use pattern matching to fetch all related items (base + suffixed orders)
       const { data, error } = await supabase
         .from('orders')
         .select('*')
-        .eq('order_id', quoteId)
+        .like('order_id', `${quoteId}%`)
         .eq('status', 'Quote');
 
       if (error) throw error;
