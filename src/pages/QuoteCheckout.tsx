@@ -167,24 +167,28 @@ const QuoteCheckout = () => {
                 <span>Quote Items</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               {quoteItems.map((item, index) => (
-                <div key={item.id} className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <h4 className="font-medium">{resolveProductName(item.product_id)}</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {item.quantity} {item.unit} @ ${item.unit_price.toFixed(2)} per {item.unit}
-                    </p>
-                    {item.notes && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Note: {item.notes}
+                <div key={item.id}>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h4 className="font-medium">{resolveProductName(item.product_id)}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {item.quantity} {item.unit} @ ${item.unit_price.toFixed(2)} per {item.unit}
                       </p>
-                    )}
+                      {item.notes && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Note: {item.notes}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <span className="font-semibold">${item.total_price.toFixed(2)}</span>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <span className="font-semibold">${item.total_price.toFixed(2)}</span>
-                  </div>
-                  {index < quoteItems.length - 1 && <Separator className="mt-4" />}
+                  {index < quoteItems.length - 1 && (
+                    <Separator className="mt-4" />
+                  )}
                 </div>
               ))}
               
