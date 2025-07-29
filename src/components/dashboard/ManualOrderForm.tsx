@@ -328,7 +328,7 @@ export function ManualOrderForm() {
       await supabase.functions.invoke('send-email', {
         body: {
           to: 'sales@mygravelguy.com',
-          subject: `New Quote Created - ${orderData.customer_name}`,
+          subject: `New Quote Created - ${customerInfo.name}`,
           html: htmlContent,
           type: 'internal_notification'
         }
