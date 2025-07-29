@@ -46,6 +46,12 @@ export const SMS_TEMPLATES: SMSTemplate[] = [
     message: 'Your order {orderId} has been delivered! Please inspect your materials and let us know if you have any concerns. Thank you for your business!'
   },
   {
+    id: 'order_in_cart',
+    name: 'Order in Cart',
+    type: 'order_update',
+    message: 'Hi {customerName}! We noticed that you added materials to your cart but haven\'t checked out yet. You can reply to this text with any questions, we are here to help. Thanks for choosing My Gravel Guy!'
+  },
+  {
     id: 'custom',
     name: 'Custom Message',
     type: 'custom',
