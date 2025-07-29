@@ -134,10 +134,6 @@ export function ManualOrderForm() {
       name: customerInfo.name,
       phone: customerInfo.phone,
     });
-    toast({
-      title: "Customer info copied",
-      description: "Customer name and phone copied to delivery information.",
-    });
   };
 
   const validateStep = (step: number) => {
@@ -492,21 +488,19 @@ export function ManualOrderForm() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  Delivery Information
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCopyCustomerInfo}
-                    className="flex items-center gap-2"
-                  >
-                    <Copy className="h-4 w-4" />
-                    Copy Customer Info
-                  </Button>
-                </CardTitle>
+                <CardTitle>Delivery Information</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyCustomerInfo}
+                  className="flex items-center gap-2"
+                >
+                  <Copy className="h-4 w-4" />
+                  Copy Customer Info
+                </Button>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="delivery-name">Contact Name</Label>
@@ -773,7 +767,7 @@ export function ManualOrderForm() {
                   >
                     <FileText className="h-4 w-4" />
                     <span className="sm:hidden">Quote</span>
-                    <span className="hidden sm:inline">Save as Quote</span>
+                    <span className="hidden sm:inline">Send Quote</span>
                   </Button>
                   <Button
                     onClick={handleStripeCheckout}
@@ -852,6 +846,28 @@ export function ManualOrderForm() {
       </div>
 
       {renderStep()}
+
+      {/* Bottom Navigation - for better mobile experience */}
+      {currentStep < 3 && (
+        <div className="flex justify-between gap-4 mt-6 pt-4 border-t">
+          <Button
+            variant="outline"
+            onClick={currentStep === 1 ? () => navigate('/dashboard/orders') : handleBack}
+            className="flex items-center justify-center gap-2 w-full sm:w-auto"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {currentStep === 1 ? 'Cancel' : 'Back'}
+          </Button>
+          
+          <Button 
+            onClick={handleNext} 
+            disabled={!validateStep(currentStep)}
+            className="w-full sm:w-auto"
+          >
+            Next
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
