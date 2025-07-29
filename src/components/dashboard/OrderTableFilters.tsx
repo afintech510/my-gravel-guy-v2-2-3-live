@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Search, Filter } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { CalendarIcon, Search, Filter, ChevronDown, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { OrderFilters, FulfillmentStatus } from '@/types/order.types';
 
@@ -22,6 +23,7 @@ const OrderTableFilters: React.FC<OrderTableFiltersProps> = ({
   dateRange,
   onDateRangeChange
 }) => {
+  const [isOpen, setIsOpen] = useState(false);
   
   const handleSearchChange = (value: string) => {
     onFiltersChange({ ...filters, searchTerm: value });
@@ -44,107 +46,137 @@ const OrderTableFilters: React.FC<OrderTableFiltersProps> = ({
     onDateRangeChange({ from: undefined, to: undefined });
   };
 
+  // Count active filters for display
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters.searchTerm && filters.searchTerm.trim() !== '') count++;
+    if (filters.fulfillmentStatus && filters.fulfillmentStatus !== 'all') count++;
+    if (filters.sortBy && filters.sortBy !== 'date_desc') count++;
+    if (dateRange.from || dateRange.to) count++;
+    return count;
+  }, [filters, dateRange]);
+
   return (
-    <div className="bg-white p-6 rounded-lg shadow space-y-4">
-      <div className="flex items-center gap-2 mb-4">
-        <Filter className="h-5 w-5 text-gray-500" />
-        <h3 className="text-lg font-semibold">Filters</h3>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Search */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Search</label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Order ID, name, email, phone..."
-              value={filters.searchTerm || ''}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-10"
-            />
+    <div className="bg-white rounded-lg shadow">
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger asChild>
+          <div className="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-50 transition-colors">
+            <div className="flex items-center gap-2">
+              <Filter className="h-5 w-5 text-gray-500" />
+              <h3 className="text-lg font-semibold">Filters</h3>
+              {activeFilterCount > 0 && (
+                <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">
+                  {activeFilterCount}
+                </span>
+              )}
+            </div>
+            {isOpen ? (
+              <ChevronDown className="h-4 w-4 text-gray-500 transition-transform" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-gray-500 transition-transform" />
+            )}
           </div>
-        </div>
+        </CollapsibleTrigger>
+        
+        <CollapsibleContent className="border-t">
+          <div className="p-6 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Search */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Search</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Order ID, name, email, phone..."
+                    value={filters.searchTerm || ''}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
 
-        {/* Fulfillment Status Filter */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Fulfillment Status</label>
-          <Select value={filters.fulfillmentStatus || 'all'} onValueChange={handleFulfillmentStatusChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="All statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="Quote Needed">Quote Needed</SelectItem>
-              <SelectItem value="Quote Sent">Quote Sent</SelectItem>
-              <SelectItem value="New Order">New Order</SelectItem>
-              <SelectItem value="Pending">Pending</SelectItem>
-              <SelectItem value="Assigned">Assigned</SelectItem>
-              <SelectItem value="Scheduled">Scheduled</SelectItem>
-              <SelectItem value="Delivered">Delivered</SelectItem>
-              <SelectItem value="Cancelled">Cancelled</SelectItem>
-              <SelectItem value="Refunded">Refunded</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+              {/* Fulfillment Status Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Fulfillment Status</label>
+                <Select value={filters.fulfillmentStatus || 'all'} onValueChange={handleFulfillmentStatusChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="Quote Needed">Quote Needed</SelectItem>
+                    <SelectItem value="Quote Sent">Quote Sent</SelectItem>
+                    <SelectItem value="New Order">New Order</SelectItem>
+                    <SelectItem value="Pending">Pending</SelectItem>
+                    <SelectItem value="Assigned">Assigned</SelectItem>
+                    <SelectItem value="Scheduled">Scheduled</SelectItem>
+                    <SelectItem value="Delivered">Delivered</SelectItem>
+                    <SelectItem value="Cancelled">Cancelled</SelectItem>
+                    <SelectItem value="Refunded">Refunded</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-        {/* Sort */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Sort By</label>
-          <Select value={filters.sortBy || 'date_desc'} onValueChange={handleSortChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Sort by..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="date_desc">Newest First</SelectItem>
-              <SelectItem value="date_asc">Oldest First</SelectItem>
-              <SelectItem value="amount_desc">Highest Amount</SelectItem>
-              <SelectItem value="amount_asc">Lowest Amount</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+              {/* Sort */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Sort By</label>
+                <Select value={filters.sortBy || 'date_desc'} onValueChange={handleSortChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sort by..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="date_desc">Newest First</SelectItem>
+                    <SelectItem value="date_asc">Oldest First</SelectItem>
+                    <SelectItem value="amount_desc">Highest Amount</SelectItem>
+                    <SelectItem value="amount_asc">Lowest Amount</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-        {/* Date Range */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Delivery Date</label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full justify-start text-left font-normal">
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateRange.from ? (
-                  dateRange.to ? (
-                    <>
-                      {format(dateRange.from, "LLL dd, y")} -{" "}
-                      {format(dateRange.to, "LLL dd, y")}
-                    </>
-                  ) : (
-                    format(dateRange.from, "LLL dd, y")
-                  )
-                ) : (
-                  <span>Pick a date range</span>
-                )}
+              {/* Date Range */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Delivery Date</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateRange.from ? (
+                        dateRange.to ? (
+                          <>
+                            {format(dateRange.from, "LLL dd, y")} -{" "}
+                            {format(dateRange.to, "LLL dd, y")}
+                          </>
+                        ) : (
+                          format(dateRange.from, "LLL dd, y")
+                        )
+                      ) : (
+                        <span>Pick a date range</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      initialFocus
+                      mode="range"
+                      defaultMonth={dateRange.from}
+                      selected={{ from: dateRange.from, to: dateRange.to }}
+                      onSelect={(range) => onDateRangeChange({ from: range?.from, to: range?.to })}
+                      numberOfMonths={2}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+
+            {/* Clear Filters */}
+            <div className="flex justify-end">
+              <Button variant="outline" onClick={clearFilters}>
+                Clear All Filters
               </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                initialFocus
-                mode="range"
-                defaultMonth={dateRange.from}
-                selected={{ from: dateRange.from, to: dateRange.to }}
-                onSelect={(range) => onDateRangeChange({ from: range?.from, to: range?.to })}
-                numberOfMonths={2}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
-
-      {/* Clear Filters */}
-      <div className="flex justify-end">
-        <Button variant="outline" onClick={clearFilters}>
-          Clear All Filters
-        </Button>
-      </div>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 };
