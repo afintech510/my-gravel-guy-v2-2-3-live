@@ -1,7 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { OrderService } from '@/services/orderService';
 
 interface FulfillmentStatusBadgeProps {
   status: string | null;
@@ -42,6 +43,24 @@ const FulfillmentStatusBadge: React.FC<FulfillmentStatusBadgeProps> = ({
   readonly = false
 }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [availableStatuses, setAvailableStatuses] = useState<string[]>([]);
+  const [isLoadingStatuses, setIsLoadingStatuses] = useState(false);
+
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      setIsLoadingStatuses(true);
+      try {
+        const statuses = await OrderService.getUniqueFulfillmentStatuses();
+        setAvailableStatuses(statuses);
+      } catch (error) {
+        console.error('Error fetching fulfillment statuses:', error);
+      } finally {
+        setIsLoadingStatuses(false);
+      }
+    };
+
+    fetchStatuses();
+  }, []);
 
   const handleStatusChange = (newStatus: string) => {
     onStatusUpdate(orderId, newStatus);
@@ -68,15 +87,15 @@ const FulfillmentStatusBadge: React.FC<FulfillmentStatusBadgeProps> = ({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="Quote Needed">Quote Needed</SelectItem>
-          <SelectItem value="Quote Sent">Quote Sent</SelectItem>
-          <SelectItem value="New Order">New Order</SelectItem>
-          <SelectItem value="Pending">Pending</SelectItem>
-          <SelectItem value="Assigned">Assigned</SelectItem>
-          <SelectItem value="Scheduled">Scheduled</SelectItem>
-          <SelectItem value="Delivered">Delivered</SelectItem>
-          <SelectItem value="Cancelled">Cancelled</SelectItem>
-          <SelectItem value="Refunded">Refunded</SelectItem>
+          {isLoadingStatuses ? (
+            <SelectItem value="" disabled>Loading...</SelectItem>
+          ) : (
+            availableStatuses.map((statusOption) => (
+              <SelectItem key={statusOption} value={statusOption}>
+                {statusOption}
+              </SelectItem>
+            ))
+          )}
         </SelectContent>
       </Select>
     );

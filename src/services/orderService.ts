@@ -75,6 +75,35 @@ export class OrderService {
   }
 
   /**
+   * Get a list of unique fulfillment statuses from the orders table
+   */
+  static async getUniqueFulfillmentStatuses(): Promise<string[]> {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('fulfillment_status')
+        .not('fulfillment_status', 'is', null);
+
+      if (error) {
+        console.error('Error fetching fulfillment statuses:', error);
+        return [];
+      }
+
+      // Extract unique statuses and filter out null/undefined values
+      const uniqueStatuses = [...new Set(
+        data
+          .map(row => row.fulfillment_status)
+          .filter(status => status !== null && status !== undefined)
+      )];
+
+      return uniqueStatuses;
+    } catch (error) {
+      console.error('Error in getUniqueFulfillmentStatuses:', error);
+      return [];
+    }
+  }
+
+  /**
    * Fetch orders with optional filtering and pagination
    */
   static async fetchOrders(

@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,6 +9,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { CalendarIcon, Search, Filter, ChevronDown, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { OrderFilters, FulfillmentStatus } from '@/types/order.types';
+import { OrderService } from '@/services/orderService';
 
 interface OrderTableFiltersProps {
   filters: OrderFilters;
@@ -24,6 +25,24 @@ const OrderTableFilters: React.FC<OrderTableFiltersProps> = ({
   onDateRangeChange
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [availableStatuses, setAvailableStatuses] = useState<string[]>([]);
+  const [isLoadingStatuses, setIsLoadingStatuses] = useState(false);
+
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      setIsLoadingStatuses(true);
+      try {
+        const statuses = await OrderService.getUniqueFulfillmentStatuses();
+        setAvailableStatuses(statuses);
+      } catch (error) {
+        console.error('Error fetching fulfillment statuses:', error);
+      } finally {
+        setIsLoadingStatuses(false);
+      }
+    };
+
+    fetchStatuses();
+  }, []);
   
   const handleSearchChange = (value: string) => {
     onFiltersChange({ ...filters, searchTerm: value });
@@ -104,15 +123,15 @@ const OrderTableFilters: React.FC<OrderTableFiltersProps> = ({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="Quote Needed">Quote Needed</SelectItem>
-                    <SelectItem value="Quote Sent">Quote Sent</SelectItem>
-                    <SelectItem value="New Order">New Order</SelectItem>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="Assigned">Assigned</SelectItem>
-                    <SelectItem value="Scheduled">Scheduled</SelectItem>
-                    <SelectItem value="Delivered">Delivered</SelectItem>
-                    <SelectItem value="Cancelled">Cancelled</SelectItem>
-                    <SelectItem value="Refunded">Refunded</SelectItem>
+                    {isLoadingStatuses ? (
+                      <SelectItem value="" disabled>Loading...</SelectItem>
+                    ) : (
+                      availableStatuses.map((statusOption) => (
+                        <SelectItem key={statusOption} value={statusOption}>
+                          {statusOption}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
