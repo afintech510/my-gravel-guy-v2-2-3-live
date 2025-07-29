@@ -452,10 +452,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
     try {
       await OrderService.updateOrderItem(order.order_id, itemId, updates);
       onOrderUpdate(); // Refresh the order data
-      toast({
-        title: "Item Updated",
-        description: "Order item has been updated successfully",
-      });
+      // Note: No success toast to prevent spam during typing
     } catch (error) {
       console.error('Error updating order item:', error);
       toast({

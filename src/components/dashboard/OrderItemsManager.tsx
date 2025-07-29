@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,28 +25,61 @@ export const OrderItemsManager: React.FC<OrderItemsManagerProps> = ({
   readOnly = false
 }) => {
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [localItems, setLocalItems] = useState<Record<string, Partial<OrderItem>>>({});
+  const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
+
+  // Update local state when orderItems prop changes
+  useEffect(() => {
+    setLocalItems({});
+  }, [orderItems]);
+
+  const debouncedUpdate = useCallback((itemId: string, updates: Partial<OrderItem>) => {
+    // Clear existing timer for this item
+    if (debounceTimers.current[itemId]) {
+      clearTimeout(debounceTimers.current[itemId]);
+    }
+
+    // Set new timer
+    debounceTimers.current[itemId] = setTimeout(() => {
+      onUpdateItem(itemId, updates);
+      // Remove from local state after successful update
+      setLocalItems(prev => {
+        const newState = { ...prev };
+        delete newState[itemId];
+        return newState;
+      });
+      delete debounceTimers.current[itemId];
+    }, 500);
+  }, [onUpdateItem]);
 
   const handleQuantityChange = (itemId: string, newQuantity: number) => {
     if (newQuantity <= 0) return;
-    const item = orderItems.find(i => i.id === itemId);
-    if (item) {
-      const newTotal = newQuantity * item.unit_price;
-      onUpdateItem(itemId, { 
-        quantity: newQuantity,
-        // Recalculate if needed - this depends on your business logic
-      });
-    }
+    
+    // Update local state immediately for responsive UI
+    setLocalItems(prev => ({
+      ...prev,
+      [itemId]: { ...prev[itemId], quantity: newQuantity }
+    }));
+
+    // Debounce the database update
+    debouncedUpdate(itemId, { quantity: newQuantity });
   };
 
   const handlePriceChange = (itemId: string, newPrice: number) => {
     if (newPrice < 0) return;
-    const item = orderItems.find(i => i.id === itemId);
-    if (item) {
-      onUpdateItem(itemId, { 
-        unit_price: newPrice,
-        // Recalculate total if needed
-      });
-    }
+    
+    // Update local state immediately for responsive UI
+    setLocalItems(prev => ({
+      ...prev,
+      [itemId]: { ...prev[itemId], unit_price: newPrice }
+    }));
+
+    // Debounce the database update
+    debouncedUpdate(itemId, { unit_price: newPrice });
+  };
+
+  const getDisplayValue = (item: OrderItem, field: 'quantity' | 'unit_price') => {
+    return localItems[item.id]?.[field] ?? item[field];
   };
 
   const handleAddProduct = (product: Product & { unit: string }, quantity: number, customPrice?: number) => {
@@ -76,7 +109,8 @@ export const OrderItemsManager: React.FC<OrderItemsManagerProps> = ({
     setShowAddProduct(false);
   };
 
-  const totalValue = orderItems.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+  const totalValue = orderItems.reduce((sum, item) => 
+    sum + (getDisplayValue(item, 'quantity') * getDisplayValue(item, 'unit_price')), 0);
 
   return (
     <div className="space-y-4">
@@ -114,7 +148,7 @@ export const OrderItemsManager: React.FC<OrderItemsManagerProps> = ({
                   <Input
                     id={`quantity-${item.id}`}
                     type="number"
-                    value={item.quantity}
+                    value={getDisplayValue(item, 'quantity')}
                     onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
                     min="1"
                     readOnly={readOnly}
@@ -126,7 +160,7 @@ export const OrderItemsManager: React.FC<OrderItemsManagerProps> = ({
                   <Input
                     id={`price-${item.id}`}
                     type="number"
-                    value={item.unit_price}
+                    value={getDisplayValue(item, 'unit_price')}
                     onChange={(e) => handlePriceChange(item.id, parseFloat(e.target.value) || 0)}
                     min="0"
                     step="0.01"
@@ -137,7 +171,7 @@ export const OrderItemsManager: React.FC<OrderItemsManagerProps> = ({
                 <div className="flex items-center justify-between">
                   <div className="text-right">
                     <Label className="text-sm font-medium">Total</Label>
-                    <p className="text-sm font-bold">${(item.quantity * item.unit_price).toFixed(2)}</p>
+                    <p className="text-sm font-bold">${(getDisplayValue(item, 'quantity') * getDisplayValue(item, 'unit_price')).toFixed(2)}</p>
                   </div>
                   {!readOnly && (
                     <Button
