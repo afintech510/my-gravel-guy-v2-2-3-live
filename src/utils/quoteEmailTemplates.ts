@@ -99,12 +99,34 @@ export const generateQuoteProposalEmail = (formData: QuoteFormData, quoteData: a
     </div>
   ` : '';
 
-  // Quote Items Section
-  const itemsSection = quoteData && quoteData.length > 0 
-    ? quoteData.map((item: any, index: number) => {
+  // Filter out general-quote items and prioritize actual products
+  const filteredQuoteData = quoteData && quoteData.length > 0 
+    ? quoteData.filter((item: any) => {
+        // Filter out general-quote items that have $0.00 total_price
+        if (item.product_id === 'general-quote' && (item.total_price === 0 || item.total_price === null)) {
+          console.log('Filtering out general-quote item with $0.00:', item);
+          return false;
+        }
+        return true;
+      })
+    : [];
+
+  console.log('Filtered quote data for email:', {
+    original: quoteData?.length || 0,
+    filtered: filteredQuoteData.length,
+    items: filteredQuoteData.map((item: any) => ({
+      product_id: item.product_id,
+      product_name: item.product_name,
+      total_price: item.total_price
+    }))
+  });
+
+  // Quote Items Section - use filtered data
+  const itemsSection = filteredQuoteData && filteredQuoteData.length > 0 
+    ? filteredQuoteData.map((item: any, index: number) => {
         const productName = productNameMap?.[item.product_id] || item.product_name || item.product_id;
         return `
-         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; margin-bottom: ${index === quoteData.length - 1 ? '0' : '20px'};">
+         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; margin-bottom: ${index === filteredQuoteData.length - 1 ? '0' : '20px'};">
            <div class="item-container" style="display: flex; justify-content: space-between; align-items: center; gap: 20px;">
              <div class="item-info" style="flex: 1;">
                <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin: 0 0 8px 0;">${productName}</h3>
@@ -126,9 +148,9 @@ export const generateQuoteProposalEmail = (formData: QuoteFormData, quoteData: a
       }).join('')
     : '<div style="background-color: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; text-align: center; color: #6b7280;">Quote details will be added by our team</div>';
 
-  // Total Amount
-  const totalAmount = quoteData && quoteData.length > 0 
-    ? quoteData.reduce((sum: number, item: any) => sum + item.total_price, 0).toFixed(2)
+  // Total Amount - use filtered data
+  const totalAmount = filteredQuoteData && filteredQuoteData.length > 0 
+    ? filteredQuoteData.reduce((sum: number, item: any) => sum + item.total_price, 0).toFixed(2)
     : '0.00';
 
   // Delivery Information Section
