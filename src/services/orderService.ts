@@ -307,7 +307,7 @@ export class OrderService {
 
   /**
    * Extract base order ID from a potentially suffixed order ID
-   * Handles both 10-digit Unix timestamps and 13-digit millisecond timestamps
+   * For timestamp-based IDs like CART-1753829165052, the whole ID is the base
    */
   private static extractBaseOrderId(orderId: string): string {
     const parts = orderId.split('-');
@@ -336,21 +336,13 @@ export class OrderService {
     try {
       console.log('Updating order fulfillment status:', { orderId, fulfillmentStatus });
       
-      // Extract base order ID to update all related items
-      const baseOrderId = this.extractBaseOrderId(orderId);
-      const isTimestampId = baseOrderId === orderId;
-      
-      const updateQuery = isTimestampId 
-        ? supabase.from('orders').update({ 
-            fulfillment_status: fulfillmentStatus,
-            updated_at: new Date().toISOString()
-          }).eq('order_id', baseOrderId)
-        : supabase.from('orders').update({ 
-            fulfillment_status: fulfillmentStatus,
-            updated_at: new Date().toISOString()
-          }).or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
-      
-      const { error } = await updateQuery;
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          fulfillment_status: fulfillmentStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('order_id', orderId);
 
       if (error) {
         console.error('Error updating order fulfillment status:', error);
@@ -369,21 +361,13 @@ export class OrderService {
     try {
       console.log('Updating order sales person:', { orderId, salesPerson });
       
-      // Extract base order ID to update all related items
-      const baseOrderId = this.extractBaseOrderId(orderId);
-      const isTimestampId = baseOrderId === orderId;
-      
-      const updateQuery = isTimestampId 
-        ? supabase.from('orders').update({ 
-            sales_person: salesPerson,
-            updated_at: new Date().toISOString()
-          }).eq('order_id', baseOrderId)
-        : supabase.from('orders').update({ 
-            sales_person: salesPerson,
-            updated_at: new Date().toISOString()
-          }).or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
-      
-      const { error } = await updateQuery;
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          sales_person: salesPerson,
+          updated_at: new Date().toISOString()
+        })
+        .eq('order_id', orderId);
 
       if (error) {
         console.error('Error updating order sales person:', error);
@@ -402,21 +386,13 @@ export class OrderService {
     try {
       console.log('Updating order sales commission:', { orderId, salesCommission });
       
-      // Extract base order ID to update all related items
-      const baseOrderId = this.extractBaseOrderId(orderId);
-      const isTimestampId = baseOrderId === orderId;
-      
-      const updateQuery = isTimestampId 
-        ? supabase.from('orders').update({ 
-            sales_commission: salesCommission,
-            updated_at: new Date().toISOString()
-          }).eq('order_id', baseOrderId)
-        : supabase.from('orders').update({ 
-            sales_commission: salesCommission,
-            updated_at: new Date().toISOString()
-          }).or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
-      
-      const { error } = await updateQuery;
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          sales_commission: salesCommission,
+          updated_at: new Date().toISOString()
+        })
+        .eq('order_id', orderId);
 
       if (error) {
         console.error('Error updating order sales commission:', error);
@@ -435,21 +411,13 @@ export class OrderService {
     try {
       console.log('Updating order status:', { orderId, status });
       
-      // Extract base order ID to update all related items
-      const baseOrderId = this.extractBaseOrderId(orderId);
-      const isTimestampId = baseOrderId === orderId;
-      
-      const updateQuery = isTimestampId 
-        ? supabase.from('orders').update({ 
-            status,
-            updated_at: new Date().toISOString()
-          }).eq('order_id', baseOrderId)
-        : supabase.from('orders').update({ 
-            status,
-            updated_at: new Date().toISOString()
-          }).or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
-      
-      const { error } = await updateQuery;
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('order_id', orderId);
 
       if (error) {
         console.error('Error updating order status:', error);
@@ -465,21 +433,13 @@ export class OrderService {
     try {
       console.log('Updating order notes:', { orderId, notes });
       
-      // Extract base order ID to update all related items
-      const baseOrderId = this.extractBaseOrderId(orderId);
-      const isTimestampId = baseOrderId === orderId;
-      
-      const updateQuery = isTimestampId 
-        ? supabase.from('orders').update({ 
-            notes,
-            updated_at: new Date().toISOString()
-          }).eq('order_id', baseOrderId)
-        : supabase.from('orders').update({ 
-            notes,
-            updated_at: new Date().toISOString()
-          }).or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
-      
-      const { error } = await updateQuery;
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          notes,
+          updated_at: new Date().toISOString()
+        })
+        .eq('order_id', orderId);
 
       if (error) {
         console.error('Error updating order notes:', error);
@@ -510,10 +470,6 @@ export class OrderService {
         return; // Don't throw error, just skip the update
       }
 
-      // Extract base order ID to update all related items
-      const baseOrderId = this.extractBaseOrderId(orderId);
-      const isTimestampId = baseOrderId === orderId;
-
       const updateData: any = {
         supplier_id: supplier.name, // Save supplier name instead of ID
         updated_at: new Date().toISOString()
@@ -523,11 +479,10 @@ export class OrderService {
         updateData.supplier_charges = supplierCharges;
       }
 
-      const updateQuery = isTimestampId 
-        ? supabase.from('orders').update(updateData).eq('order_id', baseOrderId)
-        : supabase.from('orders').update(updateData).or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
-      
-      const { error } = await updateQuery;
+      const { error } = await supabase
+        .from('orders')
+        .update(updateData)
+        .eq('order_id', orderId);
 
       if (error) {
         console.error('Error updating order supplier:', error);
@@ -545,19 +500,14 @@ export class OrderService {
       
       // Get base order ID to update all related items
       const baseOrderId = this.extractBaseOrderId(orderId);
-      const isTimestampId = baseOrderId === orderId;
       
-      const updateQuery = isTimestampId 
-        ? supabase.from('orders').update({ 
-            quote_notes: quoteNotes,
-            updated_at: new Date().toISOString()
-          }).eq('order_id', baseOrderId)
-        : supabase.from('orders').update({ 
-            quote_notes: quoteNotes,
-            updated_at: new Date().toISOString()
-          }).or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
-      
-      const { error } = await updateQuery;
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          quote_notes: quoteNotes,
+          updated_at: new Date().toISOString()
+        })
+        .or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
 
       if (error) {
         console.error('Error updating order quote notes:', error);
@@ -618,50 +568,6 @@ export class OrderService {
       
       // Get base order ID and fetch billing/delivery data from existing order
       const baseOrderId = this.extractBaseOrderId(orderId);
-      
-      // First, check if there's a "general-quote" record that we should update instead of creating a child
-      const { data: generalQuoteCheck, error: checkError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('order_id', baseOrderId)
-        .eq('product_id', 'general-quote')
-        .eq('total_price', 0)
-        .single();
-      
-      if (!checkError && generalQuoteCheck) {
-        console.log('Found general-quote record to update instead of creating child:', generalQuoteCheck.id);
-        
-        // Update the existing general-quote record with the new product
-        const { data: updatedOrder, error: updateError } = await supabase
-          .from('orders')
-          .update({
-            product_id: itemData.product_name,
-            quantity: itemData.quantity,
-            unit: itemData.unit,
-            unit_price: itemData.unit_price,
-            total_price: itemData.total_price,
-            delivery_date: itemData.delivery_date,
-            status: itemData.status || generalQuoteCheck.status,
-            fulfillment_status: itemData.fulfillment_status || generalQuoteCheck.fulfillment_status,
-            notes: itemData.notes || generalQuoteCheck.notes,
-            supplier_id: itemData.supplier_id || generalQuoteCheck.supplier_id,
-            supplier_charges: itemData.supplier_charges || generalQuoteCheck.supplier_charges,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', generalQuoteCheck.id)
-          .select()
-          .single();
-        
-        if (updateError) {
-          console.error('Error updating general-quote record:', updateError);
-          throw new Error(`Failed to update general-quote record: ${updateError.message}`);
-        }
-        
-        console.log('Successfully updated general-quote record with new product');
-        return updatedOrder.id;
-      }
-      
-      // No general-quote record found, proceed with normal child record creation
       const { data: baseOrder, error: baseOrderError } = await supabase
         .from('orders')
         .select('*')
@@ -674,15 +580,15 @@ export class OrderService {
       }
 
       // Check if base orderId already exists to determine unique order_id
-      const { data: existingOrders, error: existingOrdersError } = await supabase
+      const { data: existingOrders, error: checkError } = await supabase
         .from('orders')
         .select('order_id')
         .like('order_id', `${orderId}%`)
         .order('order_id', { ascending: false });
 
-      if (existingOrdersError) {
-        console.error('Error checking existing orders:', existingOrdersError);
-        throw new Error(`Failed to check existing orders: ${existingOrdersError.message}`);
+      if (checkError) {
+        console.error('Error checking existing orders:', checkError);
+        throw new Error(`Failed to check existing orders: ${checkError.message}`);
       }
 
       // Generate unique order_id
@@ -792,23 +698,15 @@ export class OrderService {
     delivery_time_preference?: string;
   }): Promise<void> {
     try {
-      console.log('Updating delivery info (all related items):', { orderId, deliveryData });
+      console.log('Updating delivery info:', { orderId, deliveryData });
       
-      // Extract base order ID to update all related items
-      const baseOrderId = this.extractBaseOrderId(orderId);
-      const isTimestampId = baseOrderId === orderId;
-      
-      const updateQuery = isTimestampId 
-        ? supabase.from('orders').update({ 
-            ...deliveryData,
-            updated_at: new Date().toISOString()
-          }).eq('order_id', baseOrderId)
-        : supabase.from('orders').update({ 
-            ...deliveryData,
-            updated_at: new Date().toISOString()
-          }).or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
-      
-      const { error } = await updateQuery;
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          ...deliveryData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('order_id', orderId);
 
       if (error) {
         console.error('Error updating delivery info:', error);
