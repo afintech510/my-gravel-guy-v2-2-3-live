@@ -192,23 +192,25 @@ export class OrderService {
    */
   static async fetchOrderById(orderId: string): Promise<GroupedOrder | null> {
     try {
-      console.log('Fetching order by ID (including related items):', orderId);
+      console.log('🔍 Fetching order by ID:', orderId);
       
       // Extract base order ID (remove any suffix after last dash if it's a number)
       const baseOrderId = this.extractBaseOrderId(orderId);
-      console.log('Base order ID:', baseOrderId);
+      console.log('📋 Base order ID:', baseOrderId, '(extracted from:', orderId, ')');
       
-      // Build more specific query to avoid false matches
+      // For timestamp-based IDs, use exact match only
       let query = supabase
         .from('orders')
         .select('*');
 
-      // If original orderId has a suffix, fetch both exact and base
-      if (orderId !== baseOrderId) {
-        query = query.or(`order_id.eq.${orderId},order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
-      } else {
-        // For base order IDs, only fetch exact match and direct children
+      if (orderId === baseOrderId) {
+        // This is a base order ID - fetch exact match and any suffixed versions
+        console.log('🎯 Using exact + pattern match for base order ID');
         query = query.or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
+      } else {
+        // This is a suffixed order ID - fetch exact match only
+        console.log('🎯 Using exact match only for suffixed order ID');
+        query = query.eq('order_id', orderId);
       }
 
       const { data, error } = await query;
@@ -277,16 +279,25 @@ export class OrderService {
 
   /**
    * Extract base order ID from a potentially suffixed order ID
+   * For timestamp-based IDs like CART-1753829165052, the whole ID is the base
    */
   private static extractBaseOrderId(orderId: string): string {
     const parts = orderId.split('-');
-    if (parts.length > 1) {
+    
+    // If this looks like a timestamp-based order ID (CART/ORDER + timestamp), return as-is
+    if (parts.length === 2 && parts[1].length >= 10 && !isNaN(parseInt(parts[1]))) {
+      return orderId;
+    }
+    
+    // For traditional suffixed IDs like CART-123-1, CART-123-2, extract base
+    if (parts.length > 2) {
       const lastPart = parts[parts.length - 1];
-      // If last part is a number, remove it to get base order ID
-      if (!isNaN(parseInt(lastPart))) {
+      // If last part is a short number (likely a suffix), remove it
+      if (!isNaN(parseInt(lastPart)) && lastPart.length <= 3) {
         return parts.slice(0, -1).join('-');
       }
     }
+    
     return orderId;
   }
 
