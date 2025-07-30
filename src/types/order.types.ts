@@ -177,6 +177,19 @@ export function groupOrderRows(orderRows: OrderRow[], useBaseOrderId: boolean = 
     const order = orderMap.get(groupingKey)!;
     const orderItem = orderRowToOrderItem(row);
     
+    // Validate consistency: check if customer info matches
+    const existingCustomer = order.billing_name;
+    const currentCustomer = row.billing_name;
+    
+    if (existingCustomer && currentCustomer && existingCustomer !== currentCustomer) {
+      console.warn('Customer data inconsistency detected in groupOrderRows:', {
+        orderId: displayOrderId,
+        existingCustomer,
+        currentCustomer,
+        currentRowId: row.order_id
+      });
+    }
+    
     order.items.push(orderItem);
     
     // Update total price (sum of all items)

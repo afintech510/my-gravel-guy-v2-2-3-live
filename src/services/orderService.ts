@@ -198,11 +198,20 @@ export class OrderService {
       const baseOrderId = this.extractBaseOrderId(orderId);
       console.log('Base order ID:', baseOrderId);
       
-      // Fetch all related orders using pattern matching
-      const { data, error } = await supabase
+      // Build more specific query to avoid false matches
+      let query = supabase
         .from('orders')
-        .select('*')
-        .or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
+        .select('*');
+
+      // If original orderId has a suffix, fetch both exact and base
+      if (orderId !== baseOrderId) {
+        query = query.or(`order_id.eq.${orderId},order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
+      } else {
+        // For base order IDs, only fetch exact match and direct children
+        query = query.or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching order by ID:', error);
@@ -210,13 +219,56 @@ export class OrderService {
       }
 
       if (!data || data.length === 0) {
+        console.log('No data found for order ID:', orderId);
         return null;
       }
 
+      console.log(`Found ${data.length} related order items for ${orderId}:`, data.map(item => ({ 
+        order_id: item.order_id, 
+        customer: item.delivery_name || item.billing_name,
+        product_id: item.product_id 
+      })));
+
+      // Filter out any items that don't truly belong to this order family
+      const filteredData = data.filter(item => {
+        const itemBaseId = this.extractBaseOrderId(item.order_id);
+        return itemBaseId === baseOrderId;
+      });
+
+      console.log(`After filtering, ${filteredData.length} items remain`);
+
+      // Validate data consistency - all items should have same customer
+      if (filteredData.length > 1) {
+        const firstCustomer = filteredData[0].delivery_name || filteredData[0].billing_name;
+        const inconsistentItems = filteredData.filter(item => 
+          (item.delivery_name || item.billing_name) !== firstCustomer
+        );
+        
+        if (inconsistentItems.length > 0) {
+          console.warn('Data inconsistency detected! Items with different customers:', {
+            orderId,
+            expectedCustomer: firstCustomer,
+            inconsistentItems: inconsistentItems.map(item => ({
+              order_id: item.order_id,
+              customer: item.delivery_name || item.billing_name
+            }))
+          });
+        }
+      }
+
       // Use base order grouping mode to group all related items under the base order ID
-      const groupedOrders = groupOrderRows(data as OrderRow[], true);
+      const groupedOrders = groupOrderRows(filteredData as OrderRow[], true);
       const ordersWithProductNames = await this.resolveProductNames(groupedOrders);
-      return ordersWithProductNames[0] || null;
+      
+      const result = ordersWithProductNames[0] || null;
+      console.log('Final order result:', result ? {
+        order_id: result.order_id,
+        items_count: result.items.length,
+        customer: result.billing_name,
+        total_price: result.total_price
+      } : 'null');
+      
+      return result;
     } catch (error) {
       console.error('OrderService.fetchOrderById error:', error);
       throw error;
