@@ -75,6 +75,34 @@ export class OrderService {
   }
 
   /**
+   * Get unique order statuses from orders
+   */
+  static async getUniqueOrderStatuses(): Promise<string[]> {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('status')
+        .not('status', 'is', null)
+        .neq('status', '');
+
+      if (error) {
+        console.error('Error fetching order statuses:', error);
+        // Return fallback values
+        return ['pending', 'confirmed', 'processing', 'delivered', 'cancelled', 'Quote'];
+      }
+
+      const uniqueStatuses = Array.from(new Set(
+        data?.map(row => row.status).filter(Boolean) || []
+      )).sort();
+
+      return uniqueStatuses.length > 0 ? uniqueStatuses : ['pending', 'confirmed', 'processing', 'delivered', 'cancelled', 'Quote'];
+    } catch (error) {
+      console.error('OrderService.getUniqueOrderStatuses error:', error);
+      return ['pending', 'confirmed', 'processing', 'delivered', 'cancelled', 'Quote'];
+    }
+  }
+
+  /**
    * Get a list of fulfillment status enum values from the database
    */
   static async getUniqueFulfillmentStatuses(): Promise<string[]> {
