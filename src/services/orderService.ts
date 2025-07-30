@@ -232,15 +232,10 @@ export class OrderService {
         .from('orders')
         .select('*');
 
-      if (orderId === baseOrderId) {
-        // This is a base order ID - fetch exact match and any suffixed versions
-        console.log('🎯 Using exact + pattern match for base order ID');
-        query = query.or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
-      } else {
-        // This is a suffixed order ID - fetch exact match only
-        console.log('🎯 Using exact match only for suffixed order ID');
-        query = query.eq('order_id', orderId);
-      }
+      // ALWAYS use pattern matching to fetch ALL related records
+      // This ensures that clicking edit on any related record shows all products in the group
+      console.log('🎯 Using pattern match to fetch all related records for base order ID:', baseOrderId);
+      query = query.or(getOrderPatternQuery(baseOrderId));
 
       const { data, error } = await query;
 
@@ -710,14 +705,23 @@ export class OrderService {
       
       // Extract base order ID and use pattern matching to update all related items
       const baseOrderId = extractBaseOrderId(orderId);
+      console.log('🚚 Updating delivery for base order ID:', baseOrderId, 'using pattern:', getOrderPatternQuery(baseOrderId));
       
-      const { error } = await supabase
+      const { data: updatedRecords, error } = await supabase
         .from('orders')
         .update({ 
           ...deliveryData,
           updated_at: new Date().toISOString()
         })
-        .or(getOrderPatternQuery(baseOrderId));
+        .or(getOrderPatternQuery(baseOrderId))
+        .select('order_id, delivery_name, delivery_street');
+
+      console.log('📝 Delivery update result:', {
+        baseOrderId,
+        updatedRecords: updatedRecords?.length || 0,
+        recordIds: updatedRecords?.map(r => r.order_id) || [],
+        sampleData: updatedRecords?.[0] || null
+      });
 
       if (error) {
         console.error('Error updating delivery info:', error);
