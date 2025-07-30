@@ -566,40 +566,66 @@ export class OrderService {
     try {
       console.log('Adding order item:', { orderId, itemData });
       
-      // Get base order ID and fetch billing/delivery data from existing order
+      // Get base order ID and fetch all related order items
       const baseOrderId = this.extractBaseOrderId(orderId);
-      const { data: baseOrder, error: baseOrderError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('order_id', baseOrderId)
-        .single();
-
-      if (baseOrderError) {
-        console.error('Error fetching base order for data inheritance:', baseOrderError);
-        // Continue without data inheritance if base order not found
-      }
-
-      // Check if base orderId already exists to determine unique order_id
       const { data: existingOrders, error: checkError } = await supabase
         .from('orders')
-        .select('order_id')
-        .like('order_id', `${orderId}%`)
-        .order('order_id', { ascending: false });
+        .select('*')
+        .or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`)
+        .order('order_id', { ascending: true });
 
       if (checkError) {
         console.error('Error checking existing orders:', checkError);
         throw new Error(`Failed to check existing orders: ${checkError.message}`);
       }
 
-      // Generate unique order_id
-      let uniqueOrderId = orderId;
+      // Check if base order only contains a "general-quote" record with $0 value
+      const shouldOverwriteGeneralQuote = existingOrders && 
+        existingOrders.length === 1 && 
+        existingOrders[0].product_id === 'general-quote' && 
+        (existingOrders[0].total_price === 0 || existingOrders[0].total_price === null);
+
+      if (shouldOverwriteGeneralQuote) {
+        console.log('Overwriting general-quote record with real product');
+        
+        // Update the existing "general-quote" record instead of creating new one
+        const existingRecord = existingOrders[0];
+        const { error: updateError } = await supabase
+          .from('orders')
+          .update({
+            product_id: itemData.product_name, // Store product ID in product_id field
+            quantity: itemData.quantity,
+            unit: itemData.unit,
+            unit_price: itemData.unit_price,
+            total_price: itemData.total_price,
+            delivery_date: itemData.delivery_date,
+            status: itemData.status,
+            fulfillment_status: itemData.fulfillment_status,
+            notes: itemData.notes,
+            supplier_id: itemData.supplier_id,
+            supplier_charges: itemData.supplier_charges,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingRecord.id);
+
+        if (updateError) {
+          console.error('Error updating general-quote record:', updateError);
+          throw new Error(`Failed to update general-quote record: ${updateError.message}`);
+        }
+
+        console.log('Successfully overwritten general-quote record');
+        return existingRecord.id;
+      }
+
+      // Generate unique order_id for new child record
+      let uniqueOrderId = baseOrderId;
       if (existingOrders && existingOrders.length > 0) {
         // Find the highest suffix number
         let maxSuffix = 0;
         existingOrders.forEach(order => {
-          if (order.order_id === orderId) {
+          if (order.order_id === baseOrderId) {
             maxSuffix = Math.max(maxSuffix, 1);
-          } else if (order.order_id.startsWith(`${orderId}-`)) {
+          } else if (order.order_id.startsWith(`${baseOrderId}-`)) {
             const suffix = parseInt(order.order_id.split('-').pop() || '0');
             if (!isNaN(suffix)) {
               maxSuffix = Math.max(maxSuffix, suffix);
@@ -607,13 +633,16 @@ export class OrderService {
           }
         });
         
-        // If base orderId exists, start with suffix
+        // Create child record with suffix
         if (maxSuffix > 0) {
-          uniqueOrderId = `${orderId}-${maxSuffix + 1}`;
+          uniqueOrderId = `${baseOrderId}-${maxSuffix + 1}`;
+        } else {
+          uniqueOrderId = `${baseOrderId}-2`; // First child gets -2 suffix
         }
       }
 
-      // Inherit ALL billing and delivery data from base order if available
+      // Inherit ALL billing and delivery data from first existing order if available
+      const baseOrder = existingOrders && existingOrders.length > 0 ? existingOrders[0] : null;
       const inheritedData = baseOrder ? {
         // Billing information
         billing_name: baseOrder.billing_name || itemData.delivery_name,
@@ -700,13 +729,16 @@ export class OrderService {
     try {
       console.log('Updating delivery info:', { orderId, deliveryData });
       
+      // Extract base order ID and use pattern matching to update all related items
+      const baseOrderId = this.extractBaseOrderId(orderId);
+      
       const { error } = await supabase
         .from('orders')
         .update({ 
           ...deliveryData,
           updated_at: new Date().toISOString()
         })
-        .eq('order_id', orderId);
+        .or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
 
       if (error) {
         console.error('Error updating delivery info:', error);
