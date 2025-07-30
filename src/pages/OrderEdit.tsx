@@ -31,6 +31,8 @@ const OrderEdit = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [salesPersons, setSalesPersons] = useState<string[]>([]);
+  const [orderStatuses, setOrderStatuses] = useState<string[]>([]);
+  const [fulfillmentStatuses, setFulfillmentStatuses] = useState<string[]>([]);
   const [isLoadingSalesPersons, setIsLoadingSalesPersons] = useState(false);
   const [isSendingQuote, setIsSendingQuote] = useState(false);
   const [quoteNotes, setQuoteNotes] = useState('');
@@ -65,23 +67,32 @@ const OrderEdit = () => {
     enabled: !!orderId,
   });
 
-  // Load unique sales persons from database
+  // Load dropdown data from database
   useEffect(() => {
-    const loadSalesPersons = async () => {
+    const loadDropdownData = async () => {
       setIsLoadingSalesPersons(true);
       try {
-        const uniquePersons = await OrderService.getUniqueSalesPersons();
+        const [uniquePersons, statuses, fulfillmentStats] = await Promise.all([
+          OrderService.getUniqueSalesPersons(),
+          OrderService.getUniqueOrderStatuses(),
+          OrderService.getUniqueFulfillmentStatuses()
+        ]);
+        
         setSalesPersons(uniquePersons);
+        setOrderStatuses(statuses);
+        setFulfillmentStatuses(fulfillmentStats);
       } catch (error) {
-        console.error('Error loading sales persons:', error);
+        console.error('Error loading dropdown data:', error);
         // Fallback to default options
         setSalesPersons(['Adam', 'Ronnie']);
+        setOrderStatuses(['pending', 'confirmed', 'processing', 'delivered', 'cancelled']);
+        setFulfillmentStatuses(['New Order', 'Quote Needed', 'Quote Sent', 'Delivered']);
       } finally {
         setIsLoadingSalesPersons(false);
       }
     };
     
-    loadSalesPersons();
+    loadDropdownData();
   }, []);
 
   useEffect(() => {
@@ -625,13 +636,11 @@ const OrderEdit = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="confirmed">Confirmed</SelectItem>
-                    <SelectItem value="processing">Processing</SelectItem>
-                    <SelectItem value="in_transit">In Transit</SelectItem>
-                    <SelectItem value="delivered">Delivered</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                    <SelectItem value="paid">Paid</SelectItem>
+                    {orderStatuses.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -642,15 +651,11 @@ const OrderEdit = () => {
                     <SelectValue placeholder="Select fulfillment status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Quote Needed">Quote Needed</SelectItem>
-                    <SelectItem value="Quote Sent">Quote Sent</SelectItem>
-                    <SelectItem value="New Order">New Order</SelectItem>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="Assigned">Assigned</SelectItem>
-                    <SelectItem value="Scheduled">Scheduled</SelectItem>
-                    <SelectItem value="Delivered">Delivered</SelectItem>
-                    <SelectItem value="Cancelled">Cancelled</SelectItem>
-                    <SelectItem value="Refunded">Refunded</SelectItem>
+                    {fulfillmentStatuses.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
