@@ -330,23 +330,15 @@ const OrderEdit = () => {
   const canSendQuote = () => {
     if (!order) return false;
     
-    // Allow sending quotes for cart status and quotes that need to be sent
-    const allowedStatuses = ['pending', 'confirmed', 'processing', 'Quote', 'cart'];
-    const allowedFulfillmentStatuses = ['Quote Needed', 'New Order', undefined, null, ''];
-    
-    const statusMatch = allowedStatuses.includes(order.status);
-    const fulfillmentMatch = allowedFulfillmentStatuses.includes(order.fulfillment_status);
+    // Show send quote button for any order ID starting with CART or QUOTE
+    const canSend = order.order_id.startsWith('CART') || order.order_id.startsWith('QUOTE');
     
     console.log('🚀 Checking canSendQuote:', {
       orderId: order.order_id,
-      status: order.status,
-      statusMatch,
-      fulfillment_status: order.fulfillment_status,
-      fulfillmentMatch,
-      canSend: statusMatch && fulfillmentMatch
+      canSend: canSend
     });
     
-    return statusMatch && fulfillmentMatch;
+    return canSend;
   };
 
   const getStatusColor = (status: OrderStatus) => {
