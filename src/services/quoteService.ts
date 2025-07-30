@@ -24,30 +24,68 @@ export class QuoteService {
 
       // Extract base order ID to update all related items
       const baseOrderId = this.extractBaseOrderId(order.order_id);
+      console.log(`Processing quote for order: ${order.order_id}, base ID: ${baseOrderId}`);
       
-      // Update ALL related order items to quote status with expiration
-      const { error: updateError } = await supabase
-        .from('orders')
-        .update({ 
-          status: 'Quote',
-          fulfillment_status: 'Quote Sent',
-          quote_expires_at: expirationDate.toISOString(),
-          quote_status: 'sent',
-          quoted_price: totalAmount,
-          quote_notes: notes || undefined
-        })
-        .or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
+      // Build query based on order ID type
+      const isTimestampId = baseOrderId === order.order_id;
+      const updateQuery = isTimestampId 
+        ? supabase.from('orders').update({ 
+            status: 'Quote',
+            fulfillment_status: 'Quote Sent',
+            quote_expires_at: expirationDate.toISOString(),
+            quote_status: 'sent',
+            quoted_price: totalAmount,
+            quote_notes: notes || undefined
+          }).eq('order_id', baseOrderId)
+        : supabase.from('orders').update({ 
+            status: 'Quote',
+            fulfillment_status: 'Quote Sent',
+            quote_expires_at: expirationDate.toISOString(),
+            quote_status: 'sent',
+            quoted_price: totalAmount,
+            quote_notes: notes || undefined
+          }).or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
+      
+      const { error: updateError } = await updateQuery;
 
       if (updateError) {
         console.error('Error updating order to quote:', updateError);
         return { success: false, error: 'Failed to update order status' };
       }
 
-      // Get ALL related order items for email
-      const { data: allQuoteItems } = await supabase
-        .from('orders')
-        .select('*')
-        .or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
+      // Get ALL related order items for email with validation
+      const selectQuery = isTimestampId
+        ? supabase.from('orders').select('*').eq('order_id', baseOrderId)
+        : supabase.from('orders').select('*').or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
+      
+      const { data: allQuoteItems, error: selectError } = await selectQuery;
+      
+      if (selectError) {
+        console.error('Error fetching quote items:', selectError);
+        return { success: false, error: 'Failed to fetch order items' };
+      }
+      
+      // Validate customer data consistency
+      if (allQuoteItems && allQuoteItems.length > 1) {
+        const firstCustomer = allQuoteItems[0];
+        const hasMultipleCustomers = allQuoteItems.some(item => 
+          item.delivery_email !== firstCustomer.delivery_email ||
+          item.billing_email !== firstCustomer.billing_email
+        );
+        
+        if (hasMultipleCustomers) {
+          console.error('ALERT: Multiple customers detected in quote items:', {
+            orderId: order.order_id,
+            baseOrderId,
+            itemCount: allQuoteItems.length,
+            customers: allQuoteItems.map(item => ({
+              delivery_email: item.delivery_email,
+              billing_email: item.billing_email
+            }))
+          });
+          return { success: false, error: 'Data integrity issue: Multiple customers in quote' };
+        }
+      }
 
       // Get product names for the email
       const { data: products } = await supabase
@@ -120,14 +158,22 @@ export class QuoteService {
 
   /**
    * Extract base order ID from a potentially suffixed order ID
+   * Handles timestamp-based IDs correctly (e.g., CART-1753825876923)
    */
   private static extractBaseOrderId(orderId: string): string {
     const parts = orderId.split('-');
     if (parts.length > 1) {
       const lastPart = parts[parts.length - 1];
-      // If last part is a number, remove it to get base order ID
-      if (!isNaN(parseInt(lastPart))) {
-        return parts.slice(0, -1).join('-');
+      // If last part is a timestamp (13 digits), keep the full ID
+      if (lastPart.length === 13 && !isNaN(parseInt(lastPart))) {
+        console.log(`Timestamp-based order ID detected: ${orderId}`);
+        return orderId; // Return full ID for timestamp-based orders
+      }
+      // If last part is a small number (likely a suffix), remove it
+      if (!isNaN(parseInt(lastPart)) && lastPart.length < 10) {
+        const baseId = parts.slice(0, -1).join('-');
+        console.log(`Suffix-based order ID detected: ${orderId}, base: ${baseId}`);
+        return baseId;
       }
     }
     return orderId;
