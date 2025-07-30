@@ -307,7 +307,7 @@ export class OrderService {
 
   /**
    * Extract base order ID from a potentially suffixed order ID
-   * For timestamp-based IDs like CART-1753829165052, the whole ID is the base
+   * Handles both 10-digit Unix timestamps and 13-digit millisecond timestamps
    */
   private static extractBaseOrderId(orderId: string): string {
     const parts = orderId.split('-');
@@ -618,6 +618,50 @@ export class OrderService {
       
       // Get base order ID and fetch billing/delivery data from existing order
       const baseOrderId = this.extractBaseOrderId(orderId);
+      
+      // First, check if there's a "general-quote" record that we should update instead of creating a child
+      const { data: generalQuoteCheck, error: checkError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('order_id', baseOrderId)
+        .eq('product_id', 'general-quote')
+        .eq('total_price', 0)
+        .single();
+      
+      if (!checkError && generalQuoteCheck) {
+        console.log('Found general-quote record to update instead of creating child:', generalQuoteCheck.id);
+        
+        // Update the existing general-quote record with the new product
+        const { data: updatedOrder, error: updateError } = await supabase
+          .from('orders')
+          .update({
+            product_id: itemData.product_name,
+            quantity: itemData.quantity,
+            unit: itemData.unit,
+            unit_price: itemData.unit_price,
+            total_price: itemData.total_price,
+            delivery_date: itemData.delivery_date,
+            status: itemData.status || generalQuoteCheck.status,
+            fulfillment_status: itemData.fulfillment_status || generalQuoteCheck.fulfillment_status,
+            notes: itemData.notes || generalQuoteCheck.notes,
+            supplier_id: itemData.supplier_id || generalQuoteCheck.supplier_id,
+            supplier_charges: itemData.supplier_charges || generalQuoteCheck.supplier_charges,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', generalQuoteCheck.id)
+          .select()
+          .single();
+        
+        if (updateError) {
+          console.error('Error updating general-quote record:', updateError);
+          throw new Error(`Failed to update general-quote record: ${updateError.message}`);
+        }
+        
+        console.log('Successfully updated general-quote record with new product');
+        return updatedOrder.id;
+      }
+      
+      // No general-quote record found, proceed with normal child record creation
       const { data: baseOrder, error: baseOrderError } = await supabase
         .from('orders')
         .select('*')
@@ -630,15 +674,15 @@ export class OrderService {
       }
 
       // Check if base orderId already exists to determine unique order_id
-      const { data: existingOrders, error: checkError } = await supabase
+      const { data: existingOrders, error: existingOrdersError } = await supabase
         .from('orders')
         .select('order_id')
         .like('order_id', `${orderId}%`)
         .order('order_id', { ascending: false });
 
-      if (checkError) {
-        console.error('Error checking existing orders:', checkError);
-        throw new Error(`Failed to check existing orders: ${checkError.message}`);
+      if (existingOrdersError) {
+        console.error('Error checking existing orders:', existingOrdersError);
+        throw new Error(`Failed to check existing orders: ${existingOrdersError.message}`);
       }
 
       // Generate unique order_id

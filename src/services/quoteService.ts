@@ -26,9 +26,11 @@ export class QuoteService {
       const baseOrderId = this.extractBaseOrderId(order.order_id);
       console.log(`Processing quote for order: ${order.order_id}, base ID: ${baseOrderId}`);
       
-      // Build query based on order ID type
-      const isTimestampId = baseOrderId === order.order_id;
-      const updateQuery = isTimestampId 
+      // Build query based on order ID type - pattern match for base IDs
+      const isExactMatch = baseOrderId === order.order_id;
+      console.log(`Update query type: ${isExactMatch ? 'exact match' : 'pattern match'} for base ID: ${baseOrderId}`);
+      
+      const updateQuery = isExactMatch 
         ? supabase.from('orders').update({ 
             status: 'Quote',
             fulfillment_status: 'Quote Sent',
@@ -36,7 +38,7 @@ export class QuoteService {
             quote_status: 'sent',
             quoted_price: totalAmount,
             quote_notes: notes || undefined
-          }).eq('order_id', baseOrderId)
+          }).or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`)
         : supabase.from('orders').update({ 
             status: 'Quote',
             fulfillment_status: 'Quote Sent',
@@ -53,10 +55,9 @@ export class QuoteService {
         return { success: false, error: 'Failed to update order status' };
       }
 
-      // Get ALL related order items for email with validation
-      const selectQuery = isTimestampId
-        ? supabase.from('orders').select('*').eq('order_id', baseOrderId)
-        : supabase.from('orders').select('*').or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
+      // Get ALL related order items for email with validation - always use pattern matching
+      console.log(`Fetching all items for base order ID: ${baseOrderId}`);
+      const selectQuery = supabase.from('orders').select('*').or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
       
       const { data: allQuoteItems, error: selectError } = await selectQuery;
       
@@ -158,14 +159,14 @@ export class QuoteService {
 
   /**
    * Extract base order ID from a potentially suffixed order ID
-   * Handles timestamp-based IDs correctly (e.g., CART-1753825876923)
+   * Handles both 10-digit Unix timestamps and 13-digit millisecond timestamps
    */
   private static extractBaseOrderId(orderId: string): string {
     const parts = orderId.split('-');
     if (parts.length > 1) {
       const lastPart = parts[parts.length - 1];
-      // If last part is a timestamp (13 digits), keep the full ID
-      if (lastPart.length === 13 && !isNaN(parseInt(lastPart))) {
+      // If last part is a timestamp (10+ digits), keep the full ID
+      if (lastPart.length >= 10 && !isNaN(parseInt(lastPart))) {
         console.log(`Timestamp-based order ID detected: ${orderId}`);
         return orderId; // Return full ID for timestamp-based orders
       }
