@@ -114,13 +114,13 @@ export const generateQuoteProposalEmail = (formData: QuoteFormData, quoteData: a
              </div>
              <div class="item-price" style="font-size: 24px; font-weight: 700; color: #2563eb; text-align: right; min-width: 140px; padding-left: 24px; white-space: nowrap;">$${item.total_price.toFixed(2)}</div>
            </div>
-          ${item.notes ? `
-          <div style="margin-top: 16px; padding: 16px; background-color: #f1f5f9; border-radius: 6px; border-left: 4px solid #10b981;">
-            <p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.5;">
-              <strong style="color: #059669;">Note:</strong> ${item.notes}
-            </p>
-          </div>
-          ` : ''}
+           ${item.delivery_instructions ? `
+           <div style="margin-top: 16px; padding: 16px; background-color: #f1f5f9; border-radius: 6px; border-left: 4px solid #10b981;">
+             <p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.5;">
+               <strong style="color: #059669;">Delivery Instructions:</strong> ${item.delivery_instructions}
+             </p>
+           </div>
+           ` : ''}
         </div>
       `;
       }).join('')
