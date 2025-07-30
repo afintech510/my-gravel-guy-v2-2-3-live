@@ -11,6 +11,7 @@ import type {
 import { groupOrderRows } from '@/types/order.types';
 import { SupplierService } from './supplierService';
 import { getProductById } from '@/services/products/productQueries';
+import { extractBaseOrderId, getOrderPatternQuery } from '@/utils/orderIdUtils';
 
 export class OrderService {
   /**
@@ -223,7 +224,7 @@ export class OrderService {
       console.log('🔍 Fetching order by ID:', orderId);
       
       // Extract base order ID (remove any suffix after last dash if it's a number)
-      const baseOrderId = this.extractBaseOrderId(orderId);
+      const baseOrderId = extractBaseOrderId(orderId);
       console.log('📋 Base order ID:', baseOrderId, '(extracted from:', orderId, ')');
       
       // For timestamp-based IDs, use exact match only
@@ -261,7 +262,7 @@ export class OrderService {
 
       // Filter out any items that don't truly belong to this order family
       const filteredData = data.filter(item => {
-        const itemBaseId = this.extractBaseOrderId(item.order_id);
+        const itemBaseId = extractBaseOrderId(item.order_id);
         return itemBaseId === baseOrderId;
       });
 
@@ -305,29 +306,7 @@ export class OrderService {
     }
   }
 
-  /**
-   * Extract base order ID from a potentially suffixed order ID
-   * For timestamp-based IDs like CART-1753829165052, the whole ID is the base
-   */
-  private static extractBaseOrderId(orderId: string): string {
-    const parts = orderId.split('-');
-    
-    // If this looks like a timestamp-based order ID (CART/ORDER + timestamp), return as-is
-    if (parts.length === 2 && parts[1].length >= 10 && !isNaN(parseInt(parts[1]))) {
-      return orderId;
-    }
-    
-    // For traditional suffixed IDs like CART-123-1, CART-123-2, extract base
-    if (parts.length > 2) {
-      const lastPart = parts[parts.length - 1];
-      // If last part is a short number (likely a suffix), remove it
-      if (!isNaN(parseInt(lastPart)) && lastPart.length <= 3) {
-        return parts.slice(0, -1).join('-');
-      }
-    }
-    
-    return orderId;
-  }
+  // Note: extractBaseOrderId is now imported from orderIdUtils
 
   /**
    * Update order fulfillment status
@@ -499,7 +478,7 @@ export class OrderService {
       console.log('Updating order quote notes (all related items):', { orderId, quoteNotes });
       
       // Get base order ID to update all related items
-      const baseOrderId = this.extractBaseOrderId(orderId);
+      const baseOrderId = extractBaseOrderId(orderId);
       
       const { error } = await supabase
         .from('orders')
@@ -507,7 +486,7 @@ export class OrderService {
           quote_notes: quoteNotes,
           updated_at: new Date().toISOString()
         })
-        .or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
+        .or(getOrderPatternQuery(baseOrderId));
 
       if (error) {
         console.error('Error updating order quote notes:', error);
@@ -567,11 +546,11 @@ export class OrderService {
       console.log('Adding order item:', { orderId, itemData });
       
       // Get base order ID and fetch all related order items
-      const baseOrderId = this.extractBaseOrderId(orderId);
+      const baseOrderId = extractBaseOrderId(orderId);
       const { data: existingOrders, error: checkError } = await supabase
         .from('orders')
         .select('*')
-        .or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`)
+        .or(getOrderPatternQuery(baseOrderId))
         .order('order_id', { ascending: true });
 
       if (checkError) {
@@ -730,7 +709,7 @@ export class OrderService {
       console.log('Updating delivery info:', { orderId, deliveryData });
       
       // Extract base order ID and use pattern matching to update all related items
-      const baseOrderId = this.extractBaseOrderId(orderId);
+      const baseOrderId = extractBaseOrderId(orderId);
       
       const { error } = await supabase
         .from('orders')
@@ -738,7 +717,7 @@ export class OrderService {
           ...deliveryData,
           updated_at: new Date().toISOString()
         })
-        .or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
+        .or(getOrderPatternQuery(baseOrderId));
 
       if (error) {
         console.error('Error updating delivery info:', error);

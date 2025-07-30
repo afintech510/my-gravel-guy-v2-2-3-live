@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { GroupedOrder } from '@/types/order.types';
 import { generateQuoteProposalEmail } from '@/utils/quoteEmailTemplates';
+import { extractBaseOrderId, getOrderPatternQuery } from '@/utils/orderIdUtils';
 
 interface SendQuoteOptions {
   notes?: string;
@@ -23,7 +24,13 @@ export class QuoteService {
       expirationDate.setDate(expirationDate.getDate() + expirationDays);
 
       // Extract base order ID to update all related items
-      const baseOrderId = this.extractBaseOrderId(order.order_id);
+      const baseOrderId = extractBaseOrderId(order.order_id);
+      
+      console.log('Quote Service - Processing order:', {
+        originalOrderId: order.order_id,
+        extractedBaseOrderId: baseOrderId,
+        totalItems: order.items.length
+      });
       
       // Update ALL related order items to quote status with expiration
       const { error: updateError } = await supabase
@@ -36,7 +43,7 @@ export class QuoteService {
           quoted_price: totalAmount,
           quote_notes: notes || undefined
         })
-        .or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
+        .or(getOrderPatternQuery(baseOrderId));
 
       if (updateError) {
         console.error('Error updating order to quote:', updateError);
@@ -47,7 +54,12 @@ export class QuoteService {
       const { data: allQuoteItems } = await supabase
         .from('orders')
         .select('*')
-        .or(`order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`);
+        .or(getOrderPatternQuery(baseOrderId));
+      
+      // Filter out $0 general-quote items for the email
+      const validQuoteItems = allQuoteItems?.filter(item => 
+        !(item.product_id === 'general-quote' && item.total_price === 0)
+      ) || [];
 
       // Get product names for the email
       const { data: products } = await supabase
@@ -65,7 +77,17 @@ export class QuoteService {
         return { success: false, error: 'No order items found' };
       }
 
-      // Generate quote proposal email using ALL order items
+      console.log('Quote Service - Email data:', {
+        baseOrderId,
+        totalItemsFromDB: allQuoteItems?.length || 0,
+        validItemsForEmail: validQuoteItems.length,
+        validItems: validQuoteItems.map(item => ({
+          product_id: item.product_id,
+          total_price: item.total_price
+        }))
+      });
+
+      // Generate quote proposal email using valid items only
       const htmlContent = generateQuoteProposalEmail(
         {
           name: firstItem.delivery_name || order.billing_name || 'Customer',
@@ -75,7 +97,7 @@ export class QuoteService {
           zipCode: firstItem.delivery_address?.zip || '',
           orderId: baseOrderId
         }, 
-        allQuoteItems || [], // Use the fresh database items with quote_notes
+        validQuoteItems, // Use filtered items excluding $0 general-quote items
         window.location.origin,
         productNameMap
       );
@@ -118,18 +140,5 @@ export class QuoteService {
     }
   }
 
-  /**
-   * Extract base order ID from a potentially suffixed order ID
-   */
-  private static extractBaseOrderId(orderId: string): string {
-    const parts = orderId.split('-');
-    if (parts.length > 1) {
-      const lastPart = parts[parts.length - 1];
-      // If last part is a number, remove it to get base order ID
-      if (!isNaN(parseInt(lastPart))) {
-        return parts.slice(0, -1).join('-');
-      }
-    }
-    return orderId;
-  }
+  // Note: extractBaseOrderId is now imported from orderIdUtils
 }
