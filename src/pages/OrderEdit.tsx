@@ -329,9 +329,19 @@ const OrderEdit = () => {
 
   const canSendQuote = () => {
     if (!order) return false;
-    // Allow sending quotes for most statuses except delivered/cancelled
-    const allowedStatuses = ['pending', 'confirmed', 'processing', 'Quote'];
-    return allowedStatuses.includes(order.status);
+    // Allow sending quotes for cart status and quotes that need to be sent
+    const allowedStatuses = ['pending', 'confirmed', 'processing', 'Quote', 'cart'];
+    const allowedFulfillmentStatuses = ['Quote Needed', 'New Order', undefined, null];
+    
+    console.log('Checking canSendQuote:', {
+      status: order.status,
+      fulfillment_status: order.fulfillment_status,
+      allowedStatuses,
+      allowedFulfillmentStatuses
+    });
+    
+    return allowedStatuses.includes(order.status) && 
+           allowedFulfillmentStatuses.includes(order.fulfillment_status);
   };
 
   const getStatusColor = (status: OrderStatus) => {
