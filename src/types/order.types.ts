@@ -1,4 +1,5 @@
 import type { Database } from '@/integrations/supabase/types';
+import { extractBaseOrderId } from '@/utils/orderIdUtils';
 
 // Base order row type from Supabase - using the actual schema
 export type OrderRow = Database['public']['Tables']['orders']['Row'];
@@ -136,22 +137,6 @@ export function orderRowToOrderItem(row: OrderRow): OrderItem {
 // Helper function to group order rows by order_id
 export function groupOrderRows(orderRows: OrderRow[], useBaseOrderId: boolean = false): GroupedOrder[] {
   const orderMap = new Map<string, GroupedOrder>();
-
-  // Helper function to extract base order ID (remove suffixes like -1, -2, etc.)
-  const extractBaseOrderId = (orderId: string): string => {
-    if (!useBaseOrderId) return orderId;
-    
-    // Split by dash and check if last part is a number
-    const parts = orderId.split('-');
-    if (parts.length > 1) {
-      const lastPart = parts[parts.length - 1];
-      // If last part is just a number, remove it to get base order ID
-      if (/^\d+$/.test(lastPart)) {
-        return parts.slice(0, -1).join('-');
-      }
-    }
-    return orderId;
-  };
 
   orderRows.forEach(row => {
     const displayOrderId = useBaseOrderId ? extractBaseOrderId(row.order_id) : row.order_id;
