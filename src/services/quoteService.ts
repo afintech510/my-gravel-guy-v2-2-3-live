@@ -50,16 +50,44 @@ export class QuoteService {
         return { success: false, error: 'Failed to update order status' };
       }
 
-      // Get ALL related order items for email
+      // Get ALL related order items for email (but only for this specific base order)
       const { data: allQuoteItems } = await supabase
         .from('orders')
         .select('*')
         .or(getOrderPatternQuery(baseOrderId));
+
+      console.log('📧 Quote email - fetching items for base order:', baseOrderId);
+      console.log('📧 Raw query result:', allQuoteItems?.length || 0, 'items found');
+      
+      // Filter to ensure we only get items that truly belong to this order family
+      // and have the same customer to prevent accidentally grouping different customers' orders
+      const orderFamilyItems = allQuoteItems?.filter(item => {
+        const itemBaseId = extractBaseOrderId(item.order_id);
+        const belongsToFamily = itemBaseId === baseOrderId;
+        return belongsToFamily;
+      }) || [];
+
+      // Validate customer consistency
+      if (orderFamilyItems.length > 1) {
+        const firstCustomer = orderFamilyItems[0].delivery_name || orderFamilyItems[0].billing_name;
+        const customerEmails = [...new Set(orderFamilyItems.map(item => item.delivery_email || item.billing_email))];
+        
+        if (customerEmails.length > 1) {
+          console.error('❌ CRITICAL: Quote email would combine orders from different customers!', {
+            baseOrderId,
+            customerEmails,
+            orderIds: orderFamilyItems.map(item => item.order_id)
+          });
+          return { success: false, error: 'Cannot send quote - multiple customers detected in order group' };
+        }
+      }
+
+      console.log('📧 Filtered to order family:', orderFamilyItems.length, 'items');
       
       // Filter out $0 general-quote items for the email
-      const validQuoteItems = allQuoteItems?.filter(item => 
+      const validQuoteItems = orderFamilyItems.filter(item => 
         !(item.product_id === 'general-quote' && item.total_price === 0)
-      ) || [];
+      );
 
       // Get product names for the email
       const { data: products } = await supabase
