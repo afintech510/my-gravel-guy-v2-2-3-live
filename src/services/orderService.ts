@@ -11,7 +11,7 @@ import type {
 import { groupOrderRows } from '@/types/order.types';
 import { SupplierService } from './supplierService';
 import { getProductById } from '@/services/products/productQueries';
-import { extractBaseOrderId, getOrderPatternQuery } from '@/utils/orderIdUtils';
+import { extractBaseOrderId, getOrderPatternQuery, hasOrderSuffix } from '@/utils/orderIdUtils';
 
 export class OrderService {
   /**
@@ -232,10 +232,15 @@ export class OrderService {
         .from('orders')
         .select('*');
 
-      // ALWAYS use pattern matching to fetch ALL related records
-      // This ensures that clicking edit on any related record shows all products in the group
-      console.log('🎯 Using pattern match to fetch all related records for base order ID:', baseOrderId);
-      query = query.or(getOrderPatternQuery(baseOrderId));
+      if (hasOrderSuffix(orderId)) {
+        // This is a suffixed order ID - fetch ONLY this specific record
+        console.log('🎯 Fetching individual suffixed record:', orderId);
+        query = query.eq('order_id', orderId);
+      } else {
+        // This is a base order ID - fetch all related records
+        console.log('🎯 Fetching all related records for base order ID:', baseOrderId);
+        query = query.or(getOrderPatternQuery(baseOrderId));
+      }
 
       const { data, error } = await query;
 
