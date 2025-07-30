@@ -151,19 +151,53 @@ export function OrderItemsManager({
 
   const handleRemoveItem = async (itemId: string) => {
     try {
-      // Remove from database if not a temporary item
-      if (!itemId.startsWith('temp-')) {
-        await OrderService.removeOrderItem(itemId);
-      }
+      const item = localItems.find(i => i.id === itemId);
       
-      const updatedItems = localItems.filter(item => item.id !== itemId);
-      setLocalItems(updatedItems);
-      onOrderItemsChange(updatedItems);
+      // For "general-quote" items, clear product info instead of deleting
+      if (item?.product_name === 'general-quote' || item?.unit_price === 0) {
+        const clearedItem = {
+          ...item,
+          product_name: 'general-quote',
+          quantity: 0,
+          unit_price: 0,
+          total_price: 0,
+          unit: 'quote'
+        };
+        
+        // Update in database
+        if (!itemId.startsWith('temp-')) {
+          await OrderService.updateOrderItem(itemId, {
+            product_name: 'general-quote',
+            quantity: 0,
+            unit_price: 0,
+            total_price: 0,
+            unit: 'quote'
+          });
+        }
+        
+        const updatedItems = localItems.map(i => i.id === itemId ? clearedItem : i);
+        setLocalItems(updatedItems);
+        onOrderItemsChange(updatedItems);
 
-      toast({
-        title: "Item removed",
-        description: "Order item has been removed.",
-      });
+        toast({
+          title: "Product cleared",
+          description: "Product information has been cleared. You can now select a new product.",
+        });
+      } else {
+        // For real product items, remove completely
+        if (!itemId.startsWith('temp-')) {
+          await OrderService.removeOrderItem(itemId);
+        }
+        
+        const updatedItems = localItems.filter(item => item.id !== itemId);
+        setLocalItems(updatedItems);
+        onOrderItemsChange(updatedItems);
+
+        toast({
+          title: "Item removed",
+          description: "Order item has been removed.",
+        });
+      }
     } catch (error) {
       console.error('Error removing item:', error);
       toast({

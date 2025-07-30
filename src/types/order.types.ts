@@ -58,7 +58,8 @@ export interface OrderItem {
   delivery_email?: string;
   delivery_time_preference?: string;
   delivery_instructions?: string;
-  notes?: string; // Added missing property
+  notes?: string; // Internal notes
+  quote_notes?: string; // Quote notes for email templates
   supplier_id?: string; // Added missing property
   supplier_charges?: number; // Added missing property
 }
@@ -125,7 +126,8 @@ export function orderRowToOrderItem(row: OrderRow): OrderItem {
     delivery_email: row.delivery_email || undefined,
     delivery_time_preference: row.delivery_time_preference || undefined,
     delivery_instructions: row.delivery_instructions || undefined,
-    notes: row.notes || undefined, // Added missing property mapping
+    notes: row.notes || undefined, // Internal notes
+    quote_notes: row.quote_notes || undefined, // Quote notes for email templates
     supplier_id: row.supplier_id || undefined, // Added missing property mapping
     supplier_charges: row.supplier_charges || undefined // Added missing property mapping
   };

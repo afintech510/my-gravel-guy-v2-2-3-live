@@ -44,6 +44,8 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   const [status, setStatus] = useState<OrderStatus>(order?.status || 'pending');
   const [fulfillmentStatus, setFulfillmentStatus] = useState<FulfillmentStatus | ''>('');
   const [internalNotes, setInternalNotes] = useState('');
+  const [quoteNotes, setQuoteNotes] = useState('');
+  const [deliveryNotes, setDeliveryNotes] = useState('');
   const [selectedSupplierId, setSelectedSupplierId] = useState('');
   const [supplierCharges, setSupplierCharges] = useState('');
   const [selectedSalesPerson, setSelectedSalesPerson] = useState('');
@@ -51,6 +53,8 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   const [isSending, setIsSending] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSavingNotes, setIsSavingNotes] = useState(false);
+  const [isSavingQuoteNotes, setIsSavingQuoteNotes] = useState(false);
+  const [isSavingDeliveryNotes, setIsSavingDeliveryNotes] = useState(false);
   const [isSavingSupplier, setIsSavingSupplier] = useState(false);
   const [isSavingSalesPerson, setIsSavingSalesPerson] = useState(false);
   const [isSavingFulfillmentStatus, setIsSavingFulfillmentStatus] = useState(false);
@@ -69,6 +73,8 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
         setStatus(order.status);
         setFulfillmentStatus(order.fulfillment_status || '');
         setInternalNotes(order.items[0]?.notes || '');
+        setQuoteNotes(order.items[0]?.quote_notes || '');
+        setDeliveryNotes(order.items[0]?.delivery_instructions || '');
         setSupplierCharges(order.items[0]?.supplier_charges?.toString() || '');
         setSelectedSalesPerson(order.sales_person || '');
         setEmailNote('');
@@ -230,6 +236,68 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
       });
     } finally {
       setIsSavingNotes(false);
+    }
+  };
+
+  const handleSaveQuoteNotes = async () => {
+    if (!isUnlocked) {
+      toast({
+        title: "Order Locked",
+        description: "Please unlock the order to make changes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsSavingQuoteNotes(true);
+      await OrderService.updateOrderQuoteNotes(order.order_id, quoteNotes);
+      onOrderUpdate();
+      toast({
+        title: "Quote Notes Saved",
+        description: "Quote notes have been saved successfully",
+      });
+    } catch (error) {
+      console.error('Error saving quote notes:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save quote notes",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingQuoteNotes(false);
+    }
+  };
+
+  const handleSaveDeliveryNotes = async () => {
+    if (!isUnlocked) {
+      toast({
+        title: "Order Locked",
+        description: "Please unlock the order to make changes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsSavingDeliveryNotes(true);
+      await OrderService.updateDeliveryInfo(order.order_id, {
+        delivery_instructions: deliveryNotes
+      });
+      onOrderUpdate();
+      toast({
+        title: "Delivery Notes Saved",
+        description: "Delivery notes have been saved successfully",
+      });
+    } catch (error) {
+      console.error('Error saving delivery notes:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save delivery notes",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingDeliveryNotes(false);
     }
   };
 
@@ -626,24 +694,64 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Internal Notes</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Textarea
-                  placeholder="Add internal notes about this order..."
-                  value={internalNotes}
-                  onChange={(e) => setInternalNotes(e.target.value)}
-                  disabled={!isUnlocked}
-                  rows={4}
-                />
-                <Button onClick={handleSaveNotes} disabled={!isUnlocked || isSavingNotes} className="w-full">
-                  <Save className="h-4 w-4 mr-2" />
-                  {isSavingNotes ? 'Saving...' : 'Save Notes'}
-                </Button>
-              </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Internal Notes</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Textarea
+                    placeholder="Add internal notes about this order..."
+                    value={internalNotes}
+                    onChange={(e) => setInternalNotes(e.target.value)}
+                    disabled={!isUnlocked}
+                    rows={4}
+                  />
+                  <Button onClick={handleSaveNotes} disabled={!isUnlocked || isSavingNotes} className="w-full">
+                    <Save className="h-4 w-4 mr-2" />
+                    {isSavingNotes ? 'Saving...' : 'Save Internal Notes'}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quote Notes</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Textarea
+                    placeholder="Add notes for quote emails..."
+                    value={quoteNotes}
+                    onChange={(e) => setQuoteNotes(e.target.value)}
+                    disabled={!isUnlocked}
+                    rows={4}
+                  />
+                  <Button onClick={handleSaveQuoteNotes} disabled={!isUnlocked || isSavingQuoteNotes} className="w-full">
+                    <Save className="h-4 w-4 mr-2" />
+                    {isSavingQuoteNotes ? 'Saving...' : 'Save Quote Notes'}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Delivery Notes</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Textarea
+                    placeholder="Add delivery instructions..."
+                    value={deliveryNotes}
+                    onChange={(e) => setDeliveryNotes(e.target.value)}
+                    disabled={!isUnlocked}
+                    rows={4}
+                  />
+                  <Button onClick={handleSaveDeliveryNotes} disabled={!isUnlocked || isSavingDeliveryNotes} className="w-full">
+                    <Save className="h-4 w-4 mr-2" />
+                    {isSavingDeliveryNotes ? 'Saving...' : 'Save Delivery Notes'}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="supplier" className="space-y-4">
