@@ -273,26 +273,36 @@ serve(async (req) => {
           const { data: existingQuotes, error: checkError } = await supabase
             .from('orders')
             .select('*')
-            .eq('status', 'Quote')
-            .or(`order_id.eq.${verificationResult.orderId},order_id.like.${verificationResult.orderId}-%`);
+            .eq('order_id', verificationResult.orderId)
+            .eq('status', 'Quote');
           
           console.log('=== QUOTE RECORDS FOUND ===', { 
             count: existingQuotes?.length || 0, 
             orderId: verificationResult.orderId,
-            checkError: checkError?.message 
+            checkError: checkError?.message,
+            queryUsed: 'eq order_id + eq status',
+            quotes: existingQuotes?.map(q => ({ id: q.id, order_id: q.order_id, status: q.status })) || []
           });
           
           let quoteConversionData = null;
           let quoteUpdateError = null;
           let emailSent = false;
           
-          // CRITICAL: Send email regardless of database update success
+          // CRITICAL: Send email FIRST regardless of database update success
           // This ensures customers always get confirmation emails after successful payment
           if (existingQuotes && existingQuotes.length > 0) {
             console.log('=== SENDING CONFIRMATION EMAIL (PRIORITY) ===', { orderId: orderIdFromQuote });
             try {
               // Calculate total amount from quote data
               const totalAmount = existingQuotes.reduce((sum, item) => sum + (parseFloat(item.total_price) || 0), 0);
+              
+              console.log('=== EMAIL DATA PREPARED ===', {
+                orderId: orderIdFromQuote,
+                customerName: billingName,
+                customerEmail: billingEmail,
+                totalAmount: totalAmount,
+                itemCount: existingQuotes.length
+              });
               
               const emailResult = await supabase.functions.invoke('send-quote-conversion-email', {
                 body: {
@@ -303,7 +313,7 @@ serve(async (req) => {
                   orderItems: existingQuotes.map(item => ({
                     id: item.id,
                     product_id: item.product_id,
-                    product_name: item.product_name,
+                    product_name: item.product_name || 'Unknown Product',
                     quantity: item.quantity,
                     unit: item.unit,
                     unit_price: parseFloat(item.unit_price) || 0,
@@ -322,6 +332,12 @@ serve(async (req) => {
                 }
               });
 
+              console.log('=== EMAIL FUNCTION RESULT ===', {
+                success: !emailResult.error,
+                error: emailResult.error?.message || null,
+                data: emailResult.data
+              });
+
               if (emailResult.error) {
                 console.error('Quote conversion email failed:', emailResult.error);
               } else {
@@ -331,8 +347,16 @@ serve(async (req) => {
             } catch (emailError) {
               console.error('Failed to send quote conversion email:', emailError);
             }
+          } else {
+            console.log('=== NO QUOTE RECORDS FOUND - CANNOT SEND EMAIL ===', {
+              orderId: verificationResult.orderId,
+              checkError: checkError?.message,
+              recordCount: existingQuotes?.length || 0
+            });
+          }
 
-            // Now attempt database update (secondary priority)
+          // Now attempt database update (secondary priority)
+          if (existingQuotes && existingQuotes.length > 0) {
             // Prepare update data for quote conversion
             const quoteUpdateData: any = {
               order_id: orderIdFromQuote,
@@ -342,6 +366,11 @@ serve(async (req) => {
               quote_converted: true, // Important: Mark as converted
               updated_at: new Date().toISOString()
             };
+            
+            console.log('=== STARTING DATABASE UPDATE ===', {
+              updateData: quoteUpdateData,
+              quotesToUpdate: existingQuotes.length
+            });
             
             // Handle single vs multiple product scenarios with improved logic
             if (existingQuotes.length === 1) {
@@ -357,13 +386,16 @@ serve(async (req) => {
               quoteConversionData = singleQuoteData;
               quoteUpdateError = singleError;
               
-              if (singleError) {
-                console.error('Single quote update failed:', singleError);
-              }
+              console.log('=== SINGLE QUOTE UPDATE RESULT ===', {
+                success: !singleError,
+                error: singleError?.message || null,
+                updatedCount: singleQuoteData?.length || 0
+              });
             } else {
               // Multiple products: update each record individually for better error handling
               console.log('=== MULTIPLE PRODUCT QUOTE CONVERSION ===');
               const updatePromises = existingQuotes.map(async (quote) => {
+                console.log(`=== UPDATING QUOTE ${quote.id} ===`);
                 const { data, error } = await supabase
                   .from('orders')
                   .update(quoteUpdateData)
@@ -372,9 +404,12 @@ serve(async (req) => {
                   .select()
                   .single();
                 
-                if (error) {
-                  console.error(`Failed to update quote ${quote.id}:`, error);
-                }
+                console.log(`=== QUOTE ${quote.id} UPDATE RESULT ===`, {
+                  success: !error,
+                  error: error?.message || null,
+                  data: data || null
+                });
+                
                 return { data, error };
               });
               
@@ -385,10 +420,11 @@ serve(async (req) => {
               quoteConversionData = successfulUpdates;
               quoteUpdateError = errors.length > 0 ? errors[0] : null;
               
-              console.log('Multiple quote update results:', {
+              console.log('=== MULTIPLE QUOTE UPDATE RESULTS ===', {
                 successful: successfulUpdates.length,
                 failed: errors.length,
-                errors: errors.map(e => e.message)
+                errors: errors.map(e => e.message),
+                totalAttempted: existingQuotes.length
               });
             }
           }
