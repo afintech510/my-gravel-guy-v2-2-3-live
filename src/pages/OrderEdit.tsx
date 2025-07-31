@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Save, ArrowLeft, User, MapPin, Package, UserCheck, DollarSign, FileText, Calendar, Send, Mail } from 'lucide-react';
+import { Save, ArrowLeft, User, MapPin, Package, UserCheck, DollarSign, FileText, Calendar, Send, Mail, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { formatDateForDatabase, parseLocalDate, formatDateTime } from '@/utils/dateUtils';
@@ -35,6 +35,7 @@ const OrderEdit = () => {
   const [fulfillmentStatuses, setFulfillmentStatuses] = useState<string[]>([]);
   const [isLoadingSalesPersons, setIsLoadingSalesPersons] = useState(false);
   const [isSendingQuote, setIsSendingQuote] = useState(false);
+  const [isConverting, setIsConverting] = useState(false);
   const [quoteNotes, setQuoteNotes] = useState('');
   
   // Form state
@@ -331,6 +332,37 @@ const OrderEdit = () => {
     }
   };
 
+  const handleConvertToOrder = async () => {
+    if (!order || !orderId) return;
+    
+    if (!window.confirm('Are you sure you want to change this to an order?')) {
+      return;
+    }
+    
+    setIsConverting(true);
+    try {
+      const newOrderId = await OrderService.convertToOrder(orderId);
+      
+      toast({
+        title: "Converted to Order",
+        description: `Successfully converted ${orderId} to ${newOrderId}`,
+      });
+      
+      // Navigate to the new order ID
+      navigate(`/dashboard/orders/${newOrderId}/edit`);
+      
+    } catch (error) {
+      console.error('Error converting to order:', error);
+      toast({
+        title: "Error",
+        description: "Failed to convert to order",
+        variant: "destructive",
+      });
+    } finally {
+      setIsConverting(false);
+    }
+  };
+
   const handleOrderItemsChange = (updatedItems: any[]) => {
     // This will be called when order items are modified
     // For now, we'll trigger a refetch to get the latest data
@@ -415,12 +447,23 @@ const OrderEdit = () => {
                 {isSendingQuote ? 'Sending...' : 'Send Quote'}
               </Button>
             )}
+            {order && !order.order_id.startsWith('ORDER-') && (
+              <Button 
+                variant="default" 
+                onClick={handleConvertToOrder} 
+                disabled={isConverting}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                {isConverting ? 'Converting...' : 'Convert to Order'}
+              </Button>
+            )}
             <Button variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={isSaving || !hasChanges}>
               <Save className="h-4 w-4 mr-2" />
-              {isSaving ? 'Saving...' : 'Save Changes'}
+              {isSaving ? 'Saving...' : 'Save'}
             </Button>
           </div>
         </div>
