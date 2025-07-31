@@ -7,9 +7,26 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Function version for deployment tracking
+const FUNCTION_VERSION = "v1.1.0-metadata-fix";
+
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[CREATE-QUOTE-CHECKOUT] ${step}${detailsStr}`);
+  console.log(`[CREATE-QUOTE-CHECKOUT-${FUNCTION_VERSION}] ${step}${detailsStr}`);
+};
+
+// Helper to validate metadata size for Stripe (500 char limit)
+const validateMetadataSize = (metadata: Record<string, string>, context: string) => {
+  for (const [key, value] of Object.entries(metadata)) {
+    if (value && value.length > 500) {
+      logStep(`WARNING: ${context} metadata key '${key}' exceeds 500 chars`, { 
+        keyLength: value.length, 
+        truncated: value.substring(0, 50) + '...' 
+      });
+      throw new Error(`Metadata key '${key}' exceeds Stripe's 500 character limit (${value.length} chars)`);
+    }
+  }
+  logStep(`Metadata validation passed for ${context}`, { keys: Object.keys(metadata) });
 };
 
 serve(async (req) => {
@@ -168,6 +185,27 @@ serve(async (req) => {
     
     logStep("Quote backup data prepared", { itemCount: quoteBackupData.items.length, total: quoteBackupData.total });
 
+    // Prepare and validate metadata for Stripe
+    const sessionMetadata = {
+      quote_id: quoteId,
+      type: "quote_conversion"
+    };
+    
+    const paymentIntentMetadata = {
+      quote_id: quoteId,
+      type: "quote_conversion"
+    };
+
+    // Validate metadata size before sending to Stripe
+    validateMetadataSize(sessionMetadata, "session");
+    validateMetadataSize(paymentIntentMetadata, "payment_intent");
+
+    logStep("Creating Stripe checkout session", { 
+      customerId, 
+      customerEmail: customerId ? "existing" : customerEmail,
+      lineItemCount: lineItems.length 
+    });
+
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -176,15 +214,9 @@ serve(async (req) => {
       mode: "payment",
       success_url: `${origin}/payment-success?quote_id=${quoteId}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/quote-checkout/${quoteId}`,
-      metadata: {
-        quote_id: quoteId,
-        type: "quote_conversion"
-      },
+      metadata: sessionMetadata,
       payment_intent_data: {
-        metadata: {
-          quote_id: quoteId,
-          type: "quote_conversion"
-        }
+        metadata: paymentIntentMetadata
       }
     });
 
