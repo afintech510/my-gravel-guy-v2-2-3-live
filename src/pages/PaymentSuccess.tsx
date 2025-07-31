@@ -138,6 +138,7 @@ const PaymentSuccess = () => {
       const paymentIntentId = searchParams.get('payment_intent') || searchParams.get('payment_intent_id');
       const sessionId = searchParams.get('session_id');
       const orderIdParam = searchParams.get('order_id');
+      const quoteIdParam = searchParams.get('quote_id');
       const paymentSuccess = searchParams.get('success');
       
       // Use session_id if available, otherwise use payment_intent
@@ -148,6 +149,7 @@ const PaymentSuccess = () => {
         sessionId: sessionId ? sessionId.substring(0, 20) + '...' : null,
         stripeId: stripeId ? stripeId.substring(0, 20) + '...' : null,
         orderIdParam,
+        quoteIdParam,
         paymentSuccess,
         hasProcessedPayment
       });
@@ -176,12 +178,20 @@ const PaymentSuccess = () => {
         });
       }
       
-      // Determine if we should process the payment
-      const shouldProcess = !hasProcessedPayment && (
-        stripeId || 
-        paymentSuccess === 'true' || 
-        (checkoutInProgress === 'true' && checkoutOrderId)
-      );
+        // For quote conversions, we need to handle quote_id parameter
+        let finalOrderId = orderIdParam || checkoutOrderId;
+        if (quoteIdParam && !finalOrderId) {
+          // Convert QUOTE-xxx to ORDER-xxx for quote conversions
+          finalOrderId = quoteIdParam.replace(/^QUOTE-/, 'ORDER-');
+          console.log('Quote conversion detected:', { originalQuoteId: quoteIdParam, newOrderId: finalOrderId });
+        }
+
+        // Determine if we should process the payment
+        const shouldProcess = !hasProcessedPayment && (
+          stripeId || 
+          paymentSuccess === 'true' || 
+          (checkoutInProgress === 'true' && (checkoutOrderId || quoteIdParam))
+        );
       
       console.log('Should process payment:', shouldProcess);
       
@@ -206,9 +216,9 @@ const PaymentSuccess = () => {
           const { data, error } = await supabase.functions.invoke('verify-payment', {
             body: { 
               paymentIntentId: stripeId, // This handles both session_id and payment_intent
-              orderId: orderIdParam || checkoutOrderId,
+              orderId: quoteIdParam || finalOrderId || orderIdParam || checkoutOrderId,
               backupData: checkoutOrderBackup,
-              skipDbInsert: true
+              skipDbInsert: false // Allow DB operations for quote conversions
             }
           });
 
@@ -227,10 +237,10 @@ const PaymentSuccess = () => {
           
           const { data, error } = await supabase.functions.invoke('verify-payment', {
             body: { 
-              orderId: checkoutOrderId,
+              orderId: quoteIdParam || finalOrderId || checkoutOrderId,
               fallbackMode: true,
               backupData: checkoutOrderBackup,
-              skipDbInsert: true
+              skipDbInsert: false // Allow DB operations for fallback quote conversions too
             }
           });
 
@@ -263,15 +273,44 @@ const PaymentSuccess = () => {
           } else if (data?.success && data?.paymentVerified) {
             console.log('=== PAYMENT VERIFICATION SUCCESSFUL ===');
             
-            const currentOrderId = data.orderId || orderIdParam || checkoutOrderId;
+            // Use the converted order ID from the verification result if available (for quote conversions)
+            const currentOrderId = data.orderId || finalOrderId || orderIdParam || checkoutOrderId;
             setOrderId(currentOrderId);
             setVerificationMethod(data.verification_method || 'stripe_verified');
             setUsedFallback(data.used_fallback || false);
             setProcessingError(null);
             setDetailedError(null);
             
-            // Now insert the order to database with enhanced Stripe ID extraction
-            if (checkoutOrderBackup && !dbInsertComplete) {
+            // Check if verification already handled the order (e.g., quote conversion)
+            if (data.orders && data.orders.length > 0) {
+              console.log('=== ORDER DATA RECEIVED FROM VERIFICATION ===');
+              const displayOrders = data.orders.map(order => ({
+                id: order.id,
+                order_id: order.order_id,
+                product_name: order.product_name || order.product_id,
+                quantity: order.quantity,
+                total_price: order.total_price,
+                delivery_date: order.delivery_date,
+                delivery_address_street: order.delivery_address_street || order.delivery_street,
+                delivery_address_city: order.delivery_address_city || order.delivery_city,
+                delivery_address_state: order.delivery_address_state || order.delivery_state,
+                delivery_address_zip: order.delivery_address_zip || order.delivery_zip,
+                contact_name: order.contact_name || order.delivery_name,
+                contact_email: order.contact_email || order.delivery_email,
+                contact_phone: order.contact_phone || order.delivery_phone,
+                delivery_time_preference: order.delivery_time_preference,
+                delivery_instructions: order.delivery_instructions,
+                status: order.status
+              }));
+              
+              setOrderItems(displayOrders);
+              setDbInsertComplete(true);
+              
+              // Send emails for the completed order
+              await handleEmailSending(data.orders, currentOrderId);
+            } 
+            // Now insert the order to database with enhanced Stripe ID extraction (for regular checkout)
+            else if (checkoutOrderBackup && !dbInsertComplete) {
               await handleDatabaseInsert(checkoutOrderBackup, currentOrderId, data, stripeId);
             }
             

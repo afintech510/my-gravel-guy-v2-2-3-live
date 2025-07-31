@@ -89,7 +89,17 @@ const QuoteCheckout = () => {
 
       if (error) throw error;
 
-      if (data?.url) {
+      if (data?.url && data?.backupData) {
+        // Store backup data in localStorage for quote conversion
+        localStorage.setItem('checkout-backup', JSON.stringify(data.backupData));
+        localStorage.setItem('checkout-in-progress', 'true');
+        localStorage.setItem('checkout-order-id', data.backupData.orderId);
+        
+        console.log('Quote checkout backup data stored:', data.backupData);
+        
+        window.location.href = data.url;
+      } else if (data?.url) {
+        // Fallback for backward compatibility
         window.location.href = data.url;
       } else {
         throw new Error('No checkout URL received');

@@ -262,8 +262,44 @@ serve(async (req) => {
         let data;
         let insertError;
 
-        // Step 1: Check if cart records exist for this order
-        if (verificationResult.orderId && verificationResult.orderId.startsWith('CART-')) {
+        // Step 1: Check if quote records exist for this order (for quote conversions)
+        if (verificationResult.orderId && verificationResult.orderId.startsWith('QUOTE-')) {
+          console.log('=== ATTEMPTING QUOTE TO ORDER CONVERSION ===', { quoteId: verificationResult.orderId });
+          
+          // Convert QUOTE- to ORDER- for quote conversions
+          const orderIdFromQuote = verificationResult.orderId.replace('QUOTE-', 'ORDER-');
+          
+          // Prepare update data for quote conversion
+          const quoteUpdateData: any = {
+            order_id: orderIdFromQuote,
+            status: 'confirmed', // Quotes become confirmed orders
+            stripe_payment_intent_id: paymentIntentId || null,
+            stripe_session_id: verificationResult.sessionId || null,
+            updated_at: new Date().toISOString()
+          };
+          
+          const { data: quoteConversionData, error: quoteUpdateError } = await supabase
+            .from('orders')
+            .update(quoteUpdateData)
+            .like('order_id', `${verificationResult.orderId}%`)
+            .eq('status', 'Quote')
+            .select();
+
+          if (!quoteUpdateError && quoteConversionData && quoteConversionData.length > 0) {
+            console.log('=== QUOTE TO ORDER CONVERSION SUCCESS ===', { 
+              updatedRecords: quoteConversionData.length,
+              newOrderId: orderIdFromQuote 
+            });
+            data = quoteConversionData;
+            insertError = null;
+            // Update the orderId for response
+            verificationResult.orderId = orderIdFromQuote;
+          } else {
+            console.log('No quote records found or conversion failed', quoteUpdateError);
+          }
+
+        // Step 2: Check if cart records exist for this order
+        } else if (verificationResult.orderId && verificationResult.orderId.startsWith('CART-')) {
           console.log('=== ATTEMPTING CART TO ORDER CONVERSION ===', { orderId: verificationResult.orderId });
           
           // Try to update existing cart records to order status
