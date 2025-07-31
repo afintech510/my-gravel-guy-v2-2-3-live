@@ -553,7 +553,8 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   </div>
                   <div>
                     <Label className="text-sm font-medium">Phone</Label>
-                    <p className="text-sm">{order.items[0]?.delivery_phone || 'N/A'}</p>
+                    <p className="text-sm">{order.items[0]?.delivery_phone ? 
+                      order.items[0].delivery_phone.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3') : 'N/A'}</p>
                   </div>
                   <div>
                     <Label className="text-sm font-medium">Email</Label>
@@ -595,8 +596,8 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                     </>
                   )}
                   <div>
-                    <Label className="text-xs font-medium text-muted-foreground">Sales Person</Label>
-                    <p className="text-xs">{order.sales_person || 'Not Assigned'}</p>
+                    <Label className="text-sm font-medium">Sales Person</Label>
+                    <p className="text-sm">{order.sales_person || 'Not Assigned'}</p>
                   </div>
                 </CardContent>
               </Card>
