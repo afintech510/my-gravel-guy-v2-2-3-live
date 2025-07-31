@@ -152,7 +152,7 @@ const generateQuoteConversionEmail = (data: QuoteConversionEmailRequest, product
             <div style="background: #f1f5f9; border: 2px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-top: 16px;">
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span style="font-size: 18px; font-weight: 600; color: #475569;">Total Amount Paid</span>
-                <span style="font-size: 24px; font-weight: 700; color: #2563eb;">$${data.totalAmount.toFixed(2)}</span>
+                <span style="font-size: 24px; font-weight: 700; color: #2563eb;">$${(data.totalAmount || 0).toFixed(2)}</span>
               </div>
             </div>
           </div>
