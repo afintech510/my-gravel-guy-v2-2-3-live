@@ -274,7 +274,7 @@ serve(async (req) => {
             .from('orders')
             .select('*')
             .eq('status', 'Quote')
-            .or(`order_id.eq.${verificationResult.orderId},order_id.like.${verificationResult.orderId}%`);
+            .or(`order_id.eq.${verificationResult.orderId},order_id.like.${verificationResult.orderId}-%`);
           
           console.log('=== QUOTE RECORDS FOUND ===', { 
             count: existingQuotes?.length || 0, 
@@ -284,8 +284,55 @@ serve(async (req) => {
           
           let quoteConversionData = null;
           let quoteUpdateError = null;
+          let emailSent = false;
           
+          // CRITICAL: Send email regardless of database update success
+          // This ensures customers always get confirmation emails after successful payment
           if (existingQuotes && existingQuotes.length > 0) {
+            console.log('=== SENDING CONFIRMATION EMAIL (PRIORITY) ===', { orderId: orderIdFromQuote });
+            try {
+              // Calculate total amount from quote data
+              const totalAmount = existingQuotes.reduce((sum, item) => sum + (parseFloat(item.total_price) || 0), 0);
+              
+              const emailResult = await supabase.functions.invoke('send-quote-conversion-email', {
+                body: {
+                  orderId: orderIdFromQuote,
+                  customerName: billingName,
+                  customerEmail: billingEmail,
+                  totalAmount: totalAmount,
+                  orderItems: existingQuotes.map(item => ({
+                    id: item.id,
+                    product_id: item.product_id,
+                    product_name: item.product_name,
+                    quantity: item.quantity,
+                    unit: item.unit,
+                    unit_price: parseFloat(item.unit_price) || 0,
+                    total_price: parseFloat(item.total_price) || 0,
+                    delivery_date: item.delivery_date,
+                    delivery_street: item.delivery_street,
+                    delivery_city: item.delivery_city,
+                    delivery_state: item.delivery_state,
+                    delivery_zip: item.delivery_zip,
+                    delivery_name: item.delivery_name,
+                    delivery_phone: item.delivery_phone,
+                    delivery_email: item.delivery_email,
+                    delivery_time_preference: item.delivery_time_preference,
+                    delivery_instructions: item.delivery_instructions
+                  }))
+                }
+              });
+
+              if (emailResult.error) {
+                console.error('Quote conversion email failed:', emailResult.error);
+              } else {
+                console.log('Quote conversion email sent successfully:', emailResult.data);
+                emailSent = true;
+              }
+            } catch (emailError) {
+              console.error('Failed to send quote conversion email:', emailError);
+            }
+
+            // Now attempt database update (secondary priority)
             // Prepare update data for quote conversion
             const quoteUpdateData: any = {
               order_id: orderIdFromQuote,
@@ -296,7 +343,7 @@ serve(async (req) => {
               updated_at: new Date().toISOString()
             };
             
-            // Handle single vs multiple product scenarios
+            // Handle single vs multiple product scenarios with improved logic
             if (existingQuotes.length === 1) {
               // Single product: use exact match
               console.log('=== SINGLE PRODUCT QUOTE CONVERSION ===');
@@ -309,81 +356,70 @@ serve(async (req) => {
               
               quoteConversionData = singleQuoteData;
               quoteUpdateError = singleError;
-            } else {
-              // Multiple products: use pattern match
-              console.log('=== MULTIPLE PRODUCT QUOTE CONVERSION ===');
-              const { data: multiQuoteData, error: multiError } = await supabase
-                .from('orders')
-                .update(quoteUpdateData)
-                .like('order_id', `${verificationResult.orderId}%`)
-                .eq('status', 'Quote')
-                .select();
               
-              quoteConversionData = multiQuoteData;
-              quoteUpdateError = multiError;
-            }
-          }
-
-        if (!quoteUpdateError && quoteConversionData && quoteConversionData.length > 0) {
-          console.log('=== QUOTE TO ORDER CONVERSION SUCCESS ===', { 
-            updatedRecords: quoteConversionData.length,
-            newOrderId: orderIdFromQuote,
-            convertedItems: quoteConversionData.map(item => ({ id: item.id, product_id: item.product_id }))
-          });
-          data = quoteConversionData;
-          insertError = null;
-          // Update the orderId for response
-          verificationResult.orderId = orderIdFromQuote;
-
-          // Send quote conversion confirmation email
-          console.log('=== SENDING QUOTE CONVERSION EMAIL ===', { orderId: orderIdFromQuote });
-          try {
-            // Calculate total amount from actual converted orders, not backup data
-            const totalAmount = quoteConversionData.reduce((sum, item) => sum + (parseFloat(item.total_price) || 0), 0);
-            
-            const emailResult = await supabase.functions.invoke('send-quote-conversion-email', {
-              body: {
-                orderId: orderIdFromQuote,
-                customerName: billingName,
-                customerEmail: billingEmail,
-                totalAmount: totalAmount,
-                orderItems: quoteConversionData.map(item => ({
-                  id: item.id,
-                  product_id: item.product_id,
-                  product_name: item.product_name,
-                  quantity: item.quantity,
-                  unit: item.unit,
-                  unit_price: parseFloat(item.unit_price) || 0,
-                  total_price: parseFloat(item.total_price) || 0,
-                  delivery_date: item.delivery_date,
-                  delivery_street: item.delivery_street,
-                  delivery_city: item.delivery_city,
-                  delivery_state: item.delivery_state,
-                  delivery_zip: item.delivery_zip,
-                  delivery_name: item.delivery_name,
-                  delivery_phone: item.delivery_phone,
-                  delivery_email: item.delivery_email,
-                  delivery_time_preference: item.delivery_time_preference,
-                  delivery_instructions: item.delivery_instructions
-                }))
+              if (singleError) {
+                console.error('Single quote update failed:', singleError);
               }
-            });
-
-            if (emailResult.error) {
-              console.error('Quote conversion email failed:', emailResult.error);
             } else {
-              console.log('Quote conversion email sent successfully:', emailResult.data);
+              // Multiple products: update each record individually for better error handling
+              console.log('=== MULTIPLE PRODUCT QUOTE CONVERSION ===');
+              const updatePromises = existingQuotes.map(async (quote) => {
+                const { data, error } = await supabase
+                  .from('orders')
+                  .update(quoteUpdateData)
+                  .eq('id', quote.id)
+                  .eq('status', 'Quote')
+                  .select()
+                  .single();
+                
+                if (error) {
+                  console.error(`Failed to update quote ${quote.id}:`, error);
+                }
+                return { data, error };
+              });
+              
+              const results = await Promise.all(updatePromises);
+              const successfulUpdates = results.filter(r => !r.error && r.data).map(r => r.data);
+              const errors = results.filter(r => r.error).map(r => r.error);
+              
+              quoteConversionData = successfulUpdates;
+              quoteUpdateError = errors.length > 0 ? errors[0] : null;
+              
+              console.log('Multiple quote update results:', {
+                successful: successfulUpdates.length,
+                failed: errors.length,
+                errors: errors.map(e => e.message)
+              });
             }
-          } catch (emailError) {
-            console.error('Failed to send quote conversion email:', emailError);
           }
-        } else {
-          console.log('=== QUOTE CONVERSION FAILED ===', { 
-            error: quoteUpdateError?.message || 'No quote records found',
-            orderId: verificationResult.orderId,
-            existingQuotesCount: existingQuotes?.length || 0
-          });
-        }
+
+          if (!quoteUpdateError && quoteConversionData && quoteConversionData.length > 0) {
+            console.log('=== QUOTE TO ORDER CONVERSION SUCCESS ===', { 
+              updatedRecords: quoteConversionData.length,
+              newOrderId: orderIdFromQuote,
+              emailSent: emailSent,
+              convertedItems: quoteConversionData.map(item => ({ id: item.id, product_id: item.product_id }))
+            });
+            data = quoteConversionData;
+            insertError = null;
+            // Update the orderId for response
+            verificationResult.orderId = orderIdFromQuote;
+          } else {
+            console.log('=== QUOTE CONVERSION FAILED (DB UPDATE) ===', { 
+              error: quoteUpdateError?.message || 'No quote records updated',
+              orderId: verificationResult.orderId,
+              existingQuotesCount: existingQuotes?.length || 0,
+              emailSent: emailSent // Email was still sent even if DB failed
+            });
+            
+            // Even if DB update failed, consider this a partial success if email was sent
+            if (emailSent && existingQuotes && existingQuotes.length > 0) {
+              console.log('=== PARTIAL SUCCESS: EMAIL SENT DESPITE DB FAILURE ===');
+              // Use original quote data as fallback
+              data = existingQuotes;
+              verificationResult.orderId = orderIdFromQuote;
+            }
+          }
 
         // Step 2: Check if cart records exist for this order
         } else if (verificationResult.orderId && verificationResult.orderId.startsWith('CART-')) {
