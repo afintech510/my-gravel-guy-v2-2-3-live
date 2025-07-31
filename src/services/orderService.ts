@@ -11,7 +11,7 @@ import type {
 import { groupOrderRows } from '@/types/order.types';
 import { SupplierService } from './supplierService';
 import { getProductById } from '@/services/products/productQueries';
-import { extractBaseOrderId, getOrderPatternQuery, hasOrderSuffix } from '@/utils/orderIdUtils';
+import { extractBaseOrderId, getOrderPatternQuery, hasOrderSuffix, convertToOrderId } from '@/utils/orderIdUtils';
 
 export class OrderService {
   /**
@@ -734,6 +734,51 @@ export class OrderService {
       }
     } catch (error) {
       console.error('OrderService.updateDeliveryInfo error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Convert a CART- or QUOTE- order to an ORDER-
+   */
+  static async convertToOrder(orderId: string): Promise<string> {
+    try {
+      console.log('Converting to order:', { orderId });
+      
+      // Generate new order ID
+      const newOrderId = convertToOrderId(orderId);
+      
+      if (newOrderId === orderId) {
+        throw new Error('Order ID does not start with CART- or QUOTE-');
+      }
+      
+      // Extract base order ID and update all related items
+      const baseOrderId = extractBaseOrderId(orderId);
+      
+      const { data: updatedRecords, error } = await supabase
+        .from('orders')
+        .update({ 
+          order_id: newOrderId,
+          status: 'confirmed',
+          updated_at: new Date().toISOString()
+        })
+        .or(getOrderPatternQuery(baseOrderId))
+        .select('order_id');
+
+      if (error) {
+        console.error('Error converting to order:', error);
+        throw new Error(`Failed to convert to order: ${error.message}`);
+      }
+
+      console.log('Successfully converted to order:', { 
+        oldOrderId: orderId, 
+        newOrderId,
+        updatedRecords: updatedRecords?.length || 0
+      });
+      
+      return newOrderId;
+    } catch (error) {
+      console.error('OrderService.convertToOrder error:', error);
       throw error;
     }
   }

@@ -50,3 +50,15 @@ export function hasOrderSuffix(orderId: string): boolean {
 export function getOrderPatternQuery(baseOrderId: string): string {
   return `order_id.eq.${baseOrderId},order_id.like.${baseOrderId}-%`;
 }
+
+/**
+ * Convert a CART- or QUOTE- order ID to an ORDER- order ID
+ */
+export function convertToOrderId(orderId: string): string {
+  if (orderId.startsWith('CART-')) {
+    return orderId.replace('CART-', 'ORDER-');
+  } else if (orderId.startsWith('QUOTE-')) {
+    return orderId.replace('QUOTE-', 'ORDER-');
+  }
+  return orderId;
+}
