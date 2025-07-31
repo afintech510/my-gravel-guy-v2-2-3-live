@@ -269,26 +269,66 @@ serve(async (req) => {
           // Convert QUOTE- to ORDER- for quote conversions
           const orderIdFromQuote = verificationResult.orderId.replace('QUOTE-', 'ORDER-');
           
-          // Prepare update data for quote conversion
-          const quoteUpdateData: any = {
-            order_id: orderIdFromQuote,
-            status: 'confirmed', // Quotes become confirmed orders
-            stripe_payment_intent_id: paymentIntentId || null,
-            stripe_session_id: verificationResult.sessionId || null,
-            updated_at: new Date().toISOString()
-          };
-          
-          const { data: quoteConversionData, error: quoteUpdateError } = await supabase
+          // First, check how many quote records exist for this order
+          const { data: existingQuotes, error: checkError } = await supabase
             .from('orders')
-            .update(quoteUpdateData)
-            .like('order_id', `${verificationResult.orderId}%`)
+            .select('*')
             .eq('status', 'Quote')
-            .select();
+            .or(`order_id.eq.${verificationResult.orderId},order_id.like.${verificationResult.orderId}%`);
+          
+          console.log('=== QUOTE RECORDS FOUND ===', { 
+            count: existingQuotes?.length || 0, 
+            orderId: verificationResult.orderId,
+            checkError: checkError?.message 
+          });
+          
+          let quoteConversionData = null;
+          let quoteUpdateError = null;
+          
+          if (existingQuotes && existingQuotes.length > 0) {
+            // Prepare update data for quote conversion
+            const quoteUpdateData: any = {
+              order_id: orderIdFromQuote,
+              status: 'confirmed', // Quotes become confirmed orders
+              stripe_payment_intent_id: paymentIntentId || null,
+              stripe_session_id: verificationResult.sessionId || null,
+              quote_converted: true, // Important: Mark as converted
+              updated_at: new Date().toISOString()
+            };
+            
+            // Handle single vs multiple product scenarios
+            if (existingQuotes.length === 1) {
+              // Single product: use exact match
+              console.log('=== SINGLE PRODUCT QUOTE CONVERSION ===');
+              const { data: singleQuoteData, error: singleError } = await supabase
+                .from('orders')
+                .update(quoteUpdateData)
+                .eq('order_id', verificationResult.orderId)
+                .eq('status', 'Quote')
+                .select();
+              
+              quoteConversionData = singleQuoteData;
+              quoteUpdateError = singleError;
+            } else {
+              // Multiple products: use pattern match
+              console.log('=== MULTIPLE PRODUCT QUOTE CONVERSION ===');
+              const { data: multiQuoteData, error: multiError } = await supabase
+                .from('orders')
+                .update(quoteUpdateData)
+                .like('order_id', `${verificationResult.orderId}%`)
+                .eq('status', 'Quote')
+                .select();
+              
+              quoteConversionData = multiQuoteData;
+              quoteUpdateError = multiError;
+            }
+          }
 
         if (!quoteUpdateError && quoteConversionData && quoteConversionData.length > 0) {
           console.log('=== QUOTE TO ORDER CONVERSION SUCCESS ===', { 
             updatedRecords: quoteConversionData.length,
-            newOrderId: orderIdFromQuote 
+            newOrderId: orderIdFromQuote,
+            convertedItems: quoteConversionData.map(item => ({ id: item.id, product_id: item.product_id }))
           });
           data = quoteConversionData;
           insertError = null;
@@ -298,20 +338,23 @@ serve(async (req) => {
           // Send quote conversion confirmation email
           console.log('=== SENDING QUOTE CONVERSION EMAIL ===', { orderId: orderIdFromQuote });
           try {
+            // Calculate total amount from actual converted orders, not backup data
+            const totalAmount = quoteConversionData.reduce((sum, item) => sum + (parseFloat(item.total_price) || 0), 0);
+            
             const emailResult = await supabase.functions.invoke('send-quote-conversion-email', {
               body: {
                 orderId: orderIdFromQuote,
                 customerName: billingName,
                 customerEmail: billingEmail,
-                totalAmount: backupData.items.reduce((sum, item) => sum + item.total_price, 0),
+                totalAmount: totalAmount,
                 orderItems: quoteConversionData.map(item => ({
                   id: item.id,
                   product_id: item.product_id,
                   product_name: item.product_name,
                   quantity: item.quantity,
                   unit: item.unit,
-                  unit_price: item.unit_price,
-                  total_price: item.total_price,
+                  unit_price: parseFloat(item.unit_price) || 0,
+                  total_price: parseFloat(item.total_price) || 0,
                   delivery_date: item.delivery_date,
                   delivery_street: item.delivery_street,
                   delivery_city: item.delivery_city,
@@ -335,7 +378,11 @@ serve(async (req) => {
             console.error('Failed to send quote conversion email:', emailError);
           }
         } else {
-          console.log('No quote records found or conversion failed', quoteUpdateError);
+          console.log('=== QUOTE CONVERSION FAILED ===', { 
+            error: quoteUpdateError?.message || 'No quote records found',
+            orderId: verificationResult.orderId,
+            existingQuotesCount: existingQuotes?.length || 0
+          });
         }
 
         // Step 2: Check if cart records exist for this order
