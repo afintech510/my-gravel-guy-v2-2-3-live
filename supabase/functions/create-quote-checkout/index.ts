@@ -123,6 +123,51 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://easternbuilding.supply";
     
+    // Prepare backup data for localStorage (similar to cart checkout)
+    const quoteBackupData = {
+      orderId: quoteId,
+      items: quoteItems.map(item => ({
+        id: item.product_id,
+        name: productNameMap.get(item.product_id)?.name || item.product_id,
+        category: 'aggregates',
+        price: item.unit_price,
+        quantity: item.quantity,
+        tons: item.quantity,
+        deliveryDate: item.delivery_date,
+        deliveryAddress: {
+          street: item.delivery_street || '',
+          city: item.delivery_city || '',
+          state: item.delivery_state || '',
+          zip: item.delivery_zip || ''
+        },
+        contactInfo: {
+          name: item.delivery_name || '',
+          email: item.delivery_email || '',
+          phone: item.delivery_phone || ''
+        },
+        deliveryTimePreference: item.delivery_time_preference,
+        deliveryInstructions: item.delivery_instructions,
+        metadata: {
+          unit: item.unit,
+          unitPrice: item.unit_price,
+          totalPrice: item.total_price,
+          supplierCharges: item.supplier_charges,
+          zipAdjust: item.zip_adjust
+        }
+      })),
+      total: quoteItems.reduce((sum, item) => sum + item.total_price, 0),
+      timestamp: Date.now(),
+      cartItems: [], // Empty for quotes
+      customerInfo: {
+        email: customerEmail,
+        name: quoteItems[0].delivery_name || quoteItems[0].billing_name || ''
+      },
+      isQuoteConversion: true,
+      originalQuoteId: quoteId
+    };
+    
+    logStep("Quote backup data prepared", { itemCount: quoteBackupData.items.length, total: quoteBackupData.total });
+
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -133,7 +178,8 @@ serve(async (req) => {
       cancel_url: `${origin}/quote-checkout/${quoteId}`,
       metadata: {
         quote_id: quoteId,
-        type: "quote_conversion"
+        type: "quote_conversion",
+        backup_data: JSON.stringify(quoteBackupData)
       },
       payment_intent_data: {
         metadata: {
@@ -145,7 +191,12 @@ serve(async (req) => {
 
     logStep("Stripe checkout session created", { sessionId: session.id, url: session.url });
 
-    return new Response(JSON.stringify({ url: session.url, sessionId: session.id }), {
+    // Return both the session URL and the backup data for localStorage
+    return new Response(JSON.stringify({ 
+      url: session.url, 
+      sessionId: session.id,
+      backupData: quoteBackupData
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
