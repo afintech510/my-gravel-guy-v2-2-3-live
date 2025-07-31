@@ -51,7 +51,7 @@ export function OrdersFinancialTable({ startDate, endDate }: OrdersFinancialTabl
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Order Details in Analysis</CardTitle>
+        <CardTitle>Order Details in Analysis: {orders?.length || 0}</CardTitle>
         <p className="text-sm text-muted-foreground">
           Individual orders included in the financial calculation
         </p>
