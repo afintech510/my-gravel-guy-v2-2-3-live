@@ -178,8 +178,7 @@ serve(async (req) => {
       cancel_url: `${origin}/quote-checkout/${quoteId}`,
       metadata: {
         quote_id: quoteId,
-        type: "quote_conversion",
-        backup_data: JSON.stringify(quoteBackupData)
+        type: "quote_conversion"
       },
       payment_intent_data: {
         metadata: {
