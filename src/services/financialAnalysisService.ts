@@ -77,6 +77,7 @@ export const financialAnalysisService = {
       `)
       .like('order_id', 'ORDER-%')
       .neq('fulfillment_status', 'Refunded')
+      .neq('fulfillment_status', 'Archived')
       .gte('created_at', startDate)
       .lte('created_at', endDate)
       .order('created_at', { ascending: false });
@@ -104,6 +105,7 @@ export const financialAnalysisService = {
       .select('total_price, supplier_charges, sales_commission, order_id, fulfillment_status')
       .like('order_id', 'ORDER-%')
       .neq('fulfillment_status', 'Refunded')
+      .neq('fulfillment_status', 'Archived')
       .gte('created_at', startDate)
       .lte('created_at', endDate);
 
@@ -161,6 +163,7 @@ export const financialAnalysisService = {
       .select('total_price')
       .like('order_id', 'ORDER-%')
       .neq('fulfillment_status', 'Refunded')
+      .neq('fulfillment_status', 'Archived')
       .gte('created_at', startDate)
       .lte('created_at', endDate);
 
