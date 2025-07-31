@@ -285,18 +285,58 @@ serve(async (req) => {
             .eq('status', 'Quote')
             .select();
 
-          if (!quoteUpdateError && quoteConversionData && quoteConversionData.length > 0) {
-            console.log('=== QUOTE TO ORDER CONVERSION SUCCESS ===', { 
-              updatedRecords: quoteConversionData.length,
-              newOrderId: orderIdFromQuote 
+        if (!quoteUpdateError && quoteConversionData && quoteConversionData.length > 0) {
+          console.log('=== QUOTE TO ORDER CONVERSION SUCCESS ===', { 
+            updatedRecords: quoteConversionData.length,
+            newOrderId: orderIdFromQuote 
+          });
+          data = quoteConversionData;
+          insertError = null;
+          // Update the orderId for response
+          verificationResult.orderId = orderIdFromQuote;
+
+          // Send quote conversion confirmation email
+          console.log('=== SENDING QUOTE CONVERSION EMAIL ===', { orderId: orderIdFromQuote });
+          try {
+            const emailResult = await supabase.functions.invoke('send-quote-conversion-email', {
+              body: {
+                orderId: orderIdFromQuote,
+                customerName: billingName,
+                customerEmail: billingEmail,
+                totalAmount: backupData.items.reduce((sum, item) => sum + item.total_price, 0),
+                orderItems: quoteConversionData.map(item => ({
+                  id: item.id,
+                  product_id: item.product_id,
+                  product_name: item.product_name,
+                  quantity: item.quantity,
+                  unit: item.unit,
+                  unit_price: item.unit_price,
+                  total_price: item.total_price,
+                  delivery_date: item.delivery_date,
+                  delivery_street: item.delivery_street,
+                  delivery_city: item.delivery_city,
+                  delivery_state: item.delivery_state,
+                  delivery_zip: item.delivery_zip,
+                  delivery_name: item.delivery_name,
+                  delivery_phone: item.delivery_phone,
+                  delivery_email: item.delivery_email,
+                  delivery_time_preference: item.delivery_time_preference,
+                  delivery_instructions: item.delivery_instructions
+                }))
+              }
             });
-            data = quoteConversionData;
-            insertError = null;
-            // Update the orderId for response
-            verificationResult.orderId = orderIdFromQuote;
-          } else {
-            console.log('No quote records found or conversion failed', quoteUpdateError);
+
+            if (emailResult.error) {
+              console.error('Quote conversion email failed:', emailResult.error);
+            } else {
+              console.log('Quote conversion email sent successfully:', emailResult.data);
+            }
+          } catch (emailError) {
+            console.error('Failed to send quote conversion email:', emailError);
           }
+        } else {
+          console.log('No quote records found or conversion failed', quoteUpdateError);
+        }
 
         // Step 2: Check if cart records exist for this order
         } else if (verificationResult.orderId && verificationResult.orderId.startsWith('CART-')) {
