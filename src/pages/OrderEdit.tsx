@@ -348,8 +348,8 @@ const OrderEdit = () => {
         description: `Successfully converted ${orderId} to ${newOrderId}`,
       });
       
-      // Navigate to the new order ID
-      navigate(`/dashboard/orders/${newOrderId}/edit`);
+      // Navigate to the orders dashboard
+      navigate("/dashboard/orders");
       
     } catch (error) {
       console.error('Error converting to order:', error);
