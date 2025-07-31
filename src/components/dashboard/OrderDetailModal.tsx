@@ -552,6 +552,10 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                     <p className="text-sm">{order.billing_name || 'N/A'}</p>
                   </div>
                   <div>
+                    <Label className="text-sm font-medium">Phone</Label>
+                    <p className="text-sm">{order.items[0]?.delivery_phone || 'N/A'}</p>
+                  </div>
+                  <div>
                     <Label className="text-sm font-medium">Email</Label>
                     <p className="text-sm">{order.billing_email || 'N/A'}</p>
                   </div>
@@ -590,24 +594,14 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                       </div>
                     </>
                   )}
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground">Sales Person</Label>
+                    <p className="text-xs">{order.sales_person || 'Not Assigned'}</p>
+                  </div>
                 </CardContent>
               </Card>
             </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <UserCheck className="h-4 w-4" />
-                  Sales Person
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div>
-                  <span className="text-sm font-medium text-gray-600">Sales Person: </span>
-                  <span className="text-sm text-gray-900">{order.sales_person || 'Not Assigned'}</span>
-                </div>
-              </CardContent>
-            </Card>
 
             <Card>
               <CardHeader>
