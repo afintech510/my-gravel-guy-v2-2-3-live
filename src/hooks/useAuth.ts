@@ -8,6 +8,7 @@ export const useAuth = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminCheckComplete, setAdminCheckComplete] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -18,7 +19,7 @@ export const useAuth = () => {
         // Only synchronous state updates here
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
+        setAdminCheckComplete(false);
         
         // Defer admin check to prevent deadlocks
         if (session?.user) {
@@ -27,6 +28,8 @@ export const useAuth = () => {
           }, 0);
         } else {
           setIsAdmin(false);
+          setAdminCheckComplete(true);
+          setLoading(false);
         }
       }
     );
@@ -46,6 +49,7 @@ export const useAuth = () => {
           console.log('Existing session found:', session.user?.email);
           setSession(session);
           setUser(session.user);
+          setAdminCheckComplete(false);
           
           // Defer admin check
           setTimeout(() => {
@@ -56,10 +60,12 @@ export const useAuth = () => {
           setSession(null);
           setUser(null);
           setIsAdmin(false);
+          setAdminCheckComplete(true);
+          setLoading(false);
         }
       } catch (error) {
         console.error('Session initialization failed:', error);
-      } finally {
+        setAdminCheckComplete(true);
         setLoading(false);
       }
     };
@@ -97,6 +103,9 @@ export const useAuth = () => {
     } catch (error) {
       console.error('Admin verification failed:', error);
       setIsAdmin(false);
+    } finally {
+      setAdminCheckComplete(true);
+      setLoading(false);
     }
   };
 
