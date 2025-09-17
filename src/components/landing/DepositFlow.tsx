@@ -2,8 +2,9 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Shield, CreditCard, Banknote, ArrowRight } from 'lucide-react';
+import { Shield, CreditCard, Banknote, ArrowRight, Loader2 } from 'lucide-react';
 import { useLandingPage } from '@/contexts/LandingPageContext';
+import { LandingCheckoutForm } from './LandingCheckoutForm';
 
 interface DepositFlowProps {
   priceData: {
@@ -17,11 +18,50 @@ interface DepositFlowProps {
 }
 
 export const DepositFlow = ({ priceData, discountUnlocked }: DepositFlowProps) => {
-  const { initiateCheckout } = useLandingPage();
+  const { 
+    state, 
+    initiateCheckout, 
+    handleCheckoutFormSubmit, 
+    cancelCheckout,
+    hasCompleteCheckoutInfo 
+  } = useLandingPage();
 
   if (!priceData) return null;
 
   const currentPrice = discountUnlocked ? priceData.discountedPrice : priceData.normalPrice;
+
+  // Show checkout form if needed
+  if (state.showCheckoutForm) {
+    const initialData = state.deliveryAddress.zip ? {
+      zip: state.deliveryAddress.zip,
+      city: state.deliveryAddress.city || '',
+      state: state.deliveryAddress.state || ''
+    } : {};
+
+    return (
+      <LandingCheckoutForm
+        onSubmit={handleCheckoutFormSubmit}
+        onCancel={cancelCheckout}
+        isSubmitting={state.isProcessingCheckout}
+        initialData={initialData}
+      />
+    );
+  }
+
+  // Show processing state
+  if (state.isProcessingCheckout) {
+    return (
+      <Card className="w-full max-w-md mx-auto">
+        <CardContent className="p-8 text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Processing Your Order</h3>
+          <p className="text-muted-foreground">
+            Please wait while we redirect you to secure checkout...
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">

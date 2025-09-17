@@ -31,8 +31,11 @@ export interface LandingPageState {
   utmParams: UTMParams;
   priceData: PriceData | null;
   isCalculatingPrice: boolean;
-  formStep: 'material' | 'contact' | 'review';
+  formStep: 'material' | 'contact' | 'review' | 'checkout';
   paymentPath: 'deposit' | 'buy_now' | null;
+  showCheckoutForm: boolean;
+  isProcessingCheckout: boolean;
+  checkoutFormData: any | null;
 }
 
 interface LandingPageContextType {
@@ -47,6 +50,9 @@ interface LandingPageContextType {
   setPaymentPath: (path: LandingPageState['paymentPath']) => void;
   trackFormInteraction: (action: string, data?: any) => void;
   initiateCheckout: (path: 'deposit' | 'buy_now') => void;
+  handleCheckoutFormSubmit: (formData: any) => Promise<void>;
+  cancelCheckout: () => void;
+  hasCompleteCheckoutInfo: () => boolean;
 }
 
 const LandingPageContext = createContext<LandingPageContextType | undefined>(undefined);
@@ -62,6 +68,9 @@ const initialState: LandingPageState = {
   isCalculatingPrice: false,
   formStep: 'material',
   paymentPath: null,
+  showCheckoutForm: false,
+  isProcessingCheckout: false,
+  checkoutFormData: null,
 };
 
 export const LandingPageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -227,7 +236,92 @@ export const LandingPageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
 
     setPaymentPath(path);
+    
+    // Check if we have complete checkout information
+    if (hasCompleteCheckoutInfo()) {
+      // Process checkout immediately
+      processStripeCheckout(path);
+    } else {
+      // Show checkout form
+      setState(prev => ({ ...prev, showCheckoutForm: true, formStep: 'checkout' }));
+    }
   }, [state, setPaymentPath]);
+
+  const hasCompleteCheckoutInfo = useCallback(() => {
+    return !!(
+      state.checkoutFormData?.name &&
+      state.checkoutFormData?.email &&
+      state.checkoutFormData?.phone &&
+      state.checkoutFormData?.street &&
+      state.checkoutFormData?.city &&
+      state.checkoutFormData?.state &&
+      state.checkoutFormData?.zip &&
+      state.checkoutFormData?.deliveryDate &&
+      state.checkoutFormData?.communicationConsent
+    );
+  }, [state.checkoutFormData]);
+
+  const processStripeCheckout = useCallback(async (path: 'deposit' | 'buy_now') => {
+    if (!state.selectedMaterial || !state.priceData || !state.checkoutFormData) {
+      console.error('Missing required data for checkout');
+      return;
+    }
+
+    setState(prev => ({ ...prev, isProcessingCheckout: true }));
+
+    try {
+      const { LandingStripeCheckout } = await import('@/services/landingStripeCheckout');
+      
+      const checkoutData = {
+        selectedMaterial: state.selectedMaterial,
+        quantity: state.quantity,
+        paymentPath: path,
+        priceData: state.priceData,
+        discountUnlocked: state.discountUnlocked,
+        formData: state.checkoutFormData
+      };
+
+      const checkoutUrl = await LandingStripeCheckout.processCheckout(checkoutData);
+      
+      // Redirect to Stripe
+      window.location.href = checkoutUrl;
+      
+    } catch (error) {
+      console.error('Checkout error:', error);
+      setState(prev => ({ ...prev, isProcessingCheckout: false }));
+      
+      // You might want to show a toast notification here
+      if (typeof window !== 'undefined') {
+        alert('Checkout failed. Please try again.');
+      }
+    }
+  }, [state, setState]);
+
+  const handleCheckoutFormSubmit = useCallback(async (formData: any) => {
+    setState(prev => ({ 
+      ...prev, 
+      checkoutFormData: formData,
+      showCheckoutForm: false 
+    }));
+
+    // Process checkout with the new form data
+    if (state.paymentPath) {
+      // Wait a moment for state to update, then process
+      setTimeout(() => {
+        processStripeCheckout(state.paymentPath!);
+      }, 100);
+    }
+  }, [state.paymentPath, setState, processStripeCheckout]);
+
+  const cancelCheckout = useCallback(() => {
+    setState(prev => ({ 
+      ...prev, 
+      showCheckoutForm: false, 
+      paymentPath: null, 
+      formStep: 'review',
+      isProcessingCheckout: false 
+    }));
+  }, [setState]);
 
   // Recalculate pricing when relevant data changes
   useEffect(() => {
@@ -249,6 +343,9 @@ export const LandingPageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setPaymentPath,
     trackFormInteraction,
     initiateCheckout,
+    handleCheckoutFormSubmit,
+    cancelCheckout,
+    hasCompleteCheckoutInfo,
   };
 
   return (
