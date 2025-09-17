@@ -147,7 +147,7 @@ export const ReactivePricingForm = () => {
             <div className="grid gap-4">
               <Label htmlFor="material">Material Type</Label>
               <Select
-                value={state.selectedMaterial?.id || ''}
+                value={String(state.selectedMaterial?.id || '')}
                 onValueChange={handleMaterialSelect}
               >
                 <SelectTrigger className="w-full">
@@ -161,7 +161,7 @@ export const ReactivePricingForm = () => {
                     </SelectItem>
                   ) : (
                     products.map((product) => (
-                      <SelectItem key={product.id} value={product.id}>
+                      <SelectItem key={product.id} value={String(product.id)}>
                         <div className="flex items-center gap-2">
                           <span>{product.name}</span>
                           {product.category && (
