@@ -171,7 +171,7 @@ export const LandingPageProvider: React.FC<{ children: React.ReactNode }> = ({ c
       console.error('Error calculating pricing:', error);
       setState(prev => ({ ...prev, isCalculatingPrice: false }));
     }
-  }, [state.selectedMaterial, state.quantity, state.deliveryAddress.zip, setState]);
+  }, [state.selectedMaterial, state.quantity, state.deliveryAddress.zip]);
 
   const setFormStep = useCallback((step: LandingPageState['formStep']) => {
     setState(prev => ({ ...prev, formStep: step }));
@@ -222,7 +222,7 @@ export const LandingPageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (state.selectedMaterial && state.deliveryAddress.zip) {
       calculatePricing();
     }
-  }, [state.selectedMaterial, state.quantity, state.deliveryAddress.zip, calculatePricing]);
+  }, [state.selectedMaterial, state.quantity, state.deliveryAddress.zip]);
 
   const contextValue: LandingPageContextType = {
     state,
