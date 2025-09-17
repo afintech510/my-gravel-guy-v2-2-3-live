@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,6 +14,9 @@ import { Loader2, Tag, Lock, Unlock, Calculator } from 'lucide-react';
 import { useLandingPage } from '@/contexts/LandingPageContext';
 import { PriceScale } from './PriceScale';
 import { DepositFlow } from './DepositFlow';
+import { FloatingCalculatorButton } from './FloatingCalculatorButton';
+import { LandingAreaCalculator } from './LandingAreaCalculator';
+import ProductFilterSelector from '@/components/product-calculator/ProductFilterSelector';
 import { useQuery } from '@tanstack/react-query';
 import { getProducts } from '@/services/productService';
 
@@ -42,6 +45,9 @@ export const ReactivePricingForm = () => {
   } = useLandingPage();
 
   const [showContactForm, setShowContactForm] = useState(false);
+  const [showCalculator, setShowCalculator] = useState(false);
+  const [localQuantity, setLocalQuantity] = useState(state.quantity);
+  const calculatorRef = useRef<HTMLDivElement>(null);
 
   const { data: products = [], isLoading: productsLoading } = useQuery({
     queryKey: ['products'],
@@ -70,6 +76,11 @@ export const ReactivePricingForm = () => {
 
   const watchedValues = watch();
 
+  // Sync local quantity with global state
+  React.useEffect(() => {
+    setLocalQuantity(state.quantity);
+  }, [state.quantity]);
+
   // Update context when form values change
   React.useEffect(() => {
     if (watchedValues.zip && watchedValues.zip.length >= 5) {
@@ -82,18 +93,30 @@ export const ReactivePricingForm = () => {
     }
   }, [watchedValues, setDeliveryAddress]);
 
-  const handleMaterialSelect = (materialId: string) => {
-    const material = products.find(p => p.id === materialId);
-    if (material) {
-      setSelectedMaterial(material);
-      trackFormInteraction('material_selected', { material: material.name });
-    }
+  const handleMaterialSelect = (material: any) => {
+    setSelectedMaterial(material);
+    trackFormInteraction('material_selected', { material: material?.name });
   };
 
   const handleQuantityChange = (value: number[]) => {
     const newQuantity = value[0];
+    setLocalQuantity(newQuantity);
     setQuantity(newQuantity);
     trackFormInteraction('quantity_changed', { quantity: newQuantity });
+  };
+
+  const handleCalculatorResult = (result: { totalTons: number; totalCubicYards: number; totalSquareFeet: number }) => {
+    const roundedTons = Math.max(3, Math.ceil(result.totalTons)); // Minimum 3 tons
+    setLocalQuantity(roundedTons);
+    setQuantity(roundedTons);
+    trackFormInteraction('calculator_used', { calculatedTons: result.totalTons, usedTons: roundedTons });
+  };
+
+  const scrollToCalculator = () => {
+    setShowCalculator(true);
+    setTimeout(() => {
+      calculatorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
   };
 
   const onContactSubmit = async (data: ContactForm) => {
@@ -144,48 +167,31 @@ export const ReactivePricingForm = () => {
               <h3 className="text-lg font-semibold text-foreground">Select Your Material</h3>
             </div>
 
-            <div className="grid gap-4">
-              <Label htmlFor="material">Material Type</Label>
-              <Select
-                value={String(state.selectedMaterial?.id || '')}
-                onValueChange={handleMaterialSelect}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Choose your material..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {productsLoading ? (
-                    <SelectItem value="loading" disabled>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Loading materials...
-                    </SelectItem>
-                  ) : (
-                    products.map((product) => (
-                      <SelectItem key={product.id} value={String(product.id)}>
-                        <div className="flex items-center gap-2">
-                          <span>{product.name}</span>
-                          {product.category && (
-                            <Badge variant="secondary" className="text-xs">
-                              {product.category}
-                            </Badge>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
+            <ProductFilterSelector 
+              onProductSelected={handleMaterialSelect}
+              selectedProduct={state.selectedMaterial}
+            />
 
             {state.selectedMaterial && (
               <div className="space-y-6 p-4 bg-muted/50 rounded-lg">
                 <div>
-                  <Label className="text-base font-medium">
-                    Amount: {state.quantity} tons
-                  </Label>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="text-base font-medium">
+                      Amount: {localQuantity} tons
+                    </Label>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={scrollToCalculator}
+                      className="text-xs"
+                    >
+                      <Calculator className="h-4 w-4 mr-1" />
+                      Calculate Needed
+                    </Button>
+                  </div>
                   <div className="mt-3">
                     <Slider
-                      value={[state.quantity]}
+                      value={[localQuantity]}
                       onValueChange={handleQuantityChange}
                       min={3}
                       max={50}
@@ -265,6 +271,17 @@ export const ReactivePricingForm = () => {
               </div>
             )}
           </div>
+
+          {/* Calculator Module */}
+          {showCalculator && state.selectedMaterial && (
+            <div ref={calculatorRef} className="space-y-4">
+              <LandingAreaCalculator
+                onCalculationChange={handleCalculatorResult}
+                selectedMaterial={state.selectedMaterial}
+                onClose={() => setShowCalculator(false)}
+              />
+            </div>
+          )}
 
           {/* Step 2: Price Display and Discount Offer */}
           {state.priceData && (
@@ -408,6 +425,11 @@ export const ReactivePricingForm = () => {
           )}
         </CardContent>
       </Card>
+      
+      {/* Floating Calculator Button */}
+      {state.selectedMaterial && !showCalculator && (
+        <FloatingCalculatorButton onClick={scrollToCalculator} />
+      )}
     </div>
   );
 };
