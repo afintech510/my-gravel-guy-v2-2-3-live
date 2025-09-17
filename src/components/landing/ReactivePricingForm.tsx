@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,6 +19,9 @@ import { LandingAreaCalculator } from './LandingAreaCalculator';
 import ProductFilterSelector from '@/components/product-calculator/ProductFilterSelector';
 import { useQuery } from '@tanstack/react-query';
 import { getProducts } from '@/services/productService';
+import { Product } from '@/services/productTypes';
+import { calculateFinalPrice } from '@/services/products/pricingUtils';
+import { trackEvent, trackEcommerce } from '@/utils/analytics';
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -36,17 +39,20 @@ type ContactForm = z.infer<typeof contactSchema>;
 export const ReactivePricingForm = () => {
   const { 
     state, 
-    setSelectedMaterial, 
-    setQuantity, 
-    setDeliveryAddress, 
     setContactInfo, 
     unlockDiscount,
     trackFormInteraction 
   } = useLandingPage();
 
+  // Local state - like ProductCalculator
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [quantity, setQuantity] = useState(10);
+  const [zipCode, setZipCode] = useState('');
+  const [priceData, setPriceData] = useState<any>(null);
+  const [isCalculatingPrice, setIsCalculatingPrice] = useState(false);
+  
   const [showContactForm, setShowContactForm] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
-  const [quantity, setQuantityState] = useState(10);
   const calculatorRef = useRef<HTMLDivElement>(null);
 
   const { data: products = [], isLoading: productsLoading } = useQuery({
@@ -66,56 +72,88 @@ export const ReactivePricingForm = () => {
       name: state.contactInfo?.name || '',
       email: state.contactInfo?.email || '',
       phone: state.contactInfo?.phone || '',
-      street: state.deliveryAddress?.street || '',
-      city: state.deliveryAddress?.city || '',
-      state: state.deliveryAddress?.state || '',
-      zip: state.deliveryAddress?.zip || '',
+      street: '',
+      city: '',
+      state: '',
+      zip: '',
       consent: false,
     }
   });
 
   const watchedValues = watch();
 
-  // Update context when material or ZIP code changes
-  React.useEffect(() => {
-    if (watchedValues.zip && watchedValues.zip.length >= 5) {
-      setDeliveryAddress({
-        street: watchedValues.street,
-        city: watchedValues.city,
-        state: watchedValues.state,
-        zip: watchedValues.zip,
-      });
-      // Update global quantity only when we have a ZIP code
-      setQuantity(quantity);
-    }
-  }, [watchedValues.zip, watchedValues.street, watchedValues.city, watchedValues.state, quantity, setDeliveryAddress, setQuantity]);
+  // Calculate pricing when product, quantity, or ZIP changes (like ProductCalculator)
+  useEffect(() => {
+    const updatePriceDetails = async () => {
+      if (selectedProduct && quantity > 0 && zipCode.length >= 5) {
+        try {
+          setIsCalculatingPrice(true);
+          console.log(`[ReactivePricingForm] Calculating price for ${selectedProduct.name}, ${quantity} tons, ZIP: ${zipCode}`);
+          
+          const pricing = await calculateFinalPrice(selectedProduct, quantity, zipCode);
+          
+          const normalPrice = pricing.finalPrice;
+          const discountAmount = Math.min(normalPrice * 0.05, 50);
+          const discountedPrice = normalPrice - discountAmount;
 
-  const handleMaterialSelect = (material: any) => {
+          const newPriceData = {
+            normalPrice,
+            discountedPrice,
+            discountAmount,
+            depositEstimate: 199,
+            cashPriceEstimate: Math.round(normalPrice * 0.80 * 100) / 100,
+            cardPriceEstimate: Math.round(discountedPrice * 0.95 * 100) / 100,
+          };
+
+          setPriceData(newPriceData);
+          setIsCalculatingPrice(false);
+        } catch (error) {
+          console.error('[ReactivePricingForm] Error calculating pricing:', error);
+          setIsCalculatingPrice(false);
+        }
+      } else {
+        setPriceData(null);
+      }
+    };
+    
+    updatePriceDetails();
+  }, [selectedProduct, quantity, zipCode]);
+
+  // Update ZIP code from form
+  useEffect(() => {
+    if (watchedValues.zip && watchedValues.zip.length >= 5) {
+      setZipCode(watchedValues.zip);
+    }
+  }, [watchedValues.zip]);
+
+  const handleMaterialSelect = (material: Product | null) => {
     console.log('[ReactivePricingForm] Material selected:', material?.name || 'none');
-    setSelectedMaterial(material);
+    setSelectedProduct(material);
+    
+    if (material) {
+      trackEvent('view_item', 'landing_page', material.name, quantity);
+      trackEcommerce('view_item', [{
+        item_id: material.id,
+        item_name: material.name,
+        item_category: material.category,
+        quantity: quantity,
+        price: material.price
+      }]);
+    }
+    
     trackFormInteraction('material_selected', { material: material?.name });
   };
 
   const handleQuantityChange = (value: number[]) => {
     const newQuantity = value[0];
-    setQuantityState(newQuantity);
+    setQuantity(newQuantity);
     trackFormInteraction('quantity_changed', { quantity: newQuantity });
-    
-    // Update global state only if we have a ZIP code
-    if (watchedValues.zip && watchedValues.zip.length >= 5) {
-      setQuantity(newQuantity);
-    }
   };
 
   const handleCalculatorResult = (result: { totalTons: number; totalCubicYards: number; totalSquareFeet: number }) => {
-    const roundedTons = Math.max(3, Math.ceil(result.totalTons)); // Minimum 3 tons
-    setQuantityState(roundedTons);
+    const roundedTons = Math.max(3, Math.ceil(result.totalTons));
+    setQuantity(roundedTons);
     trackFormInteraction('calculator_used', { calculatedTons: result.totalTons, usedTons: roundedTons });
-    
-    // Update global state only if we have a ZIP code
-    if (watchedValues.zip && watchedValues.zip.length >= 5) {
-      setQuantity(roundedTons);
-    }
   };
 
   const scrollToCalculator = () => {
@@ -135,12 +173,6 @@ export const ReactivePricingForm = () => {
       };
 
       setContactInfo(contactInfo);
-      setDeliveryAddress({
-        street: data.street,
-        city: data.city,
-        state: data.state,
-        zip: data.zip,
-      });
 
       unlockDiscount();
       trackFormInteraction('contact_form_submitted', contactInfo);
@@ -149,7 +181,7 @@ export const ReactivePricingForm = () => {
     }
   };
 
-  const discountAmount = state.priceData ? Math.min(state.priceData.normalPrice * 0.05, 50) : 50;
+  const discountAmount = priceData ? Math.min(priceData.normalPrice * 0.05, 50) : 50;
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -175,17 +207,17 @@ export const ReactivePricingForm = () => {
 
             <ProductFilterSelector 
               onProductSelected={handleMaterialSelect}
-              selectedProduct={state.selectedMaterial}
+              selectedProduct={selectedProduct}
             />
             
             {/* Debug: Show selected material */}
-            {state.selectedMaterial && (
+            {selectedProduct && (
               <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm">
-                ✓ Selected: <strong>{state.selectedMaterial.name}</strong>
+                ✓ Selected: <strong>{selectedProduct.name}</strong>
               </div>
             )}
 
-            {state.selectedMaterial && (
+            {selectedProduct && (
               <div className="space-y-6 p-4 bg-muted/50 rounded-lg">
                 <div>
                   <div className="flex items-center justify-between mb-2">
@@ -286,20 +318,20 @@ export const ReactivePricingForm = () => {
           </div>
 
           {/* Calculator Module */}
-          {showCalculator && state.selectedMaterial && (
+          {showCalculator && selectedProduct && (
             <div ref={calculatorRef} className="space-y-4">
               <LandingAreaCalculator
                 onCalculationChange={handleCalculatorResult}
-                selectedMaterial={state.selectedMaterial}
+                selectedMaterial={selectedProduct}
                 onClose={() => setShowCalculator(false)}
               />
             </div>
           )}
 
           {/* Step 2: Price Display and Discount Offer - Only show when ZIP code is entered */}
-          {state.priceData && watchedValues.zip && watchedValues.zip.length >= 5 && (
+          {priceData && zipCode.length >= 5 && (
             <div className="space-y-6">
-              <PriceScale />
+              <PriceScale priceData={priceData} />
 
               {!state.discountUnlocked && (
                 <Card className="border-primary/20 bg-primary/5">
@@ -313,7 +345,7 @@ export const ReactivePricingForm = () => {
                       </div>
                       
                       <p className="text-muted-foreground">
-                        Get <strong className="text-primary">${discountAmount.toFixed(0)} off</strong> when you add your contact information
+                        Get <strong className="text-primary">${(priceData?.discountAmount || 50).toFixed(0)} off</strong> when you add your contact information
                       </p>
 
                       <Button
@@ -330,7 +362,7 @@ export const ReactivePricingForm = () => {
                         ) : (
                           <>
                             <Unlock className="h-4 w-4 mr-2" />
-                            Add My Info & Save ${discountAmount.toFixed(0)}
+                            Add My Info & Save ${(priceData?.discountAmount || 50).toFixed(0)}
                           </>
                         )}
                       </Button>
@@ -423,7 +455,7 @@ export const ReactivePricingForm = () => {
                     ) : (
                       <>
                         <Calculator className="h-4 w-4 mr-2" />
-                        Unlock ${discountAmount.toFixed(0)} Discount
+                        Unlock ${(priceData?.discountAmount || 50).toFixed(0)} Discount
                       </>
                     )}
                   </Button>
@@ -432,7 +464,7 @@ export const ReactivePricingForm = () => {
 
               {/* Step 4: Deposit Flow (Shown after discount unlocked or at base price) */}
               {(state.discountUnlocked || state.formStep === 'review') && (
-                <DepositFlow />
+                <DepositFlow priceData={priceData} discountUnlocked={state.discountUnlocked} />
               )}
             </div>
           )}
@@ -440,7 +472,7 @@ export const ReactivePricingForm = () => {
       </Card>
       
       {/* Floating Calculator Button */}
-      {state.selectedMaterial && !showCalculator && (
+      {selectedProduct && !showCalculator && (
         <FloatingCalculatorButton onClick={scrollToCalculator} />
       )}
     </div>

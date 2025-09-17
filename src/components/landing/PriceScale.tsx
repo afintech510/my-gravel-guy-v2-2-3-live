@@ -4,12 +4,22 @@ import { Badge } from '@/components/ui/badge';
 import { DollarSign, TrendingDown, CreditCard, Banknote } from 'lucide-react';
 import { useLandingPage } from '@/contexts/LandingPageContext';
 
-export const PriceScale = () => {
+interface PriceScaleProps {
+  priceData: {
+    normalPrice: number;
+    discountedPrice: number;
+    depositEstimate: number;
+    cashPriceEstimate: number;
+    cardPriceEstimate: number;
+  } | null;
+}
+
+export const PriceScale = ({ priceData }: PriceScaleProps) => {
   const { state } = useLandingPage();
 
-  if (!state.priceData) return null;
+  if (!priceData) return null;
 
-  const { normalPrice, discountedPrice, depositEstimate, cashPriceEstimate, cardPriceEstimate } = state.priceData;
+  const { normalPrice, discountedPrice, depositEstimate, cashPriceEstimate, cardPriceEstimate } = priceData;
 
   // Calculate scale positions (0-100%)
   const minPrice = Math.min(cashPriceEstimate, depositEstimate);

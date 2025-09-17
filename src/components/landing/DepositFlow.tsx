@@ -5,12 +5,23 @@ import { Badge } from '@/components/ui/badge';
 import { Shield, CreditCard, Banknote, ArrowRight } from 'lucide-react';
 import { useLandingPage } from '@/contexts/LandingPageContext';
 
-export const DepositFlow = () => {
-  const { state, initiateCheckout } = useLandingPage();
+interface DepositFlowProps {
+  priceData: {
+    normalPrice: number;
+    discountedPrice: number;
+    discountAmount: number;
+    cashPriceEstimate: number;
+    cardPriceEstimate: number;
+  } | null;
+  discountUnlocked: boolean;
+}
 
-  if (!state.priceData) return null;
+export const DepositFlow = ({ priceData, discountUnlocked }: DepositFlowProps) => {
+  const { initiateCheckout } = useLandingPage();
 
-  const currentPrice = state.discountUnlocked ? state.priceData.discountedPrice : state.priceData.normalPrice;
+  if (!priceData) return null;
+
+  const currentPrice = discountUnlocked ? priceData.discountedPrice : priceData.normalPrice;
 
   return (
     <div className="space-y-6">
@@ -49,14 +60,14 @@ export const DepositFlow = () => {
                   <Banknote className="h-4 w-4 text-primary" />
                   <span>Cash Price (Estimate)</span>
                 </div>
-                <span className="font-semibold">${state.priceData.cashPriceEstimate.toLocaleString()}</span>
+                <span className="font-semibold">${priceData.cashPriceEstimate.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <CreditCard className="h-4 w-4 text-muted-foreground" />
                   <span>Card Price (Estimate)</span>
                 </div>
-                <span className="font-semibold">${state.priceData.cardPriceEstimate.toLocaleString()}</span>
+                <span className="font-semibold">${priceData.cardPriceEstimate.toLocaleString()}</span>
               </div>
             </div>
 
@@ -77,7 +88,7 @@ export const DepositFlow = () => {
             <div className="text-center">
               <h4 className="text-lg font-semibold text-foreground">Buy It Now</h4>
               <p className="text-sm text-muted-foreground mt-1">
-                {state.discountUnlocked ? 'At Your Discounted Price' : 'At Current Price'}
+                {discountUnlocked ? 'At Your Discounted Price' : 'At Current Price'}
               </p>
             </div>
 
@@ -85,9 +96,9 @@ export const DepositFlow = () => {
               <div className="text-2xl font-bold text-foreground">
                 ${currentPrice.toLocaleString()}
               </div>
-              {state.discountUnlocked && (
+              {discountUnlocked && (
                 <Badge variant="secondary" className="mt-2">
-                  ${state.priceData.discountAmount.toFixed(0)} Discount Applied
+                  ${priceData.discountAmount.toFixed(0)} Discount Applied
                 </Badge>
               )}
             </div>
