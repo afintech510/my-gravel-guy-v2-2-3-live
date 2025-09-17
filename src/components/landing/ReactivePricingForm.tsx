@@ -91,6 +91,7 @@ export const ReactivePricingForm = () => {
   }, [watchedValues.zip, watchedValues.street, watchedValues.city, watchedValues.state, quantity, setDeliveryAddress, setQuantity]);
 
   const handleMaterialSelect = (material: any) => {
+    console.log('[ReactivePricingForm] Material selected:', material?.name || 'none');
     setSelectedMaterial(material);
     trackFormInteraction('material_selected', { material: material?.name });
   };
@@ -176,6 +177,13 @@ export const ReactivePricingForm = () => {
               onProductSelected={handleMaterialSelect}
               selectedProduct={state.selectedMaterial}
             />
+            
+            {/* Debug: Show selected material */}
+            {state.selectedMaterial && (
+              <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm">
+                ✓ Selected: <strong>{state.selectedMaterial.name}</strong>
+              </div>
+            )}
 
             {state.selectedMaterial && (
               <div className="space-y-6 p-4 bg-muted/50 rounded-lg">

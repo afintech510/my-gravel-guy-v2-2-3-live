@@ -87,21 +87,29 @@ export const LandingPageProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [setState]);
 
   const setSelectedMaterial = useCallback((material: Product | null) => {
-    setState(prev => ({ ...prev, selectedMaterial: material, formStep: material ? 'contact' : 'material' }));
-    
-    if (material) {
-      trackEvent('view_item', 'landing_page', material.name, state.quantity);
+    setState(prev => {
+      const newState: LandingPageState = { 
+        ...prev, 
+        selectedMaterial: material, 
+        formStep: material ? 'contact' : 'material' 
+      };
       
-      // Track ecommerce view_item event
-      trackEcommerce('view_item', [{
-        item_id: material.id,
-        item_name: material.name,
-        item_category: material.category,
-        quantity: state.quantity,
-        price: material.price
-      }]);
-    }
-  }, [setState, state.quantity]);
+      if (material) {
+        trackEvent('view_item', 'landing_page', material.name, prev.quantity);
+        
+        // Track ecommerce view_item event
+        trackEcommerce('view_item', [{
+          item_id: material.id,
+          item_name: material.name,
+          item_category: material.category,
+          quantity: prev.quantity,
+          price: material.price
+        }]);
+      }
+      
+      return newState;
+    });
+  }, [setState]);
 
   const setQuantity = useCallback((quantity: number) => {
     setState(prev => ({ ...prev, quantity }));
