@@ -46,7 +46,7 @@ export const ReactivePricingForm = () => {
 
   const [showContactForm, setShowContactForm] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
-  const [localQuantity, setLocalQuantity] = useState(state.quantity);
+  const [quantity, setQuantityState] = useState(10);
   const calculatorRef = useRef<HTMLDivElement>(null);
 
   const { data: products = [], isLoading: productsLoading } = useQuery({
@@ -76,12 +76,7 @@ export const ReactivePricingForm = () => {
 
   const watchedValues = watch();
 
-  // Sync local quantity with global state
-  React.useEffect(() => {
-    setLocalQuantity(state.quantity);
-  }, [state.quantity]);
-
-  // Update context when form values change
+  // Update context when material or ZIP code changes
   React.useEffect(() => {
     if (watchedValues.zip && watchedValues.zip.length >= 5) {
       setDeliveryAddress({
@@ -90,8 +85,10 @@ export const ReactivePricingForm = () => {
         state: watchedValues.state,
         zip: watchedValues.zip,
       });
+      // Update global quantity only when we have a ZIP code
+      setQuantity(quantity);
     }
-  }, [watchedValues, setDeliveryAddress]);
+  }, [watchedValues.zip, watchedValues.street, watchedValues.city, watchedValues.state, quantity, setDeliveryAddress, setQuantity]);
 
   const handleMaterialSelect = (material: any) => {
     setSelectedMaterial(material);
@@ -100,16 +97,24 @@ export const ReactivePricingForm = () => {
 
   const handleQuantityChange = (value: number[]) => {
     const newQuantity = value[0];
-    setLocalQuantity(newQuantity);
-    setQuantity(newQuantity);
+    setQuantityState(newQuantity);
     trackFormInteraction('quantity_changed', { quantity: newQuantity });
+    
+    // Update global state only if we have a ZIP code
+    if (watchedValues.zip && watchedValues.zip.length >= 5) {
+      setQuantity(newQuantity);
+    }
   };
 
   const handleCalculatorResult = (result: { totalTons: number; totalCubicYards: number; totalSquareFeet: number }) => {
     const roundedTons = Math.max(3, Math.ceil(result.totalTons)); // Minimum 3 tons
-    setLocalQuantity(roundedTons);
-    setQuantity(roundedTons);
+    setQuantityState(roundedTons);
     trackFormInteraction('calculator_used', { calculatedTons: result.totalTons, usedTons: roundedTons });
+    
+    // Update global state only if we have a ZIP code
+    if (watchedValues.zip && watchedValues.zip.length >= 5) {
+      setQuantity(roundedTons);
+    }
   };
 
   const scrollToCalculator = () => {
@@ -177,7 +182,7 @@ export const ReactivePricingForm = () => {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <Label className="text-base font-medium">
-                      Amount: {localQuantity} tons
+                      Amount: {quantity} tons
                     </Label>
                     <Button
                       variant="outline"
@@ -191,7 +196,7 @@ export const ReactivePricingForm = () => {
                   </div>
                   <div className="mt-3">
                     <Slider
-                      value={[localQuantity]}
+                      value={[quantity]}
                       onValueChange={handleQuantityChange}
                       min={3}
                       max={50}
@@ -283,8 +288,8 @@ export const ReactivePricingForm = () => {
             </div>
           )}
 
-          {/* Step 2: Price Display and Discount Offer */}
-          {state.priceData && (
+          {/* Step 2: Price Display and Discount Offer - Only show when ZIP code is entered */}
+          {state.priceData && watchedValues.zip && watchedValues.zip.length >= 5 && (
             <div className="space-y-6">
               <PriceScale />
 
