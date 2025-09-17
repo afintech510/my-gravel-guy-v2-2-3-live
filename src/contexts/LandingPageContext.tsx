@@ -135,7 +135,11 @@ export const LandingPageProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [setState, state.utmParams]);
 
   const calculatePricing = useCallback(async () => {
-    if (!state.selectedMaterial || !state.deliveryAddress.zip) return;
+    const material = state.selectedMaterial;
+    const quantity = state.quantity;
+    const zipCode = state.deliveryAddress.zip;
+    
+    if (!material || !zipCode) return;
 
     setState(prev => ({ ...prev, isCalculatingPrice: true }));
 
@@ -145,15 +149,15 @@ export const LandingPageProvider: React.FC<{ children: React.ReactNode }> = ({ c
       const { getPriceAdjustmentForZipCode } = await import('@/services/products/pricingUtils');
 
       // Calculate exponential price
-      const exponentialResult = calculateProductExponentialPrice(state.selectedMaterial, state.quantity);
+      const exponentialResult = calculateProductExponentialPrice(material, quantity);
       
       // Apply ZIP adjustment if available
       let zipAdjustment = 1;
-      if (state.deliveryAddress.zip) {
-        zipAdjustment = await getPriceAdjustmentForZipCode(state.deliveryAddress.zip);
+      if (zipCode) {
+        zipAdjustment = await getPriceAdjustmentForZipCode(zipCode);
       }
 
-      const normalPrice = Math.round(exponentialResult.pricePerTon * zipAdjustment * state.quantity * 100) / 100;
+      const normalPrice = Math.round(exponentialResult.pricePerTon * zipAdjustment * quantity * 100) / 100;
       const discountAmount = Math.min(normalPrice * 0.05, 50);
       const discountedPrice = normalPrice - discountAmount;
 
@@ -162,8 +166,8 @@ export const LandingPageProvider: React.FC<{ children: React.ReactNode }> = ({ c
         discountedPrice,
         discountAmount,
         depositEstimate: 199,
-        cashPriceEstimate: Math.round(discountedPrice * 0.95 * 100) / 100, // 5% cash discount estimate
-        cardPriceEstimate: discountedPrice,
+        cashPriceEstimate: Math.round(normalPrice * 0.80 * 100) / 100, // 20% off normal price
+        cardPriceEstimate: Math.round(discountedPrice * 0.95 * 100) / 100, // 5% off buy it now price
       };
 
       setState(prev => ({ ...prev, priceData, isCalculatingPrice: false }));
@@ -171,7 +175,7 @@ export const LandingPageProvider: React.FC<{ children: React.ReactNode }> = ({ c
       console.error('Error calculating pricing:', error);
       setState(prev => ({ ...prev, isCalculatingPrice: false }));
     }
-  }, [state.selectedMaterial, state.quantity, state.deliveryAddress.zip]);
+  }, []);
 
   const setFormStep = useCallback((step: LandingPageState['formStep']) => {
     setState(prev => ({ ...prev, formStep: step }));
@@ -222,7 +226,8 @@ export const LandingPageProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (state.selectedMaterial && state.deliveryAddress.zip) {
       calculatePricing();
     }
-  }, [state.selectedMaterial, state.quantity, state.deliveryAddress.zip]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.selectedMaterial?.id, state.quantity, state.deliveryAddress.zip]);
 
   const contextValue: LandingPageContextType = {
     state,
