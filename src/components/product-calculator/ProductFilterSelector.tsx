@@ -17,6 +17,8 @@ export default function ProductFilterSelector({ onProductSelected, selectedProdu
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   
+  console.log('[ProductFilterSelector] Current selectedProduct:', selectedProduct?.name || 'none');
+  
   // Updated categories to mirror the /shop page
   const categories = [
     { id: 'all', label: 'All Products', icon: <Package className="h-5 w-5" /> },
@@ -148,6 +150,7 @@ export default function ProductFilterSelector({ onProductSelected, selectedProdu
 
   // Select a product
   const handleProductSelect = (product: Product) => {
+    console.log('[ProductFilterSelector] Product selected:', product.name);
     onProductSelected(product);
   };
 
@@ -191,10 +194,10 @@ export default function ProductFilterSelector({ onProductSelected, selectedProdu
                 key={product.id}
                 onClick={() => handleProductSelect(product)}
                 className={cn(
-                  "text-left p-4 border rounded-md transition-all hover:shadow-md",
+                  "text-left p-4 border-2 rounded-md transition-all hover:shadow-md",
                   selectedProduct?.id === product.id 
-                    ? "border-primary bg-primary/5" 
-                    : "border-gray-200 bg-white"
+                    ? "border-primary bg-primary/10 ring-2 ring-primary/20" 
+                    : "border-gray-200 bg-white hover:border-gray-300"
                 )}
               >
                 <div className="flex items-start">
@@ -207,11 +210,22 @@ export default function ProductFilterSelector({ onProductSelected, selectedProdu
                       />
                     </div>
                   )}
-                  <div>
-                    <h4 className="font-medium text-gray-900">{product.name}</h4>
+                  <div className="flex-1">
+                    <h4 className={cn(
+                      "font-medium",
+                      selectedProduct?.id === product.id ? "text-primary" : "text-gray-900"
+                    )}>
+                      {product.name}
+                    </h4>
                     <p className="text-xs text-gray-500 mt-1 line-clamp-1">
                       {product.size || product.specifications?.size || ""}
                     </p>
+                    {selectedProduct?.id === product.id && (
+                      <div className="flex items-center mt-2">
+                        <div className="w-2 h-2 bg-primary rounded-full mr-2"></div>
+                        <span className="text-xs font-medium text-primary">Selected</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </button>
