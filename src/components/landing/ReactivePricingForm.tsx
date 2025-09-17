@@ -1,0 +1,413 @@
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, Tag, Lock, Unlock, Calculator } from 'lucide-react';
+import { useLandingPage } from '@/contexts/LandingPageContext';
+import { PriceScale } from './PriceScale';
+import { DepositFlow } from './DepositFlow';
+import { useQuery } from '@tanstack/react-query';
+import { getProducts } from '@/services/productService';
+
+const contactSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Please enter a valid email address'),
+  phone: z.string().min(10, 'Please enter a valid phone number'),
+  street: z.string().min(5, 'Please enter a valid street address'),
+  city: z.string().min(2, 'Please enter a valid city'),
+  state: z.string().min(2, 'Please select a state'),
+  zip: z.string().min(5, 'Please enter a valid ZIP code'),
+  consent: z.boolean().refine(val => val === true, 'You must agree to receive communications'),
+});
+
+type ContactForm = z.infer<typeof contactSchema>;
+
+export const ReactivePricingForm = () => {
+  const { 
+    state, 
+    setSelectedMaterial, 
+    setQuantity, 
+    setDeliveryAddress, 
+    setContactInfo, 
+    unlockDiscount,
+    trackFormInteraction 
+  } = useLandingPage();
+
+  const [showContactForm, setShowContactForm] = useState(false);
+
+  const { data: products = [], isLoading: productsLoading } = useQuery({
+    queryKey: ['products'],
+    queryFn: () => getProducts(),
+  });
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting }
+  } = useForm<ContactForm>({
+    resolver: zodResolver(contactSchema),
+    defaultValues: {
+      name: state.contactInfo?.name || '',
+      email: state.contactInfo?.email || '',
+      phone: state.contactInfo?.phone || '',
+      street: state.deliveryAddress?.street || '',
+      city: state.deliveryAddress?.city || '',
+      state: state.deliveryAddress?.state || '',
+      zip: state.deliveryAddress?.zip || '',
+      consent: false,
+    }
+  });
+
+  const watchedValues = watch();
+
+  // Update context when form values change
+  React.useEffect(() => {
+    if (watchedValues.zip && watchedValues.zip.length >= 5) {
+      setDeliveryAddress({
+        street: watchedValues.street,
+        city: watchedValues.city,
+        state: watchedValues.state,
+        zip: watchedValues.zip,
+      });
+    }
+  }, [watchedValues, setDeliveryAddress]);
+
+  const handleMaterialSelect = (materialId: string) => {
+    const material = products.find(p => p.id === materialId);
+    if (material) {
+      setSelectedMaterial(material);
+      trackFormInteraction('material_selected', { material: material.name });
+    }
+  };
+
+  const handleQuantityChange = (value: number[]) => {
+    const newQuantity = value[0];
+    setQuantity(newQuantity);
+    trackFormInteraction('quantity_changed', { quantity: newQuantity });
+  };
+
+  const onContactSubmit = async (data: ContactForm) => {
+    try {
+      const contactInfo = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        zipCode: data.zip,
+      };
+
+      setContactInfo(contactInfo);
+      setDeliveryAddress({
+        street: data.street,
+        city: data.city,
+        state: data.state,
+        zip: data.zip,
+      });
+
+      unlockDiscount();
+      trackFormInteraction('contact_form_submitted', contactInfo);
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+    }
+  };
+
+  const discountAmount = state.priceData ? Math.min(state.priceData.normalPrice * 0.05, 50) : 50;
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      <Card className="shadow-2xl border-0 bg-card">
+        <CardHeader className="text-center pb-6">
+          <CardTitle className="text-2xl md:text-3xl font-bold text-foreground">
+            Get Your Instant Quote
+          </CardTitle>
+          <p className="text-muted-foreground">
+            See pricing immediately and unlock your discount
+          </p>
+        </CardHeader>
+
+        <CardContent className="space-y-8">
+          {/* Step 1: Material Selection */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold">
+                1
+              </div>
+              <h3 className="text-lg font-semibold text-foreground">Select Your Material</h3>
+            </div>
+
+            <div className="grid gap-4">
+              <Label htmlFor="material">Material Type</Label>
+              <Select
+                value={state.selectedMaterial?.id || ''}
+                onValueChange={handleMaterialSelect}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Choose your material..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {productsLoading ? (
+                    <SelectItem value="loading" disabled>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Loading materials...
+                    </SelectItem>
+                  ) : (
+                    products.map((product) => (
+                      <SelectItem key={product.id} value={product.id}>
+                        <div className="flex items-center gap-2">
+                          <span>{product.name}</span>
+                          {product.category && (
+                            <Badge variant="secondary" className="text-xs">
+                              {product.category}
+                            </Badge>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {state.selectedMaterial && (
+              <div className="space-y-6 p-4 bg-muted/50 rounded-lg">
+                <div>
+                  <Label className="text-base font-medium">
+                    Amount: {state.quantity} tons
+                  </Label>
+                  <div className="mt-3">
+                    <Slider
+                      value={[state.quantity]}
+                      onValueChange={handleQuantityChange}
+                      min={3}
+                      max={50}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                    <span>3 tons (minimum)</span>
+                    <span>50+ tons</span>
+                  </div>
+                </div>
+
+                {/* Address Fields */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="street">Street Address</Label>
+                    <Input
+                      id="street"
+                      {...register('street')}
+                      placeholder="123 Main Street"
+                      className={errors.street ? 'border-destructive' : ''}
+                    />
+                    {errors.street && (
+                      <p className="text-sm text-destructive mt-1">{errors.street.message}</p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="city">City</Label>
+                    <Input
+                      id="city"
+                      {...register('city')}
+                      placeholder="Austin"
+                      className={errors.city ? 'border-destructive' : ''}
+                    />
+                    {errors.city && (
+                      <p className="text-sm text-destructive mt-1">{errors.city.message}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="state">State</Label>
+                    <Select
+                      value={watchedValues.state || ''}
+                      onValueChange={(value) => setValue('state', value)}
+                    >
+                      <SelectTrigger className={errors.state ? 'border-destructive' : ''}>
+                        <SelectValue placeholder="Select state" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="TX">Texas</SelectItem>
+                        <SelectItem value="CA">California</SelectItem>
+                        <SelectItem value="FL">Florida</SelectItem>
+                        <SelectItem value="NY">New York</SelectItem>
+                        {/* Add more states as needed */}
+                      </SelectContent>
+                    </Select>
+                    {errors.state && (
+                      <p className="text-sm text-destructive mt-1">{errors.state.message}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="zip">ZIP Code</Label>
+                    <Input
+                      id="zip"
+                      {...register('zip')}
+                      placeholder="73301"
+                      className={errors.zip ? 'border-destructive' : ''}
+                    />
+                    {errors.zip && (
+                      <p className="text-sm text-destructive mt-1">{errors.zip.message}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Step 2: Price Display and Discount Offer */}
+          {state.priceData && (
+            <div className="space-y-6">
+              <PriceScale />
+
+              {!state.discountUnlocked && (
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardContent className="p-6">
+                    <div className="text-center space-y-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <Tag className="h-5 w-5 text-primary" />
+                        <h3 className="text-lg font-semibold text-foreground">
+                          Unlock Your Discount
+                        </h3>
+                      </div>
+                      
+                      <p className="text-muted-foreground">
+                        Get <strong className="text-primary">${discountAmount.toFixed(0)} off</strong> when you add your contact information
+                      </p>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setShowContactForm(!showContactForm)}
+                        className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                      >
+                        {showContactForm ? (
+                          <>
+                            <Lock className="h-4 w-4 mr-2" />
+                            Hide Contact Form
+                          </>
+                        ) : (
+                          <>
+                            <Unlock className="h-4 w-4 mr-2" />
+                            Add My Info & Save ${discountAmount.toFixed(0)}
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Step 3: Contact Form (Lead Gate) */}
+              {(showContactForm || state.discountUnlocked) && !state.discountUnlocked && (
+                <form onSubmit={handleSubmit(onContactSubmit)} className="space-y-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold">
+                      2
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground">Your Contact Information</h3>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="name">Full Name</Label>
+                      <Input
+                        id="name"
+                        {...register('name')}
+                        placeholder="John Smith"
+                        className={errors.name ? 'border-destructive' : ''}
+                      />
+                      {errors.name && (
+                        <p className="text-sm text-destructive mt-1">{errors.name.message}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="email">Email Address</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        {...register('email')}
+                        placeholder="john@example.com"
+                        className={errors.email ? 'border-destructive' : ''}
+                      />
+                      {errors.email && (
+                        <p className="text-sm text-destructive mt-1">{errors.email.message}</p>
+                      )}
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <Label htmlFor="phone">Phone Number</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        {...register('phone')}
+                        placeholder="(555) 123-4567"
+                        className={errors.phone ? 'border-destructive' : ''}
+                      />
+                      {errors.phone && (
+                        <p className="text-sm text-destructive mt-1">{errors.phone.message}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="consent"
+                    checked={watchedValues.consent || false}
+                    onCheckedChange={(checked) => setValue('consent', checked as boolean)}
+                      className={errors.consent ? 'border-destructive' : ''}
+                    />
+                    <div className="text-sm">
+                      <label htmlFor="consent" className="text-foreground cursor-pointer">
+                        I agree to receive text messages and calls about my order. Msg & data rates may apply.
+                      </label>
+                      {errors.consent && (
+                        <p className="text-destructive mt-1">{errors.consent.message}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                    size="lg"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Unlocking Discount...
+                      </>
+                    ) : (
+                      <>
+                        <Calculator className="h-4 w-4 mr-2" />
+                        Unlock ${discountAmount.toFixed(0)} Discount
+                      </>
+                    )}
+                  </Button>
+                </form>
+              )}
+
+              {/* Step 4: Deposit Flow (Shown after discount unlocked or at base price) */}
+              {(state.discountUnlocked || state.formStep === 'review') && (
+                <DepositFlow />
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
