@@ -22,6 +22,7 @@ import { getProducts } from '@/services/productService';
 import { Product } from '@/services/productTypes';
 import { calculateFinalPrice } from '@/services/products/pricingUtils';
 import { trackEvent, trackEcommerce } from '@/utils/analytics';
+import { formatCoverageText } from '@/utils/coverageCalculator';
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -151,9 +152,8 @@ export const ReactivePricingForm = () => {
   };
 
   const handleCalculatorResult = (result: { totalTons: number; totalCubicYards: number; totalSquareFeet: number }) => {
-    const roundedTons = Math.max(3, Math.ceil(result.totalTons));
-    setQuantity(roundedTons);
-    trackFormInteraction('calculator_used', { calculatedTons: result.totalTons, usedTons: roundedTons });
+    // Only track the calculation, don't automatically update the quantity
+    trackFormInteraction('calculator_used', { calculatedTons: result.totalTons });
   };
 
   const scrollToCalculator = () => {
@@ -221,9 +221,16 @@ export const ReactivePricingForm = () => {
               <div className="space-y-6 p-4 bg-muted/50 rounded-lg">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <Label className="text-base font-medium">
-                      Amount: {quantity} tons
-                    </Label>
+                    <div className="space-y-1">
+                      <Label className="text-base font-medium">
+                        Amount: {quantity} tons
+                      </Label>
+                      {selectedProduct && (
+                        <p className="text-sm text-muted-foreground italic">
+                          {formatCoverageText(quantity, selectedProduct.tonYardRatio)}
+                        </p>
+                      )}
+                    </div>
                     <Button
                       variant="outline"
                       size="sm"
