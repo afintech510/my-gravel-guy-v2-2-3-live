@@ -12,7 +12,7 @@ import PaymentMethodLogos from '../components/payment/PaymentMethodLogos';
 import type { OrderInsertData } from '../services/productTypes';
 
 const Checkout = () => {
-  const { items, total, discountTotal, clearCart, appliedCoupon, couponDiscount } = useCart();
+  const { items, total, discountTotal, clearCart, appliedCoupon, couponDiscount, depositOption, getPaymentTotal } = useCart();
   const [isLoading, setIsLoading] = useState(false);
   const [isTestingDB, setIsTestingDB] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
@@ -331,7 +331,8 @@ const Checkout = () => {
       const requestOptions: any = {
         body: JSON.stringify({ 
           items: formattedItems,
-          orderId: orderId
+          orderId: orderId,
+          depositOption: depositOption
         })
       };
       

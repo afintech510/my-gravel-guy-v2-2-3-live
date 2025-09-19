@@ -54,7 +54,7 @@ serve(async (req) => {
     
     console.log('Auth check result:', { hasUser: !!user, userEmail: user?.email });
 
-    const { items, orderId } = await req.json();
+    const { items, orderId, depositOption } = await req.json();
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return new Response(
@@ -94,8 +94,9 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
 
-    // Calculate total amount in cents
-    const totalAmount = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity * 100), 0);
+    // Calculate total amount in cents - use $199 if deposit option is selected
+    const baseAmount = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity * 100), 0);
+    const totalAmount = depositOption ? 19900 : baseAmount; // $199 in cents
 
     // Create Stripe Checkout Session with manual capture for authorization hold
     const session = await stripe.checkout.sessions.create({
@@ -126,7 +127,9 @@ serve(async (req) => {
         orderId: finalOrderId,
         userId: user?.id || 'guest',
         userEmail: user?.email || contactEmail,
-        isGuest: user ? 'false' : 'true'
+        isGuest: user ? 'false' : 'true',
+        depositOption: depositOption ? 'true' : 'false',
+        fullOrderAmount: (baseAmount / 100).toString()
       },
       customer_email: contactEmail,
       billing_address_collection: 'required',
