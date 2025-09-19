@@ -103,6 +103,7 @@ serve(async (req) => {
       payment_intent_data: {
         capture_method: 'manual', // This creates an authorization hold instead of immediate charge
       },
+      submit_button_text: 'authorize', // Custom button text for authorization hold
       line_items: items.map(item => ({
         price_data: {
           currency: 'usd',
