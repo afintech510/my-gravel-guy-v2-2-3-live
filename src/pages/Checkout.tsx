@@ -125,7 +125,7 @@ const Checkout = () => {
         deliveryInstructions: item.deliveryInstructions || undefined,
         contactName: item.contactInfo?.name || undefined,
         contactPhone: item.contactInfo?.phone || undefined,
-        contactEmail: item.contactInfo?.email || undefined,
+        contactEmail: item.contactInfo?.email || undefined, // This is what create-auth-hold looks for
       };
 
       return {
@@ -344,11 +344,14 @@ const Checkout = () => {
       
       const { data, error } = await supabase.functions.invoke('create-auth-hold', requestOptions);
       
+      console.log('=== CREATE-AUTH-HOLD RESPONSE ===', { data, error });
+      
       if (error) {
         throw new Error(`Authorization hold error: ${error.message}`);
       }
       
       if (!data || !data.url) {
+        console.log('Invalid response data:', data);
         throw new Error('Invalid response from payment service - no checkout URL received');
       }
       
