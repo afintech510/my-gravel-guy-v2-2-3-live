@@ -110,13 +110,22 @@ const Checkout = () => {
 
   // Transform cart items to a format suitable for Stripe with proper contact info mapping
   const formatCartItemsForStripe = () => {
-    return items.map(item => {
-      const itemTotal = item.price * item.tons;
-      // Apply cart-level discount proportionally across items
-      const itemProportion = itemTotal / total;
-      const itemDiscount = couponDiscount * itemProportion;
-      const discountedTotal = itemTotal - itemDiscount;
-      const discountedPricePerTon = discountedTotal / item.tons;
+    return items.map((item, index) => {
+      let itemTotal, discountedPricePerTon;
+      
+      if (depositOption) {
+        // For deposit option, split the $199 across all items proportionally
+        const itemProportion = (item.price * item.tons) / total;
+        itemTotal = 199 * itemProportion;
+        discountedPricePerTon = itemTotal / item.tons;
+      } else {
+        // Regular pricing with coupon discounts
+        itemTotal = item.price * item.tons;
+        const itemProportion = itemTotal / total;
+        const itemDiscount = couponDiscount * itemProportion;
+        const discountedTotal = itemTotal - itemDiscount;
+        discountedPricePerTon = discountedTotal / item.tons;
+      }
 
       const metadata = {
         deliveryDate: item.deliveryDate ? item.deliveryDate.toISOString() : undefined,
@@ -434,7 +443,10 @@ const Checkout = () => {
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-semibold">
-                          ${(item.price * item.tons).toFixed(2)}
+                          {depositOption 
+                            ? `$${(199 / items.length).toFixed(2)} (Deposit Share)`
+                            : `$${(item.price * item.tons).toFixed(2)}`
+                          }
                         </div>
                       </div>
                     </div>
