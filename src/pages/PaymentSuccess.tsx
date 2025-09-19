@@ -50,6 +50,9 @@ const PaymentSuccess = () => {
   const [autoInsertAttempted, setAutoInsertAttempted] = useState(false);
   const [emailsSent, setEmailsSent] = useState(false);
   const [emailStatus, setEmailStatus] = useState<{ customer: boolean; business: boolean } | null>(null);
+  const [isDepositPayment, setIsDepositPayment] = useState(false);
+  const [depositAmount, setDepositAmount] = useState<number | null>(null);
+  const [originalOrderTotal, setOriginalOrderTotal] = useState<number | null>(null);
   
   // Extract product IDs from order items for name resolution
   const productIds = orderItems.map(item => item.product_name); // product_name currently contains ID
@@ -317,6 +320,13 @@ const PaymentSuccess = () => {
               setOrderItems(displayOrders);
               setDbInsertComplete(true);
               
+              // Check for deposit payment information
+              if (data.orders[0]?.is_deposit_payment) {
+                setIsDepositPayment(true);
+                setDepositAmount(data.orders[0]?.deposit_amount || 199);
+                setOriginalOrderTotal(data.orders[0]?.balance_due ? data.orders[0].balance_due + (data.orders[0]?.deposit_amount || 199) : null);
+              }
+              
               // Send emails for the completed order
               await handleEmailSending(data.orders, currentOrderId);
             } 
@@ -455,6 +465,13 @@ const PaymentSuccess = () => {
       
       setOrderItems(displayOrders);
       setDbInsertComplete(true);
+      
+      // Check for deposit payment information
+      if (insertedOrders[0]?.is_deposit_payment) {
+        setIsDepositPayment(true);
+        setDepositAmount(insertedOrders[0]?.deposit_amount || 199);
+        setOriginalOrderTotal(insertedOrders[0]?.balance_due ? insertedOrders[0].balance_due + (insertedOrders[0]?.deposit_amount || 199) : null);
+      }
 
       console.log('=== DATABASE INSERT SUCCESSFUL ===', { 
         recordCount: insertedOrders.length,
@@ -1110,18 +1127,41 @@ const PaymentSuccess = () => {
                 <CheckCircle className="h-12 w-12 text-green-600" />
               </div>
             </div>
-            <h1 className="text-3xl font-bold mb-4 text-green-800">Order Confirmed!</h1>
+            <h1 className="text-3xl font-bold mb-4 text-green-800">
+              {isDepositPayment ? 'Deposit Payment Confirmed!' : 'Order Confirmed!'}
+            </h1>
             {orderId && (
               <p className="text-green-700 mb-2 font-medium">
                 Order ID: {orderId}
               </p>
             )}
-            <p className="text-green-700 mb-2">
-              Thank you for your purchase. Your order has been processed successfully.
-            </p>
-            <p className="text-green-600">
-              You will receive confirmation emails shortly with your delivery details.
-            </p>
+            {isDepositPayment ? (
+              <>
+                <p className="text-green-700 mb-2 font-medium text-lg">
+                  Deposit Paid: ${depositAmount?.toFixed(2) || '199.00'}
+                </p>
+                {originalOrderTotal && (
+                  <p className="text-green-600 mb-2">
+                    Maximum Remaining Balance: ${(originalOrderTotal - (depositAmount || 199)).toFixed(2)}
+                  </p>
+                )}
+                <p className="text-green-700 mb-2">
+                  Thank you for your deposit payment. Your order has been received.
+                </p>
+                <p className="text-green-600 font-medium">
+                  GravelGuy will present final offers within 24hrs.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-green-700 mb-2">
+                  Thank you for your purchase. Your order has been processed successfully.
+                </p>
+                <p className="text-green-600">
+                  You will receive confirmation emails shortly with your delivery details.
+                </p>
+              </>
+            )}
             {usedFallback && (
               <p className="text-amber-600 text-sm mt-2">
                 <em>Order processed using backup data.</em>
@@ -1155,7 +1195,10 @@ const PaymentSuccess = () => {
                         </h3>
                         <p className="text-gray-600">Quantity: {item.quantity} tons</p>
                         <p className="text-lg font-semibold text-green-600">
-                          ${item.total_price.toFixed(2)}
+                          {isDepositPayment 
+                            ? `$${(depositAmount || 199).toFixed(2)} (Deposit)`
+                            : `$${item.total_price.toFixed(2)}`
+                          }
                         </p>
                       </div>
                       <div className="text-right">
@@ -1237,35 +1280,71 @@ const PaymentSuccess = () => {
           <div>
             <h2 className="text-xl font-semibold mb-4">What Happens Next?</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white p-5 rounded-lg border">
-                <div className="flex items-center mb-3">
-                  <span className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold mr-2">1</span>
-                  <h3 className="font-medium">Order Processing</h3>
-                </div>
-                <p className="text-sm text-gray-600">
-                  We've received your order and are preparing your delivery. You'll receive a confirmation email soon.
-                </p>
-              </div>
-              
-              <div className="bg-white p-5 rounded-lg border">
-                <div className="flex items-center mb-3">
-                  <span className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold mr-2">2</span>
-                  <h3 className="font-medium">Delivery Preparation</h3>
-                </div>
-                <p className="text-sm text-gray-600">
-                  Our team will prepare your materials and schedule the delivery for your selected date.
-                </p>
-              </div>
-              
-              <div className="bg-white p-5 rounded-lg border">
-                <div className="flex items-center mb-3">
-                  <span className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold mr-2">3</span>
-                  <h3 className="font-medium">Delivery</h3>
-                </div>
-                <p className="text-sm text-gray-600">
-                  On your scheduled delivery date, our driver will deliver your materials to the specified location.
-                </p>
-              </div>
+              {isDepositPayment ? (
+                <>
+                  <div className="bg-white p-5 rounded-lg border">
+                    <div className="flex items-center mb-3">
+                      <span className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold mr-2">1</span>
+                      <h3 className="font-medium">Deposit Received</h3>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      Your ${depositAmount?.toFixed(2) || '199.00'} deposit has been received and your order is now in our system.
+                    </p>
+                  </div>
+                  
+                  <div className="bg-white p-5 rounded-lg border">
+                    <div className="flex items-center mb-3">
+                      <span className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold mr-2">2</span>
+                      <h3 className="font-medium">Price Negotiation</h3>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      Within 24 hours, MyGravelGuy will present you with final pricing options including card and cash prices.
+                    </p>
+                  </div>
+                  
+                  <div className="bg-white p-5 rounded-lg border">
+                    <div className="flex items-center mb-3">
+                      <span className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold mr-2">3</span>
+                      <h3 className="font-medium">Final Payment & Delivery</h3>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      Once you approve the final pricing, we'll schedule your delivery and collect the remaining balance.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="bg-white p-5 rounded-lg border">
+                    <div className="flex items-center mb-3">
+                      <span className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold mr-2">1</span>
+                      <h3 className="font-medium">Order Processing</h3>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      We've received your order and are preparing your delivery. You'll receive a confirmation email soon.
+                    </p>
+                  </div>
+                  
+                  <div className="bg-white p-5 rounded-lg border">
+                    <div className="flex items-center mb-3">
+                      <span className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold mr-2">2</span>
+                      <h3 className="font-medium">Delivery Preparation</h3>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      Our team will prepare your materials and schedule the delivery for your selected date.
+                    </p>
+                  </div>
+                  
+                  <div className="bg-white p-5 rounded-lg border">
+                    <div className="flex items-center mb-3">
+                      <span className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold mr-2">3</span>
+                      <h3 className="font-medium">Delivery</h3>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      On your scheduled delivery date, our driver will deliver your materials to the specified location.
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
           
