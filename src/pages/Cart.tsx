@@ -180,18 +180,18 @@ const Cart = () => {
               />
             </div>
           ))}
+          
+          {/* Deposit Option */}
+          <DepositOption 
+            isSelected={depositOption}
+            onToggle={toggleDepositOption}
+            totalOrder={discountTotal}
+          />
         </div>
         
         <div className="lg:col-span-1">
           <div className="bg-gray-50 rounded-lg p-6 sticky top-24">
             <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-            
-            {/* Deposit Option */}
-            <DepositOption 
-              isSelected={depositOption}
-              onToggle={toggleDepositOption}
-              totalOrder={discountTotal}
-            />
             
             {/* Order summary details */}
             <div className="space-y-2 mb-4 pb-4 border-b">
