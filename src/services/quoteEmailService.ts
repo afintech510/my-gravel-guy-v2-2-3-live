@@ -12,6 +12,7 @@ interface QuoteFormData {
   selectedProduct?: { name: string } | null;
   estimatedTons?: number;
   projectType?: string;
+  material?: string;
   sourcePage?: string;
 }
 
@@ -48,10 +49,11 @@ export const sendQuoteRequestEmail = async (formData: QuoteFormData): Promise<{ 
     });
 
     // Send the email
+    const materialSubject = formData.material || formData.selectedProduct?.name || 'General Inquiry';
     const { data, error } = await supabase.functions.invoke('send-email', {
       body: {
         to: 'sales@mygravelguy.com',
-        subject: `Quote Request from ${formData.name} - ${formData.selectedProduct?.name || 'General Inquiry'}`,
+        subject: `Quote Request from ${formData.name} - ${materialSubject}`,
         html: emailHtml,
         type: 'internal_notification',
         orderData: {

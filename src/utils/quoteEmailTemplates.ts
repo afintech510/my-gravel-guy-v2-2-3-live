@@ -6,12 +6,17 @@ interface QuoteFormData {
   message: string;
   zipCode: string;
   selectedProduct?: { name: string } | null;
+  material?: string;
   orderId?: string;
 }
 
 export const generateQuoteRequestEmail = (formData: QuoteFormData): string => {
   const productSection = formData.selectedProduct 
     ? `<p><strong>Product Interest:</strong> ${formData.selectedProduct.name}</p>`
+    : '';
+
+  const materialSection = formData.material 
+    ? `<p><strong>Material Interest:</strong> ${formData.material}</p>`
     : '';
 
   const orderIdSection = formData.orderId
@@ -39,6 +44,7 @@ export const generateQuoteRequestEmail = (formData: QuoteFormData): string => {
         <p><strong>Phone:</strong> ${formData.phone}</p>
         <p><strong>ZIP Code:</strong> ${formData.zipCode}</p>
         ${productSection}
+        ${materialSection}
         
         <h2 style="color: #374151;">Project Details</h2>
         <div style="background-color: #f9fafb; padding: 15px; border-radius: 6px; border-left: 4px solid #2563eb;">

@@ -20,6 +20,7 @@ const formSchema = z.object({
   phone: z.string().min(10, 'Please enter a valid phone number'),
   zipCode: z.string().min(5, 'Please enter a valid ZIP code'),
   projectType: z.string().min(1, 'Please select a project type'),
+  material: z.string().optional(),
   estimatedTons: z.string().optional(),
   message: z.string().optional(),
   consent: z.boolean().refine((val) => val === true, {
@@ -39,6 +40,7 @@ const QuoteForm = () => {
       phone: '',
       zipCode: '',
       projectType: '',
+      material: '',
       estimatedTons: '',
       message: '',
       consent: false,
@@ -60,10 +62,11 @@ const QuoteForm = () => {
         name: data.name,
         email: data.email,
         phone: data.phone,
-        message: `Project Type: ${data.projectType}\n${data.estimatedTons ? `Estimated Tons: ${data.estimatedTons}\n` : ''}${data.message || 'No additional details provided'}`,
+        message: `Project Type: ${data.projectType}\n${data.material ? `Material: ${data.material}\n` : ''}${data.estimatedTons ? `Estimated Tons: ${data.estimatedTons}\n` : ''}${data.message || 'No additional details provided'}`,
         zipCode: data.zipCode,
         estimatedTons: data.estimatedTons ? parseInt(data.estimatedTons) : undefined,
         projectType: data.projectType,
+        material: data.material,
         sourcePage: 'General Quote Form',
         selectedProduct: null
       });
@@ -176,6 +179,75 @@ const QuoteForm = () => {
             )}
           />
           
+          <FormField
+            control={form.control}
+            name="material"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Material (Optional)</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select material" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="max-h-[200px]">
+                    <SelectItem value="#10 Screenings">#10 Screenings</SelectItem>
+                    <SelectItem value="#57 Crushed Stone">#57 Crushed Stone</SelectItem>
+                    <SelectItem value="#67 Stone">#67 Stone</SelectItem>
+                    <SelectItem value="#8 Stone">#8 Stone</SelectItem>
+                    <SelectItem value="Beach Sand">Beach Sand</SelectItem>
+                    <SelectItem value="Chocolate Brown Mulch">Chocolate Brown Mulch</SelectItem>
+                    <SelectItem value="Clean Fill">Clean Fill</SelectItem>
+                    <SelectItem value="Compost">Compost</SelectItem>
+                    <SelectItem value="Crushed Concrete">Crushed Concrete</SelectItem>
+                    <SelectItem value="Crushed Concrete 1 1/2&quot;">Crushed Concrete 1 1/2"</SelectItem>
+                    <SelectItem value="Crushed Concrete 2-3&quot;">Crushed Concrete 2-3"</SelectItem>
+                    <SelectItem value="Crushed Concrete 3/4&quot;">Crushed Concrete 3/4"</SelectItem>
+                    <SelectItem value="Crushed Gravel 1 1/2&quot;">Crushed Gravel 1 1/2"</SelectItem>
+                    <SelectItem value="Crushed Gravel 2-3&quot;">Crushed Gravel 2-3"</SelectItem>
+                    <SelectItem value="Crushed Gravel 3/4&quot;">Crushed Gravel 3/4"</SelectItem>
+                    <SelectItem value="Crushed Gravel 3/8&quot;">Crushed Gravel 3/8"</SelectItem>
+                    <SelectItem value="Crushed Stone 1 1/2&quot;">Crushed Stone 1 1/2"</SelectItem>
+                    <SelectItem value="Crushed Stone 2-3&quot;">Crushed Stone 2-3"</SelectItem>
+                    <SelectItem value="Crushed Stone 3/4&quot;">Crushed Stone 3/4"</SelectItem>
+                    <SelectItem value="Crushed Stone 3/8&quot;">Crushed Stone 3/8"</SelectItem>
+                    <SelectItem value="Crushed Stone #57">Crushed Stone #57</SelectItem>
+                    <SelectItem value="Crusher Run">Crusher Run</SelectItem>
+                    <SelectItem value="Decomposed Granite">Decomposed Granite</SelectItem>
+                    <SelectItem value="Dirt Fill">Dirt Fill</SelectItem>
+                    <SelectItem value="Drainage Rock">Drainage Rock</SelectItem>
+                    <SelectItem value="Driveway Gravel">Driveway Gravel</SelectItem>
+                    <SelectItem value="Driveway Gravel 1 1/2&quot;">Driveway Gravel 1 1/2"</SelectItem>
+                    <SelectItem value="Driveway Gravel 3/4&quot;">Driveway Gravel 3/4"</SelectItem>
+                    <SelectItem value="Driveway Gravel 3/8&quot;">Driveway Gravel 3/8"</SelectItem>
+                    <SelectItem value="Jet Black Mulch">Jet Black Mulch</SelectItem>
+                    <SelectItem value="Loam">Loam</SelectItem>
+                    <SelectItem value="Mason Sand">Mason Sand</SelectItem>
+                    <SelectItem value="Natural Brown Mulch">Natural Brown Mulch</SelectItem>
+                    <SelectItem value="Natural Gravel">Natural Gravel</SelectItem>
+                    <SelectItem value="Natural Pea Gravel 3/8&quot;">Natural Pea Gravel 3/8"</SelectItem>
+                    <SelectItem value="Pea Gravel">Pea Gravel</SelectItem>
+                    <SelectItem value="Playground Sand">Playground Sand</SelectItem>
+                    <SelectItem value="RCA Blend 3/4&quot;">RCA Blend 3/4"</SelectItem>
+                    <SelectItem value="Red Mulch">Red Mulch</SelectItem>
+                    <SelectItem value="River Rock">River Rock</SelectItem>
+                    <SelectItem value="River Rock Large">River Rock Large</SelectItem>
+                    <SelectItem value="Road Base">Road Base</SelectItem>
+                    <SelectItem value="Topsoil">Topsoil</SelectItem>
+                    <SelectItem value="Walkway Gravel">Walkway Gravel</SelectItem>
+                    <SelectItem value="Walkway Gravel 3/4&quot;">Walkway Gravel 3/4"</SelectItem>
+                    <SelectItem value="Walkway Gravel 3/8&quot;">Walkway Gravel 3/8"</SelectItem>
+                    <SelectItem value="Washed Sand">Washed Sand</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
           <FormField
             control={form.control}
             name="estimatedTons"
