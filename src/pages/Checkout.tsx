@@ -348,25 +348,18 @@ const Checkout = () => {
         throw new Error(`Authorization hold error: ${error.message}`);
       }
       
-      if (!data || !data.client_secret) {
-        throw new Error('Invalid response from payment service - no client secret received');
+      if (!data || !data.url) {
+        throw new Error('Invalid response from payment service - no checkout URL received');
       }
       
-      console.log('Authorization hold created:', { 
+      console.log('Authorization hold checkout created:', { 
         orderId, 
         hasAuth: !!session?.access_token,
-        paymentIntentId: data.payment_intent_id 
+        checkoutUrl: data.url 
       });
       
-      // Store payment intent data for verification
-      localStorage.setItem('auth-hold-data', JSON.stringify({
-        client_secret: data.client_secret,
-        payment_intent_id: data.payment_intent_id,
-        order_id: data.order_id
-      }));
-      
-      // Navigate to payment success page with payment intent ID
-      navigate(`/payment-success?payment_intent=${data.payment_intent_id}&order_id=${data.order_id}`);
+      // Redirect to Stripe checkout with authorization hold
+      window.location.href = data.url;
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -626,12 +619,12 @@ const Checkout = () => {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing Authorization...
+                  Processing...
                 </>
               ) : (
                 <>
                   <CreditCard className="mr-2 h-4 w-4" />
-                  Authorize Payment
+                  Continue to Payment
                 </>
               )}
             </Button>

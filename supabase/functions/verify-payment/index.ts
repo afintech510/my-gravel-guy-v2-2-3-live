@@ -168,6 +168,21 @@ serve(async (req) => {
           });
         }
 
+        // For checkout sessions with manual capture, check the payment intent status
+        if (isCheckoutSession && stripeObject.payment_intent) {
+          try {
+            const paymentIntent = await stripe.paymentIntents.retrieve(stripeObject.payment_intent);
+            isAuthorized = paymentIntent.status === 'requires_capture';
+            console.log('=== CHECKOUT SESSION PAYMENT INTENT STATUS ===', {
+              paymentIntentId: paymentIntent.id,
+              status: paymentIntent.status,
+              isAuthorized: isAuthorized
+            });
+          } catch (error) {
+            console.warn('Failed to retrieve payment intent from checkout session:', error);
+          }
+        }
+
         if (paymentSuccess || isAuthorized) {
           verificationResult.success = true;
           verificationResult.paymentVerified = true;
