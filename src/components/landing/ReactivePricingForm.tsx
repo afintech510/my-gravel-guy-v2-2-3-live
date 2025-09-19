@@ -257,68 +257,18 @@ export const ReactivePricingForm = () => {
                   </div>
                 </div>
 
-                {/* Address Fields */}
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="street">Street Address</Label>
-                    <Input
-                      id="street"
-                      {...register('street')}
-                      placeholder="123 Main Street"
-                      className={errors.street ? 'border-destructive' : ''}
-                    />
-                    {errors.street && (
-                      <p className="text-sm text-destructive mt-1">{errors.street.message}</p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="city">City</Label>
-                    <Input
-                      id="city"
-                      {...register('city')}
-                      placeholder="Austin"
-                      className={errors.city ? 'border-destructive' : ''}
-                    />
-                    {errors.city && (
-                      <p className="text-sm text-destructive mt-1">{errors.city.message}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="state">State</Label>
-                    <Select
-                      value={watchedValues.state || ''}
-                      onValueChange={(value) => setValue('state', value)}
-                    >
-                      <SelectTrigger className={errors.state ? 'border-destructive' : ''}>
-                        <SelectValue placeholder="Select state" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="TX">Texas</SelectItem>
-                        <SelectItem value="CA">California</SelectItem>
-                        <SelectItem value="FL">Florida</SelectItem>
-                        <SelectItem value="NY">New York</SelectItem>
-                        {/* Add more states as needed */}
-                      </SelectContent>
-                    </Select>
-                    {errors.state && (
-                      <p className="text-sm text-destructive mt-1">{errors.state.message}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="zip">ZIP Code</Label>
-                    <Input
-                      id="zip"
-                      {...register('zip')}
-                      placeholder="73301"
-                      className={errors.zip ? 'border-destructive' : ''}
-                    />
-                    {errors.zip && (
-                      <p className="text-sm text-destructive mt-1">{errors.zip.message}</p>
-                    )}
-                  </div>
+                {/* Delivery ZIP Code Field */}
+                <div>
+                  <Label htmlFor="zip">Delivery Zip Code</Label>
+                  <Input
+                    id="zip"
+                    {...register('zip')}
+                    placeholder="73301"
+                    className={errors.zip ? 'border-destructive' : ''}
+                  />
+                  {errors.zip && (
+                    <p className="text-sm text-destructive mt-1">{errors.zip.message}</p>
+                  )}
                 </div>
               </div>
             )}
