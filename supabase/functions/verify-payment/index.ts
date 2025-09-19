@@ -298,10 +298,17 @@ serve(async (req) => {
         // Use guest defaults if no user is authenticated
         const billingEmail = user?.email || backupData.customer?.email || 'guest@mygravelguy.com';
         const billingName = backupData.customer?.name || 'Guest User';
-        
-        // Use guest defaults if no user is authenticated
-        const billingEmail = user?.email || backupData.customer?.email || 'guest@mygravelguy.com';
-        const billingName = backupData.customer?.name || 'Guest User';
+
+        // Check if this is a deposit payment and adjust status accordingly
+        const isDepositPayment = backupData.depositOption === true;
+        if (isDepositPayment && orderStatus === 'paid') {
+          orderStatus = 'Deposit Paid';
+          console.log('=== SETTING DEPOSIT PAID STATUS ===', { 
+            originalStatus: 'paid',
+            newStatus: orderStatus,
+            depositAmount: 199 
+          });
+        }
 
         let data;
         let insertError;

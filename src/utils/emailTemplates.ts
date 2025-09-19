@@ -481,6 +481,40 @@ export const generateInternalNotificationEmail = (orderData: OrderData): string 
                 </div>
             ` : ''}
 
+            <!-- Deposit Payment Information (Internal) -->
+            ${orderData.is_deposit_payment ? `
+                <div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; border: 2px solid #f59e0b; margin-bottom: 20px;">
+                    <h3 style="color: #92400e; font-size: 16px; margin: 0 0 15px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                        💰 DEPOSIT PAYMENT - Partial Order
+                    </h3>
+                    <div style="background-color: white; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                        <div style="display: table; width: 100%;">
+                            <div style="display: table-cell; vertical-align: top; width: 50%;">
+                                <p style="color: #92400e; font-size: 14px; margin: 3px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                                    <strong>✅ Deposit Received:</strong> $${orderData.deposit_amount?.toFixed(2)}
+                                </p>
+                                <p style="color: #92400e; font-size: 14px; margin: 3px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                                    <strong>📊 Full Order Value:</strong> $${((orderData.deposit_amount || 0) + (orderData.balance_due || 0)).toFixed(2)}
+                                </p>
+                            </div>
+                            <div style="display: table-cell; vertical-align: top; text-align: right;">
+                                <p style="color: #dc2626; font-size: 16px; font-weight: bold; margin: 3px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                                    Balance Due: $${orderData.balance_due?.toFixed(2)}
+                                </p>
+                                <p style="color: #047857; font-size: 12px; margin: 3px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                                    Payment Type: DOWN PAYMENT
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="background-color: #fef3c7; padding: 12px; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                        <p style="color: #92400e; font-size: 13px; margin: 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                            <strong>⚠️ ACTION REQUIRED:</strong> Follow up with customer for remaining balance payment options and delivery scheduling.
+                        </p>
+                    </div>
+                </div>
+            ` : ''}
+
             <!-- Order Items -->
             <div style="margin-bottom: 25px;">
                 <h3 style="color: #1f2937; font-size: 16px; margin: 0 0 15px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
