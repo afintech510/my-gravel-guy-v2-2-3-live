@@ -7,6 +7,9 @@ export interface OrderInsertData {
   items: OrderItemData[];
   stripeSessionId?: string;
   stripePaymentIntentId?: string;
+  isDepositPayment?: boolean;
+  depositAmount?: number;
+  balanceDue?: number;
 }
 
 export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
@@ -121,7 +124,11 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
         delivery_state: deliveryAddress.state || null,
         delivery_zip: deliveryAddress.zip || null,
         delivery_time_preference: deliveryTimePreference || null,
-        delivery_instructions: deliveryInstructions || null
+        delivery_instructions: deliveryInstructions || null,
+        is_deposit_payment: orderData.isDepositPayment || false,
+        deposit_amount: orderData.depositAmount || null,
+        balance_due: orderData.balanceDue || null,
+        payment_terms: orderData.isDepositPayment ? 'deposit_with_balance' : 'full_payment'
       };
 
       console.log('Final enhanced order record to insert:', {

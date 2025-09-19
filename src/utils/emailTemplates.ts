@@ -31,6 +31,9 @@ interface OrderData {
     total_discount: number;
     applied: boolean;
   } | null;
+  is_deposit_payment?: boolean;
+  deposit_amount?: number;
+  balance_due?: number;
 }
 
 const getEmailStyles = () => `
@@ -263,25 +266,76 @@ export const generateCustomerConfirmationEmail = (orderData: OrderData): string 
             ` : ''}
 
             <!-- Order Total -->
-            <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; border: 2px solid #10b981; margin-bottom: 30px;">
-                <div style="text-align: right;">
-                    <p style="color: #1f2937; font-size: 20px; font-weight: bold; margin: 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
-                        Total: <span style="color: #10b981;">$${orderData.total_amount.toFixed(2)}</span>
-                    </p>
+            ${orderData.is_deposit_payment ? `
+                <div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; border: 2px solid #f59e0b; margin-bottom: 20px;">
+                    <h3 style="color: #92400e; font-size: 18px; margin: 0 0 15px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                        💰 Down Payment Confirmation
+                    </h3>
+                    <div style="background-color: white; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                        <p style="color: #92400e; font-size: 16px; margin: 0 0 10px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                            <strong>✅ Down Payment Charged:</strong> <span style="color: #10b981; font-weight: bold;">$${orderData.deposit_amount?.toFixed(2)}</span>
+                        </p>
+                        <p style="color: #92400e; font-size: 14px; margin: 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                            MyGravelGuy will negotiate the best price for your remaining balance and present you with payment options.
+                        </p>
+                    </div>
+                    <div style="background-color: #f0f9ff; padding: 15px; border-radius: 6px;">
+                        <h4 style="color: #0c4a6e; font-size: 16px; margin: 0 0 10px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                            Balance Due Options:
+                        </h4>
+                        <div style="display: table; width: 100%;">
+                            <div class="mobile-stack" style="display: table-cell; width: 50%; padding-right: 10px;">
+                                <div style="background-color: #dbeafe; padding: 12px; border-radius: 6px; border-left: 3px solid #3b82f6;">
+                                    <p style="color: #1e40af; font-size: 13px; margin: 0 0 5px 0; font-weight: bold; font-family: 'Helvetica Neue', Arial, sans-serif;">💳 Card Price</p>
+                                    <p style="color: #1e40af; font-size: 14px; margin: 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                                        $${Math.round((orderData.total_amount - (orderData.deposit_amount || 0)) * 0.85)} - $${Math.round((orderData.total_amount - (orderData.deposit_amount || 0)) * 1.0)}
+                                    </p>
+                                    <p style="color: #6b7280; font-size: 11px; margin: 0; font-family: 'Helvetica Neue', Arial, sans-serif;">(85% - 100%)</p>
+                                </div>
+                            </div>
+                            <div class="mobile-stack" style="display: table-cell; width: 50%;">
+                                <div style="background-color: #dcfce7; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                                    <p style="color: #15803d; font-size: 13px; margin: 0 0 5px 0; font-weight: bold; font-family: 'Helvetica Neue', Arial, sans-serif;">💵 Cash Price</p>
+                                    <p style="color: #15803d; font-size: 14px; margin: 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                                        $${Math.round((orderData.total_amount - (orderData.deposit_amount || 0)) * 0.70)} - $${Math.round((orderData.total_amount - (orderData.deposit_amount || 0)) * 0.90)}
+                                    </p>
+                                    <p style="color: #6b7280; font-size: 11px; margin: 0; font-family: 'Helvetica Neue', Arial, sans-serif;">(70% - 90%)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            ` : `
+                <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; border: 2px solid #10b981; margin-bottom: 30px;">
+                    <div style="text-align: right;">
+                        <p style="color: #1f2937; font-size: 20px; font-weight: bold; margin: 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                            Total: <span style="color: #10b981;">$${orderData.total_amount.toFixed(2)}</span>
+                        </p>
+                    </div>
+                </div>
+            `}
 
             <!-- What's Next -->
             <div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b; margin-bottom: 20px;">
                 <h3 style="color: #92400e; font-size: 16px; margin: 0 0 15px 0; font-family: 'Helvetica Neue', Arial, sans-serif;">
                     🎯 What's Next?
                 </h3>
-                <ol style="color: #92400e; font-size: 14px; margin: 0; padding-left: 20px; font-family: 'Helvetica Neue', Arial, sans-serif;">
-                    <li style="margin-bottom: 8px;">Your order is being processed by our team</li>
-                    <li style="margin-bottom: 8px;">We'll prepare your materials for delivery</li>
-                    <li style="margin-bottom: 8px;">Our driver will deliver on your scheduled date</li>
-                    <li>You'll receive tracking updates via email</li>
-                </ol>
+                ${orderData.is_deposit_payment ? `
+                    <ol style="color: #92400e; font-size: 14px; margin: 0; padding-left: 20px; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                        <li style="margin-bottom: 8px;">We've charged your down payment of $${orderData.deposit_amount?.toFixed(2)}</li>
+                        <li style="margin-bottom: 8px;">Our team will negotiate the best price for your remaining balance</li>
+                        <li style="margin-bottom: 8px;">You'll receive both cash and card pricing options within 24 hours</li>
+                        <li style="margin-bottom: 8px;">Choose your preferred payment method for the balance</li>
+                        <li>Your materials will be scheduled for delivery once balance is paid</li>
+                    </ol>
+                ` : `
+                    <ol style="color: #92400e; font-size: 14px; margin: 0; padding-left: 20px; font-family: 'Helvetica Neue', Arial, sans-serif;">
+                        <li style="margin-bottom: 8px;">Your order is being processed by our team</li>
+                        <li style="margin-bottom: 8px;">We'll prepare your materials for delivery</li>
+                        <li style="margin-bottom: 8px;">Our driver will deliver on your scheduled date</li>
+                        <li>You'll receive tracking updates via email</li>
+                    </ol>
+                `}
             </div>
 
             <!-- CTA Button -->

@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -439,6 +439,7 @@ export type Database = {
       orders: {
         Row: {
           attachment_files: string[] | null
+          balance_due: number | null
           billing_email: string | null
           billing_name: string | null
           coupon: string | null
@@ -454,14 +455,17 @@ export type Database = {
           delivery_street: string | null
           delivery_time_preference: string | null
           delivery_zip: string | null
+          deposit_amount: number | null
           fulfillment_eta: string | null
           fulfillment_status:
             | Database["public"]["Enums"]["fulfillment_status_enum"]
             | null
           id: string
+          is_deposit_payment: boolean | null
           notes: string | null
           order_id: string
           original_quote_id: string | null
+          payment_terms: string | null
           product_id: string
           quantity: number | null
           quote_converted: boolean | null
@@ -486,6 +490,7 @@ export type Database = {
         }
         Insert: {
           attachment_files?: string[] | null
+          balance_due?: number | null
           billing_email?: string | null
           billing_name?: string | null
           coupon?: string | null
@@ -501,14 +506,17 @@ export type Database = {
           delivery_street?: string | null
           delivery_time_preference?: string | null
           delivery_zip?: string | null
+          deposit_amount?: number | null
           fulfillment_eta?: string | null
           fulfillment_status?:
             | Database["public"]["Enums"]["fulfillment_status_enum"]
             | null
           id?: string
+          is_deposit_payment?: boolean | null
           notes?: string | null
           order_id: string
           original_quote_id?: string | null
+          payment_terms?: string | null
           product_id: string
           quantity?: number | null
           quote_converted?: boolean | null
@@ -533,6 +541,7 @@ export type Database = {
         }
         Update: {
           attachment_files?: string[] | null
+          balance_due?: number | null
           billing_email?: string | null
           billing_name?: string | null
           coupon?: string | null
@@ -548,14 +557,17 @@ export type Database = {
           delivery_street?: string | null
           delivery_time_preference?: string | null
           delivery_zip?: string | null
+          deposit_amount?: number | null
           fulfillment_eta?: string | null
           fulfillment_status?:
             | Database["public"]["Enums"]["fulfillment_status_enum"]
             | null
           id?: string
+          is_deposit_payment?: boolean | null
           notes?: string | null
           order_id?: string
           original_quote_id?: string | null
+          payment_terms?: string | null
           product_id?: string
           quantity?: number | null
           quote_converted?: boolean | null
@@ -886,8 +898,8 @@ export type Database = {
       }
       check_rate_limit: {
         Args: {
-          p_identifier: string
           p_function_name: string
+          p_identifier: string
           p_max_requests?: number
           p_window_minutes?: number
         }
