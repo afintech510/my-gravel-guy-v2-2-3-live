@@ -245,8 +245,7 @@ const CartItemCard = ({
               zipCode: details.zip
             },
             deliveryTimePreference: details.deliveryTimePreference,
-            deliveryInstructions: details.deliveryInstructions,
-            locationPhotoUrl: details.locationPhotoUrl
+            deliveryInstructions: details.deliveryInstructions
           });
           // Close form after saving
           setIsDeliveryFormOpen(false);

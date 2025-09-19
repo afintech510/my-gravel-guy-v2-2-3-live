@@ -11,7 +11,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Label } from '@/components/ui/label';
-import { CalendarIcon, Upload, X } from 'lucide-react';
+import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useZipCode } from '@/contexts/ZipCodeContext';
@@ -37,7 +37,6 @@ export interface EnhancedDeliveryFormData {
   // Optional fields
   deliveryTimePreference?: "anytime" | "morning" | "afternoon";
   deliveryInstructions?: string;
-  locationPhotoUrl?: string;
   // Communication consent - required
   communicationConsent: boolean;
 }
@@ -60,7 +59,6 @@ const formSchema = z.object({
   zip: z.string().min(5, 'Please enter a valid ZIP code'),
   deliveryTimePreference: z.enum(["anytime", "morning", "afternoon"]).optional(),
   deliveryInstructions: z.string().optional(),
-  locationPhotoUrl: z.string().optional(),
   communicationConsent: z.boolean().refine((val) => val === true, {
     message: 'You must agree to receive delivery communications',
   }),
@@ -68,7 +66,6 @@ const formSchema = z.object({
 
 const EnhancedDeliveryForm: React.FC<EnhancedDeliveryFormProps> = ({ onSubmit, item }) => {
   const { zipCode, zipCodeData } = useZipCode();
-  const [uploadedPhoto, setUploadedPhoto] = useState<string | null>(item?.locationPhotoUrl || null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   
@@ -86,7 +83,6 @@ const EnhancedDeliveryForm: React.FC<EnhancedDeliveryFormProps> = ({ onSubmit, i
       deliveryDate: item?.deliveryDate || undefined,
       deliveryTimePreference: item?.deliveryTimePreference || 'anytime',
       deliveryInstructions: item?.deliveryInstructions || '',
-      locationPhotoUrl: item?.locationPhotoUrl || '',
       communicationConsent: true,
     },
   });
@@ -112,7 +108,6 @@ const EnhancedDeliveryForm: React.FC<EnhancedDeliveryFormProps> = ({ onSubmit, i
         zip: data.zip,
         deliveryTimePreference: data.deliveryTimePreference,
         deliveryInstructions: data.deliveryInstructions,
-        locationPhotoUrl: uploadedPhoto || undefined,
         communicationConsent: data.communicationConsent,
       };
       
@@ -137,8 +132,7 @@ const EnhancedDeliveryForm: React.FC<EnhancedDeliveryFormProps> = ({ onSubmit, i
             zipCode: data.zip
           },
           deliveryTimePreference: data.deliveryTimePreference,
-          deliveryInstructions: data.deliveryInstructions,
-          locationPhotoUrl: uploadedPhoto || undefined
+          deliveryInstructions: data.deliveryInstructions
         };
 
         // Insert cart to database
@@ -171,18 +165,6 @@ const EnhancedDeliveryForm: React.FC<EnhancedDeliveryFormProps> = ({ onSubmit, i
     }
   };
 
-  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // In a real app, you'd upload to a service like Supabase Storage
-      const url = URL.createObjectURL(file);
-      setUploadedPhoto(url);
-    }
-  };
-
-  const removePhoto = () => {
-    setUploadedPhoto(null);
-  };
 
   const minDate = new Date();
   minDate.setDate(minDate.getDate() + 1); // Tomorrow at earliest
@@ -398,44 +380,6 @@ const EnhancedDeliveryForm: React.FC<EnhancedDeliveryFormProps> = ({ onSubmit, i
             )}
           />
 
-          {/* Photo Upload */}
-          <div className="space-y-2">
-            <Label>Location Photo (Optional)</Label>
-            <p className="text-sm text-gray-600">Upload a photo of the delivery location to help our drivers.</p>
-            
-            {!uploadedPhoto ? (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                <div className="mt-4">
-                  <Label htmlFor="photo-upload" className="cursor-pointer">
-                    <span className="mt-2 block text-sm font-medium text-gray-900">
-                      Click to upload a photo
-                    </span>
-                  </Label>
-                  <input
-                    id="photo-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoUpload}
-                    className="hidden"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="relative">
-                <img src={uploadedPhoto} alt="Delivery location" className="w-full h-48 object-cover rounded-lg" />
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  className="absolute top-2 right-2"
-                  onClick={removePhoto}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-          </div>
 
           {/* Communication Consent */}
           <FormField

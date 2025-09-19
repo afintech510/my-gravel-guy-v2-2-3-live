@@ -50,8 +50,7 @@ export const sendCartConfirmationEmail = async (emailData: CartEmailData) => {
           phone: item.contactInfo.phone
         } : null,
         delivery_time_preference: item.deliveryTimePreference,
-        delivery_instructions: item.deliveryInstructions,
-        location_photo_url: item.locationPhotoUrl
+        delivery_instructions: item.deliveryInstructions
       })),
       total_amount: emailData.items.reduce((sum, item) => sum + (item.price * item.tons), 0),
       customer_email: customerEmail,

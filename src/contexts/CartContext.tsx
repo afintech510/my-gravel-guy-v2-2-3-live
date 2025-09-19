@@ -28,7 +28,6 @@ export interface CartItem extends Product {
   contactPhone?: string;
   deliveryTimePreference?: 'anytime' | 'morning' | 'afternoon';
   deliveryInstructions?: string;
-  locationPhotoUrl?: string;
   contactInfo?: ContactInfo;
   basePrice?: number; // Original product price before ZIP code adjustments
   

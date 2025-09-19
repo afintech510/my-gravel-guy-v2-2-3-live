@@ -78,8 +78,7 @@ const Cart = () => {
       deliveryAddress: details.deliveryAddress,
       contactInfo: details.contactInfo,
       deliveryTimePreference: details.deliveryTimePreference,
-      deliveryInstructions: details.deliveryInstructions,
-      locationPhotoUrl: details.locationPhotoUrl
+      deliveryInstructions: details.deliveryInstructions
     });
 
     // Check if this update makes all items complete

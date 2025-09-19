@@ -18,7 +18,6 @@ export type DeliveryFormData = {
   // Optional fields
   deliveryTimePreference?: "anytime" | "morning" | "afternoon";
   deliveryInstructions?: string;
-  locationPhotoUrl?: string;
 };
 
 interface DeliveryFormProps {
@@ -43,8 +42,7 @@ const DeliveryForm = ({ onSubmit, item }: DeliveryFormProps) => {
       state: data.state,
       zip: data.zip,
       deliveryTimePreference: data.deliveryTimePreference,
-      deliveryInstructions: data.deliveryInstructions,
-      locationPhotoUrl: data.locationPhotoUrl
+      deliveryInstructions: data.deliveryInstructions
     };
     onSubmit(legacyData);
   };
