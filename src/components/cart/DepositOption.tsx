@@ -67,7 +67,6 @@ const DepositOption = ({ isSelected, onToggle, totalOrder }: DepositOptionProps)
                       <div className="text-sm font-semibold text-blue-900">
                         ${cardPriceRange.min} - ${cardPriceRange.max}
                       </div>
-                      <div className="text-xs text-blue-600">(85% - 100%)</div>
                     </div>
                   </div>
                   
@@ -78,7 +77,6 @@ const DepositOption = ({ isSelected, onToggle, totalOrder }: DepositOptionProps)
                       <div className="text-sm font-semibold text-green-900">
                         ${cashPriceRange.min} - ${cashPriceRange.max}
                       </div>
-                      <div className="text-xs text-green-600">(70% - 90%)</div>
                     </div>
                   </div>
                 </div>

@@ -141,9 +141,6 @@ const CouponCode: React.FC<CouponCodeProps> = ({ onCouponApplied }) => {
                   {isApplying ? 'Applying...' : 'Apply'}
                 </Button>
               </div>
-              <p className="text-xs text-gray-500 mt-2">
-                Try: SAVE5, FIRST50, FREE25
-              </p>
             </div>
           )}
         </>

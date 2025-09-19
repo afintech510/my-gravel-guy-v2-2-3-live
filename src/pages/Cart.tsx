@@ -232,11 +232,11 @@ const Cart = () => {
                 <div className="text-xs space-y-1">
                   <div className="flex justify-between">
                     <span>Card Price:</span>
-                    <span>${Math.round((discountTotal - 199) * 0.85)} - ${Math.round((discountTotal - 199) * 1.0)} (85% - 100%)</span>
+                    <span>${Math.round((discountTotal - 199) * 0.85)} - ${Math.round((discountTotal - 199) * 1.0)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Cash Price:</span>
-                    <span>${Math.round((discountTotal - 199) * 0.70)} - ${Math.round((discountTotal - 199) * 0.90)} (70% - 90%)</span>
+                    <span>${Math.round((discountTotal - 199) * 0.70)} - ${Math.round((discountTotal - 199) * 0.90)}</span>
                   </div>
                 </div>
               </div>
