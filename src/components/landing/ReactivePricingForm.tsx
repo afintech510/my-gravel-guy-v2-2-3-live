@@ -6,16 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Tag, Lock, Unlock, Calculator } from 'lucide-react';
+import { Calculator, Shield, Truck, CheckCircle, Banknote, CreditCard } from 'lucide-react';
 import { useLandingPage } from '@/contexts/LandingPageContext';
-import { PriceScale } from './PriceScale';
-import { DepositFlow } from './DepositFlow';
 import { FloatingCalculatorButton } from './FloatingCalculatorButton';
 import { LandingAreaCalculator } from './LandingAreaCalculator';
+import TrustBadge from '@/components/products/trust/TrustBadge';
+import { generateCartLink } from '@/utils/cartLinkUtils';
 import ProductFilterSelector from '@/components/product-calculator/ProductFilterSelector';
 import { useQuery } from '@tanstack/react-query';
 import { getProducts } from '@/services/productService';
@@ -25,25 +23,13 @@ import { trackEvent, trackEcommerce } from '@/utils/analytics';
 import { formatCoverageText } from '@/utils/coverageCalculator';
 
 const contactSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Please enter a valid email address'),
-  phone: z.string().min(10, 'Please enter a valid phone number'),
-  street: z.string().min(5, 'Please enter a valid street address'),
-  city: z.string().min(2, 'Please enter a valid city'),
-  state: z.string().min(2, 'Please select a state'),
   zip: z.string().min(5, 'Please enter a valid ZIP code'),
-  consent: z.boolean().refine(val => val === true, 'You must agree to receive communications'),
 });
 
 type ContactForm = z.infer<typeof contactSchema>;
 
 export const ReactivePricingForm = () => {
-  const { 
-    state, 
-    setContactInfo, 
-    unlockDiscount,
-    trackFormInteraction 
-  } = useLandingPage();
+  const { trackFormInteraction } = useLandingPage();
 
   // Local state - like ProductCalculator
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -52,7 +38,6 @@ export const ReactivePricingForm = () => {
   const [priceData, setPriceData] = useState<any>(null);
   const [isCalculatingPrice, setIsCalculatingPrice] = useState(false);
   
-  const [showContactForm, setShowContactForm] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
   const calculatorRef = useRef<HTMLDivElement>(null);
 
@@ -63,27 +48,18 @@ export const ReactivePricingForm = () => {
 
   const {
     register,
-    handleSubmit,
     watch,
-    setValue,
-    formState: { errors, isSubmitting }
+    formState: { errors }
   } = useForm<ContactForm>({
     resolver: zodResolver(contactSchema),
     defaultValues: {
-      name: state.contactInfo?.name || '',
-      email: state.contactInfo?.email || '',
-      phone: state.contactInfo?.phone || '',
-      street: '',
-      city: '',
-      state: '',
       zip: '',
-      consent: false,
     }
   });
 
   const watchedValues = watch();
 
-  // Calculate pricing when product, quantity, or ZIP changes (like ProductCalculator)
+  // Calculate pricing when product, quantity, or ZIP changes
   useEffect(() => {
     const updatePriceDetails = async () => {
       if (selectedProduct && quantity > 0 && zipCode.length >= 5) {
@@ -120,12 +96,13 @@ export const ReactivePricingForm = () => {
     updatePriceDetails();
   }, [selectedProduct, quantity, zipCode]);
 
-  // Update ZIP code from form
+  // Update ZIP code from form and track interaction
   useEffect(() => {
     if (watchedValues.zip && watchedValues.zip.length >= 5) {
       setZipCode(watchedValues.zip);
+      trackFormInteraction('zip_code_entered', { zipCode: watchedValues.zip });
     }
-  }, [watchedValues.zip]);
+  }, [watchedValues.zip, trackFormInteraction]);
 
   const handleMaterialSelect = (material: Product | null) => {
     console.log('[ReactivePricingForm] Material selected:', material?.name || 'none');
@@ -162,26 +139,6 @@ export const ReactivePricingForm = () => {
       calculatorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 100);
   };
-
-  const onContactSubmit = async (data: ContactForm) => {
-    try {
-      const contactInfo = {
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        zipCode: data.zip,
-      };
-
-      setContactInfo(contactInfo);
-
-      unlockDiscount();
-      trackFormInteraction('contact_form_submitted', contactInfo);
-    } catch (error) {
-      console.error('Error submitting contact form:', error);
-    }
-  };
-
-  const discountAmount = priceData ? Math.min(priceData.normalPrice * 0.05, 50) : 50;
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -257,18 +214,43 @@ export const ReactivePricingForm = () => {
                   </div>
                 </div>
 
-                {/* Delivery ZIP Code Field */}
-                <div>
-                  <Label htmlFor="zip">Delivery Zip Code</Label>
-                  <Input
-                    id="zip"
-                    {...register('zip')}
-                    placeholder="73301"
-                    className={errors.zip ? 'border-destructive' : ''}
-                  />
-                  {errors.zip && (
-                    <p className="text-sm text-destructive mt-1">{errors.zip.message}</p>
-                  )}
+                {/* Centered ZIP Code Field with Trust Badges */}
+                <div className="flex items-center gap-6 max-w-2xl mx-auto">
+                  {/* Left Trust Badge */}
+                  <div className="hidden md:flex">
+                    <TrustBadge
+                      icon={Shield}
+                      title="Secure Ordering"
+                      size="compact"
+                      className="bg-white border shadow-sm rounded-lg px-3 py-2"
+                    />
+                  </div>
+
+                  {/* Centered ZIP Code Input */}
+                  <div className="flex-1 max-w-xs">
+                    <Label htmlFor="zip" className="text-center block mb-2 font-medium">
+                      Delivery Zip Code
+                    </Label>
+                    <Input
+                      id="zip"
+                      {...register('zip')}
+                      placeholder="73301"
+                      className={`text-center text-lg py-3 ${errors.zip ? 'border-destructive' : 'border-primary/30 focus:border-primary'}`}
+                    />
+                    {errors.zip && (
+                      <p className="text-sm text-destructive mt-1 text-center">{errors.zip.message}</p>
+                    )}
+                  </div>
+
+                  {/* Right Trust Badge */}
+                  <div className="hidden md:flex">
+                    <TrustBadge
+                      icon={Truck}
+                      title="Free Delivery"
+                      size="compact"
+                      className="bg-white border shadow-sm rounded-lg px-3 py-2"
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -285,144 +267,117 @@ export const ReactivePricingForm = () => {
             </div>
           )}
 
-          {/* Step 2: Price Display and Discount Offer - Only show when ZIP code is entered */}
+          {/* New Simple Pricing Module - Show when ZIP code is entered */}
           {priceData && zipCode.length >= 5 && (
             <div className="space-y-6">
-              <PriceScale priceData={priceData} />
-
-              {!state.discountUnlocked && (
-                <Card className="border-primary/20 bg-primary/5">
-                  <CardContent className="p-6">
-                    <div className="text-center space-y-4">
-                      <div className="flex items-center justify-center gap-2">
-                        <Tag className="h-5 w-5 text-primary" />
-                        <h3 className="text-lg font-semibold text-foreground">
-                          Unlock Your Discount
-                        </h3>
+              {/* Pricing Display */}
+              <Card className="shadow-lg border-primary/20">
+                <CardContent className="p-8">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {/* Left: $199 Deposit (Promoted) */}
+                    <Card className="border-2 border-primary bg-primary/5 relative overflow-hidden">
+                      <div className="absolute top-0 left-0 right-0 bg-primary text-primary-foreground text-center py-1 text-sm font-semibold">
+                        ⭐ BEST VALUE - Cash on Delivery
                       </div>
-                      
-                      <p className="text-muted-foreground">
-                        Get <strong className="text-primary">${(priceData?.discountAmount || 50).toFixed(0)} off</strong> when you add your contact information
-                      </p>
+                      <CardContent className="pt-8 pb-6 px-6 text-center">
+                        <div className="space-y-4">
+                          <div>
+                            <div className="text-3xl font-bold text-primary">$199</div>
+                            <div className="text-sm text-muted-foreground">Refundable Deposit</div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Pay balance in cash on delivery
+                            </div>
+                          </div>
+                          
+                          <div className="bg-white/70 rounded-lg p-3 text-sm">
+                            <div className="font-medium text-foreground">Final Total:</div>
+                            <div className="text-lg font-bold text-primary">
+                              ${Math.round(priceData.normalPrice * 0.80).toLocaleString()}
+                            </div>
+                            <div className="text-xs text-muted-foreground">Wholesale Cash Price</div>
+                          </div>
 
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setShowContactForm(!showContactForm)}
-                        className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                      >
-                        {showContactForm ? (
-                          <>
-                            <Lock className="h-4 w-4 mr-2" />
-                            Hide Contact Form
-                          </>
-                        ) : (
-                          <>
-                            <Unlock className="h-4 w-4 mr-2" />
-                            Add My Info & Save ${(priceData?.discountAmount || 50).toFixed(0)}
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+                          <Button
+                            size="lg"
+                            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+                            onClick={() => {
+                              const cartLink = generateCartLink({
+                                product: selectedProduct?.slug || selectedProduct?.id || '',
+                                tons: quantity,
+                                zipCode: zipCode,
+                                redirect: '/cart'
+                              });
+                              window.location.href = cartLink + '&paymentType=deposit';
+                            }}
+                          >
+                            <Banknote className="h-5 w-5 mr-2" />
+                            Reserve with $199 Deposit
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
 
-              {/* Step 3: Contact Form (Lead Gate) */}
-              {(showContactForm || state.discountUnlocked) && !state.discountUnlocked && (
-                <form onSubmit={handleSubmit(onContactSubmit)} className="space-y-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold">
-                      2
-                    </div>
-                    <h3 className="text-lg font-semibold text-foreground">Your Contact Information</h3>
+                    {/* Right: Buy Now (Normal Price) */}
+                    <Card className="border border-muted">
+                      <CardContent className="pt-6 pb-6 px-6 text-center">
+                        <div className="space-y-4">
+                          <div>
+                            <div className="text-2xl font-bold text-foreground">
+                              ${priceData.normalPrice.toLocaleString()}
+                            </div>
+                            <div className="text-sm text-muted-foreground">Full Payment Now</div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Pay complete amount by card
+                            </div>
+                          </div>
+
+                          <div className="bg-muted/30 rounded-lg p-3 text-sm">
+                            <div className="text-muted-foreground">
+                              Standard card processing rate
+                            </div>
+                          </div>
+
+                          <Button
+                            size="lg"
+                            variant="outline"
+                            className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                            onClick={() => {
+                              const cartLink = generateCartLink({
+                                product: selectedProduct?.slug || selectedProduct?.id || '',
+                                tons: quantity,
+                                zipCode: zipCode,
+                                redirect: '/cart'
+                              });
+                              window.location.href = cartLink + '&paymentType=full';
+                            }}
+                          >
+                            <CreditCard className="h-5 w-5 mr-2" />
+                            Buy Now - ${priceData.normalPrice.toLocaleString()}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="name">Full Name</Label>
-                      <Input
-                        id="name"
-                        {...register('name')}
-                        placeholder="John Smith"
-                        className={errors.name ? 'border-destructive' : ''}
-                      />
-                      {errors.name && (
-                        <p className="text-sm text-destructive mt-1">{errors.name.message}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label htmlFor="email">Email Address</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        {...register('email')}
-                        placeholder="john@example.com"
-                        className={errors.email ? 'border-destructive' : ''}
-                      />
-                      {errors.email && (
-                        <p className="text-sm text-destructive mt-1">{errors.email.message}</p>
-                      )}
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        {...register('phone')}
-                        placeholder="(555) 123-4567"
-                        className={errors.phone ? 'border-destructive' : ''}
-                      />
-                      {errors.phone && (
-                        <p className="text-sm text-destructive mt-1">{errors.phone.message}</p>
-                      )}
+                  {/* Additional Trust Elements */}
+                  <div className="mt-6 pt-6 border-t border-muted/30">
+                    <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <Shield className="h-4 w-4 text-primary" />
+                        <span>Secure Payment</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Truck className="h-4 w-4 text-primary" />
+                        <span>Free Delivery</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-primary" />
+                        <span>Quality Guaranteed</span>
+                      </div>
                     </div>
                   </div>
-
-                  <div className="flex items-start space-x-2">
-                  <Checkbox
-                    id="consent"
-                    checked={watchedValues.consent || false}
-                    onCheckedChange={(checked) => setValue('consent', checked as boolean)}
-                      className={errors.consent ? 'border-destructive' : ''}
-                    />
-                    <div className="text-sm">
-                      <label htmlFor="consent" className="text-foreground cursor-pointer">
-                        I agree to receive text messages and calls about my order. Msg & data rates may apply.
-                      </label>
-                      {errors.consent && (
-                        <p className="text-destructive mt-1">{errors.consent.message}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-                    size="lg"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Unlocking Discount...
-                      </>
-                    ) : (
-                      <>
-                        <Calculator className="h-4 w-4 mr-2" />
-                        Unlock ${(priceData?.discountAmount || 50).toFixed(0)} Discount
-                      </>
-                    )}
-                  </Button>
-                </form>
-              )}
-
-              {/* Step 4: Deposit Flow (Shown after discount unlocked or at base price) */}
-              {(state.discountUnlocked || state.formStep === 'review') && (
-                <DepositFlow priceData={priceData} discountUnlocked={state.discountUnlocked} />
-              )}
+                </CardContent>
+              </Card>
             </div>
           )}
         </CardContent>
