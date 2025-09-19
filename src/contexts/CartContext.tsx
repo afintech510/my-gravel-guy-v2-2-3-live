@@ -69,6 +69,11 @@ interface CartContextType {
   couponDiscount: number;
   applyCoupon: (code: string, discount: number) => void;
   removeCoupon: () => void;
+  // Deposit payment option
+  depositOption: boolean;
+  toggleDepositOption: () => void;
+  isDepositPayment: () => boolean;
+  getPaymentTotal: () => number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -86,6 +91,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [lastRemovedItem, setLastRemovedItem] = useLocalStorage<CartItem | null>('last-removed-item', null);
   const [appliedCoupon, setAppliedCoupon] = useLocalStorage<string | null>('applied-coupon-code', null);
   const [couponDiscount, setCouponDiscount] = useLocalStorage<number>('coupon-discount', 0);
+  const [depositOption, setDepositOption] = useLocalStorage<boolean>('deposit-option', false);
   const { toast } = useToast();
 
   // Deserialize dates whenever items change from localStorage
@@ -235,7 +241,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLastRemovedItem(null);
     setAppliedCoupon(null);
     setCouponDiscount(0);
-  }, [setItems, setLastRemovedItem, setAppliedCoupon, setCouponDiscount]);
+    setDepositOption(false);
+  }, [setItems, setLastRemovedItem, setAppliedCoupon, setCouponDiscount, setDepositOption]);
 
   // Helper function to check if delivery info is complete for an item
   const isDeliveryInfoComplete = useCallback((item: CartItem) => {
@@ -266,6 +273,20 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Calculate the total after applying cart-level coupon discount
   const discountTotal = Math.max(0, total - couponDiscount);
 
+  // Deposit option functions
+  const toggleDepositOption = useCallback(() => {
+    setDepositOption(prev => !prev);
+  }, [setDepositOption]);
+
+  const isDepositPayment = useCallback(() => {
+    return depositOption;
+  }, [depositOption]);
+
+  const getPaymentTotal = useCallback(() => {
+    const baseTotal = Math.max(0, total - couponDiscount);
+    return depositOption ? 199 : baseTotal;
+  }, [total, couponDiscount, depositOption]);
+
   return (
     <CartContext.Provider value={{ 
       items, 
@@ -281,7 +302,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       appliedCoupon,
       couponDiscount,
       applyCoupon,
-      removeCoupon
+      removeCoupon,
+      depositOption,
+      toggleDepositOption,
+      isDepositPayment,
+      getPaymentTotal
     }}>
       {children}
     </CartContext.Provider>

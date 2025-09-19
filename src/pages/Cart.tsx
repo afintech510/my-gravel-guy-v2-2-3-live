@@ -6,6 +6,7 @@ import CartItemCard from '../components/cart/CartItemCard';
 import { CartPricingUpdater } from '../components/cart/CartPricingUpdater';
 import CouponCode from '../components/cart/CouponCode';
 import PaymentMethodLogos from '../components/payment/PaymentMethodLogos';
+import DepositOption from '../components/cart/DepositOption';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { sendCartConfirmationEmail } from '@/services/cartEmailService';
@@ -16,7 +17,10 @@ const Cart = () => {
     total,
     discountTotal,
     removeFromCart,
-    updateDeliveryDetails
+    updateDeliveryDetails,
+    depositOption,
+    toggleDepositOption,
+    getPaymentTotal
   } = useCart();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -182,6 +186,13 @@ const Cart = () => {
           <div className="bg-gray-50 rounded-lg p-6 sticky top-24">
             <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
             
+            {/* Deposit Option */}
+            <DepositOption 
+              isSelected={depositOption}
+              onToggle={toggleDepositOption}
+              totalOrder={discountTotal}
+            />
+            
             {/* Order summary details */}
             <div className="space-y-2 mb-4 pb-4 border-b">
               <div className="flex justify-between text-sm">
@@ -208,10 +219,28 @@ const Cart = () => {
               </div>
             </div>
             
-            <div className="flex justify-between font-semibold text-lg mb-6">
-              <span>Total</span>
-              <span>${discountTotal.toFixed(2)}</span>
+            {/* Payment Total */}
+            <div className="flex justify-between font-semibold text-lg mb-2">
+              <span>{depositOption ? 'Payment Today' : 'Total'}</span>
+              <span>${getPaymentTotal().toFixed(2)}</span>
             </div>
+            
+            {/* Balance Due Display */}
+            {depositOption && (
+              <div className="mb-4 p-3 bg-white rounded-lg border border-primary/20">
+                <div className="text-sm text-muted-foreground mb-1">Balance Due:</div>
+                <div className="text-xs space-y-1">
+                  <div className="flex justify-between">
+                    <span>Card Price:</span>
+                    <span>${Math.round((discountTotal - 199) * 0.85)} - ${Math.round((discountTotal - 199) * 1.0)} (85% - 100%)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Cash Price:</span>
+                    <span>${Math.round((discountTotal - 199) * 0.70)} - ${Math.round((discountTotal - 199) * 0.90)} (70% - 90%)</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Delivery completion status */}
             {!allItemsComplete && (
