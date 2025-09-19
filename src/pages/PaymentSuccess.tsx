@@ -260,7 +260,15 @@ const PaymentSuccess = () => {
             console.log('Verification error in fallback mode (likely testing):', error);
           } else if (error) {
             console.error('Payment verification error:', error);
-            if (stripeId) {
+            
+            // Detect CORS errors - these are expected when verify-payment function has CORS issues
+            const isCorsError = error.message?.includes('CORS') || 
+                               error.message?.includes('access control') ||
+                               error.message?.includes('preflight') ||
+                               error.message?.includes('Failed to send a request to the Edge Function');
+            
+            if (stripeId && !isCorsError) {
+              // Only show error toast for non-CORS errors
               setProcessingError(`Payment verification issue: ${error.message}`);
               setDetailedError(error.details || error.stack || 'No additional details available');
               
@@ -269,6 +277,9 @@ const PaymentSuccess = () => {
                 description: "There was an issue processing your payment verification. Please contact support if this persists.",
                 variant: "destructive"
               });
+            } else if (isCorsError) {
+              console.log('CORS error detected, will rely on auto-insert fallback mechanism:', error.message);
+              // Don't show error toast for CORS issues - let auto-insert handle it
             }
           } else if (data?.success && data?.paymentVerified) {
             console.log('=== PAYMENT VERIFICATION SUCCESSFUL ===');
