@@ -75,7 +75,7 @@ const Cart = () => {
     }
   };
 
-  // Handle delivery details update with auto-checkout logic
+  // Handle delivery details update without auto-checkout logic
   const handleDeliveryUpdate = (productId: string | number, details: any) => {
     updateDeliveryDetails(productId, {
       deliveryDate: details.deliveryDate,
@@ -85,25 +85,8 @@ const Cart = () => {
       deliveryInstructions: details.deliveryInstructions
     });
 
-    // Check if this update makes all items complete
-    // We need to simulate the updated state since React state updates are async
-    const updatedItems = items.map(item => 
-      item.id === productId ? { ...item, ...details } : item
-    );
-    const allWillBeComplete = updatedItems.every(item => 
-      item.deliveryDate && 
-      item.deliveryAddress?.street && 
-      item.contactInfo?.name && 
-      item.contactInfo?.phone && 
-      item.contactInfo?.email
-    );
-
-    // Auto-navigate to checkout if all items are now complete
-    if (allWillBeComplete) {
-      setTimeout(() => {
-        navigate('/checkout');
-      }, 100); // Small delay to ensure state updates
-    }
+    // Form will collapse automatically when delivery info is complete
+    // No auto-navigation to checkout - let customer consider deposit option
   };
 
   const handleProceedToCheckout = async () => {
