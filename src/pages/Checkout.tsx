@@ -328,7 +328,7 @@ const Checkout = () => {
       // Try to get current session for authentication (optional for guest checkout)
       const { data: { session } } = await supabase.auth.getSession();
       
-      // Call the create-payment Supabase Edge function (with optional authentication)
+      // Call the create-auth-hold Supabase Edge function (with optional authentication)
       const requestOptions: any = {
         body: JSON.stringify({ 
           items: formattedItems,
@@ -343,24 +343,31 @@ const Checkout = () => {
         };
       }
       
-      const { data, error } = await supabase.functions.invoke('create-payment', requestOptions);
+      const { data, error } = await supabase.functions.invoke('create-auth-hold', requestOptions);
       
       if (error) {
-        throw new Error(`Payment service error: ${error.message}`);
+        throw new Error(`Authorization hold error: ${error.message}`);
       }
       
-      if (!data || !data.url) {
-        throw new Error('Invalid response from payment service - no checkout URL received');
+      if (!data || !data.client_secret) {
+        throw new Error('Invalid response from payment service - no client secret received');
       }
       
-      console.log('Proceeding to Stripe checkout:', { 
+      console.log('Authorization hold created:', { 
         orderId, 
         hasAuth: !!session?.access_token,
-        checkoutUrl: data.url 
+        paymentIntentId: data.payment_intent_id 
       });
       
-      // Redirect to Stripe checkout
-      window.location.href = data.url;
+      // Store payment intent data for verification
+      localStorage.setItem('auth-hold-data', JSON.stringify({
+        client_secret: data.client_secret,
+        payment_intent_id: data.payment_intent_id,
+        order_id: data.order_id
+      }));
+      
+      // Navigate to payment success page with payment intent ID
+      navigate(`/payment-success?payment_intent=${data.payment_intent_id}&order_id=${data.order_id}`);
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -610,6 +617,17 @@ const Checkout = () => {
               <CouponCode />
             </div>
             
+            {/* Authorization Hold Disclaimer */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-blue-800">
+                  <p className="font-medium mb-1">Authorization Notice</p>
+                  <p>We will place an authorization hold on your card for the order amount. You will NOT be charged until we confirm your materials and delivery details. The final charge will only occur after your approval.</p>
+                </div>
+              </div>
+            </div>
+
             <Button 
               onClick={handleCheckout}
               disabled={isLoading}
@@ -618,10 +636,13 @@ const Checkout = () => {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
+                  Processing Authorization...
                 </>
               ) : (
-                'Continue to Payment'
+                <>
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Authorize Payment
+                </>
               )}
             </Button>
 

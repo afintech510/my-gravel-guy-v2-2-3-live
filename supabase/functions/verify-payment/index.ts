@@ -100,7 +100,8 @@ serve(async (req) => {
       orderId: orderId,
       sessionId: null,
       paymentIntentId: null,
-      error: null
+      error: null,
+      isAuthorized: false // Add authorization flag
     };
 
     // Primary verification: Check with Stripe
@@ -145,6 +146,7 @@ serve(async (req) => {
         }
 
         let paymentSuccess = false;
+        let isAuthorized = false;
         if (isCheckoutSession) {
           paymentSuccess = stripeObject.status === 'complete' && stripeObject.payment_status === 'paid';
           // IMPORTANT: Always set the Stripe IDs in verification result
@@ -155,18 +157,27 @@ serve(async (req) => {
             paymentIntentId: verificationResult.paymentIntentId
           });
         } else {
+          // Handle Payment Intent status - check for authorization vs captured
           paymentSuccess = stripeObject.status === 'succeeded';
+          isAuthorized = stripeObject.status === 'requires_capture'; // Authorization hold created
           verificationResult.paymentIntentId = stripeObject.id;
           console.log('=== PAYMENT INTENT ID CAPTURED ===', {
-            paymentIntentId: verificationResult.paymentIntentId
+            paymentIntentId: verificationResult.paymentIntentId,
+            status: stripeObject.status,
+            isAuthorized: isAuthorized
           });
         }
 
-        if (paymentSuccess) {
+        if (paymentSuccess || isAuthorized) {
           verificationResult.success = true;
           verificationResult.paymentVerified = true;
           verificationResult.verification_method = 'stripe_verified';
-          console.log('=== STRIPE VERIFICATION SUCCESS ===', verificationResult);
+          verificationResult.isAuthorized = isAuthorized; // Add authorization flag
+          console.log('=== STRIPE VERIFICATION SUCCESS ===', { 
+            ...verificationResult,
+            paymentSuccess,
+            isAuthorized 
+          });
         } else {
           verificationResult.error = `Payment not successful. Status: ${stripeObject.status}`;
           console.log('=== STRIPE VERIFICATION FAILED ===', { 
@@ -253,7 +264,25 @@ serve(async (req) => {
           }
         });
 
-        const paymentStatus = verificationResult.used_fallback ? 'processed' : (verificationResult.paymentVerified ? 'paid' : 'pending');
+        // Determine order status based on payment verification results
+        let orderStatus = 'pending';
+        if (verificationResult.used_fallback) {
+          orderStatus = 'processed';
+        } else if (verificationResult.paymentVerified) {
+          // Check if this is an authorization hold or actual payment
+          orderStatus = verificationResult.isAuthorized ? 'authorized' : 'paid';
+        }
+        
+        console.log('=== ORDER STATUS DETERMINED ===', {
+          orderStatus,
+          isAuthorized: verificationResult.isAuthorized,
+          paymentVerified: verificationResult.paymentVerified,
+          usedFallback: verificationResult.used_fallback
+        });
+        
+        // Use guest defaults if no user is authenticated
+        const billingEmail = user?.email || backupData.customer?.email || 'guest@mygravelguy.com';
+        const billingName = backupData.customer?.name || 'Guest User';
         
         // Use guest defaults if no user is authenticated
         const billingEmail = user?.email || backupData.customer?.email || 'guest@mygravelguy.com';

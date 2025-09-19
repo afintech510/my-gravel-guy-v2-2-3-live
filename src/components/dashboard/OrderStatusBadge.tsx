@@ -15,6 +15,8 @@ const getStatusColor = (status: OrderStatus) => {
   switch (status) {
     case 'pending':
       return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200';
+    case 'authorized':
+      return 'bg-cyan-100 text-cyan-800 hover:bg-cyan-200';
     case 'confirmed':
       return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
     case 'processing':
@@ -76,6 +78,7 @@ const OrderStatusBadge: React.FC<OrderStatusBadgeProps> = ({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="pending">Pending</SelectItem>
+          <SelectItem value="authorized">Authorized</SelectItem>
           <SelectItem value="confirmed">Confirmed</SelectItem>
           <SelectItem value="processing">Processing</SelectItem>
           <SelectItem value="in_transit">In Transit</SelectItem>
