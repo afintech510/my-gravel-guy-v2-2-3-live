@@ -155,7 +155,7 @@ export class OrderService {
       if (filters.quotesOnly) {
         query = query.or('status.eq.Quote,status.eq.cart').or('fulfillment_status.is.null,fulfillment_status.neq.Archived');
       } else if (filters.excludeQuotes) {
-        query = query.neq('status', 'Quote').neq('status', 'cart').neq('fulfillment_status', 'Archived');
+        query = query.neq('status', 'Quote').neq('status', 'cart').or('fulfillment_status.neq.Archived,fulfillment_status.is.null');
       }
 
       // Apply search filter - enhanced search across multiple fields
