@@ -19,7 +19,9 @@ const CartItemCard = ({
 }: CartItemCardProps) => {
   const [isDeliveryFormOpen, setIsDeliveryFormOpen] = useState(false);
   const {
-    updateQuantity
+    updateQuantity,
+    depositOption,
+    items
   } = useCart();
 
   // Check if delivery info is complete
@@ -57,7 +59,12 @@ const CartItemCard = ({
   };
 
   // Calculate total price for this item
-  const itemTotal = item.price * item.tons;
+  const fullItemTotal = item.price * item.tons;
+  
+  // If deposit option is selected, show the deposit portion for this item
+  const itemTotal = depositOption ? 
+    (199 / items.length) : // Split $199 deposit across all items
+    fullItemTotal;
 
   // Calculate and display yards if available
   const yards = item.tons / (item.tonYardRatio ? parseFloat(String(item.tonYardRatio)) : 1.5);
@@ -217,6 +224,11 @@ const CartItemCard = ({
                 <div className="text-lg font-bold">
                   ${itemTotal.toFixed(2)}
                 </div>
+                {depositOption && (
+                  <div className="text-xs text-muted-foreground">
+                    Deposit portion (Full: ${fullItemTotal.toFixed(2)})
+                  </div>
+                )}
               </div>
             </div>
 
