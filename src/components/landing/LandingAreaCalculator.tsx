@@ -183,14 +183,17 @@ export const LandingAreaCalculator = ({ onCalculationChange, selectedMaterial, o
           </div>
         </Card>
 
-        {/* Use Calculated Amount Button */}
-        <Button
-          onClick={handleUseCalculatedAmount}
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-          size="lg"
-        >
-          Use {calculationResult.totalTons.toFixed(2)} Tons in Quote
-        </Button>
+        {/* Close Calculator Button */}
+        {onClose && (
+          <Button
+            onClick={onClose}
+            variant="outline"
+            className="w-full"
+            size="lg"
+          >
+            Close Calculator
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
