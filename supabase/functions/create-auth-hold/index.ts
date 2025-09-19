@@ -97,32 +97,53 @@ serve(async (req) => {
     // Calculate total amount in cents
     const totalAmount = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity * 100), 0);
 
-    // Create Payment Intent with manual capture for authorization hold
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(totalAmount),
-      currency: 'usd',
-      capture_method: 'manual', // This creates an authorization hold instead of immediate charge
+    // Create Stripe Checkout Session with manual capture for authorization hold
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      payment_intent_data: {
+        capture_method: 'manual', // This creates an authorization hold instead of immediate charge
+      },
+      line_items: items.map(item => ({
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: item.name,
+            description: item.description || '',
+            metadata: {
+              orderId: finalOrderId,
+              userId: user?.id || 'guest',
+              ...item.metadata
+            }
+          },
+          unit_amount: Math.round(item.price * 100),
+        },
+        quantity: item.quantity,
+      })),
+      mode: 'payment',
+      success_url: `${req.headers.get('origin')}/payment-success?session_id={CHECKOUT_SESSION_ID}&order_id=${finalOrderId}`,
+      cancel_url: `${req.headers.get('origin')}/cart`,
       metadata: {
         orderId: finalOrderId,
         userId: user?.id || 'guest',
         userEmail: user?.email || contactEmail,
         isGuest: user ? 'false' : 'true'
       },
-      receipt_email: contactEmail,
+      customer_email: contactEmail,
+      billing_address_collection: 'required',
     });
 
-    console.log('Payment Intent created for authorization hold:', { 
-      paymentIntentId: paymentIntent.id, 
+    console.log('Authorization hold checkout session created:', { 
+      sessionId: session.id, 
       userType: user ? 'authenticated' : 'guest',
       contactEmail,
       amount: totalAmount / 100,
-      status: paymentIntent.status
+      captureMethod: 'manual'
     });
 
     return new Response(
       JSON.stringify({ 
-        client_secret: paymentIntent.client_secret,
-        payment_intent_id: paymentIntent.id,
+        url: session.url,
+        session_id: session.id,
         order_id: finalOrderId
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }

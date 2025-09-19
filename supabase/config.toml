@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.send-quote-conversion-email]
 verify_jwt = false
+
+[functions.verify-payment]
+verify_jwt = false
+
+[functions.create-auth-hold]
+verify_jwt = false
