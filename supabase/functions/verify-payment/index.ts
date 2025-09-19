@@ -525,6 +525,21 @@ serve(async (req) => {
               discount: backupData.couponInfo.discount 
             });
           }
+
+          // Add deposit information if present
+          if (backupData.depositOption === true) {
+            const originalTotal = backupData.items.reduce((sum, i) => sum + i.total_price, 0);
+            const totalCouponDiscount = backupData.couponInfo?.applied ? backupData.couponInfo.discount : 0;
+            updateData.is_deposit_payment = true;
+            updateData.deposit_amount = 199;
+            updateData.balance_due = originalTotal - totalCouponDiscount - 199;
+            
+            console.log('=== APPLYING DEPOSIT TO CART CONVERSION ===', { 
+              depositAmount: updateData.deposit_amount,
+              balanceDue: updateData.balance_due,
+              originalTotal: originalTotal
+            });
+          }
           
           const { data: cartUpdateData, error: updateError } = await supabase
             .from('orders')
@@ -570,6 +585,21 @@ serve(async (req) => {
               (itemBasePrice / backupData.items.reduce((sum, i) => sum + i.total_price, 0)) * totalCouponDiscount : 0;
             const finalItemPrice = itemBasePrice - itemDiscount;
 
+            // Check if this is a deposit payment
+            const isDepositPayment = backupData.depositOption === true;
+            const depositAmount = isDepositPayment ? 199 : null;
+            const originalTotal = backupData.items.reduce((sum, i) => sum + i.total_price, 0);
+            const balanceDue = isDepositPayment ? (originalTotal - totalCouponDiscount - 199) : null;
+
+            console.log('=== DEPOSIT PAYMENT CALCULATION ===', {
+              isDepositPayment,
+              depositAmount,
+              originalTotal,
+              totalCouponDiscount,
+              balanceDue,
+              finalItemPrice: isDepositPayment ? depositAmount / backupData.items.length : finalItemPrice
+            });
+
             return {
               order_id: verificationResult.orderId,
               stripe_payment_intent_id: paymentIntentId || null,
@@ -577,7 +607,7 @@ serve(async (req) => {
               product_id: item.product_id,
               unit: item.unit,
               unit_price: item.unit_price,
-              total_price: finalItemPrice, // Use discounted price
+              total_price: isDepositPayment ? (depositAmount / backupData.items.length) : finalItemPrice, // Split deposit across items
               quantity: item.quantity,
               delivery_date: item.delivery_date,
               delivery_street: item.delivery_street,
@@ -593,6 +623,9 @@ serve(async (req) => {
               billing_email: billingEmail,
               status: paymentStatus,
               coupon: backupData.couponInfo?.applied ? backupData.couponInfo.code : null,
+              is_deposit_payment: isDepositPayment,
+              deposit_amount: depositAmount,
+              balance_due: balanceDue,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             };
@@ -627,7 +660,10 @@ serve(async (req) => {
           contact_phone: order.delivery_phone,
           delivery_time_preference: order.delivery_time_preference,
           delivery_instructions: order.delivery_instructions,
-          status: order.status
+          status: order.status,
+          is_deposit_payment: order.is_deposit_payment,
+          deposit_amount: order.deposit_amount,
+          balance_due: order.balance_due
         }));
         
         const totalAmount = backupData.items.reduce((sum, item) => sum + item.total_price, 0);

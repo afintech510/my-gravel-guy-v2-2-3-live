@@ -85,6 +85,9 @@ const Cart = () => {
       deliveryInstructions: details.deliveryInstructions
     });
 
+    // Scroll to top of page after saving delivery info
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
     // Form will collapse automatically when delivery info is complete
     // No auto-navigation to checkout - let customer consider deposit option
   };
