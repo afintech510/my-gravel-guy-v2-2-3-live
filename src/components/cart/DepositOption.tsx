@@ -39,8 +39,10 @@ const DepositOption = ({
           </div>
           
           <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-            Let MyGravelGuy negotiate the best price for you. We will offer you both a Cash on Delivery Price and a Card Price. 
+            Give us 24hrs to Make you Discount Offers. We will offer you both a Cash on Delivery Price and a Card Price. 
             <span className="font-semibold text-primary"> This could save up to 25% off the Buy it Now price.</span>
+            <br />
+            <span className="font-semibold text-primary">Fully Refundable</span>
           </p>
           
           {isSelected && <div className="bg-white/80 border border-primary/20 rounded-lg p-4 space-y-3">
