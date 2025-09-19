@@ -73,13 +73,8 @@ serve(async (req) => {
       );
     }
 
-    // For authenticated users, validate that contact email matches user email
-    if (user && user.email !== contactEmail) {
-      return new Response(
-        JSON.stringify({ error: "Contact information must match authenticated user" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
-      );
-    }
+    // Note: We allow different emails for flexibility in checkout process
+    // Users may want to use different billing/contact emails
 
     // Check if we have an existing cart order to update
     let finalOrderId = orderId;
