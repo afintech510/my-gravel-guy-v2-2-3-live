@@ -158,8 +158,7 @@ const Checkout = () => {
           delivery_address: item.deliveryAddress,
           contact_info: item.contactInfo,
           delivery_time_preference: item.deliveryTimePreference,
-          delivery_instructions: item.deliveryInstructions,
-          location_photo_url: item.locationPhotoUrl
+          delivery_instructions: item.deliveryInstructions
         })),
         total_amount: discountTotal,
         base_total: baseTotal,
@@ -519,15 +518,6 @@ const Checkout = () => {
                           )}
                         </div>
 
-                        {item.locationPhotoUrl && (
-                          <div className="pt-2 border-t border-gray-200">
-                            <h5 className="font-medium text-gray-700 text-sm mb-2">Location Photo</h5>
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <span>📷</span>
-                              <span>Photo uploaded by customer</span>
-                            </div>
-                          </div>
-                        )}
                       </div>
                     )}
                   </div>

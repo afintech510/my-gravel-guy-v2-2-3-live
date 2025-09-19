@@ -45,7 +45,6 @@ export interface OrderItemData {
   };
   deliveryTimePreference?: string;
   deliveryInstructions?: string;
-  locationPhotoUrl?: string;
   metadata?: {
     deliveryDate?: string;
     deliveryAddress?: string;
@@ -208,7 +207,6 @@ export const prepareItemsForStripe = (cartItems: any[]): OrderItemData[] => {
       contactInfo: item.contactInfo,
       deliveryTimePreference: item.deliveryTimePreference,
       deliveryInstructions: item.deliveryInstructions,
-      locationPhotoUrl: item.locationPhotoUrl,
       metadata
     };
     
