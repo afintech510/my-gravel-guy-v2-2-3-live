@@ -38,12 +38,20 @@ const DepositOption = ({
             </Badge>
           </div>
           
-          <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-            Give us 24hrs to Make you Discount Offers. We will offer you both a Cash on Delivery Price and a Card Price. 
-            <span className="font-semibold text-primary"> This could save up to 25% off the Buy it Now price.</span>
-            <br />
-            <span className="font-semibold text-primary">Fully Refundable</span>
-          </p>
+          <div className="flex flex-wrap gap-2 mb-4">
+            <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-300">
+              <TrendingDown className="w-3 h-3 mr-1" />
+              Save Up to 25%
+            </Badge>
+            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+              <HandCoins className="w-3 h-3 mr-1" />
+              Cash is King
+            </Badge>
+            <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-300">
+              <CreditCard className="w-3 h-3 mr-1" />
+              Fully Refundable
+            </Badge>
+          </div>
           
           {isSelected && <div className="bg-white/80 border border-primary/20 rounded-lg p-4 space-y-3">
               <div className="flex justify-between items-center">
