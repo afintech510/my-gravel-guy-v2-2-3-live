@@ -9,6 +9,7 @@ export type OrderUpdate = Database['public']['Tables']['orders']['Update'];
 // Order status enum matching the database
 export type OrderStatus = 
   | 'pending' 
+  | 'authorized'
   | 'confirmed' 
   | 'processing' 
   | 'in_transit' 
