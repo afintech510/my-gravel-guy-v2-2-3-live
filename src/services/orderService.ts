@@ -152,10 +152,19 @@ export class OrderService {
         .select('*', { count: 'exact' });
 
       // Apply quotes/orders filter - include both Quote and cart statuses as quotes
+      // IMPORTANT: For orders view, include ORDER-* prefix orders regardless of status (they've been paid)
+      // For quotes view, include Quote and cart status items
       if (filters.quotesOnly) {
-        query = query.or('status.eq.Quote,status.eq.cart').or('fulfillment_status.is.null,fulfillment_status.neq.Archived');
+        // Quotes: status is Quote or cart, AND not archived
+        query = query.or('status.eq.Quote,status.eq.cart')
+          .or('fulfillment_status.is.null,fulfillment_status.not.in.(Archived)');
       } else if (filters.excludeQuotes) {
-        query = query.neq('status', 'Quote').neq('status', 'cart').or('fulfillment_status.neq.Archived,fulfillment_status.is.null');
+        // Orders: exclude cart status, but include ORDER-* prefix orders even if status is 'Quote'
+        // (these are paid quote conversions where the order_id starts with ORDER-)
+        // This ensures paid orders from quote checkout flow appear in the orders list
+        query = query.neq('status', 'cart')
+          .or('fulfillment_status.is.null,fulfillment_status.not.in.(Archived)')
+          .like('order_id', 'ORDER-%');
       }
 
       // Apply search filter - enhanced search across multiple fields
