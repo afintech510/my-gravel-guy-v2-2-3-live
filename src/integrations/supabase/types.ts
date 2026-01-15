@@ -910,22 +910,19 @@ export type Database = {
         Returns: boolean
       }
       get_fulfillment_status_enum_values: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           enumlabel: string
         }[]
       }
       get_tables: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           table_name: string
           table_schema: string
         }[]
       }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       expense_type: "fixed_monthly" | "variable_monthly" | "one_time"
