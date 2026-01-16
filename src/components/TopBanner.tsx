@@ -77,8 +77,8 @@ const TopBanner = ({ className }: TopBannerProps) => {
           </Dialog>
         </h3>
         
-        {/* Dark mode toggle - minimal moon icon */}
-        <div className="flex-1 flex justify-end">
+        {/* Dark mode toggle - hidden for now */}
+        {/* <div className="flex-1 flex justify-end">
           <button
             onClick={toggleTheme}
             className="p-1 hover:opacity-80 transition-opacity"
@@ -91,7 +91,8 @@ const TopBanner = ({ className }: TopBannerProps) => {
               )} 
             />
           </button>
-        </div>
+        </div> */}
+        <div className="flex-1" />
       </div>
     </div>
   );
