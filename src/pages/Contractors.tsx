@@ -8,29 +8,55 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { sendQuoteRequestEmail } from '@/services/quoteEmailService';
 import { trackEvent } from '@/utils/analytics';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 const formSchema = z.object({
   material: z.string().min(1, 'Please select a material'),
   quantity: z.string().min(1, 'Please enter quantity'),
   zipCode: z.string().min(5, 'Please enter a valid ZIP code'),
   email: z.string().email('Please enter a valid email'),
+  deliveryNotes: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
+const MATERIALS = [
+  '#57 Stone',
+  '#67 Stone',
+  '#8 Stone',
+  '#10 Screenings',
+  'Base / Road Base',
+  'RCA',
+  'Mason Sand',
+  'Sand',
+  'Playground Stone',
+  'Decomposed Granite',
+  'Structural Fill',
+  'Topsoil',
+  'Loam',
+  'Mulch',
+  'Drainage Rock',
+  'Other',
+];
+
 const Contractors = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
-  const { register, handleSubmit, formState: { errors }, setValue, reset } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors }, setValue, reset, watch } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       material: '',
       quantity: '',
       zipCode: '',
       email: '',
+      deliveryNotes: '',
     }
   });
 
@@ -39,11 +65,18 @@ const Contractors = () => {
     try {
       trackEvent('contractor_quote_request', 'quote', `${data.material} - ${data.quantity} tons`);
 
+      const messageContent = [
+        `Material: ${data.material}`,
+        `Quantity: ${data.quantity} tons`,
+        `Delivery ZIP: ${data.zipCode}`,
+        data.deliveryNotes ? `Delivery Notes: ${data.deliveryNotes}` : null,
+      ].filter(Boolean).join('\n');
+
       const result = await sendQuoteRequestEmail({
         name: 'Contractor Quote Request',
         email: data.email,
         phone: '',
-        message: `Material: ${data.material}\nQuantity: ${data.quantity} tons\nDelivery ZIP: ${data.zipCode}`,
+        message: messageContent,
         zipCode: data.zipCode,
         material: data.material,
         estimatedTons: parseFloat(data.quantity) || undefined,
@@ -51,8 +84,9 @@ const Contractors = () => {
       });
 
       if (result.success) {
-        toast.success('Quote request submitted! We\'ll be in touch shortly.');
+        toast.success('Quote request submitted! Check your email for confirmation.');
         reset();
+        setIsModalOpen(false);
       } else {
         toast.error('Failed to submit request. Please try again.');
       }
@@ -64,10 +98,80 @@ const Contractors = () => {
     }
   };
 
-  const scrollToQuote = (e: React.MouseEvent) => {
+  const openQuoteModal = (e: React.MouseEvent) => {
     e.preventDefault();
-    document.getElementById('quote')?.scrollIntoView({ behavior: 'smooth' });
+    setIsModalOpen(true);
   };
+
+  const QuoteFormContent = () => (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div>
+        <Label className="text-xs font-semibold uppercase text-[#B7C0CC] mb-1.5 block">Material Needed</Label>
+        <Select onValueChange={(value) => setValue('material', value)}>
+          <SelectTrigger className="w-full bg-[#0F1115] border-[rgba(255,255,255,0.1)] text-white">
+            <SelectValue placeholder="Select material" />
+          </SelectTrigger>
+          <SelectContent className="bg-[#1a1f28] border-[rgba(255,255,255,0.2)] z-50">
+            {MATERIALS.map((material) => (
+              <SelectItem 
+                key={material} 
+                value={material}
+                className="text-white hover:bg-[#2a3040] focus:bg-[#2a3040] focus:text-white cursor-pointer"
+              >
+                {material}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {errors.material && <p className="text-red-400 text-xs mt-1">{errors.material.message}</p>}
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label className="text-xs font-semibold uppercase text-[#B7C0CC] mb-1.5 block">Quantity (Tons)</Label>
+          <Input
+            {...register('quantity')}
+            placeholder="e.g. 100"
+            className="bg-[#0F1115] border-[rgba(255,255,255,0.1)] text-white placeholder:text-gray-500"
+          />
+          {errors.quantity && <p className="text-red-400 text-xs mt-1">{errors.quantity.message}</p>}
+        </div>
+        <div>
+          <Label className="text-xs font-semibold uppercase text-[#B7C0CC] mb-1.5 block">Delivery ZIP</Label>
+          <Input
+            {...register('zipCode')}
+            placeholder="90210"
+            className="bg-[#0F1115] border-[rgba(255,255,255,0.1)] text-white placeholder:text-gray-500"
+          />
+          {errors.zipCode && <p className="text-red-400 text-xs mt-1">{errors.zipCode.message}</p>}
+        </div>
+      </div>
+      <div>
+        <Label className="text-xs font-semibold uppercase text-[#B7C0CC] mb-1.5 block">Company Email</Label>
+        <Input
+          {...register('email')}
+          type="email"
+          placeholder="pm@construction.com"
+          className="bg-[#0F1115] border-[rgba(255,255,255,0.1)] text-white placeholder:text-gray-500"
+        />
+        {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email.message}</p>}
+      </div>
+      <div>
+        <Label className="text-xs font-semibold uppercase text-[#B7C0CC] mb-1.5 block">Delivery Notes (Optional)</Label>
+        <Textarea
+          {...register('deliveryNotes')}
+          placeholder="Special delivery instructions, site access details, preferred delivery times..."
+          className="bg-[#0F1115] border-[rgba(255,255,255,0.1)] text-white placeholder:text-gray-500 min-h-[80px]"
+        />
+      </div>
+      <Button
+        type="submit"
+        disabled={isSubmitting}
+        className="w-full bg-[#BADF24] text-black font-montserrat font-bold uppercase hover:bg-white"
+      >
+        {isSubmitting ? 'Sending...' : 'Request Pricing'}
+      </Button>
+    </form>
+  );
 
   return (
     <>
@@ -77,6 +181,11 @@ const Contractors = () => {
         <meta name="keywords" content="contractor gravel delivery, bulk aggregate, construction materials, nationwide stone delivery, commercial gravel" />
         <link rel="canonical" href="https://mygravelguy.com/contractors" />
       </Helmet>
+
+      {/* Dark mode navbar wrapper */}
+      <div className="dark bg-[#0F1115] [&_nav]:bg-[#0F1115] [&_nav]:border-[rgba(255,255,255,0.1)] [&_nav_a]:text-gray-300 [&_nav_a:hover]:text-white [&_nav_button]:text-gray-300">
+        <Navbar />
+      </div>
 
       <div className="min-h-screen bg-[#0F1115] text-[#F5F7FA]">
         {/* Hero Section */}
@@ -108,7 +217,7 @@ const Contractors = () => {
               </ul>
               <div className="flex gap-4">
                 <button
-                  onClick={scrollToQuote}
+                  onClick={openQuoteModal}
                   className="bg-[#BADF24] text-black px-7 py-3.5 rounded font-montserrat font-bold uppercase text-sm hover:bg-white transition-colors"
                 >
                   Get a Quote
@@ -123,65 +232,10 @@ const Contractors = () => {
             </div>
 
             {/* Quote Form Card */}
-            <div id="quote" className="bg-[#151A22] p-8 rounded-lg border border-[rgba(255,255,255,0.1)]">
+            <div className="bg-[#151A22] p-8 rounded-lg border border-[rgba(255,255,255,0.1)]">
               <h3 className="font-montserrat font-semibold text-xl uppercase mb-2">Get a Fast Quote</h3>
               <p className="text-sm text-[#B7C0CC] mb-6">Best for 50+ tons or multi-load projects.</p>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div>
-                  <Label className="text-xs font-semibold uppercase text-[#B7C0CC] mb-1.5 block">Material Needed</Label>
-                  <Select onValueChange={(value) => setValue('material', value)}>
-                    <SelectTrigger className="w-full bg-[#0F1115] border-[rgba(255,255,255,0.1)] text-white">
-                      <SelectValue placeholder="Select material" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#151A22] border-[rgba(255,255,255,0.1)]">
-                      <SelectItem value="#57 Stone">#57 Stone</SelectItem>
-                      <SelectItem value="Base / Road Base">Base / Road Base</SelectItem>
-                      <SelectItem value="Mason Sand">Mason Sand</SelectItem>
-                      <SelectItem value="Playground Stone">Playground Stone</SelectItem>
-                      <SelectItem value="Decomposed Granite">Decomposed Granite</SelectItem>
-                      <SelectItem value="Other / Structural Fill">Other / Structural Fill</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.material && <p className="text-red-400 text-xs mt-1">{errors.material.message}</p>}
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs font-semibold uppercase text-[#B7C0CC] mb-1.5 block">Quantity (Tons)</Label>
-                    <Input
-                      {...register('quantity')}
-                      placeholder="e.g. 100"
-                      className="bg-[#0F1115] border-[rgba(255,255,255,0.1)] text-white"
-                    />
-                    {errors.quantity && <p className="text-red-400 text-xs mt-1">{errors.quantity.message}</p>}
-                  </div>
-                  <div>
-                    <Label className="text-xs font-semibold uppercase text-[#B7C0CC] mb-1.5 block">Delivery ZIP</Label>
-                    <Input
-                      {...register('zipCode')}
-                      placeholder="90210"
-                      className="bg-[#0F1115] border-[rgba(255,255,255,0.1)] text-white"
-                    />
-                    {errors.zipCode && <p className="text-red-400 text-xs mt-1">{errors.zipCode.message}</p>}
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-xs font-semibold uppercase text-[#B7C0CC] mb-1.5 block">Company Email</Label>
-                  <Input
-                    {...register('email')}
-                    type="email"
-                    placeholder="pm@construction.com"
-                    className="bg-[#0F1115] border-[rgba(255,255,255,0.1)] text-white"
-                  />
-                  {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email.message}</p>}
-                </div>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-[#BADF24] text-black font-montserrat font-bold uppercase hover:bg-white"
-                >
-                  {isSubmitting ? 'Sending...' : 'Request Pricing'}
-                </Button>
-              </form>
+              <QuoteFormContent />
             </div>
           </section>
         </div>
@@ -273,7 +327,7 @@ const Contractors = () => {
                   <li>✓ Coordinated truck scheduling</li>
                 </ul>
                 <button
-                  onClick={scrollToQuote}
+                  onClick={openQuoteModal}
                   className="block w-full text-center bg-[#BADF24] text-black px-7 py-3.5 rounded font-montserrat font-bold uppercase text-sm hover:bg-white transition-colors"
                 >
                   Request Quote
@@ -295,7 +349,7 @@ const Contractors = () => {
               </p>
               <div className="flex gap-4 justify-center flex-wrap">
                 <button
-                  onClick={scrollToQuote}
+                  onClick={openQuoteModal}
                   className="bg-[#BADF24] text-black px-7 py-3.5 rounded font-montserrat font-bold uppercase text-sm hover:bg-white transition-colors"
                 >
                   Get a Quote
@@ -314,6 +368,24 @@ const Contractors = () => {
           </div>
         </section>
       </div>
+
+      {/* Dark mode footer wrapper */}
+      <div className="dark bg-[#0F1115] [&_footer]:bg-[#0F1115] [&_footer]:border-[rgba(255,255,255,0.1)] [&_footer_h3]:text-white [&_footer_a]:text-gray-400 [&_footer_a:hover]:text-[#BADF24] [&_footer_p]:text-gray-500 [&_footer_hr]:border-[rgba(255,255,255,0.1)]">
+        <Footer />
+      </div>
+
+      {/* Quote Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="bg-[#151A22] border-[rgba(255,255,255,0.1)] text-white sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="font-montserrat font-semibold text-xl uppercase text-white">Get a Fast Quote</DialogTitle>
+            <DialogDescription className="text-[#B7C0CC]">
+              Best for 50+ tons or multi-load projects. We'll get back to you within 24 hours.
+            </DialogDescription>
+          </DialogHeader>
+          <QuoteFormContent />
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
