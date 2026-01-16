@@ -13,8 +13,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { sendQuoteRequestEmail } from "@/services/quoteEmailService";
 import { trackEvent } from "@/utils/analytics";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 
 const formSchema = z.object({
   material: z.string().min(1, "Please select a material"),
@@ -391,11 +389,6 @@ const Contractors = () => {
             </div>
           </div>
         </section>
-      </div>
-
-      {/* Dark mode footer wrapper */}
-      <div className="dark bg-[#0F1115] [&_footer]:bg-[#0F1115] [&_footer]:border-[rgba(255,255,255,0.1)] [&_footer_h3]:text-white [&_footer_a]:text-gray-400 [&_footer_a:hover]:text-[#BADF24] [&_footer_p]:text-gray-500 [&_footer_hr]:border-[rgba(255,255,255,0.1)]">
-        <Footer />
       </div>
 
       {/* Quote Modal */}
