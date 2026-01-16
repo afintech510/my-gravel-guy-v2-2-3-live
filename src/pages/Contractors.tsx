@@ -185,7 +185,10 @@ const Contractors = () => {
         <link rel="canonical" href="https://mygravelguy.com/contractors" />
       </Helmet>
 
-      <Navbar />
+      {/* Dark mode navbar wrapper */}
+      <div className="dark bg-[#0F1115] [&_nav]:bg-[#0F1115] [&_nav]:border-[rgba(255,255,255,0.1)] [&_nav_a]:text-gray-300 [&_nav_a:hover]:text-white [&_nav_button]:text-gray-300">
+        <Navbar />
+      </div>
 
       <div className="min-h-screen bg-[#0F1115] text-[#F5F7FA]">
         {/* Hero Section */}
@@ -369,7 +372,10 @@ const Contractors = () => {
         </section>
       </div>
 
-      <Footer />
+      {/* Dark mode footer wrapper */}
+      <div className="dark bg-[#0F1115] [&_footer]:bg-[#0F1115] [&_footer]:border-[rgba(255,255,255,0.1)] [&_footer_h3]:text-white [&_footer_a]:text-gray-400 [&_footer_a:hover]:text-[#BADF24] [&_footer_p]:text-gray-500 [&_footer_hr]:border-[rgba(255,255,255,0.1)]">
+        <Footer />
+      </div>
 
       {/* Quote Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
