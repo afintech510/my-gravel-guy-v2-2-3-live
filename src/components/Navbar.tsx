@@ -1,14 +1,15 @@
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, ShoppingCart, NotebookPen, Calculator, Store, ThumbsUp, Phone, House, MapPin, DollarSign, X, Mails, Sparkles } from "lucide-react";
+import { Menu, ShoppingCart, Calculator, Store, MapPin, X, Mails, HardHat } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart } from '../contexts/CartContext';
 import { useZipCode } from '../contexts/ZipCodeContext';
 import ZipCodeSearch from './zip-code/ZipCodeSearch';
-import ThemeToggle from './ThemeToggle';
 import { useState } from 'react';
 import { useIsMobile } from '../hooks/use-mobile';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 const Navbar = () => {
   const { items } = useCart();
@@ -18,16 +19,14 @@ const Navbar = () => {
   const isMobile = useIsMobile();
 
   const links = [
-    { href: "/", label: "Home", icon: <House className="h-5 w-5 mr-2" /> },
-    { href: "/shop", label: "Shop", icon: <Store className="h-5 w-5 mr-2" /> },
+    { href: "/contractors", label: "Contractors", icon: <HardHat className="h-5 w-5 mr-2" />, isHighlighted: true },
+    { href: "/shop", label: "Order Now", icon: <Store className="h-5 w-5 mr-2" /> },
     { href: "/product-calculator", label: "Calculator", icon: <Calculator className="h-5 w-5 mr-2" /> },
-//    { href: "/quiz", label: "Plan Project", icon: <NotebookPen className="h-5 w-5 mr-2" /> },
-    { href: "/about", label: "About", icon: <Sparkles className="h-5 w-5 mr-2" /> },
     { href: "/contact", label: "Quote", icon: <Mails className="h-5 w-5 mr-2" /> },
   ];
 
   const mobileLinks = [
-    { href: "/shop", label: "Shop", icon: <Store className="h-6 w-6" /> },
+    { href: "/shop", label: "Order Now", icon: <Store className="h-6 w-6" /> },
     { href: "/product-calculator", label: "Calculator", icon: <Calculator className="h-6 w-6" /> },
   ];
 
@@ -53,7 +52,7 @@ const Navbar = () => {
         </Link>
       </div>
 
-      <nav className="bg-white dark:bg-gray-900 border-b z-40">
+      <nav className="bg-background dark:bg-gray-800 border-b border-border z-40">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
 
@@ -79,14 +78,30 @@ const Navbar = () => {
               )}
               
               {links.map((link) => (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 px-3 py-2 rounded-md text-[1.1rem] font-medium inline-flex items-center font-playfair"
-                >
-                  {link.icon}
-                  {link.label}
-                </Link>
+                link.isHighlighted ? (
+                  <Link
+                    key={link.href}
+                    to={link.href}
+                    className="inline-flex items-center"
+                  >
+                    <Badge 
+                      variant="outline" 
+                      className="bg-primary/10 text-primary border-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200 px-3 py-1.5 text-[1rem] font-medium font-playfair cursor-pointer"
+                    >
+                      {link.icon}
+                      {link.label}
+                    </Badge>
+                  </Link>
+                ) : (
+                  <Link
+                    key={link.href}
+                    to={link.href}
+                    className="text-foreground/70 hover:text-foreground px-3 py-2 rounded-md text-[1.1rem] font-medium inline-flex items-center font-playfair transition-colors"
+                  >
+                    {link.icon}
+                    {link.label}
+                  </Link>
+                )
               ))}
               <Link to="/cart" className="relative">
                 <Button variant="ghost" size="icon">
@@ -164,7 +179,12 @@ const Navbar = () => {
                       <Link
                         key={link.href}
                         to={link.href}
-                        className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 px-3 py-2 rounded-md text-[1.1rem] font-medium inline-flex items-center font-playfair"
+                        className={cn(
+                          "px-3 py-2 rounded-md text-[1.1rem] font-medium inline-flex items-center font-playfair",
+                          link.isHighlighted 
+                            ? "text-primary bg-primary/10 border border-primary/30" 
+                            : "text-foreground/70 hover:text-foreground"
+                        )}
                         onClick={handleMenuClick}
                       >
                         {link.icon}

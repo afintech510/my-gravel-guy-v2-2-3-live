@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { MapPin } from 'lucide-react';
+import { MapPin, Moon, Sun } from 'lucide-react';
 import { useZipCode } from '../contexts/ZipCodeContext';
 import { 
   Dialog,
@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import ZipCodeSearch from './zip-code/ZipCodeSearch';
 import { cn } from '@/lib/utils';
-import { Link } from 'react-router-dom';
+import { useTheme } from 'next-themes';
+import { Switch } from '@/components/ui/switch';
 
 interface TopBannerProps {
   className?: string;
@@ -20,6 +21,7 @@ interface TopBannerProps {
 const TopBanner = ({ className }: TopBannerProps) => {
   const { zipCodeData } = useZipCode();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
   
   // Use the city name and state from zipCodeData if available
   const locationText = zipCodeData ? 
@@ -30,14 +32,20 @@ const TopBanner = ({ className }: TopBannerProps) => {
   const handleZipCodeSelected = () => {
     setDialogOpen(false);
   };
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
   
   return (
     <div className={cn(
-      "bg-primary text-primary-foreground py-0.5 px-4 text-right md:text-center z-50 relative",
+      "bg-primary text-primary-foreground py-0.5 px-4 z-50 relative",
       className
     )}>
-      <div className="max-w-6xl mx-auto flex items-center justify-end md:justify-center">
-        <h3 className="text-sm font-roboto-mono font-bold">
+      <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="flex-1" />
+        
+        <h3 className="text-sm font-roboto-mono font-bold text-center">
           <span className="italic">FREE</span>{' '}DELIVERY{' '} 
            
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -69,6 +77,17 @@ const TopBanner = ({ className }: TopBannerProps) => {
             </DialogContent>
           </Dialog>
         </h3>
+        
+        {/* Dark mode toggle */}
+        <div className="flex-1 flex justify-end items-center gap-2">
+          <Sun className="h-3.5 w-3.5 text-primary-foreground/70" />
+          <Switch
+            checked={theme === 'dark'}
+            onCheckedChange={toggleTheme}
+            className="data-[state=checked]:bg-gray-800 data-[state=unchecked]:bg-primary-foreground/30 h-5 w-9"
+          />
+          <Moon className="h-3.5 w-3.5 text-primary-foreground/70" />
+        </div>
       </div>
     </div>
   );
