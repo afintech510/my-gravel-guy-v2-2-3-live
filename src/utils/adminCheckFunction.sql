@@ -10,6 +10,7 @@ AS $$
 DECLARE
   admin_emails TEXT[] := ARRAY[
     'admin@mygravelguy.com',
+    'adam.larkin@mygravelguy.com',
     'manager@mygravelguy.com', 
     'adam@easternbuilding.supply',
     'techminded.xyz@gmail.com',
