@@ -17,7 +17,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onOrderInstantly, onGetQuote 
   return (
     <section
       id="quote"
-      className="relative min-h-screen bg-[#0F1115] pt-[72px] overflow-hidden"
+      className="relative bg-[#0F1115] pt-[72px] overflow-hidden"
     >
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
