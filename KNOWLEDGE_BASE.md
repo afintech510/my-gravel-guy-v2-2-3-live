@@ -23,6 +23,7 @@ MyGravelGuy is a React/TypeScript web application for a gravel and construction 
 ### Core Tables
 
 #### Products (`products`)
+
 - **Purpose**: Product catalog with sophisticated pricing models
 - **Key Fields**:
   - `id`: UUID primary key
@@ -35,6 +36,7 @@ MyGravelGuy is a React/TypeScript web application for a gravel and construction 
   - `slug`: URL-friendly identifier
 
 #### Orders (`orders`)
+
 - **Purpose**: Customer orders and quotes
 - **Key Fields**:
   - `order_id`: Human-readable order identifier
@@ -48,6 +50,7 @@ MyGravelGuy is a React/TypeScript web application for a gravel and construction 
   - `sales_person`, `sales_commission`: Sales tracking
 
 #### Service ZIP Codes (`service_zip_codes`)
+
 - **Purpose**: Geographic service area definition with pricing adjustments
 - **Key Fields**:
   - `zip`: ZIP code (primary identifier)
@@ -56,6 +59,7 @@ MyGravelGuy is a React/TypeScript web application for a gravel and construction 
   - `price_adjustment`: Multiplier for regional pricing (e.g., 1.2 = 20% increase)
 
 #### Suppliers (`suppliers`)
+
 - **Purpose**: Supplier management and coordination
 - **Key Fields**:
   - `name`, `email`, `phone`: Contact information
@@ -65,6 +69,7 @@ MyGravelGuy is a React/TypeScript web application for a gravel and construction 
   - `active`: Operational status
 
 #### Messages (`messages`)
+
 - **Purpose**: SMS communication with customers
 - **Key Fields**:
   - `phone_number`: Customer phone number
@@ -76,17 +81,21 @@ MyGravelGuy is a React/TypeScript web application for a gravel and construction 
 ### Specialized Tables
 
 #### Blog System
+
 - `blog_posts`: Content management with categories, SEO metadata
 - `blog_categories`: Hierarchical content organization
 
 #### Reviews System
+
 - `customer_reviews`: Product reviews with ratings and admin responses
 
 #### Financial Management
+
 - `expenses`: Business expense tracking with categories and recurring items
 - `expense_categories`: Expense classification system
 
 #### Analytics
+
 - `location_search`: ZIP code search tracking
 - `quote_analytics`: Business metrics and conversion tracking
 
@@ -104,6 +113,7 @@ The database uses comprehensive RLS policies:
 ### Pricing System
 
 #### Exponential Pricing Model
+
 The system uses a sophisticated exponential pricing model for bulk discounts:
 
 **Formula**: `price = a * e^(b * quantity) + c`
@@ -114,11 +124,13 @@ The system uses a sophisticated exponential pricing model for bulk discounts:
 - **Minimum Pricing**: Prevents prices below 50% of base price or $50
 
 #### ZIP Code Adjustments
+
 - **Regional Pricing**: Price multipliers based on delivery location
 - **Cache System**: Reduces database calls for pricing lookups
 - **Service Area Validation**: Ensures delivery availability
 
 #### Complete Pricing Flow
+
 ```typescript
 1. Base Product Price ($150/ton)
 2. Apply Exponential Pricing (10 tons → ~$120/ton)
@@ -129,16 +141,19 @@ The system uses a sophisticated exponential pricing model for bulk discounts:
 ### Order Management
 
 #### Order ID System
+
 - **Base Orders**: Timestamp-based IDs (e.g., `20241201-143022`)
 - **Multi-Item Orders**: Suffixed IDs (e.g., `20241201-143022-2`, `20241201-143022-3`)
 - **Grouping Logic**: Orders with same base ID are grouped together
 
 #### Order Statuses
+
 - **Standard Flow**: pending → confirmed → processing → delivered
 - **Quote Flow**: Quote → (conversion) → confirmed
 - **Fulfillment Tracking**: Separate enum for logistics status
 
 #### Quote System
+
 - **Quote Generation**: Convert existing orders to quotes with expiration
 - **Email Templates**: Automated quote proposals with product details
 - **Conversion Tracking**: Monitor quote-to-order conversion rates
@@ -146,6 +161,7 @@ The system uses a sophisticated exponential pricing model for bulk discounts:
 ### Cart and Checkout
 
 #### Cart Functionality
+
 - **Persistent Storage**: localStorage with date serialization
 - **Multi-Item Support**: Each product addition creates new cart item
 - **Delivery Details**: Per-item delivery addresses and timing
@@ -153,6 +169,7 @@ The system uses a sophisticated exponential pricing model for bulk discounts:
 - **Minimum Quantities**: 3-ton minimum enforced
 
 #### Checkout Process
+
 1. **Cart Review**: Validate delivery information completeness
 2. **Stripe Integration**: Secure payment processing
 3. **Order Creation**: Generate order records with proper IDs
@@ -162,15 +179,18 @@ The system uses a sophisticated exponential pricing model for bulk discounts:
 ## Authentication & Authorization
 
 ### User Roles
+
 - **Public Users**: Browse products, get quotes, place orders
 - **Authenticated Users**: Access order history, manage quotes
 - **Admins**: Full dashboard access, order management, system administration
 - **Financial Admins**: Subset of users with expense management access
 
 ### Admin Email List
+
 ```typescript
 const adminEmails = [
   'admin@mygravelguy.com',
+  'mygravelguy@gmail.com',
   'manager@mygravelguy.com',
   'adam@easternbuilding.supply',
   'techminded.xyz@gmail.com',
@@ -179,6 +199,7 @@ const adminEmails = [
 ```
 
 ### Session Management
+
 - **Supabase Auth**: JWT-based authentication
 - **Session Recovery**: Automatic session restoration
 - **Admin Status**: Cached admin status checks
@@ -186,6 +207,7 @@ const adminEmails = [
 ## Component Architecture
 
 ### Context Providers
+
 - **CartContext**: Shopping cart state management
 - **ZipCodeContext**: Location and service area management
 - **BlogContext**: Content management state
@@ -194,22 +216,26 @@ const adminEmails = [
 ### Key Component Categories
 
 #### Product Components
+
 - **ProductGrid**: Product listing with filtering
 - **ProductCard**: Individual product display
 - **ProductCalculator**: Advanced pricing calculator with area inputs
 
 #### Shopping Components
+
 - **MaterialCalculator**: Area-based material estimation
 - **ShoppingModule**: Quick product selection
 - **CartItemCard**: Individual cart item management
 
 #### Admin Dashboard
+
 - **OrdersTable**: Order management interface
 - **OrderDetailModal**: Comprehensive order editing
 - **SuppliersTable**: Supplier management
 - **FinancialCharts**: Business analytics visualization
 
 #### Forms and Validation
+
 - **React Hook Form**: Form state management
 - **Zod Schemas**: Type-safe validation
 - **Error Handling**: Comprehensive error states
@@ -217,12 +243,14 @@ const adminEmails = [
 ### Design System
 
 #### Theme Configuration
+
 - **Primary Color**: `#14FF6A` (bright green)
 - **HSL Color System**: Consistent color management
 - **Dark Mode**: Complete dark/light theme support
 - **Typography**: Montserrat, Playfair Display, Roboto Mono fonts
 
 #### Component Standards
+
 - **shadcn/ui**: Base component library
 - **Semantic Tokens**: Design system variables
 - **Responsive Design**: Mobile-first approach
@@ -231,6 +259,7 @@ const adminEmails = [
 ## API Integrations
 
 ### Supabase Edge Functions
+
 - **send-email**: Email notifications via Resend
 - **send-sms**: SMS messaging via Twilio
 - **create-payment**: Stripe payment processing
@@ -238,6 +267,7 @@ const adminEmails = [
 - **voice-response**: Twilio voice handling
 
 ### External Services
+
 - **Stripe**: Payment processing with webhook handling
 - **Twilio**: SMS and voice communications
 - **Resend**: Transactional email delivery
@@ -246,6 +276,7 @@ const adminEmails = [
 ## Development Guidelines
 
 ### Code Organization
+
 - **Services**: Business logic and data access (`src/services/`)
 - **Components**: UI components (`src/components/`)
 - **Hooks**: Custom React hooks (`src/hooks/`)
@@ -253,6 +284,7 @@ const adminEmails = [
 - **Types**: TypeScript type definitions (`src/types/`)
 
 ### Best Practices
+
 - **TypeScript**: Strict type checking enabled
 - **Error Handling**: Comprehensive try/catch blocks
 - **Logging**: Detailed console logging for debugging
@@ -260,6 +292,7 @@ const adminEmails = [
 - **Testing**: Component and utility testing
 
 ### File Naming Conventions
+
 - **Components**: PascalCase (e.g., `OrderDetailModal.tsx`)
 - **Hooks**: camelCase with `use` prefix (e.g., `useAuth.ts`)
 - **Services**: camelCase (e.g., `orderService.ts`)
@@ -268,23 +301,27 @@ const adminEmails = [
 ## Business Rules & Constraints
 
 ### Order Management Rules
+
 1. **Minimum Order**: 3 tons per product
 2. **Order Grouping**: Items with same base order ID are managed together
 3. **Quote Expiration**: 30-day default expiration on quotes
 4. **Status Transitions**: Defined workflows for order progression
 
 ### Pricing Rules
+
 1. **Exponential Discounts**: Volume pricing based on mathematical model
 2. **Regional Adjustments**: ZIP code-based price modifications
 3. **Minimum Pricing**: Floor prices prevent unrealistic discounts
 4. **Cache Strategy**: Price adjustments cached for performance
 
 ### Service Area Rules
+
 1. **ZIP Code Validation**: Only service defined ZIP codes
 2. **Delivery Scheduling**: Flexible delivery date selection
 3. **Contact Requirements**: Phone number mandatory for delivery
 
 ### Admin Functions
+
 1. **Order Modification**: Admins can update all order fields
 2. **Supplier Assignment**: Manual supplier selection and charge entry
 3. **Quote Conversion**: Convert quotes to orders with price adjustments
@@ -293,18 +330,21 @@ const adminEmails = [
 ## Performance Considerations
 
 ### Frontend Optimization
+
 - **React Query**: Data caching and background updates
 - **LocalStorage**: Cart persistence and user preferences
 - **Component Lazy Loading**: Route-based code splitting
 - **Image Optimization**: Responsive images and lazy loading
 
 ### Database Optimization
+
 - **Indexes**: Strategic indexing on frequently queried fields
 - **RLS Policies**: Efficient row-level security implementation
 - **Caching**: Application-level caching for ZIP code adjustments
 - **Query Optimization**: Efficient joins and filtering
 
 ### API Performance
+
 - **Rate Limiting**: Prevent API abuse
 - **Edge Functions**: Serverless function optimization
 - **Webhook Handling**: Efficient event processing
@@ -313,18 +353,21 @@ const adminEmails = [
 ## Security Considerations
 
 ### Data Protection
+
 - **RLS Policies**: Database-level access control
 - **Input Validation**: Comprehensive form validation
 - **SQL Injection**: Parameterized queries via Supabase
 - **XSS Prevention**: Proper input sanitization
 
 ### Authentication Security
+
 - **JWT Tokens**: Secure token management
 - **Session Management**: Proper session handling
 - **Admin Verification**: Email-based admin role verification
 - **Rate Limiting**: API endpoint protection
 
 ### Financial Data
+
 - **PCI Compliance**: Stripe handles sensitive payment data
 - **Order Integrity**: Immutable order records
 - **Audit Trail**: Order status change tracking
@@ -333,12 +376,14 @@ const adminEmails = [
 ## Monitoring & Analytics
 
 ### Business Metrics
+
 - **Order Volume**: Track order creation and completion
 - **Quote Conversion**: Monitor quote-to-order rates
 - **Regional Performance**: ZIP code-based analytics
 - **Revenue Tracking**: Sales and commission reporting
 
 ### Technical Monitoring
+
 - **Error Tracking**: Application error monitoring
 - **Performance Metrics**: Page load and API response times
 - **User Behavior**: Navigation and interaction tracking
@@ -347,12 +392,14 @@ const adminEmails = [
 ## Deployment & Environment
 
 ### Environment Configuration
+
 - **Production**: Deployed via Lovable platform
 - **Environment Variables**: Supabase keys and API configurations
 - **Domain Management**: Custom domain support
 - **SSL/Security**: Automatic HTTPS and security headers
 
 ### Backup & Recovery
+
 - **Database Backups**: Supabase automated backups
 - **Code Repository**: Git-based version control
 - **Asset Storage**: Supabase storage with CDN
@@ -361,6 +408,7 @@ const adminEmails = [
 ## Future Enhancements
 
 ### Planned Features
+
 1. **SEO-Optimized Landing Pages**: Dynamic routing for materials and locations
 2. **Advanced Analytics**: Enhanced business intelligence dashboard
 3. **Mobile App**: React Native mobile application
@@ -368,6 +416,7 @@ const adminEmails = [
 5. **Machine Learning**: Predictive analytics for demand forecasting
 
 ### Scalability Considerations
+
 1. **Database Scaling**: Prepare for increased order volume
 2. **CDN Integration**: Optimize asset delivery
 3. **Caching Strategy**: Implement Redis for enhanced caching
@@ -375,4 +424,4 @@ const adminEmails = [
 
 ---
 
-*This knowledge base serves as the definitive guide for understanding and maintaining the MyGravelGuy platform. It should be updated as the system evolves and new features are added.*
+_This knowledge base serves as the definitive guide for understanding and maintaining the MyGravelGuy platform. It should be updated as the system evolves and new features are added._
