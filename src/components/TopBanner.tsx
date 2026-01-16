@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { MapPin, Moon, Sun } from 'lucide-react';
+import { MapPin, Moon } from 'lucide-react';
 import { useZipCode } from '../contexts/ZipCodeContext';
 import { 
   Dialog,
@@ -12,7 +12,6 @@ import {
 import ZipCodeSearch from './zip-code/ZipCodeSearch';
 import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
-import { Switch } from '@/components/ui/switch';
 
 interface TopBannerProps {
   className?: string;
@@ -78,15 +77,20 @@ const TopBanner = ({ className }: TopBannerProps) => {
           </Dialog>
         </h3>
         
-        {/* Dark mode toggle */}
-        <div className="flex-1 flex justify-end items-center gap-2">
-          <Sun className="h-3.5 w-3.5 text-primary-foreground/70" />
-          <Switch
-            checked={theme === 'dark'}
-            onCheckedChange={toggleTheme}
-            className="data-[state=checked]:bg-gray-800 data-[state=unchecked]:bg-primary-foreground/30 h-5 w-9"
-          />
-          <Moon className="h-3.5 w-3.5 text-primary-foreground/70" />
+        {/* Dark mode toggle - minimal moon icon */}
+        <div className="flex-1 flex justify-end">
+          <button
+            onClick={toggleTheme}
+            className="p-1 hover:opacity-80 transition-opacity"
+            aria-label="Toggle dark mode"
+          >
+            <Moon 
+              className={cn(
+                "h-4 w-4 text-primary-foreground transition-all",
+                theme === 'dark' ? "fill-primary-foreground" : "fill-transparent"
+              )} 
+            />
+          </button>
         </div>
       </div>
     </div>
