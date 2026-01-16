@@ -60,6 +60,7 @@ import GoogleShopping from "./pages/GoogleShopping";
 import AddToCart from "./pages/AddToCart";
 import QuoteCheckout from "./pages/QuoteCheckout";
 import LandingPage from "./pages/LandingPage";
+import Contractors from "./pages/Contractors";
 import { Link } from "react-router-dom";
 
 const queryClient = new QueryClient({
@@ -148,6 +149,7 @@ function AppContent() {
         <Route path="/add-to-cart" element={<AddToCart />} />
         <Route path="/quote-checkout/:quoteId" element={<QuoteCheckout />} />
         <Route path="/landing" element={<LandingPage />} />
+        <Route path="/contractors" element={<Contractors />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       {!isDashboardPage && <Footer />}
