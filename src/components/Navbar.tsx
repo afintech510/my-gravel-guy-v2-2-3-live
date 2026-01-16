@@ -86,7 +86,7 @@ const Navbar = () => {
                   >
                     <Badge 
                       variant="outline" 
-                      className="bg-primary/10 text-primary border-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200 px-3 py-1.5 text-[1rem] font-medium font-playfair cursor-pointer"
+                      className="bg-primary/10 text-foreground border-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200 px-3 py-1.5 text-[1rem] font-medium font-playfair cursor-pointer"
                     >
                       {link.icon}
                       {link.label}
