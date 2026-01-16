@@ -61,6 +61,7 @@ import AddToCart from "./pages/AddToCart";
 import QuoteCheckout from "./pages/QuoteCheckout";
 import LandingPage from "./pages/LandingPage";
 import Contractors from "./pages/Contractors";
+import ContractorsAggregateLanding from "./pages/ContractorsAggregateLanding";
 import { Link } from "react-router-dom";
 
 const queryClient = new QueryClient({
@@ -150,6 +151,7 @@ function AppContent() {
         <Route path="/quote-checkout/:quoteId" element={<QuoteCheckout />} />
         <Route path="/landing" element={<LandingPage />} />
         <Route path="/contractors" element={<Contractors />} />
+        <Route path="/contractors-aggregate-delivery-service" element={<ContractorsAggregateLanding />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       {!isDashboardPage && <Footer />}

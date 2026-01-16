@@ -5,12 +5,13 @@ import HeroSection from '@/components/contractors-landing/HeroSection';
 import ProblemSection from '@/components/contractors-landing/ProblemSection';
 import SolutionSection from '@/components/contractors-landing/SolutionSection';
 import MaterialsSection from '@/components/contractors-landing/MaterialsSection';
+import BuiltForSection from '@/components/contractors-landing/BuiltForSection';
 import CompareSection from '@/components/contractors-landing/CompareSection';
+import CredibilitySection from '@/components/contractors-landing/CredibilitySection';
+import FinalCTASection from '@/components/contractors-landing/FinalCTASection';
 import Footer from '@/components/contractors-landing/Footer';
 
 const ContractorsAggregateLanding: React.FC = () => {
-  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
-
   const scrollToQuote = () => {
     const quoteSection = document.getElementById('quote');
     if (quoteSection) {
@@ -35,7 +36,10 @@ const ContractorsAggregateLanding: React.FC = () => {
         <ProblemSection />
         <SolutionSection onGetQuote={scrollToQuote} />
         <MaterialsSection />
+        <BuiltForSection />
         <CompareSection onGetQuote={scrollToQuote} onOrderInstantly={openOrderModal} />
+        <CredibilitySection />
+        <FinalCTASection onGetQuote={scrollToQuote} onOrderInstantly={openOrderModal} />
         <Footer onGetQuote={scrollToQuote} />
       </div>
     </>
