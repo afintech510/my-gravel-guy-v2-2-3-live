@@ -11,6 +11,7 @@ interface EmailRequest {
   subject: string;
   html: string;
   type: 'customer_confirmation' | 'internal_notification';
+  reply_to?: string;
   orderData?: any;
 }
 
@@ -24,13 +25,14 @@ serve(async (req) => {
   }
 
   try {
-    const { to, subject, html, type, orderData }: EmailRequest = await req.json();
+    const { to, subject, html, type, reply_to, orderData }: EmailRequest = await req.json();
     
     console.log('=== EMAIL FUNCTION DEBUG ===');
     console.log('Email type:', type);
     console.log('Recipient (to):', to);
     console.log('Recipient type:', typeof to);
     console.log('Subject:', subject);
+    console.log('Reply-to:', reply_to || 'not set');
     console.log('From address will be: team@mygravelguy.com');
     
     if (orderData) {
@@ -59,12 +61,17 @@ serve(async (req) => {
 
     console.log(`Sending ${type} email to: ${to}`);
 
-    const emailPayload = {
+    const emailPayload: Record<string, any> = {
       from: "MyGravelGuy <team@mygravelguy.com>",
       to: [to],
       subject: subject,
       html: html,
     };
+    
+    // Add reply_to if provided
+    if (reply_to) {
+      emailPayload.reply_to = reply_to;
+    }
     
     console.log('Resend payload:', JSON.stringify(emailPayload, null, 2));
 
