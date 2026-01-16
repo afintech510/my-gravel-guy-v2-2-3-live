@@ -8,7 +8,8 @@ AS $$
 DECLARE
   financial_admin_emails TEXT[] := ARRAY[
     'techminded.xyz@gmail.com',
-    'adam@easternbuilding.supply'
+    'adam@easternbuilding.supply',
+    'adam.larkin@mygravelguy.com'
   ];
 BEGIN
   -- Ensure user is authenticated
