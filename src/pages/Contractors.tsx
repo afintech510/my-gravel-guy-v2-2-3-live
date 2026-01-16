@@ -49,7 +49,7 @@ const Contractors = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  const { register, handleSubmit, formState: { errors }, setValue, reset, watch } = useForm<FormData>({
+  const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       material: '',
@@ -59,6 +59,9 @@ const Contractors = () => {
       deliveryNotes: '',
     }
   });
+
+  const { register, handleSubmit, formState: { errors }, setValue, reset, watch } = form;
+  const materialValue = watch('material');
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
@@ -103,11 +106,11 @@ const Contractors = () => {
     setIsModalOpen(true);
   };
 
-  const QuoteFormContent = () => (
+  const renderQuoteForm = () => (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <Label className="text-xs font-semibold uppercase text-[#B7C0CC] mb-1.5 block">Material Needed</Label>
-        <Select onValueChange={(value) => setValue('material', value)}>
+        <Select value={materialValue} onValueChange={(value) => setValue('material', value)}>
           <SelectTrigger className="w-full bg-[#0F1115] border-[rgba(255,255,255,0.1)] text-white">
             <SelectValue placeholder="Select material" />
           </SelectTrigger>
@@ -235,7 +238,7 @@ const Contractors = () => {
             <div className="bg-[#151A22] p-8 rounded-lg border border-[rgba(255,255,255,0.1)]">
               <h3 className="font-montserrat font-semibold text-xl uppercase mb-2">Get a Fast Quote</h3>
               <p className="text-sm text-[#B7C0CC] mb-6">Best for 50+ tons or multi-load projects.</p>
-              <QuoteFormContent />
+              {renderQuoteForm()}
             </div>
           </section>
         </div>
@@ -383,7 +386,7 @@ const Contractors = () => {
               Best for 50+ tons or multi-load projects. We'll get back to you within 24 hours.
             </DialogDescription>
           </DialogHeader>
-          <QuoteFormContent />
+          {renderQuoteForm()}
         </DialogContent>
       </Dialog>
     </>
