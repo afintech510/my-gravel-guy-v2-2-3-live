@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { toast } from 'sonner';
+import { sendQuoteRequestEmail } from '@/services/quoteEmailService';
 
 interface FormData {
   name: string;
@@ -16,7 +17,11 @@ interface FormErrors {
   [key: string]: string;
 }
 
-const QuoteForm: React.FC = () => {
+interface QuoteFormProps {
+  onSuccess?: () => void;
+}
+
+const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess }) => {
   const [formData, setFormData] = useState<FormData>({
     name: '',
     company: '',
@@ -34,15 +39,24 @@ const QuoteForm: React.FC = () => {
 
   const materials = [
     '#57 Stone',
+    '#67 Stone',
+    '#8 Stone',
+    '#10 Screenings',
     'Road Base / ABC',
+    'RCA',
     'Screenings / Crusher Dust',
     'Mason Sand',
     'Concrete Sand',
+    'Sand',
     'Playground Stone',
     'Decomposed Granite',
     'Rip Rap',
+    'Drainage Rock',
     'Fill Dirt',
+    'Structural Fill',
     'Topsoil',
+    'Loam',
+    'Mulch',
     'Other',
   ];
 
@@ -66,7 +80,7 @@ const QuoteForm: React.FC = () => {
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Invalid email format';
     }
-    if (!formData.phone.trim()) newErrors.phone = 'Phone is required';
+    // Phone is now optional - no validation required
     if (!formData.material) newErrors.material = 'Please select a material';
     if (!formData.quantity.trim()) newErrors.quantity = 'Quantity is required';
     if (!formData.deliveryZip.trim()) {
@@ -86,24 +100,51 @@ const QuoteForm: React.FC = () => {
 
     setIsSubmitting(true);
 
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      // Build the message from form data
+      const message = `
+Company: ${formData.company}
+Material: ${formData.material}
+Quantity: ${formData.quantity} tons
+${formData.projectDetails ? `Project Details: ${formData.projectDetails}` : ''}
+      `.trim();
 
-    setIsSubmitting(false);
-    setIsSubmitted(true);
-    toast.success('Quote request submitted successfully!');
+      const result = await sendQuoteRequestEmail({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || 'Not provided',
+        message: message,
+        zipCode: formData.deliveryZip,
+        material: formData.material,
+        estimatedTons: parseFloat(formData.quantity) || undefined,
+        sourcePage: '/contractors-aggregate-delivery-service',
+      });
 
-    // Reset form
-    setFormData({
-      name: '',
-      company: '',
-      email: '',
-      phone: '',
-      material: '',
-      quantity: '',
-      deliveryZip: '',
-      projectDetails: '',
-    });
+      if (result.success) {
+        setIsSubmitted(true);
+        toast.success('Quote request submitted successfully!');
+        onSuccess?.();
+        
+        // Reset form
+        setFormData({
+          name: '',
+          company: '',
+          email: '',
+          phone: '',
+          material: '',
+          quantity: '',
+          deliveryZip: '',
+          projectDetails: '',
+        });
+      } else {
+        toast.error(result.error || 'Failed to submit quote request');
+      }
+    } catch (error) {
+      console.error('Error submitting quote:', error);
+      toast.error('Failed to submit quote request. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isSubmitted) {
@@ -208,14 +249,9 @@ const QuoteForm: React.FC = () => {
               name="phone"
               value={formData.phone}
               onChange={handleChange}
-              placeholder="Phone *"
-              className={`w-full bg-[#0F1115] border ${
-                errors.phone ? 'border-red-500' : 'border-[rgba(255,255,255,0.10)]'
-              } rounded-lg px-4 py-3 text-[#F5F7FA] placeholder-[#B7C0CC]/50 focus:outline-none focus:border-[#BADF24] transition-colors`}
+              placeholder="Phone (optional)"
+              className="w-full bg-[#0F1115] border border-[rgba(255,255,255,0.10)] rounded-lg px-4 py-3 text-[#F5F7FA] placeholder-[#B7C0CC]/50 focus:outline-none focus:border-[#BADF24] transition-colors"
             />
-            {errors.phone && (
-              <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
-            )}
           </div>
         </div>
 
