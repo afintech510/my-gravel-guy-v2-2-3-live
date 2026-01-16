@@ -1,6 +1,6 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import Navbar from "@/components/contractors-landing/Navbar";
 import HeroSection from "@/components/contractors-landing/HeroSection";
 import ProblemSection from "@/components/contractors-landing/ProblemSection";
 import SolutionSection from "@/components/contractors-landing/SolutionSection";
@@ -9,19 +9,18 @@ import BuiltForSection from "@/components/contractors-landing/BuiltForSection";
 import CompareSection from "@/components/contractors-landing/CompareSection";
 import CredibilitySection from "@/components/contractors-landing/CredibilitySection";
 import FinalCTASection from "@/components/contractors-landing/FinalCTASection";
-import Footer from "@/components/contractors-landing/Footer";
+import QuoteModal from "@/components/contractors-landing/QuoteModal";
 
 const ContractorsAggregateLanding: React.FC = () => {
-  const scrollToQuote = () => {
-    const quoteSection = document.getElementById("quote");
-    if (quoteSection) {
-      quoteSection.scrollIntoView({ behavior: "smooth" });
-    }
+  const navigate = useNavigate();
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+
+  const openQuoteModal = () => {
+    setQuoteModalOpen(true);
   };
 
-  const openOrderModal = () => {
-    // For now, scroll to quote form
-    scrollToQuote();
+  const goToShop = () => {
+    navigate('/shop');
   };
 
   return (
@@ -34,15 +33,16 @@ const ContractorsAggregateLanding: React.FC = () => {
         />
       </Helmet>
       <div className="min-h-screen bg-[#0F1115]">
-        <HeroSection onOrderInstantly={openOrderModal} />
+        <HeroSection onOrderInstantly={goToShop} onGetQuote={openQuoteModal} />
         <ProblemSection />
-        <SolutionSection onGetQuote={scrollToQuote} />
+        <SolutionSection onGetQuote={openQuoteModal} />
         <MaterialsSection />
         <BuiltForSection />
-        <CompareSection onGetQuote={scrollToQuote} onOrderInstantly={openOrderModal} />
+        <CompareSection onGetQuote={openQuoteModal} onOrderInstantly={goToShop} />
         <CredibilitySection />
-        <FinalCTASection onGetQuote={scrollToQuote} onOrderInstantly={openOrderModal} />
+        <FinalCTASection onGetQuote={openQuoteModal} onOrderInstantly={goToShop} />
       </div>
+      <QuoteModal open={quoteModalOpen} onOpenChange={setQuoteModalOpen} />
     </>
   );
 };
