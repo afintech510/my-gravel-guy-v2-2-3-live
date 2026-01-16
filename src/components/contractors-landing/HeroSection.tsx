@@ -3,9 +3,10 @@ import QuoteForm from './QuoteForm';
 
 interface HeroSectionProps {
   onOrderInstantly: () => void;
+  onGetQuote: () => void;
 }
 
-const HeroSection: React.FC<HeroSectionProps> = ({ onOrderInstantly }) => {
+const HeroSection: React.FC<HeroSectionProps> = ({ onOrderInstantly, onGetQuote }) => {
   const trustBadges = [
     'Nationwide Coverage',
     'Construction-Grade Materials',
@@ -76,12 +77,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onOrderInstantly }) => {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
               <button
-                onClick={() => {
-                  const formElement = document.querySelector('#quote form');
-                  if (formElement) {
-                    formElement.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }}
+                onClick={onGetQuote}
                 className="bg-[#BADF24] text-[#0F1115] px-8 py-4 rounded-lg font-bold text-lg hover:bg-[#a8cb1f] transition-all hover:shadow-lg hover:shadow-[#BADF24]/20"
               >
                 Get a Quote
