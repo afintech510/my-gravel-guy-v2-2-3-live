@@ -1,101 +1,107 @@
-import React, { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Link } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { sendQuoteRequestEmail } from '@/services/quoteEmailService';
-import { trackEvent } from '@/utils/analytics';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import React, { useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { sendQuoteRequestEmail } from "@/services/quoteEmailService";
+import { trackEvent } from "@/utils/analytics";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const formSchema = z.object({
-  material: z.string().min(1, 'Please select a material'),
-  quantity: z.string().min(1, 'Please enter quantity'),
-  zipCode: z.string().min(5, 'Please enter a valid ZIP code'),
-  email: z.string().email('Please enter a valid email'),
+  material: z.string().min(1, "Please select a material"),
+  quantity: z.string().min(1, "Please enter quantity"),
+  zipCode: z.string().min(5, "Please enter a valid ZIP code"),
+  email: z.string().email("Please enter a valid email"),
   deliveryNotes: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
 const MATERIALS = [
-  '#57 Stone',
-  '#67 Stone',
-  '#8 Stone',
-  '#10 Screenings',
-  'Base / Road Base',
-  'RCA',
-  'Mason Sand',
-  'Sand',
-  'Playground Stone',
-  'Decomposed Granite',
-  'Structural Fill',
-  'Topsoil',
-  'Loam',
-  'Mulch',
-  'Drainage Rock',
-  'Other',
+  "#57 Stone",
+  "#67 Stone",
+  "#8 Stone",
+  "#10 Screenings",
+  "Base / Road Base",
+  "RCA",
+  "Mason Sand",
+  "Sand",
+  "Playground Stone",
+  "Decomposed Granite",
+  "Structural Fill",
+  "Topsoil",
+  "Loam",
+  "Mulch",
+  "Drainage Rock",
+  "Other",
 ];
 
 const Contractors = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  const form = useForm<FormData>({
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    reset,
+    watch,
+  } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      material: '',
-      quantity: '',
-      zipCode: '',
-      email: '',
-      deliveryNotes: '',
-    }
+      material: "",
+      quantity: "",
+      zipCode: "",
+      email: "",
+      deliveryNotes: "",
+    },
   });
-
-  const { register, handleSubmit, formState: { errors }, setValue, reset, watch } = form;
-  const materialValue = watch('material');
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     try {
-      trackEvent('contractor_quote_request', 'quote', `${data.material} - ${data.quantity} tons`);
+      trackEvent("contractor_quote_request", "quote", `${data.material} - ${data.quantity} tons`);
 
       const messageContent = [
         `Material: ${data.material}`,
         `Quantity: ${data.quantity} tons`,
         `Delivery ZIP: ${data.zipCode}`,
         data.deliveryNotes ? `Delivery Notes: ${data.deliveryNotes}` : null,
-      ].filter(Boolean).join('\n');
+      ]
+        .filter(Boolean)
+        .join("\n");
 
       const result = await sendQuoteRequestEmail({
-        name: 'Contractor Quote Request',
+        name: "Contractor Quote Request",
         email: data.email,
-        phone: '',
+        phone: "",
         message: messageContent,
         zipCode: data.zipCode,
         material: data.material,
         estimatedTons: parseFloat(data.quantity) || undefined,
-        sourcePage: '/contractors',
+        sourcePage: "/contractors",
       });
 
       if (result.success) {
-        toast.success('Quote request submitted! Check your email for confirmation.');
+        toast.success("Quote request submitted! Check your email for confirmation.");
         reset();
         setIsModalOpen(false);
       } else {
-        toast.error('Failed to submit request. Please try again.');
+        toast.error("Failed to submit request. Please try again.");
       }
     } catch (error) {
-      console.error('Error submitting quote:', error);
-      toast.error('Something went wrong. Please try again.');
+      console.error("Error submitting quote:", error);
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -106,18 +112,18 @@ const Contractors = () => {
     setIsModalOpen(true);
   };
 
-  const renderQuoteForm = () => (
+  const QuoteFormContent = () => (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <Label className="text-xs font-semibold uppercase text-[#B7C0CC] mb-1.5 block">Material Needed</Label>
-        <Select value={materialValue} onValueChange={(value) => setValue('material', value)}>
+        <Select onValueChange={(value) => setValue("material", value)}>
           <SelectTrigger className="w-full bg-[#0F1115] border-[rgba(255,255,255,0.1)] text-white">
             <SelectValue placeholder="Select material" />
           </SelectTrigger>
           <SelectContent className="bg-[#1a1f28] border-[rgba(255,255,255,0.2)] z-50">
             {MATERIALS.map((material) => (
-              <SelectItem 
-                key={material} 
+              <SelectItem
+                key={material}
                 value={material}
                 className="text-white hover:bg-[#2a3040] focus:bg-[#2a3040] focus:text-white cursor-pointer"
               >
@@ -132,7 +138,7 @@ const Contractors = () => {
         <div>
           <Label className="text-xs font-semibold uppercase text-[#B7C0CC] mb-1.5 block">Quantity (Tons)</Label>
           <Input
-            {...register('quantity')}
+            {...register("quantity")}
             placeholder="e.g. 100"
             className="bg-[#0F1115] border-[rgba(255,255,255,0.1)] text-white placeholder:text-gray-500"
           />
@@ -141,7 +147,7 @@ const Contractors = () => {
         <div>
           <Label className="text-xs font-semibold uppercase text-[#B7C0CC] mb-1.5 block">Delivery ZIP</Label>
           <Input
-            {...register('zipCode')}
+            {...register("zipCode")}
             placeholder="90210"
             className="bg-[#0F1115] border-[rgba(255,255,255,0.1)] text-white placeholder:text-gray-500"
           />
@@ -151,7 +157,7 @@ const Contractors = () => {
       <div>
         <Label className="text-xs font-semibold uppercase text-[#B7C0CC] mb-1.5 block">Company Email</Label>
         <Input
-          {...register('email')}
+          {...register("email")}
           type="email"
           placeholder="pm@construction.com"
           className="bg-[#0F1115] border-[rgba(255,255,255,0.1)] text-white placeholder:text-gray-500"
@@ -161,7 +167,7 @@ const Contractors = () => {
       <div>
         <Label className="text-xs font-semibold uppercase text-[#B7C0CC] mb-1.5 block">Delivery Notes (Optional)</Label>
         <Textarea
-          {...register('deliveryNotes')}
+          {...register("deliveryNotes")}
           placeholder="Special delivery instructions, site access details, preferred delivery times..."
           className="bg-[#0F1115] border-[rgba(255,255,255,0.1)] text-white placeholder:text-gray-500 min-h-[80px]"
         />
@@ -171,7 +177,7 @@ const Contractors = () => {
         disabled={isSubmitting}
         className="w-full bg-[#BADF24] text-black font-montserrat font-bold uppercase hover:bg-white"
       >
-        {isSubmitting ? 'Sending...' : 'Request Pricing'}
+        {isSubmitting ? "Sending..." : "Request Pricing"}
       </Button>
     </form>
   );
@@ -180,15 +186,16 @@ const Contractors = () => {
     <>
       <Helmet>
         <title>Contractor Gravel & Aggregate Delivery | MyGravelGuy</title>
-        <meta name="description" content="Nationwide aggregate sourcing and delivery for construction teams. One point of contact for all your gravel, stone, and sand needs across all 50 states." />
-        <meta name="keywords" content="contractor gravel delivery, bulk aggregate, construction materials, nationwide stone delivery, commercial gravel" />
+        <meta
+          name="description"
+          content="Nationwide aggregate sourcing and delivery for construction teams. One point of contact for all your gravel, stone, and sand needs across all 50 states."
+        />
+        <meta
+          name="keywords"
+          content="contractor gravel delivery, bulk aggregate, construction materials, nationwide stone delivery, commercial gravel"
+        />
         <link rel="canonical" href="https://mygravelguy.com/contractors" />
       </Helmet>
-
-      {/* Dark mode navbar wrapper */}
-      <div className="dark bg-[#0F1115] [&_nav]:bg-[#0F1115] [&_nav]:border-[rgba(255,255,255,0.1)] [&_nav_a]:text-gray-300 [&_nav_a:hover]:text-white [&_nav_button]:text-gray-300">
-        <Navbar />
-      </div>
 
       <div className="min-h-screen bg-[#0F1115] text-[#F5F7FA]">
         {/* Hero Section */}
@@ -202,7 +209,8 @@ const Contractors = () => {
                 Do You Have a Gravel Guy?
               </h1>
               <p className="text-xl text-[#B7C0CC] mb-8 max-w-[500px]">
-                Nationwide aggregate sourcing and delivery for construction teams that work across multiple cities. Turf, surfacing, and playground specialists.
+                Nationwide aggregate sourcing and delivery for construction teams that work across multiple cities.
+                Turf, surfacing, and playground specialists.
               </p>
               <ul className="mb-10 space-y-3">
                 <li className="flex items-center">
@@ -238,7 +246,7 @@ const Contractors = () => {
             <div className="bg-[#151A22] p-8 rounded-lg border border-[rgba(255,255,255,0.1)]">
               <h3 className="font-montserrat font-semibold text-xl uppercase mb-2">Get a Fast Quote</h3>
               <p className="text-sm text-[#B7C0CC] mb-6">Best for 50+ tons or multi-load projects.</p>
-              {renderQuoteForm()}
+              <QuoteFormContent />
             </div>
           </section>
         </div>
@@ -251,15 +259,28 @@ const Contractors = () => {
                 Stop wasting hours calling yards in every city.
               </h2>
               <p className="text-[#B7C0CC] max-w-[700px] mx-auto text-lg">
-                When you're running installs across multiple markets, sourcing rock shouldn't be a side-quest. We become your single point of contact for everything aggregate.
+                When you're running installs across multiple markets, sourcing rock shouldn't be a side-quest. We become
+                your single point of contact for everything aggregate.
               </p>
             </div>
             <div className="grid md:grid-cols-2 gap-10">
               {[
-                { title: 'No Trusted Local Supplier', desc: 'Stop gambling on new quarries in every city. We already know who\'s reliable and who has the inventory.' },
-                { title: 'Trucking Bottlenecks', desc: 'The material is there, but the trucks aren\'t. We manage the haulers so your crew stays on schedule.' },
-                { title: 'Inconsistent Pricing', desc: 'Get transparent, competitive project pricing based on volume, not "retail" walk-in rates.' },
-                { title: 'Too Many Vendors', desc: 'One invoice. One point of contact. One nationwide gravel guy. Simplify your procurement.' },
+                {
+                  title: "No Trusted Local Supplier",
+                  desc: "Stop gambling on new quarries in every city. We already know who's reliable and who has the inventory.",
+                },
+                {
+                  title: "Trucking Bottlenecks",
+                  desc: "The material is there, but the trucks aren't. We manage the haulers so your crew stays on schedule.",
+                },
+                {
+                  title: "Inconsistent Pricing",
+                  desc: 'Get transparent, competitive project pricing based on volume, not "retail" walk-in rates.',
+                },
+                {
+                  title: "Too Many Vendors",
+                  desc: "One invoice. One point of contact. One nationwide gravel guy. Simplify your procurement.",
+                },
               ].map((item, i) => (
                 <div key={i} className="p-6 border-l-[3px] border-[#BADF24] bg-[#151A22]">
                   <h4 className="font-montserrat font-semibold uppercase mb-2">{item.title}</h4>
@@ -280,12 +301,12 @@ const Contractors = () => {
             </div>
             <div className="grid md:grid-cols-3 gap-6">
               {[
-                { title: '#57 Stone', desc: 'Clean, consistent 3/4" stone for drainage, bedding, and base work.' },
-                { title: 'Road Base', desc: 'Compaction-friendly crusher run for road and pad preparation.' },
-                { title: 'Playground Stone', desc: 'Certified safety aggregate for playgrounds and impact surfacing.' },
-                { title: 'Mason Sand', desc: 'Fine-screened sand for pavers, masonry, and athletic fields.' },
-                { title: 'Decomposed Granite', desc: 'Natural fines for pathways, trails, and decorative surfacing.' },
-                { title: 'Structural Fill', desc: 'Bulk material for major site prep and volume projects.' },
+                { title: "#57 Stone", desc: 'Clean, consistent 3/4" stone for drainage, bedding, and base work.' },
+                { title: "Road Base", desc: "Compaction-friendly crusher run for road and pad preparation." },
+                { title: "Playground Stone", desc: "Certified safety aggregate for playgrounds and impact surfacing." },
+                { title: "Mason Sand", desc: "Fine-screened sand for pavers, masonry, and athletic fields." },
+                { title: "Decomposed Granite", desc: "Natural fines for pathways, trails, and decorative surfacing." },
+                { title: "Structural Fill", desc: "Bulk material for major site prep and volume projects." },
               ].map((item, i) => (
                 <div key={i} className="bg-[#151A22] p-8 rounded-lg border border-[rgba(255,255,255,0.1)]">
                   <h4 className="font-montserrat font-semibold uppercase text-[#BADF24] mb-3">{item.title}</h4>
@@ -381,12 +402,14 @@ const Contractors = () => {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="bg-[#151A22] border-[rgba(255,255,255,0.1)] text-white sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle className="font-montserrat font-semibold text-xl uppercase text-white">Get a Fast Quote</DialogTitle>
+            <DialogTitle className="font-montserrat font-semibold text-xl uppercase text-white">
+              Get a Fast Quote
+            </DialogTitle>
             <DialogDescription className="text-[#B7C0CC]">
               Best for 50+ tons or multi-load projects. We'll get back to you within 24 hours.
             </DialogDescription>
           </DialogHeader>
-          {renderQuoteForm()}
+          <QuoteFormContent />
         </DialogContent>
       </Dialog>
     </>
