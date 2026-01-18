@@ -91,29 +91,29 @@ export default function ProductCalculator() {
     updatePriceDetails();
   }, [selectedProduct, zipCode, calculationResult.totalTons, toast]);
 
-  return <div className="container mx-auto px-4 py-8">
+  return <div className="container mx-auto px-4 py-8 bg-background min-h-screen">
       <Helmet>
         <title>Material Calculator | Find the Right Amount for Your Project</title>
         <meta name="description" content="Calculate exactly how much material you need for your project with our easy-to-use calculator." />
       </Helmet>
       
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Material Calculator</h1>
-        <p className="text-slate-600 mt-2">Find the perfect amount of material for your project and add it to your cart.</p>
+        <h1 className="text-3xl font-bold text-foreground">Material Calculator</h1>
+        <p className="text-muted-foreground mt-2">Find the perfect amount of material for your project and add it to your cart.</p>
         
         {/* Step-by-step guidance */}
         <div className="mt-6 flex flex-col sm:flex-row gap-4 text-sm">
           <div className="flex items-center gap-2">
             <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-medium">1</span>
-            <span className="text-slate-600 font-bold">Select Your Material - Choose a product</span>
+            <span className="text-muted-foreground font-bold">Select Your Material - Choose a product</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-medium">2</span>
-            <span className="text-slate-600 font-bold">Calculate Your Needs</span>
+            <span className="text-muted-foreground font-bold">Calculate Your Needs</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-medium">3</span>
-            <span className="text-slate-600 font-bold">Add to cart</span>
+            <span className="text-muted-foreground font-bold">Add to cart</span>
           </div>
         </div>
       </div>
@@ -121,28 +121,28 @@ export default function ProductCalculator() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
         {/* Left column - Product selection */}
         <div className="lg:col-span-7">
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-            <h2 className="text-xl font-semibold mb-6">Step 1: Select Your Material</h2>
+          <div className="bg-card border border-border rounded-lg shadow-sm p-6 mb-8">
+            <h2 className="text-xl font-semibold mb-6 text-foreground">Step 1: Select Your Material</h2>
             <ProductFilterSelector onProductSelected={setSelectedProduct} selectedProduct={selectedProduct} />
           </div>
           
-          {selectedProduct && <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+          {selectedProduct && <div className="bg-card border border-border rounded-lg shadow-sm p-6 mb-8">
               <ProductDetails product={selectedProduct} />
             </div>}
         </div>
         
         {/* Right column - Calculator and actions */}
         <div className="lg:col-span-5">
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-8 sticky top-24">
-            <h2 className="text-xl font-semibold mb-4">Step 2: Calculate Your Needs</h2>
+          <div className="bg-card border border-border rounded-lg shadow-sm p-6 mb-8 sticky top-24">
+            <h2 className="text-xl font-semibold mb-4 text-foreground">Step 2: Calculate Your Needs</h2>
             <AreaCalculator areas={areas} setAreas={setAreas} depth={depth} setDepth={setDepth} extraPercentage={extraPercentage} setExtraPercentage={setExtraPercentage} calculationResult={calculationResult} />
             
-            <div className="mt-8 pt-6 border-t border-gray-200">
+            <div className="mt-8 pt-6 border-t border-border">
               <ZipCodeChecker />
             </div>
             
-            {selectedProduct && calculationResult.totalTons > 0 && <div className="mt-8 pt-6 border-t border-gray-200">
-                <h3 className="text-lg font-semibold mb-4">Step 3: Add to Cart</h3>
+            {selectedProduct && calculationResult.totalTons > 0 && <div className="mt-8 pt-6 border-t border-border">
+                <h3 className="text-lg font-semibold mb-4 text-foreground">Step 3: Add to Cart</h3>
                 <AddToCartOptions product={selectedProduct} calculatedTons={calculationResult.totalTons} priceDetails={priceDetails} />
               </div>}
           </div>
@@ -150,7 +150,7 @@ export default function ProductCalculator() {
       </div>
       
       {/* Trust banner - now full width and below calculator */}
-      <div className="bg-white rounded-lg shadow-sm p-6 w-full">
+      <div className="bg-card border border-border rounded-lg shadow-sm p-6 w-full">
         <TrustBanner />
       </div>
     </div>;

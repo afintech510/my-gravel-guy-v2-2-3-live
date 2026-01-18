@@ -198,7 +198,7 @@ export default function ShopProductFilterSelector({ onFilterChange, sortOrder = 
             "flex items-center justify-center p-3 border rounded-md transition-colors",
             selectedCategory === category.id
               ? "bg-primary text-primary-foreground border-primary"
-              : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
+              : "bg-card hover:bg-accent text-foreground border-border"
           )}
         >
           {category.icon}
