@@ -5,22 +5,22 @@ import { Button } from '@/components/ui/button';
 const TopProducts = () => {
   const products = [
     {
-      name: "#57 Stone",
-      description: "Versatile drainage and base material for construction",
-      slug: "57-gravel",
-      image: "https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//57-gravel_cat.jpg"
+      name: "Driveway Gravel",
+      description: "Perfect for driveways and high-traffic areas",
+      slug: "driveway-gravel",
+      image: "https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//driveway-gravel-3-4_cat.jpg"
     },
     {
-      name: "Screenings",
-      description: "Fine aggregate for compaction and leveling",
-      slug: "screenings", 
-      image: "https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//screenings_cat.jpg"
+      name: "Pea Gravel",
+      description: "Smooth, rounded stones ideal for walkways",
+      slug: "pea-gravel", 
+      image: "https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//3-8-Natural-Pea-Gravel-EDIT.jpg"
     },
     {
-      name: "Road Base",
-      description: "Compactible base for roads, pads, and foundations",
-      slug: "road-base",
-      image: "https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//road-base_cat.jpg"
+      name: "River Rock",
+      description: "Decorative option for landscaping features",
+      slug: "river-rock-large-2-3in-gravel",
+      image: "https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//river-rocks.png"
     }
   ];
 
@@ -33,7 +33,7 @@ const TopProducts = () => {
             Explore Products
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Construction-grade aggregate for contractors and commercial projects.
+            Choose from our wide selection of high-quality gravel options for any project.
           </p>
         </div>
 
