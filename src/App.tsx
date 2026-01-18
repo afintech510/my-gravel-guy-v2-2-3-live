@@ -98,12 +98,10 @@ function AppContent() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
-      <div className="sticky top-0 z-40 w-full">
-        <div className="relative">
-          <TopBanner />
-          <Navbar />
-        </div>
+    <div className="min-h-screen bg-background flex flex-col">
+      <div className="sticky top-0 z-50 w-full">
+        <TopBanner />
+        <Navbar />
       </div>
       <Routes>
         <Route path="/" element={<Index />} />
@@ -162,7 +160,7 @@ function AppContent() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
         <ZipCodeProvider>
           <CartProvider>
             <BlogProvider>
