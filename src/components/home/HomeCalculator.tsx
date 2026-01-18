@@ -145,12 +145,12 @@ const HomeCalculator = () => {
   };
 
   return (
-    <section className="py-16 px-4 bg-gray-50">
+    <section className="py-16 px-4 bg-card border-y border-border">
       <div className="max-w-4xl mx-auto">
        
-        <Card className="bg-white shadow-sm border">
+        <Card className="bg-background shadow-sm border border-border">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-foreground">
               <Calculator className="h-5 w-5 text-primary" />
               Material Calculator
             </CardTitle>
@@ -158,27 +158,27 @@ const HomeCalculator = () => {
           <CardContent className="space-y-6">
             {/* Areas Input */}
             <div className="space-y-4">
-              <Label className="text-base font-semibold">Project Areas</Label>
+              <Label className="text-base font-semibold text-foreground">Project Areas</Label>
               {areas.map((area, index) => (
-                <div key={area.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                <div key={area.id} className="flex items-center gap-4 p-4 bg-muted rounded-lg">
                   <div className="flex-1 grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-sm text-gray-600">Length (ft)</Label>
+                      <Label className="text-sm text-muted-foreground">Length (ft)</Label>
                       <Input
                         type="number"
                         value={area.length || ''}
                         onChange={(e) => updateArea(area.id, 'length', parseFloat(e.target.value) || 0)}
-                        className="mt-1"
+                        className="mt-1 bg-background border-border"
                         placeholder="0"
                       />
                     </div>
                     <div>
-                      <Label className="text-sm text-gray-600">Width (ft)</Label>
+                      <Label className="text-sm text-muted-foreground">Width (ft)</Label>
                       <Input
                         type="number"
                         value={area.width || ''}
                         onChange={(e) => updateArea(area.id, 'width', parseFloat(e.target.value) || 0)}
-                        className="mt-1"
+                        className="mt-1 bg-background border-border"
                         placeholder="0"
                       />
                     </div>
@@ -189,7 +189,7 @@ const HomeCalculator = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => removeArea(area.id)}
-                        className="text-red-600 hover:text-red-700"
+                        className="text-destructive hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -210,8 +210,8 @@ const HomeCalculator = () => {
             {/* Depth Slider */}
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <Label className="text-base font-semibold">Depth (inches)</Label>
-                <span className="text-sm text-gray-600">{depth}"</span>
+                <Label className="text-base font-semibold text-foreground">Depth (inches)</Label>
+                <span className="text-sm text-muted-foreground">{depth}"</span>
               </div>
               <Slider
                 value={[depth]}
@@ -221,7 +221,7 @@ const HomeCalculator = () => {
                 step={1}
                 className="w-full"
               />
-              <div className="flex justify-between text-xs text-gray-500">
+              <div className="flex justify-between text-xs text-muted-foreground">
                 <span>1"</span>
                 <span>24"</span>
               </div>
@@ -231,12 +231,12 @@ const HomeCalculator = () => {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <Label className="text-base font-semibold">Order Extra</Label>
+                  <Label className="text-base font-semibold text-foreground">Order Extra</Label>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="cursor-help">
-                          <Info className="h-4 w-4 text-gray-500" />
+                          <Info className="h-4 w-4 text-muted-foreground" />
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -247,7 +247,7 @@ const HomeCalculator = () => {
                     </Tooltip>
                   </TooltipProvider>
                 </div>
-                <span className="text-sm text-gray-600">{orderExtra[0]}%</span>
+                <span className="text-sm text-muted-foreground">{orderExtra[0]}%</span>
               </div>
               <Slider
                 value={orderExtra}
@@ -257,7 +257,7 @@ const HomeCalculator = () => {
                 step={1}
                 className="w-full"
               />
-              <div className="flex justify-between text-xs text-gray-500">
+              <div className="flex justify-between text-xs text-muted-foreground">
                 <span>0%</span>
                 <span>30%</span>
               </div>
@@ -265,9 +265,9 @@ const HomeCalculator = () => {
 
             {/* Product Selection */}
             <div className="space-y-3">
-              <Label className="text-base font-semibold">Material Type</Label>
+              <Label className="text-base font-semibold text-foreground">Material Type</Label>
               <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-background border-border">
                   <SelectValue placeholder="Select material type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -281,42 +281,42 @@ const HomeCalculator = () => {
             </div>
 
             {/* Results */}
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold mb-4">Calculation Results</h3>
+            <div className="border-t border-border pt-6">
+              <h3 className="text-lg font-semibold mb-4 text-foreground">Calculation Results</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="bg-blue-50 border-blue-200">
+                <Card className="bg-blue-500/10 border-blue-500/20">
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-blue-900">
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                       {totalAreaSqFt.toFixed(0)}
                     </div>
-                    <div className="text-sm text-blue-700">Square Feet</div>
+                    <div className="text-sm text-blue-600/80 dark:text-blue-400/80">Square Feet</div>
                   </CardContent>
                 </Card>
                 
-                <Card className="bg-green-50 border-green-200">
+                <Card className="bg-green-500/10 border-green-500/20">
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-green-900">
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                       {totalVolumeYards.toFixed(1)}
                     </div>
-                    <div className="text-sm text-green-700">Cubic Yards</div>
+                    <div className="text-sm text-green-600/80 dark:text-green-400/80">Cubic Yards</div>
                   </CardContent>
                 </Card>
                 
-                <Card className="bg-orange-50 border-orange-200">
+                <Card className="bg-orange-500/10 border-orange-500/20">
                   <CardContent className="p-4 text-center">
-                     <div className="text-2xl font-bold text-orange-900">
+                     <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                        {calculatedTons.toFixed(1)}
                      </div>
-                    <div className="text-sm text-orange-700">Tons Needed</div>
+                    <div className="text-sm text-orange-600/80 dark:text-orange-400/80">Tons Needed</div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-purple-50 border-purple-200">
+                <Card className="bg-purple-500/10 border-purple-500/20">
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-purple-900">
+                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                       {totalTons < 3 ? "3 ton min. order" : `$${totalDeliveredPrice.toFixed(0)}`}
                     </div>
-                    <div className="text-sm text-purple-700">Total Delivered Price</div>
+                    <div className="text-sm text-purple-600/80 dark:text-purple-400/80">Total Delivered Price</div>
                   </CardContent>
                 </Card>
               </div>
@@ -324,8 +324,8 @@ const HomeCalculator = () => {
 
             {/* Product Card */}
             {selectedProductData && (
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold mb-4">Selected Product</h3>
+              <div className="border-t border-border pt-6">
+                <h3 className="text-lg font-semibold mb-4 text-foreground">Selected Product</h3>
                 <Card className="overflow-hidden border-0 shadow-lg">
                   <div 
                     className="relative min-h-[200px] bg-cover bg-center bg-no-repeat"
@@ -348,7 +348,7 @@ const HomeCalculator = () => {
                               ${totalDeliveredPrice && totalTons > 0 ? (totalDeliveredPrice / totalTons).toFixed(2) : '0.00'} per ton
                             </div>
                             <div className="mt-1">
-                              <span className="bg-green-500 text-black px-3 py-1 rounded-full text-sm font-medium">
+                              <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium">
                                 Free Delivery
                               </span>
                             </div>
