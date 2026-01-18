@@ -66,32 +66,36 @@ const TopBanner = ({ className }: TopBannerProps) => {
         
         {/* Right: Location + Theme toggle on mobile */}
         <div className="flex flex-1 justify-end items-center gap-2">
-          {locationText && (
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <button className="hidden md:inline-flex items-center text-xs font-medium hover:opacity-80 transition-opacity">
-                  <span className="mr-1">Delivering to:</span>
-                  <span className="font-bold">{locationText}</span>
-                  <MapPin className="h-3 w-3 ml-1" />
-                </button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Change Your Delivery Location</DialogTitle>
-                </DialogHeader>
-                <div className="py-4">
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Enter your ZIP code to see delivery options and pricing for your area.
-                  </p>
-                  <ZipCodeSearch 
-                    variant="minimal" 
-                    className="w-full" 
-                    onZipCodeSelected={handleZipCodeSelected}
-                  />
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <button className="hidden md:inline-flex items-center text-xs font-medium hover:opacity-80 transition-opacity">
+                {locationText ? (
+                  <>
+                    <span className="mr-1">Delivering to:</span>
+                    <span className="font-bold">{locationText}</span>
+                  </>
+                ) : (
+                  <span className="mr-1">Set Delivery Location</span>
+                )}
+                <MapPin className="h-3 w-3 ml-1" />
+              </button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>{locationText ? 'Change Your Delivery Location' : 'Set Your Delivery Location'}</DialogTitle>
+              </DialogHeader>
+              <div className="py-4">
+                <p className="text-sm text-muted-foreground mb-4">
+                  Enter your ZIP code to see delivery options and pricing for your area.
+                </p>
+                <ZipCodeSearch 
+                  variant="minimal" 
+                  className="w-full" 
+                  onZipCodeSelected={handleZipCodeSelected}
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
           
           {/* Mobile theme toggle */}
           <button
