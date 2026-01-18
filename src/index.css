@@ -15,8 +15,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 142 100% 54%; /* #14FF6A */
-    --primary-foreground: 0 0% 0%; /* Changed to black (0 0% 0%) */
+    --primary: 72 75% 51%; /* #BADF24 */
+    --primary-foreground: 0 0% 0%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -32,7 +32,7 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 142 100% 54%; /* Changed to match primary */
+    --ring: 72 75% 51%; /* Match primary #BADF24 */
 
     --radius: 0.5rem;
 
@@ -40,9 +40,9 @@
 
     --sidebar-foreground: 240 5.3% 26.1%;
 
-    --sidebar-primary: 142 100% 54%; /* Changed to match the new primary */
+    --sidebar-primary: 72 75% 51%; /* Match primary #BADF24 */
 
-    --sidebar-primary-foreground: 0 0% 0%; /* Changed to black */
+    --sidebar-primary-foreground: 0 0% 0%;
 
     --sidebar-accent: 240 4.8% 95.9%;
 
@@ -50,7 +50,7 @@
 
     --sidebar-border: 220 13% 91%;
 
-    --sidebar-ring: 142 100% 54%; /* Changed to match primary */
+    --sidebar-ring: 72 75% 51%; /* Match primary #BADF24 */
   }
 
   .dark {
@@ -63,8 +63,8 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 142 100% 54%; /* #14FF6A */
-    --primary-foreground: 0 0% 0%; /* Changed to black (0 0% 0%) */
+    --primary: 72 75% 51%; /* #BADF24 */
+    --primary-foreground: 0 0% 0%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -80,16 +80,16 @@
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 142 100% 54%; /* Changed to match primary */
+    --ring: 72 75% 51%; /* Match primary #BADF24 */
     
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 142 100% 54%; /* Changed to match the new primary */
-    --sidebar-primary-foreground: 0 0% 0%; /* Changed to black */
+    --sidebar-primary: 72 75% 51%; /* Match primary #BADF24 */
+    --sidebar-primary-foreground: 0 0% 0%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 142 100% 54%; /* Changed to match primary */
+    --sidebar-ring: 72 75% 51%; /* Match primary #BADF24 */
   }
 }
 
