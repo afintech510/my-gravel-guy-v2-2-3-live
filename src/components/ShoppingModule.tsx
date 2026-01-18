@@ -319,21 +319,21 @@ const ShoppingModule = () => {
         </div>
       </div>;
   }
-  return <div className="py-8 md:py-16 px-4 bg-white">
+  return <div className="py-8 md:py-16 px-4 bg-background">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-6 md:mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <Scale className="h-8 w-8" />
-            <h2 className="text-2xl md:text-3xl font-bold mx-0">Quick Price Compare</h2>
+            <Scale className="h-8 w-8 text-foreground" />
+            <h2 className="text-2xl md:text-3xl font-bold mx-0 text-foreground">Quick Price Compare</h2>
           </div>
         </div>
 
         {/* Material Category Selector - Updated with Lucide icons and primary styling */}
-        <Card className="mb-6 md:mb-8">
+        <Card className="mb-6 md:mb-8 bg-card border-border">
           <CardContent className="p-4 md:p-6">
-            <h3 className="text-base md:text-lg font-semibold mb-4">FREE SHIPPING NATIONWIDE</h3>
+            <h3 className="text-base md:text-lg font-semibold mb-4 text-foreground">FREE SHIPPING NATIONWIDE</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 md:gap-3">
-              {categories.map(category => <button key={category.id} onClick={() => setSelectedCategory(category.id)} className={cn("flex items-center justify-center p-3 border rounded-md transition-colors", selectedCategory === category.id ? "bg-primary text-primary-foreground border-primary" : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200")}>
+              {categories.map(category => <button key={category.id} onClick={() => setSelectedCategory(category.id)} className={cn("flex items-center justify-center p-3 border rounded-md transition-colors", selectedCategory === category.id ? "bg-primary text-primary-foreground border-primary" : "bg-card hover:bg-accent text-foreground border-border")}>
                   {category.icon}
                   <span className={cn("ml-2", isMobile ? "text-xs" : "text-sm")}>
                     {category.label}
@@ -344,10 +344,10 @@ const ShoppingModule = () => {
         </Card>
 
         {/* Available Materials */}
-        <Card>
+        <Card className="bg-card border-border">
           <CardContent className="p-4 md:p-6">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-base md:text-lg font-semibold">Available Materials</h3>
+              <h3 className="text-base md:text-lg font-semibold text-foreground">Available Materials</h3>
               <div className="flex items-center space-x-2">
                 <Checkbox id="sync-tons" checked={syncTons} onCheckedChange={handleSyncToggle} />
                 <label htmlFor="sync-tons" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -356,20 +356,20 @@ const ShoppingModule = () => {
               </div>
             </div>
             
-            {filteredProducts.length === 0 ? <p className="text-gray-500 text-center py-8">No products found for this category</p> : <div className="grid grid-cols-1 gap-4 md:gap-6">
+            {filteredProducts.length === 0 ? <p className="text-muted-foreground text-center py-8">No products found for this category</p> : <div className="grid grid-cols-1 gap-4 md:gap-6">
                 {filteredProducts.map(product => {
               const quantity = quantities[product.id.toString()] || 5;
               const totalPrice = calculateFinalPrice(product, quantity);
               const pricePerTon = calculatePricePerTon(product, quantity);
               const cubicYards = Math.round(quantity / (product.tonYardRatio || 1.5) * 10) / 10;
-              return <div key={product.id} className="border rounded-lg p-4">
+              return <div key={product.id} className="border border-border rounded-lg p-4 bg-background">
                       {/* Mobile Layout */}
                       <div className="md:hidden space-y-4">
                         <div className="flex items-start gap-3">
                           <img src={getProductImage(product)} alt={product.name} className="w-16 h-16 object-cover rounded-md flex-shrink-0" />
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-sm leading-tight">{product.name}</h4>
-                            {product.size && <p className="text-xs text-gray-500 mt-1">{product.size}</p>}
+                            <h4 className="font-semibold text-sm leading-tight text-foreground">{product.name}</h4>
+                            {product.size && <p className="text-xs text-muted-foreground mt-1">{product.size}</p>}
                             <Button
                               variant="outline"
                               size="sm"
@@ -383,30 +383,30 @@ const ShoppingModule = () => {
                         </div>
                         
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center border rounded-md">
+                          <div className="flex items-center border border-border rounded-md">
                             <button 
                               onClick={() => updateQuantity(product.id.toString(), -1)} 
-                              className="p-3 hover:bg-gray-100 min-h-[48px] min-w-[48px] flex items-center justify-center" 
+                              className="p-3 hover:bg-accent min-h-[48px] min-w-[48px] flex items-center justify-center text-foreground" 
                               disabled={quantity <= 3}
                             >
                               <Minus className="h-4 w-4" />
                             </button>
                             <div className="px-3 py-2 text-center">
-                              <div className="text-sm font-medium">{quantity} tons</div>
-                              <div className="text-xs text-gray-500">≡ {cubicYards} yd³</div>
-                              <div className="text-xs text-green-600 font-medium">${pricePerTon.toFixed(2)}/ton</div>
+                              <div className="text-sm font-medium text-foreground">{quantity} tons</div>
+                              <div className="text-xs text-muted-foreground">≡ {cubicYards} yd³</div>
+                              <div className="text-xs text-primary font-medium">${pricePerTon.toFixed(2)}/ton</div>
                             </div>
                             <button 
                               onClick={() => updateQuantity(product.id.toString(), 1)} 
-                              className="p-3 hover:bg-gray-100 min-h-[48px] min-w-[48px] flex items-center justify-center"
+                              className="p-3 hover:bg-accent min-h-[48px] min-w-[48px] flex items-center justify-center text-foreground"
                             >
                               <Plus className="h-4 w-4" />
                             </button>
                           </div>
 
                           <div className="text-right">
-                            <div className="text-lg font-bold">${totalPrice.toFixed(2)}</div>
-                            <Button onClick={() => handleAddToCart(product)} className="bg-green-500 hover:bg-green-600 text-white mt-1" size="sm">
+                            <div className="text-lg font-bold text-foreground">${totalPrice.toFixed(2)}</div>
+                            <Button onClick={() => handleAddToCart(product)} className="bg-primary hover:bg-primary/90 text-primary-foreground mt-1" size="sm">
                               Add to Cart
                             </Button>
                           </div>
@@ -418,8 +418,8 @@ const ShoppingModule = () => {
                         <img src={getProductImage(product)} alt={product.name} className="w-16 h-16 object-cover rounded-md flex-shrink-0" />
                         
                         <div className="flex-1">
-                          <h4 className="font-semibold">{product.name}</h4>
-                          {product.size && <p className="text-sm text-gray-500">{product.size}</p>}
+                          <h4 className="font-semibold text-foreground">{product.name}</h4>
+                          {product.size && <p className="text-sm text-muted-foreground">{product.size}</p>}
                            {product.short_description && <p className="text-sm text-gray-600 mt-1 line-clamp-2">{product.short_description}</p>}
                           <Button
                             variant="outline"

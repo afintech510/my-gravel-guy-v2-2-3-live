@@ -102,13 +102,13 @@ ${formData.additionalDetails}`,
   };
 
   return (
-    <section className="py-16 px-4 bg-white">
+    <section className="py-16 px-4 bg-background">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Get a Free Quote
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Fill out the form below, and we'll get back to you with a customized quote for your project.
           </p>
         </div>
@@ -123,8 +123,8 @@ ${formData.additionalDetails}`,
                 </div>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-1">Call Us Directly</h3>
-                <p className="text-gray-600">(844) 624-0400</p>
+                <h3 className="font-semibold text-foreground mb-1">Call Us Directly</h3>
+                <p className="text-muted-foreground">(844) 624-0400</p>
               </div>
             </div>
 
@@ -135,8 +135,8 @@ ${formData.additionalDetails}`,
                 </div>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-1">Email Us</h3>
-                <p className="text-gray-600">support@mygravelguy.com</p>
+                <h3 className="font-semibold text-foreground mb-1">Email Us</h3>
+                <p className="text-muted-foreground">support@mygravelguy.com</p>
               </div>
             </div>
 
@@ -147,20 +147,20 @@ ${formData.additionalDetails}`,
                 </div>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-1">Our Service</h3>
-                <p className="text-gray-600">Nationwide Delivery Available</p>
+                <h3 className="font-semibold text-foreground mb-1">Our Service</h3>
+                <p className="text-muted-foreground">Nationwide Delivery Available</p>
               </div>
             </div>
           </div>
 
           {/* Quote Form */}
           <div className="lg:col-span-2">
-            <Card className="shadow-sm border">
+            <Card className="shadow-sm border border-border bg-card">
               <CardContent className="p-6">
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {/* Name Field */}
                   <div>
-                    <Label htmlFor="fullName" className="text-sm font-medium text-gray-700">
+                    <Label htmlFor="fullName" className="text-sm font-medium text-foreground">
                       Full Name
                     </Label>
                     <Input
@@ -169,14 +169,14 @@ ${formData.additionalDetails}`,
                       onChange={(e) => handleInputChange('fullName', e.target.value)}
                       placeholder="John Doe"
                       required
-                      className="mt-1"
+                      className="mt-1 bg-background border-border"
                     />
                   </div>
 
                   {/* Email and Phone */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                      <Label htmlFor="email" className="text-sm font-medium text-foreground">
                         Email
                       </Label>
                       <Input
@@ -186,11 +186,11 @@ ${formData.additionalDetails}`,
                         onChange={(e) => handleInputChange('email', e.target.value)}
                         placeholder="john@example.com"
                         required
-                        className="mt-1"
+                        className="mt-1 bg-background border-border"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="phoneNumber" className="text-sm font-medium text-gray-700">
+                      <Label htmlFor="phoneNumber" className="text-sm font-medium text-foreground">
                         Phone Number
                       </Label>
                       <Input
@@ -199,14 +199,14 @@ ${formData.additionalDetails}`,
                         value={formData.phoneNumber}
                         onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
                         placeholder="(555) 123-4567"
-                        className="mt-1"
+                        className="mt-1 bg-background border-border"
                       />
                     </div>
                   </div>
 
                   {/* Property Address */}
                   <div>
-                    <Label htmlFor="propertyAddress" className="text-sm font-medium text-gray-700">
+                    <Label htmlFor="propertyAddress" className="text-sm font-medium text-foreground">
                       Property Address
                     </Label>
                     <Input
@@ -215,21 +215,21 @@ ${formData.additionalDetails}`,
                       onChange={(e) => handleInputChange('propertyAddress', e.target.value)}
                       placeholder="123 Main St, City, State, Zip"
                       required
-                      className="mt-1"
+                      className="mt-1 bg-background border-border"
                     />
                   </div>
 
                   {/* Project Type and Area */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-sm font-medium text-gray-700">
+                      <Label className="text-sm font-medium text-foreground">
                         Project Type
                       </Label>
                       <Select
                         value={formData.projectType}
                         onValueChange={(value) => handleInputChange('projectType', value)}
                       >
-                        <SelectTrigger className="mt-1">
+                        <SelectTrigger className="mt-1 bg-background border-border">
                           <SelectValue placeholder="Select project type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -243,7 +243,7 @@ ${formData.additionalDetails}`,
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="approximateArea" className="text-sm font-medium text-gray-700">
+                      <Label htmlFor="approximateArea" className="text-sm font-medium text-foreground">
                         Approximate Area (sq ft)
                       </Label>
                       <Input
@@ -251,14 +251,14 @@ ${formData.additionalDetails}`,
                         value={formData.approximateArea}
                         onChange={(e) => handleInputChange('approximateArea', e.target.value)}
                         placeholder="e.g., 500"
-                        className="mt-1"
+                        className="mt-1 bg-background border-border"
                       />
                     </div>
                   </div>
 
                   {/* Additional Details */}
                   <div>
-                    <Label htmlFor="additionalDetails" className="text-sm font-medium text-gray-700">
+                    <Label htmlFor="additionalDetails" className="text-sm font-medium text-foreground">
                       Additional Details
                     </Label>
                     <Textarea
@@ -267,13 +267,13 @@ ${formData.additionalDetails}`,
                       onChange={(e) => handleInputChange('additionalDetails', e.target.value)}
                       placeholder="Tell us more about your project..."
                       rows={3}
-                      className="mt-1"
+                      className="mt-1 bg-background border-border"
                     />
                   </div>
 
                   {/* Preferred Contact Method */}
                   <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                    <Label className="text-sm font-medium text-foreground mb-2 block">
                       Preferred Contact Method
                     </Label>
                     <RadioGroup
@@ -283,11 +283,11 @@ ${formData.additionalDetails}`,
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="email" id="email-contact" />
-                        <Label htmlFor="email-contact">Email</Label>
+                        <Label htmlFor="email-contact" className="text-foreground">Email</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="phone" id="phone-contact" />
-                        <Label htmlFor="phone-contact">Phone</Label>
+                        <Label htmlFor="phone-contact" className="text-foreground">Phone</Label>
                       </div>
                     </RadioGroup>
                   </div>
