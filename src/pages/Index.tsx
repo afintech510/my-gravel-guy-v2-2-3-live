@@ -35,19 +35,19 @@ const Index = () => {
             <p className="text-xl text-white mb-8">Transform your home with high-quality gravel from My Gravel Guy. Fast delivery, competitive pricing, and professional service.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-end">
               <Link to="/shop">
-              <Button variant="outline" size="lg" className="bg-white text-foreground hover:bg-primary hover:text-primary-foreground">
+              <Button variant="outline" size="lg" className="bg-white !text-gray-900 border-gray-300 hover:bg-primary hover:!text-primary-foreground">
                 <Store className="mr-2 h-4 w-4" />
                 Shop
               </Button>
             </Link>
             <Link to="/product-calculator">
-              <Button variant="outline" size="lg" className="bg-white text-foreground hover:bg-primary hover:text-primary-foreground">
+              <Button variant="outline" size="lg" className="bg-white !text-gray-900 border-gray-300 hover:bg-primary hover:!text-primary-foreground">
                 <Calculator className="mr-2 h-4 w-4" />
                 Calculator
               </Button>
             </Link>
               <Link to="/contact">
-              <Button variant="outline" size="lg" className="bg-white text-foreground hover:bg-primary hover:text-primary-foreground">
+              <Button variant="outline" size="lg" className="bg-white !text-gray-900 border-gray-300 hover:bg-primary hover:!text-primary-foreground">
                 <Mails className="mr-2 h-4 w-4" />
                 Contact
               </Button>
