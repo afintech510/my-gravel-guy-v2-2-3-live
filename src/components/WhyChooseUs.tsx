@@ -22,12 +22,12 @@ const WhyChooseUs = () => {
   ];
 
   return (
-    <section className="py-16 px-4 bg-background">
+    <section className="py-16 px-4 bg-white">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Left side - Content */}
           <div>
-            <h2 className="text-3xl font-bold text-foreground mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8">
               Why Choose MyGravelGuy?
             </h2>
             <div className="space-y-6">
@@ -37,10 +37,10 @@ const WhyChooseUs = () => {
                     <Check className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
                       {benefit.title}
                     </h3>
-                    <p className="text-muted-foreground leading-relaxed">
+                    <p className="text-gray-600 leading-relaxed">
                       {benefit.description}
                     </p>
                   </div>

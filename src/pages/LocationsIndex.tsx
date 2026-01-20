@@ -226,24 +226,24 @@ const LocationsIndex = () => {
   const filteredStatesList = Object.keys(filteredStates).sort();
   
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <Helmet>
         <title>Gravel Delivery Locations | Service Areas</title>
         <meta name="description" content="Find gravel delivery service areas near you. We deliver gravel, sand, and dirt across multiple locations." />
       </Helmet>
       
-      <div className="relative py-20 px-4 bg-card border-b border-border text-foreground">
+      <div className="relative py-20 px-4 bg-gray-800 text-white">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center text-sm mb-2">
-            <Link to="/" className="hover:underline text-muted-foreground hover:text-foreground">Home</Link>
-            <span className="mx-2 text-muted-foreground">›</span>
-            <span className="text-foreground">Locations</span>
+            <Link to="/" className="hover:underline">Home</Link>
+            <span className="mx-2">›</span>
+            <span>Locations</span>
           </div>
           
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 text-foreground">
+          <h1 className="text-4xl md:text-5xl font-bold mb-6">
             Gravel Delivery Service Areas
           </h1>
-          <p className="text-lg max-w-2xl mb-8 text-muted-foreground">
+          <p className="text-lg max-w-2xl mb-8">
             Find local gravel, sand, and dirt delivery services in your area. We offer competitive rates and reliable delivery across multiple locations.
           </p>
           
@@ -255,12 +255,12 @@ const LocationsIndex = () => {
       
       <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold mb-8 text-foreground">Browse Delivery Locations</h2>
+          <h2 className="text-3xl font-bold mb-8">Browse Delivery Locations</h2>
           
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Card key={i} className="bg-card border-border">
+                <Card key={i}>
                   <CardContent className="p-6">
                     <Skeleton className="h-6 w-2/3 mb-2" />
                     <Skeleton className="h-4 w-1/3 mb-4" />
@@ -280,9 +280,9 @@ const LocationsIndex = () => {
             <>
               <div className="mb-8">
                 <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
-                    className="pl-10 bg-card border-border text-foreground"
+                    className="pl-10"
                     placeholder="Search by city or state..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -292,11 +292,11 @@ const LocationsIndex = () => {
               
               {filteredStatesList.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-muted-foreground">No locations found for "{searchTerm}"</p>
+                  <p>No locations found for "{searchTerm}"</p>
                 </div>
               ) : (
                 <Tabs defaultValue={filteredStatesList[0]}>
-                  <TabsList className="flex flex-wrap mb-6 bg-muted">
+                  <TabsList className="flex flex-wrap mb-6">
                     {filteredStatesList.map(state => (
                       <TabsTrigger key={state} value={state} className="mb-2">
                         {state}
@@ -306,7 +306,7 @@ const LocationsIndex = () => {
                   
                   {filteredStatesList.map(state => (
                     <TabsContent key={state} value={state}>
-                      <h3 className="text-2xl font-semibold mb-6 text-foreground">
+                      <h3 className="text-2xl font-semibold mb-6">
                         {state} Delivery Locations
                       </h3>
                       
@@ -320,23 +320,23 @@ const LocationsIndex = () => {
                               to={`/locations/${locationSlug}`}
                               className="block transition-transform hover:scale-[1.02]"
                             >
-                              <Card className="h-full hover:shadow-md transition-shadow bg-card border-border">
+                              <Card className="h-full hover:shadow-md transition-shadow">
                                 <CardContent className="p-6 h-full flex flex-col">
                                   <div className="flex items-start justify-between">
                                     <div>
-                                      <h4 className="text-lg font-semibold mb-2 text-foreground">
+                                      <h4 className="text-lg font-semibold mb-2">
                                         {location.city}
                                       </h4>
-                                      <div className="flex items-center text-sm text-muted-foreground mb-4">
+                                      <div className="flex items-center text-sm text-gray-600 mb-4">
                                         <MapPin className="h-4 w-4 mr-1" />
                                         <span>{location.state}</span>
                                       </div>
                                     </div>
-                                    <div className="rounded-full bg-muted p-1 hover:bg-accent transition-colors">
-                                      <ArrowRight className="h-5 w-5 text-foreground" />
+                                    <div className="rounded-full bg-gray-100 p-1 hover:bg-gray-200 transition-colors">
+                                      <ArrowRight className="h-5 w-5" />
                                     </div>
                                   </div>
-                                  <p className="text-sm line-clamp-3 text-muted-foreground">
+                                  <p className="text-sm line-clamp-3">
                                     {location.description && location.description.length > 120 
                                       ? `${location.description.substring(0, 120)}...` 
                                       : location.description || "Fast and reliable gravel delivery services."

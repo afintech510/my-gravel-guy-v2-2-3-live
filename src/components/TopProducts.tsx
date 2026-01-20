@@ -25,14 +25,14 @@ const TopProducts = () => {
   ];
 
   return (
-    <section className="py-16 px-4 bg-card border-y border-border">
+    <section className="py-16 px-4 bg-gray-50">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             Explore Products
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Choose from our wide selection of high-quality gravel options for any project.
           </p>
         </div>
@@ -45,7 +45,7 @@ const TopProducts = () => {
               to={`/products/${product.slug}`}
               className="group block"
             >
-              <div className="relative h-64 rounded-lg overflow-hidden bg-muted transition-transform duration-300 group-hover:scale-105">
+              <div className="relative h-64 rounded-lg overflow-hidden bg-gray-300 transition-transform duration-300 group-hover:scale-105">
                 {/* Background Image */}
                 <img
                   src={product.image}
