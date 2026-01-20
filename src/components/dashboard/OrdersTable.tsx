@@ -4,7 +4,7 @@ import { OrderService } from '@/services/orderService';
 import { OrderFilters, GroupedOrder, FulfillmentStatus } from '@/types/order.types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Loader2, ChevronLeft, ChevronRight, Eye, ExternalLink, Edit } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, Eye, ExternalLink, Edit, Archive } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import OrderTableFilters from './OrderTableFilters';
@@ -298,6 +298,19 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
                             <Edit className="h-4 w-4 mr-1" />
                             Edit
                           </Button>
+                          {statusFilter === 'quotes' && order.fulfillment_status !== 'Archived' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleFulfillmentStatusUpdate(order.order_id, 'Archived');
+                              }}
+                            >
+                              <Archive className="h-4 w-4 mr-1" />
+                              Archive
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
