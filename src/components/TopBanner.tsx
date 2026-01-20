@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { MapPin, Moon, Sun } from 'lucide-react';
+import { MapPin, Moon } from 'lucide-react';
 import { useZipCode } from '../contexts/ZipCodeContext';
 import { 
   Dialog,
@@ -22,10 +22,12 @@ const TopBanner = ({ className }: TopBannerProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   
+  // Use the city name and state from zipCodeData if available
   const locationText = zipCodeData ? 
     `${zipCodeData.city}, ${zipCodeData.state_id}` : 
-    null;
+    'Nationwide';
   
+  // Callback to close the dialog when a ZIP code is selected
   const handleZipCodeSelected = () => {
     setDialogOpen(false);
   };
@@ -36,53 +38,30 @@ const TopBanner = ({ className }: TopBannerProps) => {
   
   return (
     <div className={cn(
-      "bg-primary text-primary-foreground py-1 px-4 z-50 relative",
+      "bg-primary text-primary-foreground py-0.5 px-4 z-50 relative",
       className
     )}>
       <div className="max-w-6xl mx-auto flex items-center justify-between">
-        {/* Desktop: Theme toggle left */}
-        <div className="hidden md:flex flex-1 justify-start">
-          <button
-            onClick={toggleTheme}
-            className="p-1 hover:opacity-80 transition-opacity flex items-center gap-1 text-xs font-medium"
-            aria-label="Toggle dark mode"
-          >
-            {theme === 'dark' ? (
-              <Sun className="h-4 w-4" />
-            ) : (
-              <Moon className="h-4 w-4" />
-            )}
-          </button>
-        </div>
+        <div className="flex-1" />
         
-        {/* Center content */}
-        <h3 className="text-xs sm:text-sm font-montserrat font-bold text-center tracking-wide">
-          <span className="hidden sm:inline">CONTRACTOR PRIORITY DISPATCH</span>
-          <span className="sm:hidden">CONTRACTOR PRIORITY</span>
-          <span className="mx-2">•</span>
-          <span className="hidden sm:inline">NATIONWIDE AGGREGATE DELIVERY</span>
-          <span className="sm:hidden">NATIONWIDE</span>
-        </h3>
-        
-        {/* Right: Location + Theme toggle on mobile */}
-        <div className="flex flex-1 justify-end items-center gap-2">
+        <h3 className="text-sm font-roboto-mono font-bold text-center">
+          <span className="italic">FREE</span>{' '}DELIVERY{' '} 
+           
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <button className="hidden md:inline-flex items-center text-xs font-medium hover:opacity-80 transition-opacity">
-                {locationText ? (
-                  <>
-                    <span className="mr-1">Delivering to:</span>
-                    <span className="font-bold">{locationText}</span>
-                  </>
-                ) : (
-                  <span className="mr-1">Set Delivery Location</span>
-                )}
-                <MapPin className="h-3 w-3 ml-1" />
+              <button className="inline-flex items-center underline hover:text-white transition-colors">
+                <img 
+                  src="https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//wide-arrow.svg" 
+                  alt="Arrow" 
+                  className="h-3 w-5 ml-1"
+                />
+                {locationText}
+                <MapPin className="h-3 w-3 ml-0.5" />
               </button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-md fixed left-[50%] translate-x-[-50%] top-4 sm:top-[50%] sm:translate-y-[-50%] translate-y-0">
               <DialogHeader>
-                <DialogTitle>{locationText ? 'Change Your Delivery Location' : 'Set Your Delivery Location'}</DialogTitle>
+                <DialogTitle>Change Your Delivery Location</DialogTitle>
               </DialogHeader>
               <div className="py-4">
                 <p className="text-sm text-muted-foreground mb-4">
@@ -96,20 +75,24 @@ const TopBanner = ({ className }: TopBannerProps) => {
               </div>
             </DialogContent>
           </Dialog>
-          
-          {/* Mobile theme toggle */}
+        </h3>
+        
+        {/* Dark mode toggle - hidden for now */}
+        {/* <div className="flex-1 flex justify-end">
           <button
             onClick={toggleTheme}
-            className="md:hidden p-1 hover:opacity-80 transition-opacity"
+            className="p-1 hover:opacity-80 transition-opacity"
             aria-label="Toggle dark mode"
           >
-            {theme === 'dark' ? (
-              <Sun className="h-4 w-4" />
-            ) : (
-              <Moon className="h-4 w-4" />
-            )}
+            <Moon 
+              className={cn(
+                "h-4 w-4 text-primary-foreground transition-all",
+                theme === 'dark' ? "fill-primary-foreground" : "fill-transparent"
+              )} 
+            />
           </button>
-        </div>
+        </div> */}
+        <div className="flex-1" />
       </div>
     </div>
   );

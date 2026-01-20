@@ -32,11 +32,11 @@ const ShopTrustBlocks = () => {
   ];
 
   return (
-    <section className="py-16 px-4 bg-background">
+    <section className="py-16 px-4 bg-gradient-to-br from-gray-50 via-white to-stone-50">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4 text-foreground">Why Choose My Gravel Guy</h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <h2 className="text-4xl font-bold mb-4 text-gray-900">Why Choose My Gravel Guy</h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             More than just materials—we're building the future of landscape supply
           </p>
         </div>
