@@ -4,6 +4,7 @@ import { OrderService } from '@/services/orderService';
 import { OrderFilters, GroupedOrder, FulfillmentStatus } from '@/types/order.types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, ChevronLeft, ChevronRight, Eye, ExternalLink, Edit, Archive } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -34,6 +35,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
   });
   const [selectedOrder, setSelectedOrder] = useState<GroupedOrder | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [hideArchived, setHideArchived] = useState(true);
 
   const limit = 20;
 
@@ -45,11 +47,12 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
       delete baseFilters.quotesOnly;
     } else if (statusFilter === 'quotes') {
       baseFilters.quotesOnly = true;
+      baseFilters.hideArchived = hideArchived;
       delete baseFilters.excludeQuotes;
     }
     
     return baseFilters;
-  }, [filters, statusFilter]);
+  }, [filters, statusFilter, hideArchived]);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['orders', modifiedFilters, page, dateRange, statusFilter],
@@ -187,6 +190,22 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
         dateRange={dateRange}
         onDateRangeChange={setDateRange}
       />
+
+      {statusFilter === 'quotes' && (
+        <div className="flex items-center gap-2 bg-white rounded-lg shadow px-4 py-3">
+          <Checkbox 
+            id="hide-archived" 
+            checked={hideArchived} 
+            onCheckedChange={(checked) => setHideArchived(checked === true)}
+          />
+          <label 
+            htmlFor="hide-archived" 
+            className="text-sm font-medium text-gray-700 cursor-pointer"
+          >
+            Hide archived quotes
+          </label>
+        </div>
+      )}
 
       {isLoading && (
         <div className="flex justify-center py-12">

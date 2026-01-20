@@ -155,9 +155,13 @@ export class OrderService {
       // IMPORTANT: For orders view, include ORDER-* prefix orders regardless of status (they've been paid)
       // For quotes view, include Quote and cart status items
       if (filters.quotesOnly) {
-        // Quotes: status is Quote or cart, AND not archived
-        query = query.or('status.eq.Quote,status.eq.cart')
-          .or('fulfillment_status.is.null,fulfillment_status.not.in.(Archived)');
+        // Quotes: status is Quote or cart
+        query = query.or('status.eq.Quote,status.eq.cart');
+        
+        // Filter out archived quotes by default (unless explicitly showing them)
+        if (filters.hideArchived !== false) {
+          query = query.neq('fulfillment_status', 'Archived');
+        }
       } else if (filters.excludeQuotes) {
         // Orders: exclude cart status, but include ORDER-* prefix orders even if status is 'Quote'
         // (these are paid quote conversions where the order_id starts with ORDER-)

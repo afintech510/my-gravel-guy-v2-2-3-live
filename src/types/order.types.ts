@@ -94,6 +94,7 @@ export interface OrderFilters {
   sortBy?: 'date_desc' | 'date_asc' | 'amount_desc' | 'amount_asc';
   quotesOnly?: boolean;
   excludeQuotes?: boolean;
+  hideArchived?: boolean; // Hide archived items (default true for quotes)
 }
 
 // Service response interface
