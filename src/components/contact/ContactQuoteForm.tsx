@@ -258,7 +258,6 @@ const ContactQuoteForm: React.FC = () => {
                 errors.phone ? 'border-red-500' : 'border-[rgba(255,255,255,0.10)]'
               } rounded-lg px-4 py-3 text-[#F5F7FA] placeholder-[#B7C0CC]/50 focus:outline-none focus:border-[#BADF24] transition-colors`}
             />
-            <p className="text-[#B7C0CC]/70 text-xs mt-1">Text or Call OK</p>
             {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
           </div>
         </div>
@@ -298,26 +297,28 @@ const ContactQuoteForm: React.FC = () => {
           {errors.projectType && <p className="text-red-500 text-xs mt-1">{errors.projectType}</p>}
         </div>
 
-        {/* Material Type (Multi-select) */}
+        {/* Material Type */}
         <div>
-          <p className="text-[#B7C0CC] text-sm mb-3">Material Type * (select all that apply)</p>
-          <div className="grid grid-cols-2 gap-2">
+          <select
+            name="material"
+            value={formData.materials[0] || ''}
+            onChange={(e) => {
+              setFormData((prev) => ({ ...prev, materials: e.target.value ? [e.target.value] : [] }));
+              if (errors.materials) {
+                setErrors((prev) => ({ ...prev, materials: '' }));
+              }
+            }}
+            className={`w-full bg-[#0F1115] border ${
+              errors.materials ? 'border-red-500' : 'border-[rgba(255,255,255,0.10)]'
+            } rounded-lg px-4 py-3 text-[#F5F7FA] focus:outline-none focus:border-[#BADF24] transition-colors appearance-none cursor-pointer`}
+            style={selectStyle}
+          >
+            <option value="" className="bg-[#0F1115]">Material Type *</option>
             {materialOptions.map((material) => (
-              <button
-                key={material}
-                type="button"
-                onClick={() => handleMaterialToggle(material)}
-                className={`px-3 py-2 rounded-lg text-sm text-left transition-all ${
-                  formData.materials.includes(material)
-                    ? 'bg-[#BADF24] text-[#0F1115] font-medium'
-                    : 'bg-[#0F1115] text-[#B7C0CC] border border-[rgba(255,255,255,0.10)] hover:border-[#BADF24]'
-                }`}
-              >
-                {material}
-              </button>
+              <option key={material} value={material} className="bg-[#0F1115]">{material}</option>
             ))}
-          </div>
-          {errors.materials && <p className="text-red-500 text-xs mt-2">{errors.materials}</p>}
+          </select>
+          {errors.materials && <p className="text-red-500 text-xs mt-1">{errors.materials}</p>}
         </div>
 
         {/* Quantity & Timing */}
@@ -328,12 +329,11 @@ const ContactQuoteForm: React.FC = () => {
               name="quantity"
               value={formData.quantity}
               onChange={handleChange}
-              placeholder="Estimated Quantity (tons) *"
+              placeholder="Est. Qty (tons) *"
               className={`w-full bg-[#0F1115] border ${
                 errors.quantity ? 'border-red-500' : 'border-[rgba(255,255,255,0.10)]'
               } rounded-lg px-4 py-3 text-[#F5F7FA] placeholder-[#B7C0CC]/50 focus:outline-none focus:border-[#BADF24] transition-colors`}
             />
-            <p className="text-[#B7C0CC]/70 text-xs mt-1">Type "Not sure" if you need help estimating</p>
             {errors.quantity && <p className="text-red-500 text-xs mt-1">{errors.quantity}</p>}
           </div>
           <div>
@@ -346,7 +346,7 @@ const ContactQuoteForm: React.FC = () => {
               } rounded-lg px-4 py-3 text-[#F5F7FA] focus:outline-none focus:border-[#BADF24] transition-colors appearance-none cursor-pointer`}
               style={selectStyle}
             >
-              <option value="" className="bg-[#0F1115]">Desired Delivery Timing *</option>
+              <option value="" className="bg-[#0F1115]">Timeframe *</option>
               {timingOptions.map((t) => (
                 <option key={t} value={t} className="bg-[#0F1115]">{t}</option>
               ))}
