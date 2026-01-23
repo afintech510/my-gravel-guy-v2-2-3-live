@@ -198,11 +198,20 @@ export function OrderItemsManager({
           description: "Order item has been removed.",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error removing item:', error);
+      
+      // Provide more specific error messages
+      let errorMessage = "Failed to remove item. Please try again.";
+      if (error?.message?.includes('row-level security') || error?.message?.includes('policy')) {
+        errorMessage = "Permission denied. You must be logged in as an admin to remove items.";
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Error removing item",
-        description: "Failed to remove item. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
