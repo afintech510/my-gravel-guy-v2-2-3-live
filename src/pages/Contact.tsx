@@ -1,106 +1,119 @@
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
+import React from 'react';
+import { Helmet } from 'react-helmet-async';
+import { CheckCircle } from 'lucide-react';
+import ContactQuoteForm from '@/components/contact/ContactQuoteForm';
+import HowItWorksSection from '@/components/contact/HowItWorksSection';
+import WhyContractorsSection from '@/components/contact/WhyContractorsSection';
+import TrustSection from '@/components/contact/TrustSection';
+import ContactFAQ from '@/components/contact/ContactFAQ';
+import ContactInfoBar from '@/components/contact/ContactInfoBar';
 
-import QuoteForm from '@/components/forms/QuoteForm';
+const trustBadges = [
+  'Nationwide Supplier Network',
+  'Contractor-Friendly',
+  'Transparent Delivered Pricing',
+  'Real Humans, Not Call Centers',
+];
 
 const Contact = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    message: ''
-  });
-  const {
-    toast
-  } = useToast();
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const {
-      name,
-      value
-    } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // In a real app, this would send the form data to a server
-    console.log('Form submitted:', formData);
-    toast({
-      title: "Message sent!",
-      description: "We'll get back to you as soon as possible."
-    });
-    setFormData({
-      name: '',
-      email: '',
-      message: ''
-    });
-  };
   return (
-    <div className="min-h-screen bg-white">
-      <div className="py-20 px-4 bg-gray-50">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">Get a Quote</h1>
-          <p className="text-xl text-gray-600">
-            Fill out the form below and we'll get back to you with a custom quote for your material needs.
-          </p>
-        </div>
-      </div>
-      
-      <section className="py-16 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 gap-12">
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <QuoteForm />
-            </div>
-            
-            <div>
-              <h2 className="text-3xl font-bold mb-6">Contact Information</h2>
-              <div className="space-y-6">
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <p className="text-blue-800 font-medium text-sm">
-                    <strong>Business Entity:</strong> MyGravelGuy.com is a service provided by Eastern Building Supply Inc.
-                  </p>
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Email</h3>
-                  <p className="text-gray-600">support@mygravelguy.com</p>
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Phone</h3>
-                  <p className="text-gray-600">(844) 624-0400</p>
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Hours (Eastern Daylight Time)</h3>
-                  <p className="text-gray-600">Monday - Friday: 8am - 5pm</p>
-                  <p className="text-gray-600">Saturday: 8am - 1pm</p>
-                </div>
-                
-                <div className="mt-8">
-                  <h3 className="text-lg font-semibold mb-2">Frequently Asked Questions</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-medium">What areas do you service?</h4>
-                      <p className="text-sm text-gray-600">We deliver to most areas across the United States. Enter your ZIP code to check availability.</p>
+    <>
+      <Helmet>
+        <title>Get a Quote | Aggregate Sourcing & Delivery | MyGravelGuy</title>
+        <meta
+          name="description"
+          content="Get delivered pricing on gravel, stone, sand, and base materials from vetted local suppliers. One request, fast response, no hassle."
+        />
+        <meta
+          name="keywords"
+          content="gravel quote, aggregate delivery, stone pricing, bulk material delivery, contractor materials"
+        />
+        <link rel="canonical" href="https://mygravelguy.com/contact" />
+      </Helmet>
+
+      <div className="min-h-screen bg-[#0F1115] text-[#F5F7FA]">
+        {/* Hero Section with Form */}
+        <section className="pt-12 pb-16 lg:pt-20 lg:pb-24">
+          <div className="max-w-[1200px] mx-auto px-6">
+            <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-12 lg:gap-16 items-start">
+              {/* Left: Hero Content */}
+              <div className="lg:sticky lg:top-24">
+                <h1 className="font-montserrat font-extrabold text-4xl lg:text-[52px] leading-[1.1] uppercase tracking-tight mb-6">
+                  Nationwide Aggregate Sourcing & Delivery — Made Simple
+                </h1>
+                <p className="text-xl text-[#B7C0CC] mb-8 max-w-[520px]">
+                  We source, price, and deliver gravel, stone, sand, and base materials from trusted local suppliers — saving you time, calls, and guesswork.
+                </p>
+
+                {/* Trust Signals */}
+                <div className="grid grid-cols-2 gap-4 mb-10">
+                  {trustBadges.map((badge, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-[#BADF24] flex-shrink-0" />
+                      <span className="text-sm text-[#F5F7FA]">{badge}</span>
                     </div>
-                    <div>
-                      <h4 className="font-medium">How is pricing calculated?</h4>
-                      <p className="text-sm text-gray-600">Pricing is based on material type, volume, and delivery distance.</p>
+                  ))}
+                </div>
+
+                {/* Contact Info - Desktop Only */}
+                <div className="hidden lg:block">
+                  <div className="bg-[#151A22] border border-[rgba(255,255,255,0.1)] rounded-xl p-6">
+                    <h3 className="font-semibold text-[#F5F7FA] mb-4">Prefer to talk?</h3>
+                    <div className="space-y-3">
+                      <p className="text-[#B7C0CC]">
+                        <span className="text-[#BADF24]">Phone:</span>{' '}
+                        <a href="tel:+18446240400" className="hover:text-[#BADF24]">(844) 624-0400</a>
+                      </p>
+                      <p className="text-[#B7C0CC]">
+                        <span className="text-[#BADF24]">Email:</span>{' '}
+                        <a href="mailto:support@mygravelguy.com" className="hover:text-[#BADF24]">support@mygravelguy.com</a>
+                      </p>
+                      <p className="text-[#B7C0CC] text-sm">
+                        Mon-Fri 8am-5pm ET • Sat 8am-1pm ET
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
+
+              {/* Right: Form */}
+              <div>
+                <ContactQuoteForm />
+              </div>
             </div>
           </div>
+        </section>
+
+        {/* How It Works */}
+        <HowItWorksSection />
+
+        {/* Why Contractors Section */}
+        <WhyContractorsSection />
+
+        {/* Trust Section */}
+        <TrustSection />
+
+        {/* FAQ Section */}
+        <ContactFAQ />
+
+        {/* Contact Info Bar */}
+        <ContactInfoBar />
+
+        {/* Sticky Mobile CTA */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#0F1115] border-t border-[rgba(255,255,255,0.1)] p-4 z-50">
+          <a
+            href="#quote-form"
+            onClick={(e) => {
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="block w-full bg-[#BADF24] text-[#0F1115] py-4 rounded-lg font-bold text-center"
+          >
+            Get My Quote
+          </a>
         </div>
-      </section>
-      
-    </div>
+      </div>
+    </>
   );
 };
 
