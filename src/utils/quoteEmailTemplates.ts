@@ -7,6 +7,8 @@ interface QuoteFormData {
   zipCode: string;
   selectedProduct?: { name: string } | null;
   material?: string;
+  estimatedTons?: number;
+  timeframe?: string;
   orderId?: string;
 }
 
@@ -16,7 +18,15 @@ export const generateQuoteRequestEmail = (formData: QuoteFormData): string => {
     : '';
 
   const materialSection = formData.material 
-    ? `<p><strong>Material Interest:</strong> ${formData.material}</p>`
+    ? `<p><strong>Material:</strong> ${formData.material}</p>`
+    : '';
+
+  const tonsSection = formData.estimatedTons
+    ? `<p><strong>Amount:</strong> ${formData.estimatedTons} tons</p>`
+    : '';
+
+  const timeframeSection = formData.timeframe
+    ? `<p><strong>Timeframe:</strong> ${formData.timeframe}</p>`
     : '';
 
   const orderIdSection = formData.orderId
@@ -39,22 +49,28 @@ export const generateQuoteRequestEmail = (formData: QuoteFormData): string => {
       
       <div style="background-color: #ffffff; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
         <h2 style="color: #374151; margin-top: 0;">Customer Information</h2>
-        <p><strong>Customer Name:</strong> ${formData.name}</p>
-        <p><strong>Email:</strong> ${formData.email}</p>
+        <p><strong>Name:</strong> ${formData.name}</p>
         <p><strong>Phone:</strong> ${formData.phone}</p>
-        <p><strong>ZIP Code:</strong> ${formData.zipCode}</p>
-        ${productSection}
-        ${materialSection}
+        <p><strong>Email:</strong> ${formData.email}</p>
+        <p><strong>Delivery ZIP:</strong> ${formData.zipCode}</p>
         
-        <h2 style="color: #374151;">Project Details</h2>
+        <h2 style="color: #374151;">Material Details</h2>
+        ${materialSection}
+        ${productSection}
+        ${tonsSection}
+        ${timeframeSection}
+        
+        ${formData.message ? `
+        <h2 style="color: #374151;">Notes</h2>
         <div style="background-color: #f9fafb; padding: 15px; border-radius: 6px; border-left: 4px solid #2563eb;">
           ${formData.message.replace(/\n/g, '<br>')}
         </div>
+        ` : ''}
       </div>
       
       <div style="margin-top: 20px; padding: 15px; background-color: #ecfdf5; border-radius: 8px; border: 1px solid #d1fae5;">
         <p style="margin: 0; color: #065f46;">
-          <strong>Next Steps:</strong> Please respond to this quote request within 24 hours for the best customer experience.
+          <strong>Next Steps:</strong> Please respond to this quote request within 2 hours for the best customer experience.
         </p>
       </div>
     </body>

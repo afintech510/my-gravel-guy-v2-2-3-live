@@ -4,13 +4,13 @@ import { sendQuoteRequestEmail } from '@/services/quoteEmailService';
 
 interface FormData {
   name: string;
-  company: string;
-  email: string;
   phone: string;
+  email: string;
+  deliveryZip: string;
   material: string;
   quantity: string;
-  deliveryZip: string;
-  projectDetails: string;
+  timeframe: string;
+  notes: string;
 }
 
 interface FormErrors {
@@ -24,13 +24,13 @@ interface QuoteFormProps {
 const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess }) => {
   const [formData, setFormData] = useState<FormData>({
     name: '',
-    company: '',
-    email: '',
     phone: '',
+    email: '',
+    deliveryZip: '',
     material: '',
     quantity: '',
-    deliveryZip: '',
-    projectDetails: '',
+    timeframe: '',
+    notes: '',
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -60,6 +60,15 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess }) => {
     'Other',
   ];
 
+  const timeframes = [
+    'ASAP (1-3 days)',
+    'This week',
+    'Next week',
+    '2-4 weeks',
+    '1+ month out',
+    'Flexible / Not sure',
+  ];
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -74,20 +83,24 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess }) => {
     const newErrors: FormErrors = {};
 
     if (!formData.name.trim()) newErrors.name = 'Name is required';
-    if (!formData.company.trim()) newErrors.company = 'Company is required';
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!/^[\d\s\-\(\)\+]+$/.test(formData.phone) || formData.phone.replace(/\D/g, '').length < 10) {
+      newErrors.phone = 'Please enter a valid phone number';
+    }
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Invalid email format';
     }
-    // Phone is now optional - no validation required
-    if (!formData.material) newErrors.material = 'Please select a material';
-    if (!formData.quantity.trim()) newErrors.quantity = 'Quantity is required';
     if (!formData.deliveryZip.trim()) {
       newErrors.deliveryZip = 'Delivery ZIP is required';
     } else if (!/^\d{5}$/.test(formData.deliveryZip)) {
       newErrors.deliveryZip = 'Invalid ZIP code';
     }
+    if (!formData.material) newErrors.material = 'Please select a material';
+    if (!formData.quantity.trim()) newErrors.quantity = 'Amount is required';
+    if (!formData.timeframe) newErrors.timeframe = 'Please select a timeframe';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -101,22 +114,15 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess }) => {
     setIsSubmitting(true);
 
     try {
-      // Build the message from form data
-      const message = `
-Company: ${formData.company}
-Material: ${formData.material}
-Quantity: ${formData.quantity} tons
-${formData.projectDetails ? `Project Details: ${formData.projectDetails}` : ''}
-      `.trim();
-
       const result = await sendQuoteRequestEmail({
         name: formData.name,
         email: formData.email,
-        phone: formData.phone || 'Not provided',
-        message: message,
+        phone: formData.phone,
         zipCode: formData.deliveryZip,
         material: formData.material,
         estimatedTons: parseFloat(formData.quantity) || undefined,
+        timeframe: formData.timeframe,
+        message: formData.notes || '',
         sourcePage: '/contractors-aggregate-delivery-service',
       });
 
@@ -128,13 +134,13 @@ ${formData.projectDetails ? `Project Details: ${formData.projectDetails}` : ''}
         // Reset form
         setFormData({
           name: '',
-          company: '',
-          email: '',
           phone: '',
+          email: '',
+          deliveryZip: '',
           material: '',
           quantity: '',
-          deliveryZip: '',
-          projectDetails: '',
+          timeframe: '',
+          notes: '',
         });
       } else {
         toast.error(result.error || 'Failed to submit quote request');
@@ -182,6 +188,13 @@ ${formData.projectDetails ? `Project Details: ${formData.projectDetails}` : ''}
     );
   }
 
+  const selectStyle = {
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23B7C0CC'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'right 1rem center',
+    backgroundSize: '1.5em 1.5em',
+  };
+
   return (
     <div className="bg-[#151A22] border border-[rgba(255,255,255,0.10)] rounded-2xl p-6 md:p-8">
       <div className="mb-6">
@@ -194,40 +207,40 @@ ${formData.projectDetails ? `Project Details: ${formData.projectDetails}` : ''}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Name *"
-              className={`w-full bg-[#0F1115] border ${
-                errors.name ? 'border-red-500' : 'border-[rgba(255,255,255,0.10)]'
-              } rounded-lg px-4 py-3 text-[#F5F7FA] placeholder-[#B7C0CC]/50 focus:outline-none focus:border-[#BADF24] transition-colors`}
-            />
-            {errors.name && (
-              <p className="text-red-500 text-xs mt-1">{errors.name}</p>
-            )}
-          </div>
-          <div>
-            <input
-              type="text"
-              name="company"
-              value={formData.company}
-              onChange={handleChange}
-              placeholder="Company *"
-              className={`w-full bg-[#0F1115] border ${
-                errors.company ? 'border-red-500' : 'border-[rgba(255,255,255,0.10)]'
-              } rounded-lg px-4 py-3 text-[#F5F7FA] placeholder-[#B7C0CC]/50 focus:outline-none focus:border-[#BADF24] transition-colors`}
-            />
-            {errors.company && (
-              <p className="text-red-500 text-xs mt-1">{errors.company}</p>
-            )}
-          </div>
+        {/* Name */}
+        <div>
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="Name *"
+            className={`w-full bg-[#0F1115] border ${
+              errors.name ? 'border-red-500' : 'border-[rgba(255,255,255,0.10)]'
+            } rounded-lg px-4 py-3 text-[#F5F7FA] placeholder-[#B7C0CC]/50 focus:outline-none focus:border-[#BADF24] transition-colors`}
+          />
+          {errors.name && (
+            <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+          )}
         </div>
 
+        {/* Phone & Email */}
         <div className="grid grid-cols-2 gap-4">
+          <div>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="Phone # *"
+              className={`w-full bg-[#0F1115] border ${
+                errors.phone ? 'border-red-500' : 'border-[rgba(255,255,255,0.10)]'
+              } rounded-lg px-4 py-3 text-[#F5F7FA] placeholder-[#B7C0CC]/50 focus:outline-none focus:border-[#BADF24] transition-colors`}
+            />
+            {errors.phone && (
+              <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+            )}
+          </div>
           <div>
             <input
               type="email"
@@ -243,18 +256,27 @@ ${formData.projectDetails ? `Project Details: ${formData.projectDetails}` : ''}
               <p className="text-red-500 text-xs mt-1">{errors.email}</p>
             )}
           </div>
-          <div>
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="Phone (optional)"
-              className="w-full bg-[#0F1115] border border-[rgba(255,255,255,0.10)] rounded-lg px-4 py-3 text-[#F5F7FA] placeholder-[#B7C0CC]/50 focus:outline-none focus:border-[#BADF24] transition-colors"
-            />
-          </div>
         </div>
 
+        {/* Delivery ZIP */}
+        <div>
+          <input
+            type="text"
+            name="deliveryZip"
+            value={formData.deliveryZip}
+            onChange={handleChange}
+            placeholder="Delivery ZIP Code *"
+            maxLength={5}
+            className={`w-full bg-[#0F1115] border ${
+              errors.deliveryZip ? 'border-red-500' : 'border-[rgba(255,255,255,0.10)]'
+            } rounded-lg px-4 py-3 text-[#F5F7FA] placeholder-[#B7C0CC]/50 focus:outline-none focus:border-[#BADF24] transition-colors`}
+          />
+          {errors.deliveryZip && (
+            <p className="text-red-500 text-xs mt-1">{errors.deliveryZip}</p>
+          )}
+        </div>
+
+        {/* Material */}
         <div>
           <select
             name="material"
@@ -263,12 +285,7 @@ ${formData.projectDetails ? `Project Details: ${formData.projectDetails}` : ''}
             className={`w-full bg-[#0F1115] border ${
               errors.material ? 'border-red-500' : 'border-[rgba(255,255,255,0.10)]'
             } rounded-lg px-4 py-3 text-[#F5F7FA] focus:outline-none focus:border-[#BADF24] transition-colors appearance-none cursor-pointer`}
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23B7C0CC'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'right 1rem center',
-              backgroundSize: '1.5em 1.5em',
-            }}
+            style={selectStyle}
           >
             <option value="" className="bg-[#0F1115]">
               Select Material *
@@ -284,6 +301,7 @@ ${formData.projectDetails ? `Project Details: ${formData.projectDetails}` : ''}
           )}
         </div>
 
+        {/* Amount & Timeframe */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <input
@@ -291,7 +309,7 @@ ${formData.projectDetails ? `Project Details: ${formData.projectDetails}` : ''}
               name="quantity"
               value={formData.quantity}
               onChange={handleChange}
-              placeholder="Quantity (tons) *"
+              placeholder="Amount (tons) *"
               className={`w-full bg-[#0F1115] border ${
                 errors.quantity ? 'border-red-500' : 'border-[rgba(255,255,255,0.10)]'
               } rounded-lg px-4 py-3 text-[#F5F7FA] placeholder-[#B7C0CC]/50 focus:outline-none focus:border-[#BADF24] transition-colors`}
@@ -301,29 +319,37 @@ ${formData.projectDetails ? `Project Details: ${formData.projectDetails}` : ''}
             )}
           </div>
           <div>
-            <input
-              type="text"
-              name="deliveryZip"
-              value={formData.deliveryZip}
+            <select
+              name="timeframe"
+              value={formData.timeframe}
               onChange={handleChange}
-              placeholder="Delivery ZIP *"
-              maxLength={5}
               className={`w-full bg-[#0F1115] border ${
-                errors.deliveryZip ? 'border-red-500' : 'border-[rgba(255,255,255,0.10)]'
-              } rounded-lg px-4 py-3 text-[#F5F7FA] placeholder-[#B7C0CC]/50 focus:outline-none focus:border-[#BADF24] transition-colors`}
-            />
-            {errors.deliveryZip && (
-              <p className="text-red-500 text-xs mt-1">{errors.deliveryZip}</p>
+                errors.timeframe ? 'border-red-500' : 'border-[rgba(255,255,255,0.10)]'
+              } rounded-lg px-4 py-3 text-[#F5F7FA] focus:outline-none focus:border-[#BADF24] transition-colors appearance-none cursor-pointer`}
+              style={selectStyle}
+            >
+              <option value="" className="bg-[#0F1115]">
+                Timeframe *
+              </option>
+              {timeframes.map((tf) => (
+                <option key={tf} value={tf} className="bg-[#0F1115]">
+                  {tf}
+                </option>
+              ))}
+            </select>
+            {errors.timeframe && (
+              <p className="text-red-500 text-xs mt-1">{errors.timeframe}</p>
             )}
           </div>
         </div>
 
+        {/* Notes (optional) */}
         <div>
           <textarea
-            name="projectDetails"
-            value={formData.projectDetails}
+            name="notes"
+            value={formData.notes}
             onChange={handleChange}
-            placeholder="Project details (optional)"
+            placeholder="Notes (optional)"
             rows={3}
             className="w-full bg-[#0F1115] border border-[rgba(255,255,255,0.10)] rounded-lg px-4 py-3 text-[#F5F7FA] placeholder-[#B7C0CC]/50 focus:outline-none focus:border-[#BADF24] transition-colors resize-none"
           />
