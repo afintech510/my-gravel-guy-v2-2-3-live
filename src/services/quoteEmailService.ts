@@ -13,6 +13,7 @@ interface QuoteFormData {
   estimatedTons?: number;
   projectType?: string;
   material?: string;
+  timeframe?: string;
   sourcePage?: string;
 }
 
@@ -30,6 +31,8 @@ export const sendQuoteRequestEmail = async (formData: QuoteFormData): Promise<{ 
       projectDetails: formData.message,
       estimatedTons: formData.estimatedTons,
       productName: formData.selectedProduct?.name,
+      material: formData.material,
+      timeframe: formData.timeframe,
       sourcePage: formData.sourcePage,
     };
 
@@ -114,6 +117,7 @@ export const sendQuoteRequestEmail = async (formData: QuoteFormData): Promise<{ 
 const generateCustomerQuoteConfirmationEmail = (formData: QuoteFormData & { orderId?: string }): string => {
   const materialInfo = formData.material || formData.selectedProduct?.name || 'Not specified';
   const tonsInfo = formData.estimatedTons ? `${formData.estimatedTons} tons` : 'To be determined';
+  const timeframeInfo = formData.timeframe || 'Not specified';
   
   return `
     <!DOCTYPE html>
@@ -132,16 +136,20 @@ const generateCustomerQuoteConfirmationEmail = (formData: QuoteFormData & { orde
         <h1 style="color: #0F1115; font-size: 24px; margin-bottom: 20px;">We Received Your Quote Request!</h1>
         
         <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
-          Thank you for reaching out to MyGravelGuy. Our team is reviewing your request and will get back to you within 24 hours with competitive pricing.
+          Thank you for reaching out to MyGravelGuy. Our team is reviewing your request and will get back to you within 2 hours with competitive pricing.
         </p>
         
         <div style="background-color: #f7fafc; border-radius: 8px; padding: 20px; margin: 30px 0;">
           <h2 style="color: #0F1115; font-size: 18px; margin-bottom: 15px;">Your Request Details</h2>
           ${formData.orderId ? `<p style="color: #4a5568; margin: 8px 0;"><strong>Reference ID:</strong> ${formData.orderId}</p>` : ''}
-          <p style="color: #4a5568; margin: 8px 0;"><strong>Material:</strong> ${materialInfo}</p>
-          <p style="color: #4a5568; margin: 8px 0;"><strong>Quantity:</strong> ${tonsInfo}</p>
+          <p style="color: #4a5568; margin: 8px 0;"><strong>Name:</strong> ${formData.name}</p>
+          <p style="color: #4a5568; margin: 8px 0;"><strong>Phone:</strong> ${formData.phone}</p>
+          <p style="color: #4a5568; margin: 8px 0;"><strong>Email:</strong> ${formData.email}</p>
           <p style="color: #4a5568; margin: 8px 0;"><strong>Delivery ZIP:</strong> ${formData.zipCode}</p>
-          ${formData.message ? `<p style="color: #4a5568; margin: 8px 0;"><strong>Additional Details:</strong><br>${formData.message.replace(/\n/g, '<br>')}</p>` : ''}
+          <p style="color: #4a5568; margin: 8px 0;"><strong>Material:</strong> ${materialInfo}</p>
+          <p style="color: #4a5568; margin: 8px 0;"><strong>Amount:</strong> ${tonsInfo}</p>
+          <p style="color: #4a5568; margin: 8px 0;"><strong>Timeframe:</strong> ${timeframeInfo}</p>
+          ${formData.message ? `<p style="color: #4a5568; margin: 8px 0;"><strong>Notes:</strong><br>${formData.message.replace(/\n/g, '<br>')}</p>` : ''}
         </div>
         
         <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
