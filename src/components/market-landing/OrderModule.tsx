@@ -9,7 +9,7 @@ import { Truck, Zap, Calendar, AlertCircle, CheckCircle } from 'lucide-react';
 import type { MarketMaterialData, Product, OrderModuleState } from './types';
 import { calculateTotalWithFees, formatCurrency, formatPercentage } from '@/utils/feeCalculation';
 import { getMaterialDisplayName } from '@/services/marketMaterialService';
-import { shouldFireAddToCart, trackAddToCart } from '@/utils/analytics';
+import { shouldFireAddToCart, trackAddToCart, type OrderModuleStateForAnalytics } from '@/utils/analytics';
 
 interface OrderModuleProps {
   pageData: MarketMaterialData;

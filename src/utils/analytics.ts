@@ -1,5 +1,5 @@
-
 // Google Analytics Utility
+// Updated: force rebuild
 
 // Define window with gtag
 declare global {
