@@ -589,8 +589,11 @@ export type Database = {
         Row: {
           attachment_files: string[] | null
           balance_due: number | null
+          base_price: number | null
           billing_email: string | null
           billing_name: string | null
+          confirmation_deadline_at: string | null
+          confirmed_at: string | null
           coupon: string | null
           created_at: string | null
           delivered_at: string | null
@@ -605,12 +608,20 @@ export type Database = {
           delivery_time_preference: string | null
           delivery_zip: string | null
           deposit_amount: number | null
+          expedite_fee_amount: number | null
+          expedite_fee_pct: number | null
           fulfillment_eta: string | null
           fulfillment_status:
             | Database["public"]["Enums"]["fulfillment_status_enum"]
             | null
+          ga4_purchase_fired: boolean | null
+          gbraid: string | null
+          gclid: string | null
           id: string
           is_deposit_payment: boolean | null
+          landing_page_url: string | null
+          market_slug: string | null
+          material_slug: string | null
           notes: string | null
           order_id: string
           original_quote_id: string | null
@@ -622,8 +633,11 @@ export type Database = {
           quote_notes: string | null
           quote_status: string | null
           quoted_price: number | null
+          referrer: string | null
           sales_commission: number | null
           sales_person: string | null
+          saturday_fee_amount: number | null
+          saturday_fee_pct: number | null
           status: string | null
           stripe_payment_intent_id: string | null
           stripe_session_id: string | null
@@ -635,13 +649,23 @@ export type Database = {
           unit: string
           unit_price: number
           updated_at: string | null
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+          wbraid: string | null
           zip_adjust: number | null
         }
         Insert: {
           attachment_files?: string[] | null
           balance_due?: number | null
+          base_price?: number | null
           billing_email?: string | null
           billing_name?: string | null
+          confirmation_deadline_at?: string | null
+          confirmed_at?: string | null
           coupon?: string | null
           created_at?: string | null
           delivered_at?: string | null
@@ -656,12 +680,20 @@ export type Database = {
           delivery_time_preference?: string | null
           delivery_zip?: string | null
           deposit_amount?: number | null
+          expedite_fee_amount?: number | null
+          expedite_fee_pct?: number | null
           fulfillment_eta?: string | null
           fulfillment_status?:
             | Database["public"]["Enums"]["fulfillment_status_enum"]
             | null
+          ga4_purchase_fired?: boolean | null
+          gbraid?: string | null
+          gclid?: string | null
           id?: string
           is_deposit_payment?: boolean | null
+          landing_page_url?: string | null
+          market_slug?: string | null
+          material_slug?: string | null
           notes?: string | null
           order_id: string
           original_quote_id?: string | null
@@ -673,8 +705,11 @@ export type Database = {
           quote_notes?: string | null
           quote_status?: string | null
           quoted_price?: number | null
+          referrer?: string | null
           sales_commission?: number | null
           sales_person?: string | null
+          saturday_fee_amount?: number | null
+          saturday_fee_pct?: number | null
           status?: string | null
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
@@ -686,13 +721,23 @@ export type Database = {
           unit: string
           unit_price: number
           updated_at?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          wbraid?: string | null
           zip_adjust?: number | null
         }
         Update: {
           attachment_files?: string[] | null
           balance_due?: number | null
+          base_price?: number | null
           billing_email?: string | null
           billing_name?: string | null
+          confirmation_deadline_at?: string | null
+          confirmed_at?: string | null
           coupon?: string | null
           created_at?: string | null
           delivered_at?: string | null
@@ -707,12 +752,20 @@ export type Database = {
           delivery_time_preference?: string | null
           delivery_zip?: string | null
           deposit_amount?: number | null
+          expedite_fee_amount?: number | null
+          expedite_fee_pct?: number | null
           fulfillment_eta?: string | null
           fulfillment_status?:
             | Database["public"]["Enums"]["fulfillment_status_enum"]
             | null
+          ga4_purchase_fired?: boolean | null
+          gbraid?: string | null
+          gclid?: string | null
           id?: string
           is_deposit_payment?: boolean | null
+          landing_page_url?: string | null
+          market_slug?: string | null
+          material_slug?: string | null
           notes?: string | null
           order_id?: string
           original_quote_id?: string | null
@@ -724,8 +777,11 @@ export type Database = {
           quote_notes?: string | null
           quote_status?: string | null
           quoted_price?: number | null
+          referrer?: string | null
           sales_commission?: number | null
           sales_person?: string | null
+          saturday_fee_amount?: number | null
+          saturday_fee_pct?: number | null
           status?: string | null
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
@@ -737,6 +793,13 @@ export type Database = {
           unit?: string
           unit_price?: number
           updated_at?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          wbraid?: string | null
           zip_adjust?: number | null
         }
         Relationships: []
