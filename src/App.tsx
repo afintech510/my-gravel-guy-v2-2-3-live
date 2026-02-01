@@ -64,6 +64,7 @@ import LandingPage from "./pages/LandingPage";
 import Contractors from "./pages/Contractors";
 import ContractorsAggregateLanding from "./pages/ContractorsAggregateLanding";
 import MarketMaterialPage from "./pages/MarketMaterialPage";
+import ContractorsSpecMaterials from "./pages/ContractorsSpecMaterials";
 import { Link } from "react-router-dom";
 
 const queryClient = new QueryClient({
@@ -154,6 +155,7 @@ function AppContent() {
         <Route path="/landing" element={<LandingPage />} />
         <Route path="/contractors" element={<Contractors />} />
         <Route path="/contractors-aggregate-delivery-service" element={<ContractorsAggregateLanding />} />
+        <Route path="/contractors-spec-materials" element={<ContractorsSpecMaterials />} />
         <Route path="/markets/:marketSlug/materials/:materialSlug" element={<MarketMaterialPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
