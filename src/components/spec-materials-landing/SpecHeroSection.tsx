@@ -1,5 +1,5 @@
 import React from 'react';
-import { trackSpecLPView } from '@/utils/analytics';
+import { trackSpecLPView } from '../../utils/analytics';
 
 interface SpecHeroSectionProps {
   onScrollToForm: () => void;
