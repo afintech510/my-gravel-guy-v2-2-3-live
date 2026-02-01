@@ -1,17 +1,24 @@
 
 import { useLocation, Link } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Store } from "lucide-react";
 
 const NotFound = () => {
   const location = useLocation();
+  const hasDispatchedPrerenderEvent = useRef(false);
 
   useEffect(() => {
     console.error(
       "404 Error: User attempted to access non-existent route:",
       location.pathname
     );
+    
+    // Dispatch prerender-ready to prevent Puppeteer hang on 404 pages
+    if (!hasDispatchedPrerenderEvent.current && typeof document !== 'undefined') {
+      hasDispatchedPrerenderEvent.current = true;
+      document.dispatchEvent(new Event('prerender-ready'));
+    }
   }, [location.pathname]);
 
   return (
