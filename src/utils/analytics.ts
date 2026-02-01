@@ -379,7 +379,7 @@ export const trackMarketPurchase = (
 };
 
 // ============================================
-// Spec Materials Landing Page Analytics
+// Spec Materials Landing Page Analytics  
 // ============================================
 
 /**
@@ -427,3 +427,6 @@ export const trackSpecFormSubmit = (tons: number, material: string, hasSpec: boo
     ...utmParams
   });
 };
+
+// Ensure all exports are available
+export type { UTMData };
