@@ -350,6 +350,35 @@ export type Database = {
         }
         Relationships: []
       }
+      market_aliases: {
+        Row: {
+          alias_slug: string
+          created_at: string | null
+          id: string
+          market_id: string
+        }
+        Insert: {
+          alias_slug: string
+          created_at?: string | null
+          id?: string
+          market_id: string
+        }
+        Update: {
+          alias_slug?: string
+          created_at?: string | null
+          id?: string
+          market_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_aliases_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           body: string | null
