@@ -379,6 +379,126 @@ export type Database = {
           },
         ]
       }
+      market_materials: {
+        Row: {
+          activated_at: string | null
+          best_uses: string[] | null
+          confirmation_window_hours: number | null
+          created_at: string | null
+          expedite_enabled: boolean | null
+          expedite_fee_pct: number | null
+          faq_json: Json | null
+          gallery_image_urls: string[] | null
+          hero_headline: string | null
+          hero_image_url: string | null
+          hero_subheadline: string | null
+          id: string
+          local_intro_copy: string | null
+          local_logistics_copy: string | null
+          market_display_name: string
+          market_id: string
+          material_caveats: string | null
+          material_display_name: string | null
+          max_tons: number | null
+          min_tons: number | null
+          paused_at: string | null
+          product_id: string
+          published_at: string | null
+          sat_enabled: boolean | null
+          sat_fee_pct: number | null
+          seo_description: string | null
+          seo_title: string | null
+          slug_path: string | null
+          spec_notes: string | null
+          standard_lead_time_hours: number | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          best_uses?: string[] | null
+          confirmation_window_hours?: number | null
+          created_at?: string | null
+          expedite_enabled?: boolean | null
+          expedite_fee_pct?: number | null
+          faq_json?: Json | null
+          gallery_image_urls?: string[] | null
+          hero_headline?: string | null
+          hero_image_url?: string | null
+          hero_subheadline?: string | null
+          id?: string
+          local_intro_copy?: string | null
+          local_logistics_copy?: string | null
+          market_display_name: string
+          market_id: string
+          material_caveats?: string | null
+          material_display_name?: string | null
+          max_tons?: number | null
+          min_tons?: number | null
+          paused_at?: string | null
+          product_id: string
+          published_at?: string | null
+          sat_enabled?: boolean | null
+          sat_fee_pct?: number | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug_path?: string | null
+          spec_notes?: string | null
+          standard_lead_time_hours?: number | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          best_uses?: string[] | null
+          confirmation_window_hours?: number | null
+          created_at?: string | null
+          expedite_enabled?: boolean | null
+          expedite_fee_pct?: number | null
+          faq_json?: Json | null
+          gallery_image_urls?: string[] | null
+          hero_headline?: string | null
+          hero_image_url?: string | null
+          hero_subheadline?: string | null
+          id?: string
+          local_intro_copy?: string | null
+          local_logistics_copy?: string | null
+          market_display_name?: string
+          market_id?: string
+          material_caveats?: string | null
+          material_display_name?: string | null
+          max_tons?: number | null
+          min_tons?: number | null
+          paused_at?: string | null
+          product_id?: string
+          published_at?: string | null
+          sat_enabled?: boolean | null
+          sat_fee_pct?: number | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug_path?: string | null
+          spec_notes?: string | null
+          standard_lead_time_hours?: number | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_materials_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "market_materials_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           body: string | null
