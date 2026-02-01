@@ -82,7 +82,8 @@ export const trackEcommerce = (
 // Market Landing Page Analytics
 // ============================================
 
-interface OrderModuleState {
+// Re-export OrderModuleState type for analytics functions
+export interface OrderModuleStateForAnalytics {
   tons: number;
   zipCode: string | null;
   email: string | null;
@@ -189,7 +190,7 @@ export const getTrafficType = (): 'paid' | 'organic' | 'direct' => {
 /**
  * Check if add_to_cart should fire based on precise conditions
  */
-export const shouldFireAddToCart = (state: OrderModuleState, materialSlug: string): boolean => {
+export const shouldFireAddToCart = (state: OrderModuleStateForAnalytics, materialSlug: string): boolean => {
   const sessionKey = `${materialSlug}-${state.tons}`;
 
   // Already fired for this material + quantity combination
