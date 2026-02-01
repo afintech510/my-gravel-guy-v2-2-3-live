@@ -377,3 +377,53 @@ export const trackMarketPurchase = (
   // Mark as fired
   localStorage.setItem(firedKey, 'true');
 };
+
+// ============================================
+// Spec Materials Landing Page Analytics
+// ============================================
+
+/**
+ * Track spec landing page view
+ */
+export const trackSpecLPView = () => {
+  if (!window.gtag) return;
+  window.gtag('event', 'spec_lp_view', {
+    page_type: 'spec_materials_landing'
+  });
+};
+
+/**
+ * Track spec form start
+ */
+export const trackSpecFormStart = (material?: string) => {
+  if (!window.gtag) return;
+  window.gtag('event', 'spec_form_start', {
+    material_selected: material
+  });
+};
+
+/**
+ * Track spec material selection (renamed per PATCH 5 to avoid collision)
+ */
+export const trackSpecMaterialSelect = (material: string) => {
+  if (!window.gtag) return;
+  window.gtag('event', 'spec_material_select', {
+    material: material,
+    page_type: 'spec_materials_landing'
+  });
+};
+
+/**
+ * Track spec form submission
+ */
+export const trackSpecFormSubmit = (tons: number, material: string, hasSpec: boolean) => {
+  if (!window.gtag) return;
+  const utmParams = getStoredUTMParams();
+  window.gtag('event', 'generate_lead', {
+    lead_type: 'spec_material_quote',
+    tons: tons,
+    material: material,
+    has_spec_file: hasSpec,
+    ...utmParams
+  });
+};
