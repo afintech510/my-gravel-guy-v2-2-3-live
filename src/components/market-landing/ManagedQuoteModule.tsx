@@ -1,3 +1,4 @@
+// ManagedQuoteModule - Lead form for spec-matched quotes
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
