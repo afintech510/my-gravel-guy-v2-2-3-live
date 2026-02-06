@@ -46,26 +46,26 @@ const About = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <div className="py-20 px-4 bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="py-20 px-4 bg-muted">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-12">
             {/* Text content - left side */}
             <div className="text-left md:w-1/2">
-              <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
                 About MyGravelGuy.com
               </h1>
-              <p className="text-xl text-gray-600 leading-relaxed mb-6">
+              <p className="text-xl text-muted-foreground leading-relaxed mb-6">
                 We believe ordering gravel, mulch, topsoil, or fill dirt should be as simple as buying anything else online. No more guessing prices, chasing down suppliers, or worrying about whether your delivery will show up on time.
               </p>
               <div className="mt-8 p-6 bg-primary/10 rounded-lg border-l-4 border-primary">
-                <p className="text-gray-700 font-medium">
+                <p className="text-foreground font-medium">
                   We're here to take the hassle out of bulk material delivery—nationwide. We serve <strong>homeowners, contractors, landscapers, and developers</strong> with one clear goal: make ordering bulk landscaping and construction materials easy, fast, and frustration-free.
                 </p>
               </div>
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <p className="text-sm text-blue-800">
+              <div className="mt-6 p-4 bg-muted rounded-lg border border-border">
+                <p className="text-sm text-foreground">
                   <strong>Business Information:</strong> MyGravelGuy.com is a service provided by Eastern Building Supply Inc.
                 </p>
               </div>
@@ -91,21 +91,21 @@ const About = () => {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold mb-6">What Makes Us Different?</h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
               From your first click to your last delivery, we've got your back with a reliable, transparent, online-first platform backed by real people who care about your project as much as you do.
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
             {features.map((feature, index) => (
-              <div key={index} className="flex items-start gap-4 p-6 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <div className="flex-shrink-0 p-2 bg-white rounded-lg shadow-sm">
+              <div key={index} className="flex items-start gap-4 p-6 bg-muted hover:bg-muted/80 rounded-lg transition-colors">
+                <div className="flex-shrink-0 p-2 bg-card rounded-lg shadow-sm">
                   <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
                   {feature.icon}
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                  <p className="text-gray-600">{feature.description}</p>
+                  <p className="text-muted-foreground">{feature.description}</p>
                 </div>
               </div>
             ))}
@@ -113,7 +113,7 @@ const About = () => {
 
           <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl p-8 text-center">
             <h3 className="text-2xl font-bold mb-4">From Premium Materials to Perfect Delivery</h3>
-            <p className="text-lg text-gray-700 mb-6">
+            <p className="text-lg text-foreground mb-6">
               From crushed concrete gravel and river rock to clean fill dirt, rich topsoil, and premium mulch—we deliver quality materials that meet your project's exact specifications, every time.
             </p>
             <div className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold">
@@ -125,23 +125,23 @@ const About = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 px-4 bg-gray-50">
+      <section className="py-16 px-4 bg-muted">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Why We Exist</h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
               We started MyGravelGuy.com because we saw how outdated and frustrating bulk material ordering could be—especially for homeowners and smaller contractors. Too many delays. Too much confusion. Too little accountability.
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {stats.map((stat, index) => (
-              <div key={index} className="text-center p-6 bg-white rounded-lg shadow-sm">
+              <div key={index} className="text-center p-6 bg-card rounded-lg shadow-sm">
                 <div className="flex justify-center mb-4">
                   {stat.icon}
                 </div>
-                <div className="text-2xl font-bold text-gray-900 mb-2">{stat.value}</div>
-                <div className="text-gray-600">{stat.label}</div>
+                <div className="text-2xl font-bold text-foreground mb-2">{stat.value}</div>
+                <div className="text-muted-foreground">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -151,7 +151,7 @@ const About = () => {
       {/* Mission Statement */}
       <section className="py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="bg-gradient-to-r from-gray-900 to-gray-700 text-white rounded-xl p-12">
+          <div className="bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-800 dark:to-gray-600 text-white rounded-xl p-12">
             <h2 className="text-3xl font-bold mb-6">So We Built a Better Way</h2>
             <p className="text-xl mb-4 text-gray-200">
               A reliable, transparent, online-first platform backed by real people who care about your project as much as you do.
@@ -168,7 +168,7 @@ const About = () => {
       <section className="py-16 px-4 bg-primary/5">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-8">Ready to Get Started?</h2>
-          <p className="text-lg text-gray-600 mb-8">Check if we deliver to your area and start your project today.</p>
+          <p className="text-lg text-muted-foreground mb-8">Check if we deliver to your area and start your project today.</p>
           <div className="max-w-md mx-auto">
             <ZipCodeSearch />
           </div>
