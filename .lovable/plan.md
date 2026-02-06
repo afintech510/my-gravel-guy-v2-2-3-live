@@ -1,158 +1,141 @@
 
-# Enhancement Plan: Lead Integration, Quote Summary, and UI Improvements
+# Final Polish Pass: Supplier Quotes (Production Hardening)
 
 ## Overview
-This plan covers three main areas of work:
-1. **Lead Table Integration**: Connect contact forms and cart saves to create entries in the `leads` table
-2. **Quote Summary Enhancement**: Add total supplier price, price per ton, and total tons to the action bar
-3. **UI/UX Improvements**: Fix text readability, make quotes clickable for editing, and enhance sidebar modules
+This plan applies the approved final polish pass to the Supplier Quotes feature, implementing all four priorities in order. No new features, tables, or refactors - only targeted improvements to visual contrast, keyboard ergonomics, unit-aware pricing display, and editing workflow.
 
 ---
 
-## Part 1: Lead Table Integration
+## Priority 1: Visual Polish (Quick Wins)
 
-### What Gets Connected
-When users submit any of these forms or actions, a lead will automatically be created in the `leads` table:
+### 1A. Fix Pill Contrast (`PillSelect.tsx`)
+Change low-contrast green text to high-contrast foreground text:
 
-| Source | Display Name Format | Material | Job Location |
-|--------|---------------------|----------|--------------|
-| Contact Quote Form (`ContactQuoteForm.tsx`) | Customer name | Selected material | ZIP code only |
-| General Quote Form (`QuoteForm.tsx`) | Customer name | Selected material | ZIP code only |
-| Contractors Quote Form (`contractors-landing/QuoteForm.tsx`) | Customer name | Selected material | ZIP code only |
-| Spec Materials Form (`specMaterialQuoteService.ts`) | "Company - Contact" | Spec material | Full address |
-| Market Quote Module (`ManagedQuoteModule.tsx`) | "Company - Contact" | Page material | ZIP code only |
-| Cart Save (`cartInsertService.ts`) | Contact name | Product names | Full delivery address |
+| Current | New |
+|---------|-----|
+| `text-green-200` (selected success) | `text-foreground font-medium` |
+| `text-muted-foreground` (unselected) | `text-foreground` |
 
-### Technical Changes
+### 1B. Fix Checkbox Contrast (`CheckboxBtn.tsx`)
+Change checked state text from `text-primary` to `text-foreground` with a primary-colored icon:
 
-**New Service Function**: `src/services/supplierQuoteService.ts`
-- Add `createLeadFromForm()` helper that takes form data and creates a lead entry
-- Handle different form formats (contact, cart, spec materials)
+```tsx
+// Checked state
+'bg-primary/20 text-foreground border border-primary/50'
+<CheckSquare className="w-4 h-4 shrink-0 text-primary" />
+```
 
-**Integration Points**:
-1. `src/services/quoteOrderService.ts` - After creating quote order, also create lead
-2. `src/services/quoteEmailService.ts` - Hook into sendQuoteRequestEmail
-3. `src/services/specMaterialQuoteService.ts` - After creating spec quote, create lead
-4. `src/services/cartInsertService.ts` - After saving cart, create lead
-5. `src/components/market-landing/ManagedQuoteModule.tsx` - Submit to leads table
-6. `src/components/contact/ContactQuoteForm.tsx` - Create lead on submit
+### 1C. Add Hover Border to Quote Tiles
+Add subtle primary border on hover to both quote list components:
+
+```tsx
+// QuotesForLeadList.tsx & RecentQuotesList.tsx
+className="... hover:border-primary/30 ..."
+```
+
+### 1D. Bold Supplier Names
+Change from `font-medium` to `font-semibold` for supplier names in quote tiles.
 
 ---
 
-## Part 2: Quote Summary Enhancement
+## Priority 2: Keyboard & Speed Enhancements
 
-### Current State
-The action bar shows a simple `price_summary` string like "$22.50/ton + Delivery Incl."
+### 2A. Add Ctrl/Cmd + Enter Shortcut (`DashboardSupplierQuotes.tsx`)
+Add keyboard listener to trigger save on shortcut:
 
-### New Summary Display
-The action bar will show a detailed breakdown:
-
-```
-Summary: $2,475.00 Total | $22.50/ton | 110 tons
-         └─ Materials + Delivery + Fees
-```
-
-### Calculation Logic (in ActionBar.tsx)
-```typescript
-// Calculate total supplier cost
-const calculateTotalCost = (data, flags) => {
-  const tons = parseFloat(data.qty_tons) || 0;
-  
-  if (flags.is_all_in) {
-    return parseFloat(data.all_in_delivered_total) || 0;
-  }
-  
-  let materialCost = 0;
-  if (flags.material_is_total) {
-    materialCost = parseFloat(data.material_price) || 0;
-  } else {
-    materialCost = (parseFloat(data.material_price) || 0) * tons;
-  }
-  
-  let deliveryCost = 0;
-  if (!flags.delivery_included) {
-    deliveryCost = parseFloat(data.delivery_rate) || 0;
-  }
-  
-  // Add CC fee if applicable
-  const subtotal = materialCost + deliveryCost;
-  const ccFee = (parseFloat(data.cc_fee_percent) || 0) / 100 * subtotal;
-  
-  return subtotal + ccFee;
-};
+```tsx
+useEffect(() => {
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      handleSave();
+    }
+  };
+  document.addEventListener('keydown', handleKeyDown);
+  return () => document.removeEventListener('keydown', handleKeyDown);
+}, [handleSave]);
 ```
 
-### Files Modified
-- `src/components/supplier-quotes/ActionBar.tsx` - Add props for form data and flags, compute totals
+### 2B. Add Autofocus to Supplier Name
+Expose ref from SupplierCard and focus after Save & New or on initial load:
+
+```tsx
+// SupplierCard.tsx - expose ref
+const supplierNameRef = useRef<HTMLInputElement>(null);
+useImperativeHandle(ref, () => ({
+  focus: () => supplierNameRef.current?.focus()
+}));
+
+// DashboardSupplierQuotes.tsx - focus after reset
+supplierCardRef.current?.focus();
+```
+
+### 2C. Add Editing Indicator & Cancel Button (`ActionBar.tsx`)
+When editing, show indicator and cancel button:
+
+```tsx
+{isEditing && (
+  <div className="flex items-center gap-2">
+    <span className="text-sm text-amber-600 font-medium">Editing Quote</span>
+    <Button variant="ghost" size="sm" onClick={onCancelEdit}>
+      <X className="h-4 w-4 mr-1" /> Cancel
+    </Button>
+  </div>
+)}
+```
+
+Add `onCancelEdit` prop and handler in DashboardSupplierQuotes:
+
+```tsx
+const handleCancelEdit = useCallback(() => {
+  setFormData(INITIAL_FORM_DATA);
+  setFlags(INITIAL_FLAGS);
+  setEditingQuoteId(null);
+}, []);
+```
 
 ---
 
-## Part 3: UI/UX Improvements
+## Priority 3: Unit-Aware Pricing Display
 
-### 3A: Fix Text Readability on Sidebar Modules
+### 3A. Update ActionBar Summary
+Show unit based on `material_unit` field (ton or cy), no conversions:
 
-**Problem**: Light green text on right side modules is hard to read
+```tsx
+// ActionBar.tsx
+const unitLabel = formData.material_unit === 'cy' ? '/cy' : '/ton';
+const unitsLabel = formData.material_unit === 'cy' ? 'cy' : 'tons';
 
-**Solution**: Update these components to use dark text:
-- `SidebarKPIs.tsx` - Already uses `text-foreground`, verify it works
-- `RecentLeadsList.tsx` - Change text colors
-- `QuotesForLeadList.tsx` - Change text colors
-- `RecentQuotesList.tsx` - Change text colors
-
-**Pattern**: Replace any `text-primary` or similar with `text-foreground` for main content
-
-### 3B: Clickable Quotes for Editing
-
-**Current State**: Clicking a lead populates the form, but quotes are not clickable
-
-**New Behavior**:
-1. Click a quote in "Quotes For [Lead]" or "Recent Quotes" list
-2. Form loads with that quote's data
-3. Lead is auto-selected if quote has a lead_id
-4. All fields become editable
-5. Save button updates the existing quote (not creates new)
-
-**Implementation**:
-1. Add `getSupplierQuoteById()` to service
-2. Add `updateSupplierQuote()` to service  
-3. Add `selectedQuoteId` state to `DashboardSupplierQuotes.tsx`
-4. Add `onSelectQuote` handler that:
-   - Fetches quote details
-   - Populates form data and flags
-   - Sets editing mode
-5. Modify Save button to call update vs insert based on editing state
-6. Add quote click handlers to `QuotesForLeadList` and `RecentQuotesList`
-
-### 3C: Enhanced Sidebar Module Content
-
-**RecentLeadsList.tsx** changes:
-- Show city, state after name
-- Better font contrast (dark text)
-- Already scrollable (verify)
-
-**QuotesForLeadList.tsx** changes:
-- Show state in location
-- Add total price, price/ton, total tons
-- Dark text for readability
-- Make scrollable if not already
-- Make each quote clickable
-
-**RecentQuotesList.tsx** changes:
-- Show state in location
-- Add total price, price/ton, total tons
-- Dark text for all content
-- Make each quote clickable
-- Already has scroll area (verify)
-
-**Quote Tile Display Format**:
+summaryDisplay = `$${totals.totalCost.toLocaleString(...)} Total • $${totals.pricePerTon.toFixed(2)}${unitLabel} • ${totals.totalTons} ${unitsLabel}`;
 ```
-┌─────────────────────────────────────┐
-│ Texas Aggregate Supply       2:30pm │
-│ 57 Stone                            │
-│ Austin, TX                          │
-│ $2,475.00 • $22.50/ton • 110 tons   │ ← NEW
-└─────────────────────────────────────┘
+
+### 3B. Update Quote Tiles Pricing Display
+Same unit-aware logic in `QuotesForLeadList.tsx` and `RecentQuotesList.tsx`:
+
+```tsx
+const unitLabel = quote.material_unit === 'cy' ? '/cy' : '/ton';
+const unitsLabel = quote.material_unit === 'cy' ? 'cy' : 'tons';
+
+<div className="text-sm font-semibold text-foreground">
+  ${totals.totalCost...} • ${totals.pricePerTon}${unitLabel} • {totals.totalTons} {unitsLabel}
+</div>
 ```
+
+---
+
+## Priority 4: Production Hardening
+
+### 4A. Default Status for New Quotes
+Add `status: 'active'` only on create (not update) in service layer. Since the DB doesn't have a status column in supplier_quotes yet, this is a no-op until schema is updated.
+
+### 4B. Preserve Existing Status on Edit
+The `updateSupplierQuote` function passes only the fields from `formDataToQuoteInsert`, which doesn't include `status`. This means existing status is preserved by default. No change needed.
+
+### 4C. is_all_in Override Behavior
+Current `handleFlagChange` does NOT clear other fields when `is_all_in` is toggled - it only uses `disabled` prop to grey out fields. This is correct per requirements. No change needed.
+
+### 4D. Array Field Robustness
+Current `formDataToQuoteInsert` already handles arrays correctly with `length > 0` checks. No change needed.
 
 ---
 
@@ -160,95 +143,22 @@ const calculateTotalCost = (data, flags) => {
 
 | File | Changes |
 |------|---------|
-| `src/services/supplierQuoteService.ts` | Add `createLeadFromForm()`, `getSupplierQuoteById()`, `updateSupplierQuote()` |
-| `src/services/quoteOrderService.ts` | Call `createLeadFromForm()` after quote creation |
-| `src/services/specMaterialQuoteService.ts` | Call `createLeadFromForm()` after spec quote |
-| `src/services/cartInsertService.ts` | Call `createLeadFromForm()` after cart save |
-| `src/components/market-landing/ManagedQuoteModule.tsx` | Submit to leads table |
-| `src/components/contact/ContactQuoteForm.tsx` | Create lead on form submit |
-| `src/pages/DashboardSupplierQuotes.tsx` | Add quote selection/editing state, pass form data to ActionBar |
-| `src/components/supplier-quotes/ActionBar.tsx` | Calculate and display detailed pricing summary |
-| `src/components/supplier-quotes/SidebarKPIs.tsx` | Verify dark text colors |
-| `src/components/supplier-quotes/RecentLeadsList.tsx` | Add city/state, fix text colors |
-| `src/components/supplier-quotes/QuotesForLeadList.tsx` | Add pricing, state, clickable, dark text |
-| `src/components/supplier-quotes/RecentQuotesList.tsx` | Add pricing, state, clickable, dark text |
-| `src/types/supplierQuote.types.ts` | Add helper function for computing totals from quote data |
+| `PillSelect.tsx` | Fix contrast: `text-foreground` instead of `text-green-200` |
+| `CheckboxBtn.tsx` | Fix contrast: `text-foreground` with `text-primary` icon |
+| `QuotesForLeadList.tsx` | Hover border, bold supplier, unit-aware pricing |
+| `RecentQuotesList.tsx` | Hover border, bold supplier, unit-aware pricing |
+| `ActionBar.tsx` | Unit-aware summary, editing indicator, cancel button |
+| `DashboardSupplierQuotes.tsx` | Keyboard shortcut, cancel handler, autofocus |
+| `SupplierCard.tsx` | Expose focus ref via forwardRef |
 
 ---
 
-## Technical Details
+## What This Does NOT Change
 
-### Lead Creation Helper Function
-```typescript
-interface LeadFromFormData {
-  displayName: string;
-  email?: string;
-  phone?: string;
-  material?: string;
-  requestedQty?: number;
-  requestedUnit?: string;
-  jobAddress?: string;
-  jobCity?: string;
-  jobState?: string;
-  jobZip?: string;
-  timeline?: string;
-  notes?: string;
-}
-
-export async function createLeadFromForm(data: LeadFromFormData): Promise<Lead | null> {
-  const lead: LeadInsert = {
-    display_name: data.displayName,
-    email: data.email,
-    phone: data.phone,
-    material: data.material,
-    requested_qty: data.requestedQty,
-    requested_unit: data.requestedUnit || 'tons',
-    job_address: data.jobAddress,
-    job_city: data.jobCity,
-    job_state: data.jobState,
-    job_zip: data.jobZip,
-    timeline: data.timeline,
-    notes: data.notes,
-  };
-  return createLead(lead);
-}
-```
-
-### Quote Pricing Calculator
-```typescript
-export function calculateQuoteTotals(quote: SupplierQuote): {
-  totalCost: number;
-  pricePerTon: number;
-  totalTons: number;
-} {
-  const tons = quote.qty_tons || 0;
-  
-  let totalCost = 0;
-  if (quote.is_all_in) {
-    totalCost = quote.all_in_delivered_total || 0;
-  } else {
-    const materialCost = quote.material_is_total 
-      ? (quote.material_price || 0)
-      : (quote.material_price || 0) * tons;
-    const deliveryCost = quote.delivery_included ? 0 : (quote.delivery_rate || 0);
-    const subtotal = materialCost + deliveryCost;
-    const ccFee = ((quote.cc_fee_percent || 0) / 100) * subtotal;
-    totalCost = subtotal + ccFee;
-  }
-  
-  const pricePerTon = tons > 0 ? totalCost / tons : 0;
-  
-  return { totalCost, pricePerTon, totalTons: tons };
-}
-```
-
----
-
-## Summary
-
-This plan delivers:
-1. **Lead funnel integration** - All contact forms and cart saves create leads for the supplier quotes system
-2. **Enhanced quote summary** - Action bar shows total cost, $/ton, and tonnage for quick reference
-3. **Better readability** - Dark text throughout sidebar modules for accessibility
-4. **Quote editing workflow** - Click any quote to load and edit it
-5. **Richer sidebar tiles** - Leads show location, quotes show pricing breakdown
+- No new tables or columns
+- No changes to `formDataToQuoteInsert` logic
+- No changes to flag mutual exclusivity
+- No new required fields
+- No refactoring of working services
+- `is_all_in` remains an override signal only
+- No unit conversions (ton/cy display based on captured unit only)
