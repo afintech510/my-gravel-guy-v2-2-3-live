@@ -34,15 +34,17 @@ export function RecentQuotesList({ quotes, onSelectQuote }: RecentQuotesListProp
         <div className="space-y-3">
           {quotes.map((quote) => {
             const totals = calculateQuoteTotals(quote);
+            const unitLabel = quote.material_unit === 'cy' ? '/cy' : '/ton';
+            const unitsLabel = quote.material_unit === 'cy' ? 'cy' : 'tons';
             
             return (
               <button
                 key={quote.id}
                 onClick={() => onSelectQuote?.(quote.id)}
-                className="w-full text-left p-3 rounded-lg bg-muted border border-border hover:bg-muted/80 transition-colors"
+                className="w-full text-left p-3 rounded-lg bg-muted border border-border hover:bg-muted/80 hover:border-primary/30 transition-colors cursor-pointer"
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium text-foreground truncate">
+                  <span className="font-semibold text-foreground truncate">
                     {quote.supplier_name || 'Unknown Supplier'}
                   </span>
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
@@ -66,8 +68,8 @@ export function RecentQuotesList({ quotes, onSelectQuote }: RecentQuotesListProp
                 
                 {/* Pricing breakdown */}
                 {totals.totalCost > 0 ? (
-                  <div className="text-sm font-medium text-foreground">
-                    ${totals.totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} • ${totals.pricePerTon.toFixed(2)}/ton • {totals.totalTons} tons
+                  <div className="text-sm font-semibold text-foreground">
+                    ${totals.totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} • ${totals.pricePerTon.toFixed(2)}{unitLabel} • {totals.totalTons} {unitsLabel}
                   </div>
                 ) : (
                   <div className="text-sm text-muted-foreground">
