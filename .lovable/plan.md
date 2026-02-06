@@ -1,431 +1,377 @@
 
 
-# Spec Materials Landing Page - Complete Implementation Plan
+# Supplier Quotes Dashboard Tab - Updated Implementation Plan
 
 ## Overview
-Create a new landing page at `/contractors-spec-materials` for spec-driven buyers (Project Managers, DOT, Civil, Utility contractors). This plan incorporates all review feedback and patch requirements.
+Create a new dashboard page at `/dashboard/supplier-quotes` for capturing supplier quotes. This plan now includes the **reference HTML prototype code** and **field layout preferences** from the uploaded sample.
 
 ---
 
-## Route Decision
-**Route:** `/contractors-spec-materials`
-- Clean, SEO-friendly
-- Internal links + canonical URL consistent
+## Reference Design Assets
+
+### Screenshot Reference
+The uploaded screenshot (`user-uploads://image-25.png`) shows the exact field layout with:
+- Dark slate theme (`bg-slate-900`, `bg-slate-800`)
+- Orange accent color (`bg-orange-600`, `text-orange-500`)
+- 2-column responsive grid for form fields
+- Pill-style multi-select buttons for Site Access, Trucks, Payment Methods
+- Checkbox-style toggle buttons for Quote Details flags
+
+### HTML Prototype Reference
+The uploaded HTML file (`mgg-supplier-quote-capture.html`) contains production-ready React component patterns to reuse.
 
 ---
 
-## Patch Requirements Integration
+## Key Code Patterns from Prototype
 
-### PATCH 1: Private Upload Bucket
-**Requirement:** Upload bucket MUST be private. Store only `file_path` in `orders.notes` (no signed URLs).
-
-**Implementation:**
-- Create new private bucket `spec-uploads` OR use existing `customer-uploads` with RLS policies restricting public access
-- On file upload: store path as `spec-uploads/{quote_id}/{filename}`
-- Store only the path string in notes, NOT a signed URL
-- Admin dashboard will generate signed URLs on-demand when viewing
-
-### PATCH 2: Structured JSON in Notes
-**Requirement:** Embed structured JSON block in `orders.notes` with delimiters.
-
-**Implementation:**
-```
-Spec Quote: #57 Stone, 150 tons, Acme Construction, Nashville TN
-
---- MGG_SPEC_META_JSON ---
-{
-  "material": "#57 Stone (ASTM/DOT-grade)",
-  "tons": 150,
-  "company": "Acme Construction",
-  "project_name": "Highway 40 Drainage",
-  "po_number": "PO-2024-5567",
-  "spec_item_description": "TDOT Item 903.01",
-  "delivery_window": "AM (7-11)",
-  "multi_drop_requested": false,
-  "expedite_requested": true,
-  "spec_file_path": "spec-uploads/QUOTE-20260201-123456/spec-sheet.pdf",
-  "persona": "Contractor/PM/DOT/Utility",
-  "source": "Spec Materials Landing Page"
-}
---- END_MGG_SPEC_META_JSON ---
-```
-
-### PATCH 3: Spec-Safe Trust Bar & Documentation Copy
-**Requirement:** Update copy to be legally safe.
-
-**Trust Bar (5 items):**
-- "Tickets + Documentation"
-- "PO / Invoicing Support"
-- "20-1,000+ Tons"
-- "Multi-Site Coordination"
-- "Vetted Supplier Network"
-
-**Documentation Section Copy:**
-- "Delivery tickets / scale slips with every load"
-- "COA / gradation reports when available"
-- "Chain of custody documentation where applicable"
-- "PO / net terms coordination"
-- "Invoice handling"
-
-### PATCH 4: Full Address Validation
-**Requirement:** Required field validation must include full delivery address (street/city/state/zip), not ZIP alone.
-
-**Zod Schema:**
+### 1. Initial State Structure
 ```typescript
-const specFormSchema = z.object({
-  fullName: z.string().min(2, "Name is required"),
-  company: z.string().min(2, "Company is required"),
-  email: z.string().email("Valid email required"),
-  phone: z.string().min(10, "Valid phone required"),
-  deliveryStreet: z.string().min(5, "Street address is required"),
-  deliveryCity: z.string().min(2, "City is required"),
-  deliveryState: z.string().min(2, "State is required"),
-  deliveryZip: z.string().regex(/^\d{5}$/, "Valid 5-digit ZIP required"),
-  material: z.string().min(1, "Select a material"),
-  tons: z.number().min(20, "Minimum 20 tons").max(1000, "Maximum 1000 tons"),
-  // ... optional fields
-});
-```
+const INITIAL_FLAGS = {
+  all_in: false,
+  material_is_unit: true,
+  material_is_total: false,
+  delivery_included: false,
+  delivery_flat: true,
+  delivery_hourly: false,
+};
 
-### PATCH 5: Renamed Analytics Event
-**Requirement:** Rename `material_select` to `spec_material_select` to avoid collisions.
-
-**Analytics Events:**
-- `spec_lp_view` - Page view
-- `spec_form_start` - User begins filling form
-- `spec_material_select` - Material dropdown selection (renamed)
-- `spec_form_submit` - Form submission (fires `generate_lead`)
-
-### PATCH 6: Updated Button Label
-**Requirement:** Change "Save & Checkout" to "Save & Request Pricing" (since payment is not implemented on this page).
-
-**Primary Button:** "Save & Request Pricing"
-
----
-
-## Technical Implementation
-
-### Phase 1: Service Layer
-
-**File:** `src/services/specMaterialQuoteService.ts`
-
-```typescript
-interface SpecMaterialQuoteData {
-  // Contact
-  fullName: string;
-  company: string;
-  email: string;
-  phone: string;
-  
-  // Delivery (ALL REQUIRED per PATCH 4)
-  deliveryStreet: string;
-  deliveryCity: string;
-  deliveryState: string;
-  deliveryZip: string;
-  
-  // Order Details
-  material: string;
-  tons: number;
-  deliveryDatePreference: string;
-  deliveryWindowPreference: string;
-  
-  // Project Details (optional)
-  projectName?: string;
-  poNumber?: string;
-  specItemDescription?: string;
-  notes?: string;
-  specFilePath?: string;  // Path only, not URL (PATCH 1)
-  multiDropRequested?: boolean;
-  multiDropDetails?: string;
-  
-  // Expedite
-  expediteRequested: boolean;
-}
-```
-
-**Notes Field Builder (PATCH 2):**
-```typescript
-const buildNotesField = (data: SpecMaterialQuoteData): string => {
-  // Human-readable summary line
-  const summary = `Spec Quote: ${data.material}, ${data.tons} tons, ${data.company}, ${data.deliveryCity} ${data.deliveryState}`;
-  
-  // Structured JSON block
-  const metaJson = {
-    material: data.material,
-    tons: data.tons,
-    company: data.company,
-    project_name: data.projectName || null,
-    po_number: data.poNumber || null,
-    spec_item_description: data.specItemDescription || null,
-    delivery_window: data.deliveryWindowPreference,
-    multi_drop_requested: data.multiDropRequested || false,
-    multi_drop_details: data.multiDropDetails || null,
-    expedite_requested: data.expediteRequested,
-    spec_file_path: data.specFilePath || null,
-    user_notes: data.notes || null,
-    persona: "Contractor/PM/DOT/Utility",
-    source: "Spec Materials Landing Page"
-  };
-  
-  return `${summary}\n\n--- MGG_SPEC_META_JSON ---\n${JSON.stringify(metaJson, null, 2)}\n--- END_MGG_SPEC_META_JSON ---`;
+const INITIAL_DATA = {
+  lead_id: '',
+  supplier_name: '',
+  supplier_phone: '',
+  supplier_address: '',
+  supplier_notes: '',
+  spec_name: '',
+  spec_description: '',
+  spec_application: '',
+  spec_requirement: '',
+  amount_tons: '',
+  amount_cuyd: '',
+  delivery_address: '',
+  delivery_city: '',
+  delivery_state: '',
+  delivery_zip: '',
+  site_access: [],
+  material_price: '',
+  material_unit: 'ton',
+  delivered_total: '',
+  delivery_rate: '',
+  delivery_basis: 'total',
+  delivery_notes: '',
+  max_qty_per_delivery: '',
+  max_qty_unit: 'ton',
+  lead_time: '',
+  lead_time_notes: '',
+  truck_size_options: [],
+  truck_size_other: '',
+  payment_methods: [],
+  cc_fee_percent: '0',
+  payment_notes: '',
+  adjust_to_load_tickets: false,
 };
 ```
 
-**File Upload Handler (PATCH 1):**
+### 2. Price Summary Generator
 ```typescript
-const uploadSpecFile = async (file: File, quoteId: string): Promise<string | null> => {
-  // Validate file type and size
-  const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
-  if (!allowedTypes.includes(file.type)) return null;
-  if (file.size > 10 * 1024 * 1024) return null; // 10MB max
-  
-  const filePath = `spec-uploads/${quoteId}/${file.name}`;
-  
-  const { error } = await supabase.storage
-    .from('customer-uploads')  // Using existing bucket
-    .upload(filePath, file, { upsert: false });
-  
-  if (error) {
-    console.error('File upload failed:', error);
-    return null;
+const generatePriceSummary = (data, flags) => {
+  if (flags.all_in && data.delivered_total) {
+    return `Delivered Total $${data.delivered_total}`;
   }
+
+  const parts = [];
   
-  // Return path only, NOT signed URL
-  return filePath;
-};
-```
-
-### Phase 2: Page Components
-
-**Directory:** `src/components/spec-materials-landing/`
-
-#### 2.1 SpecHeroSection.tsx
-Clones existing contractors page styling with new copy:
-
-**Headline:** "Spec Materials. On-Time Delivery. One Point of Contact."
-
-**Subhead:** "Nationwide sourcing + dispatch coordination for DOT, civil, and utility projects. Documentation included."
-
-**Badge:** "Serving DOT, Civil & Utility Projects Nationwide"
-
-**CTAs:**
-- Primary: "Price & Reserve Delivery" (scrolls to form)
-- Secondary: "Request a Quote / Send Specs" (scrolls to form)
-
-#### 2.2 SpecTrustBar.tsx
-Horizontal proof points (spec-safe per PATCH 3):
-
-```
-Tickets + Documentation | PO / Invoicing Support | 20-1,000+ Tons | Multi-Site Coordination | Vetted Supplier Network
-```
-
-#### 2.3 SpecReservationForm.tsx (Core Module)
-
-**Section A: Material Selection**
-Dropdown with 7 materials:
-- #57 Stone (ASTM/DOT-grade)
-- RCA - Recycled Concrete Aggregate
-- Dense Graded Base / Road Base (Item 4/304/ABC)
-- Stone Dust / Crusher Fines
-- #8 Stone (Pipe Bedding)
-- #89 Stone (Utility/Drainage)
-- Utility Sand (Spec-Only)
-
-**Section B: Quantity**
-- Slider + manual input
-- Min: 20 tons, Max: 1000 tons, Step: 10
-
-**Section C: Delivery Address (ALL REQUIRED per PATCH 4)**
-- Street Address (required)
-- City (required)
-- State dropdown (required)
-- ZIP Code (required)
-
-**Section D: Delivery Schedule**
-- Date picker
-- Window dropdown: AM (7-11), Midday (11-2), PM (2-6), Best Available
-
-**Section E: Contact Info (ALL REQUIRED)**
-- Full Name
-- Company
-- Email
-- Phone
-
-**Section F: Project Details (Collapsible, Optional)**
-- Project Name
-- PO #
-- Spec Item / Description (e.g., "NYSDOT Item 4", "#57 ASTM C33")
-- Notes / Spec Notes (textarea)
-- File upload (PDF/JPG/PNG, max 10MB)
-- Multi-drop toggle: "Multiple drop locations?"
-
-**Section G: Expedite Option**
-- Checkbox: "Need same/next day? Add Expedite"
-- Note: "Standard lead time: 48 hours. We'll respond within the same business day."
-
-**Primary Button (PATCH 6):** "Save & Request Pricing"
-
-**Honeypot Field:** Hidden `website` field for spam prevention
-
-**Success State:**
-- Confirmation message with reference ID
-- "A sourcing specialist will follow up within the same business day"
-
-#### 2.4 SpecDocumentationSection.tsx (PATCH 3 - Spec-Safe Copy)
-
-**Headline:** "Documentation & Compliance"
-
-**Bullets:**
-- Delivery tickets / scale slips with every load
-- COA / gradation reports when available
-- Chain of custody documentation where applicable
-- PO / net terms coordination
-- Invoice handling
-
-#### 2.5 SpecMaterialsGrid.tsx
-7 material cards with spec-forward labels:
-
-| Material | Use Case | Spec Note |
-|----------|----------|-----------|
-| #57 Stone | Drainage, base layers, French drains | ASTM C33 / DOT-grade where applicable |
-| RCA | Sub-base, fills, sustainable builds | Acceptance varies by jurisdiction—send your spec |
-| Dense Graded Base | Roads, parking pads, foundations | Item 4/304/ABC—confirm regional spec |
-| Stone Dust | Paver base, joint fill, compaction | Also called "screenings" or "crusher fines" |
-| #8 Stone | Pipe bedding, utility trenches | Per ASTM C33 gradation |
-| #89 Stone | Drainage, utilities, backfill | Utility/drainage spec applications |
-| Utility Sand | Bedding, backfill | Requires spec confirmation |
-
-Each card has "Select in Checkout" button that scrolls to form and pre-selects material.
-
-#### 2.6 SpecHowItWorks.tsx
-5 procurement-focused steps:
-
-1. **Tell us material + tons + site** - Submit your order details
-2. **We source + confirm spec match** - Regional supplier validation
-3. **Delivery scheduling + dispatch** - Coordinated logistics
-4. **Tickets/docs + invoice/PO handling** - Full documentation
-5. **Material arrives on-site** - Reliable, on-time delivery
-
-#### 2.7 SpecFAQSection.tsx
-
-1. **"Can you meet DOT/municipal specs?"**
-   We source from suppliers commonly used on DOT/municipal work where available, and we'll match to your project spec. Send your item and we'll confirm.
-
-2. **"Do you provide tickets/scale slips?"**
-   Yes, every load includes delivery tickets and scale slips for documentation.
-
-3. **"Can you deliver to multiple sites across states?"**
-   Yes, we coordinate multi-site deliveries through our nationwide supplier network.
-
-4. **"What's the minimum tonnage?"**
-   20 tons minimum per delivery.
-
-5. **"What if the local spec name differs?"**
-   Regional naming varies (e.g., ABC vs. 304 vs. Item 4). We match to your spec—just tell us what you're calling it.
-
-6. **"Do you offer after-hours/early AM delivery?"**
-   Some markets offer early morning or weekend delivery. Select expedite options for availability.
-
-7. **"How does expedite work?"**
-   Request expedite for same/next-day. We'll respond within the same business day to confirm availability.
-
-#### 2.8 SpecFinalCTA.tsx
-**Headline:** "Ready to simplify spec material procurement?"
-**Buttons:** "Price & Reserve Delivery", "Request a Quote"
-
-#### 2.9 SpecStickyCTA.tsx
-Mobile fixed bottom bar with "Price & Reserve" button.
-
-### Phase 3: Analytics Events (PATCH 5)
-
-**File:** `src/utils/analytics.ts` - Add new events:
-
-```typescript
-export const trackSpecLPView = () => {
-  if (!window.gtag) return;
-  window.gtag('event', 'spec_lp_view', {
-    page_type: 'spec_materials_landing'
-  });
-};
-
-export const trackSpecFormStart = (material?: string) => {
-  if (!window.gtag) return;
-  window.gtag('event', 'spec_form_start', {
-    material_selected: material
-  });
-};
-
-// RENAMED per PATCH 5 to avoid collision
-export const trackSpecMaterialSelect = (material: string) => {
-  if (!window.gtag) return;
-  window.gtag('event', 'spec_material_select', {
-    material: material,
-    page_type: 'spec_materials_landing'
-  });
-};
-
-export const trackSpecFormSubmit = (tons: number, material: string, hasSpec: boolean) => {
-  if (!window.gtag) return;
-  const utmParams = getStoredUTMParams();
-  window.gtag('event', 'generate_lead', {
-    lead_type: 'spec_material_quote',
-    tons: tons,
-    material: material,
-    has_spec_file: hasSpec,
-    ...utmParams
-  });
-};
-```
-
-### Phase 4: Page File with SEO
-
-**File:** `src/pages/ContractorsSpecMaterials.tsx`
-
-```typescript
-<Helmet>
-  <title>Spec Materials Delivery | #57 Stone, Road Base, RCA | MyGravelGuy</title>
-  <meta name="description" content="DOT-grade aggregate delivery for contractors. #57 stone, road base, RCA, stone dust. Tickets, PO support, multi-site coordination. 20-1000+ tons." />
-  <link rel="canonical" href="https://mygravelguy.com/contractors-spec-materials" />
-  
-  {/* Open Graph */}
-  <meta property="og:title" content="Spec Materials Delivery for Contractors | MyGravelGuy" />
-  <meta property="og:description" content="DOT-grade aggregate delivery with documentation, PO support, and multi-site coordination." />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://mygravelguy.com/contractors-spec-materials" />
-  
-  {/* Twitter Card */}
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Spec Materials Delivery | MyGravelGuy" />
-  <meta name="twitter:description" content="DOT-grade aggregate delivery for contractors." />
-  
-  {/* JSON-LD Structured Data */}
-  <script type="application/ld+json">{`
-    {
-      "@context": "https://schema.org",
-      "@type": "Service",
-      "name": "Spec Materials Delivery",
-      "provider": {
-        "@type": "LocalBusiness",
-        "name": "MyGravelGuy"
-      },
-      "description": "DOT-grade aggregate delivery for construction contractors",
-      "areaServed": "United States"
+  // Material Part
+  if (data.material_price) {
+    if (flags.material_is_total) {
+      parts.push(`$${data.material_price} Total Mat`);
+    } else {
+      parts.push(`$${data.material_price}/${data.material_unit}`);
     }
-  `}</script>
-</Helmet>
+  }
+
+  // Delivery Part
+  if (flags.delivery_included) {
+    parts.push(`Del. Incl.`);
+  } else if (data.delivery_rate) {
+    if (flags.delivery_hourly) {
+      parts.push(`$${data.delivery_rate}/hr`);
+    } else {
+      parts.push(`$${data.delivery_rate} Del.`);
+    }
+  }
+
+  // Max Load Part
+  if (data.max_qty_per_delivery) {
+    parts.push(`Max ${data.max_qty_per_delivery} ${data.max_qty_unit}`);
+  }
+
+  if (parts.length === 0) return "Draft Quote";
+  return parts.join(" • ");
+};
 ```
 
-### Phase 5: Route Configuration
-
-**File:** `src/App.tsx`
-
-Add import and route:
+### 3. Toggle Exclusivity Logic
 ```typescript
-import ContractorsSpecMaterials from "./pages/ContractorsSpecMaterials";
+const handleFlagChange = (key) => {
+  setFlags(prev => {
+    const next = { ...prev, [key]: !prev[key] };
+    
+    // Enforce exclusivity: Material
+    if (key === 'material_is_unit' && next.material_is_unit) next.material_is_total = false;
+    if (key === 'material_is_total' && next.material_is_total) next.material_is_unit = false;
 
-// In Routes:
-<Route path="/contractors-spec-materials" element={<ContractorsSpecMaterials />} />
+    // Enforce exclusivity: Delivery
+    if (key === 'delivery_flat' && next.delivery_flat) {
+      next.delivery_hourly = false;
+      next.delivery_included = false;
+    }
+    if (key === 'delivery_hourly' && next.delivery_hourly) {
+      next.delivery_flat = false;
+      next.delivery_included = false;
+    }
+    if (key === 'delivery_included' && next.delivery_included) {
+      next.delivery_flat = false;
+      next.delivery_hourly = false;
+    }
+
+    return next;
+  });
+};
 ```
+
+### 4. Reusable UI Components
+
+#### SectionHeader Component
+```tsx
+const SectionHeader = ({ icon: IconComponent, title, children }) => (
+  <div className="flex items-center justify-between mb-4 border-b border-slate-700 pb-2 gap-2">
+    <div className="flex items-center gap-2">
+      <IconComponent className="w-5 h-5 text-orange-500" />
+      <h3 className="text-lg font-semibold text-slate-100 whitespace-nowrap">{title}</h3>
+    </div>
+    {children && <div className="flex-shrink-0">{children}</div>}
+  </div>
+);
+```
+
+#### InputGroup Component
+```tsx
+const InputGroup = ({ label, helper, children }) => (
+  <div className="mb-3">
+    <label className="block text-sm font-medium text-slate-300 mb-1">{label}</label>
+    {children}
+    {helper && <p className="text-xs text-slate-500 mt-1">{helper}</p>}
+  </div>
+);
+```
+
+#### CheckboxBtn (Toggle Button) Component
+```tsx
+const CheckboxBtn = ({ label, checked, onChange }) => (
+  <button
+    type="button"
+    onClick={onChange}
+    className={`
+      flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all w-full text-left
+      ${checked 
+        ? 'bg-orange-900/30 text-orange-200 border border-orange-700' 
+        : 'bg-slate-800 text-slate-400 border border-slate-700 hover:border-slate-600'}
+    `}
+  >
+    {checked ? <CheckSquare className="w-4 h-4 shrink-0" /> : <Square className="w-4 h-4 shrink-0" />}
+    {label}
+  </button>
+);
+```
+
+#### Pill Multi-Select Pattern (Trucks)
+```tsx
+{[
+  { id: 'small_upto_10', label: 'Small ≤10t' },
+  { id: 'med_10_19', label: 'Med 10-19t' },
+  { id: 'tri_axle_20_22', label: 'Tri 20-22t' },
+  { id: 'quad_23_25', label: 'Quad 23-25t' },
+  { id: 'semi_25_27', label: 'Semi 25-27t' },
+  { id: 'semi_28_30', label: 'Semi 28-30t' },
+  { id: 'live_bottom_32_35', label: 'Live 32-35t' },
+].map(opt => (
+  <button
+    key={opt.id}
+    type="button"
+    onClick={() => toggleArrayItem('truck_size_options', opt.id)}
+    className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+      data.truck_size_options.includes(opt.id) 
+        ? 'bg-orange-600 border-orange-500 text-white' 
+        : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600'
+    }`}
+  >
+    {opt.label}
+  </button>
+))}
+```
+
+#### Payment Method Pills (Emerald Accent)
+```tsx
+{['CC', 'Wire', 'ACH', 'NET10', 'NET30', 'Venmo', 'Zelle', 'Paypal', 'CashApp'].map(method => (
+  <button
+    key={method}
+    type="button"
+    onClick={() => toggleArrayItem('payment_methods', method)}
+    className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+      data.payment_methods.includes(method) 
+        ? 'bg-emerald-900/40 border-emerald-600 text-emerald-200' 
+        : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600'
+    }`}
+  >
+    {method}
+  </button>
+))}
+```
+
+---
+
+## Field Layout (Exact Order from Screenshot)
+
+### Card 1: Supplier
+```text
+┌─────────────────────────────────────────────────────────────┐
+│ 🚚 Supplier                                                 │
+├─────────────────────────────────────────────────────────────┤
+│ [Supplier Name]          [Phone]                            │
+│ [Address (Search)]  ─── full width with MapPin icon         │
+│ [Supplier Notes]    ─── full width                          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Card 2: Project Requirements
+```text
+┌─────────────────────────────────────────────────────────────┐
+│ 📦 Project Requirements          [Select Lead... ▼] [+]    │
+├─────────────────────────────────────────────────────────────┤
+│ [Material]                [Tons]       [Cu Yds]             │
+│ [Spec Requirement]        [Application]                     │
+│ [Delivery Address] ─ MapPin  │ Site Access: [Small] [Tri-Axle] [Semi/Trailer] │
+│ [City] [State] [Zip]         │                              │
+│ [Project Notes]  ─── full width textarea                    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Card 3: Quote Details
+```text
+┌─────────────────────────────────────────────────────────────┐
+│ 💲 Quote Details                                            │
+├─────────────────────────────────────────────────────────────┤
+│ Toggle Grid (2x3):                                          │
+│ [✓ Unit Price]   [□ Total Material]   [□ All-in Delivered]  │
+│ [✓ Delivery Flat] [□ Delivery Hourly] [□ Delivery Incl.]    │
+├─────────────────────────────────────────────────────────────┤
+│ [Material Price] [Unit ▼]   │ [Delivery Charge] [Basis ▼]   │
+│ [All-In Delivered Total]    │ [Max Qty Per Load] [Unit ▼]   │
+│ [Typical Lead Time] 🕐      │ [Lead Time Notes]             │
+├─────────────────────────────────────────────────────────────┤
+│ Available Trucks:                                           │
+│ [Small ≤10t] [Med 10-19t] [Tri 20-22t] [Quad 23-25t]       │
+│ [Semi 25-27t] [Semi 28-30t] [Live 32-35t]                  │
+│ [Additional Notes]  ─── full width                          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Card 4: Billing & Payment
+```text
+┌─────────────────────────────────────────────────────────────┐
+│ 💳 Billing & Payment                                        │
+├─────────────────────────────────────────────────────────────┤
+│ Accepted Payment Methods:                                   │
+│ [CC] [Wire] [ACH] [NET10] [NET30] [Venmo] [Zelle]          │
+│ [Paypal] [CashApp]                                          │
+├─────────────────────────────────────────────────────────────┤
+│ [CC Fee (%)]               [□] Bill according to Load Tickets│
+│ [Payment Notes]  ─── full width                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Action Bar
+```text
+┌─────────────────────────────────────────────────────────────┐
+│ [🔒 Save Quote]  primary orange    [+ Save & New] secondary │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Right Sidebar Layout
+
+### KPI Cards (2-column grid)
+```text
+┌────────────────┐ ┌────────────────┐
+│ 📊 Count       │ │ 📈 Last $      │
+│ 5              │ │ $34.50/ton...  │
+└────────────────┘ └────────────────┘
+```
+
+### Recent Leads (Scrollable max-h-64)
+```text
+┌─────────────────────────────────────┐
+│ 👥 Recent Leads                     │
+├─────────────────────────────────────┤
+│ [John Doe]          01/15/2025      │
+│  #57 Stone • 200t                   │
+├─────────────────────────────────────┤
+│ [ABC Construction]   01/14/2025     │
+│  Fill Dirt • 500t                   │
+└─────────────────────────────────────┘
+```
+
+### Quotes for Selected Lead (Conditional)
+```text
+┌─────────────────────────────────────┐
+│ 📄 Quotes for John Doe              │
+├─────────────────────────────────────┤
+│ Metro Quarry         2:30 PM        │
+│ $34.50/ton • Del. Incl.             │
+└─────────────────────────────────────┘
+```
+
+### Recent Quotes (All) (Fixed h-[400px])
+```text
+┌─────────────────────────────────────┐
+│ 📄 Recent Quotes (All)              │
+├─────────────────────────────────────┤
+│ Metro Quarry Supply   3:45 PM       │
+│ #57 Limestone                       │
+│ $34.50/ton • $125 Del. • Max 22 ton │
+│ 📍 Riverhead                        │
+└─────────────────────────────────────┘
+```
+
+---
+
+## Style Tokens (Map to MGG Theme)
+
+### Prototype Colors to MGG Theme Mapping
+| Prototype Token | Prototype Value | MGG Equivalent |
+|-----------------|-----------------|----------------|
+| `bg-slate-950` | `#020617` | `bg-background` (dark mode) |
+| `bg-slate-900` | `#0f172a` | `bg-card` / `bg-muted` |
+| `bg-slate-800` | `#1e293b` | Input backgrounds |
+| `border-slate-700` | `#334155` | `border-border` |
+| `text-slate-200` | `#e2e8f0` | `text-foreground` |
+| `text-slate-400` | `#94a3b8` | `text-muted-foreground` |
+| `bg-orange-600` | `#ea580c` | `bg-primary` (or keep orange for internal tools) |
+| `bg-emerald-600` | `#059669` | Payment method accent (keep) |
+
+### Spacing Values (Preserve)
+- Card padding: `p-5`
+- Section gap: `space-y-6`
+- Form field gap: `gap-4`
+- Grid columns: `grid-cols-1 md:grid-cols-2`
+- Main layout: `grid-cols-1 lg:grid-cols-12` (8 + 4)
+
+### Typography (Preserve)
+- Section title: `text-lg font-semibold`
+- Field label: `text-sm font-medium`
+- Helper text: `text-xs`
+- Pill buttons: `text-xs`
 
 ---
 
@@ -433,104 +379,165 @@ import ContractorsSpecMaterials from "./pages/ContractorsSpecMaterials";
 
 | File | Purpose |
 |------|---------|
-| `src/pages/ContractorsSpecMaterials.tsx` | Main page with SEO tags |
-| `src/services/specMaterialQuoteService.ts` | Quote submission with JSON notes |
-| `src/components/spec-materials-landing/SpecHeroSection.tsx` | Hero with CTAs |
-| `src/components/spec-materials-landing/SpecTrustBar.tsx` | Proof points strip |
-| `src/components/spec-materials-landing/SpecReservationForm.tsx` | Checkout-style form |
-| `src/components/spec-materials-landing/SpecDocumentationSection.tsx` | Compliance bullets |
-| `src/components/spec-materials-landing/SpecMaterialsGrid.tsx` | Material cards grid |
-| `src/components/spec-materials-landing/SpecHowItWorks.tsx` | 5-step process |
-| `src/components/spec-materials-landing/SpecFAQSection.tsx` | FAQ accordion |
-| `src/components/spec-materials-landing/SpecFinalCTA.tsx` | Closing CTA |
-| `src/components/spec-materials-landing/SpecStickyCTA.tsx` | Mobile sticky bar |
+| `src/pages/DashboardSupplierQuotes.tsx` | Main page with 2-column layout |
+| `src/services/supplierQuoteService.ts` | CRUD for leads and quotes |
+| `src/types/supplierQuote.types.ts` | TypeScript interfaces |
+| `src/components/supplier-quotes/SupplierCard.tsx` | Card 1 |
+| `src/components/supplier-quotes/ProjectRequirementsCard.tsx` | Card 2 with lead selector |
+| `src/components/supplier-quotes/QuoteDetailsCard.tsx` | Card 3 with toggle flags |
+| `src/components/supplier-quotes/BillingPaymentCard.tsx` | Card 4 |
+| `src/components/supplier-quotes/ActionBar.tsx` | Save buttons |
+| `src/components/supplier-quotes/NewLeadModal.tsx` | Modal for new leads |
+| `src/components/supplier-quotes/SidebarKPIs.tsx` | KPI cards |
+| `src/components/supplier-quotes/RecentLeadsList.tsx` | Leads list |
+| `src/components/supplier-quotes/QuotesForLeadList.tsx` | Lead-specific quotes |
+| `src/components/supplier-quotes/RecentQuotesList.tsx` | All quotes list |
+| `src/components/supplier-quotes/shared/SectionHeader.tsx` | Reusable header |
+| `src/components/supplier-quotes/shared/InputGroup.tsx` | Reusable input wrapper |
+| `src/components/supplier-quotes/shared/CheckboxBtn.tsx` | Toggle button |
+| `src/components/supplier-quotes/shared/PillSelect.tsx` | Multi-select pills |
 
 ## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/App.tsx` | Add route `/contractors-spec-materials` |
-| `src/utils/analytics.ts` | Add spec LP tracking events (with `spec_material_select`) |
+| `src/components/dashboard/DashboardSidebar.tsx` | Add "Supplier Quotes" nav item with `ClipboardList` icon |
+| `src/App.tsx` | Add route `/dashboard/supplier-quotes` |
 
 ---
 
-## Design System (Maintained)
+## Database Schema
 
-All components use the established dark palette:
-- Background: `#0F1115`
-- Section alt: `#151A22`
-- Accent: `#BADF24` (lime green)
-- Text primary: `#F5F7FA`
-- Text secondary: `#B7C0CC`
-- Border: `rgba(255,255,255,0.10)`
+### Table: `leads`
+```sql
+CREATE TABLE leads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  display_name TEXT NOT NULL,
+  phone TEXT,
+  email TEXT,
+  material TEXT,
+  requested_qty NUMERIC,
+  requested_unit TEXT DEFAULT 'tons',
+  job_address TEXT,
+  job_city TEXT,
+  job_state TEXT,
+  job_zip TEXT,
+  target_price NUMERIC,
+  timeline TEXT,
+  site_access TEXT[],
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+```
 
----
+### Table: `supplier_quotes`
+```sql
+CREATE TABLE supplier_quotes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  lead_id UUID REFERENCES leads(id),
+  
+  -- Supplier
+  supplier_name TEXT,
+  supplier_phone TEXT,
+  supplier_address TEXT,
+  supplier_notes TEXT,
+  
+  -- Project Requirements
+  material TEXT,
+  qty_tons NUMERIC,
+  qty_cy NUMERIC,
+  spec_requirement TEXT,
+  application TEXT,
+  delivery_address TEXT,
+  delivery_city TEXT,
+  delivery_state TEXT,
+  delivery_zip TEXT,
+  site_access TEXT[],
+  project_notes TEXT,
+  
+  -- Quote Details Flags
+  is_all_in BOOLEAN DEFAULT false,
+  material_is_unit BOOLEAN DEFAULT true,
+  material_is_total BOOLEAN DEFAULT false,
+  delivery_included BOOLEAN DEFAULT false,
+  delivery_flat BOOLEAN DEFAULT true,
+  delivery_hourly BOOLEAN DEFAULT false,
+  
+  -- Quote Details Values
+  material_price NUMERIC,
+  material_unit TEXT DEFAULT 'ton',
+  delivery_rate NUMERIC,
+  delivery_basis TEXT DEFAULT 'total',
+  all_in_delivered_total NUMERIC,
+  max_qty_per_load NUMERIC,
+  max_qty_unit TEXT DEFAULT 'ton',
+  lead_time TEXT,
+  lead_time_notes TEXT,
+  available_trucks TEXT[],
+  truck_notes TEXT,
+  
+  -- Billing & Payment
+  payment_methods TEXT[],
+  cc_fee_percent NUMERIC DEFAULT 0,
+  bill_by_load_tickets BOOLEAN DEFAULT false,
+  payment_notes TEXT,
+  
+  -- Computed
+  price_summary TEXT,
+  
+  -- Metadata
+  created_at TIMESTAMPTZ DEFAULT now(),
+  created_by TEXT
+);
 
-## JSON Payload Structure
-
-Stored in `orders.notes` with delimiter format:
-
-```text
-Spec Quote: #57 Stone, 150 tons, Acme Construction, Nashville TN
-
---- MGG_SPEC_META_JSON ---
-{
-  "material": "#57 Stone (ASTM/DOT-grade)",
-  "tons": 150,
-  "company": "Acme Construction",
-  "project_name": "Highway 40 Drainage",
-  "po_number": "PO-2024-5567",
-  "spec_item_description": "TDOT Item 903.01",
-  "delivery_window": "AM (7-11)",
-  "multi_drop_requested": false,
-  "multi_drop_details": null,
-  "expedite_requested": true,
-  "spec_file_path": "spec-uploads/QUOTE-20260201-123456/spec-sheet.pdf",
-  "user_notes": "Need COD documentation",
-  "persona": "Contractor/PM/DOT/Utility",
-  "source": "Spec Materials Landing Page"
-}
---- END_MGG_SPEC_META_JSON ---
+CREATE INDEX idx_supplier_quotes_lead ON supplier_quotes(lead_id, created_at DESC);
+CREATE INDEX idx_supplier_quotes_recent ON supplier_quotes(created_at DESC);
 ```
 
 ---
 
-## Validation Summary (PATCH 4)
+## Implementation Checklist
 
-**Required Fields:**
-- Full Name (min 2 chars)
-- Company (min 2 chars)
-- Email (valid format)
-- Phone (min 10 digits)
-- Street Address (min 5 chars)
-- City (min 2 chars)
-- State (from dropdown)
-- ZIP Code (5 digits)
-- Material (selected)
-- Tons (20-1000)
+### Phase 1: Database + Types
+- [ ] Create `leads` table migration
+- [ ] Create `supplier_quotes` table migration
+- [ ] Define TypeScript interfaces in `supplierQuote.types.ts`
 
----
+### Phase 2: Service Layer
+- [ ] Create `supplierQuoteService.ts` with CRUD functions
+- [ ] Implement `generatePriceSummary()` helper
 
-## Security Considerations
+### Phase 3: Shared UI Components
+- [ ] `SectionHeader` component
+- [ ] `InputGroup` component
+- [ ] `CheckboxBtn` toggle component
+- [ ] `PillSelect` multi-select component
 
-1. **Private file storage** - paths only, signed URLs generated on-demand (PATCH 1)
-2. **Honeypot field** for spam prevention
-3. **Zod validation** on all inputs
-4. **File constraints**: PDF/JPG/PNG only, 10MB max
-5. **Backend email handling** via Edge Function
-6. **Existing RLS policies** protect the orders table
+### Phase 4: Form Cards
+- [ ] `SupplierCard` (Supplier Name, Phone, Address, Notes)
+- [ ] `ProjectRequirementsCard` (Lead selector, Material, Qty, Address, Site Access)
+- [ ] `QuoteDetailsCard` (Flags, Pricing, Trucks)
+- [ ] `BillingPaymentCard` (Payment methods, CC Fee, Load Tickets)
+- [ ] `ActionBar` (Save Quote, Save & New)
 
----
+### Phase 5: Sidebar Components
+- [ ] `SidebarKPIs` (Count, Last $)
+- [ ] `RecentLeadsList`
+- [ ] `QuotesForLeadList`
+- [ ] `RecentQuotesList`
 
-## Testing Checklist
+### Phase 6: Main Page + Modal
+- [ ] `DashboardSupplierQuotes` page with 2-column layout
+- [ ] `NewLeadModal` for creating leads
+- [ ] State management and React Query integration
 
-1. Visit `/contractors-spec-materials` and verify all sections render
-2. Test form validation - especially full address requirement (PATCH 4)
-3. Test file upload with valid/invalid types and sizes
-4. Verify form submission creates quote with structured JSON in notes (PATCH 2)
-5. Confirm button says "Save & Request Pricing" (PATCH 6)
-6. Check analytics events fire with `spec_material_select` name (PATCH 5)
-7. Verify documentation copy uses spec-safe language (PATCH 3)
-8. Test mobile responsiveness and sticky CTA
-9. Verify SEO tags in page source
+### Phase 7: Routing + Navigation
+- [ ] Add nav item to DashboardSidebar
+- [ ] Add route to App.tsx
+
+### Phase 8: Testing
+- [ ] Verify toggle exclusivity
+- [ ] Test save/reset flow
+- [ ] Verify sidebar updates
+- [ ] Mobile responsiveness
 
