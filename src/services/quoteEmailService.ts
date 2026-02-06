@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { generateQuoteRequestEmail } from '@/utils/quoteEmailTemplates';
 import { createQuoteOrder, type QuoteOrderData } from './quoteOrderService';
+import { createLeadFromForm } from './supplierQuoteService';
 
 interface QuoteFormData {
   name: string;
@@ -41,6 +42,24 @@ export const sendQuoteRequestEmail = async (formData: QuoteFormData): Promise<{ 
     if (!dbResult.success) {
       console.error('Failed to create quote order record:', dbResult.error);
       return { success: false, error: 'Failed to save quote request' };
+    }
+
+    // Also create a lead entry for the supplier quotes system
+    try {
+      await createLeadFromForm({
+        displayName: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        material: formData.material || formData.selectedProduct?.name,
+        requestedQty: formData.estimatedTons,
+        requestedUnit: 'tons',
+        jobZip: formData.zipCode,
+        timeline: formData.timeframe,
+        notes: `Source: ${formData.sourcePage || 'Quote Form'}\n${formData.message || ''}`.trim(),
+      });
+      console.log('Lead created from quote form');
+    } catch (leadErr) {
+      console.warn('Failed to create lead from quote form (non-blocking):', leadErr);
     }
 
     console.log('Quote order record created, now sending emails');
@@ -109,7 +128,7 @@ export const sendQuoteRequestEmail = async (formData: QuoteFormData): Promise<{ 
     return { success: true, orderId: dbResult.orderId };
   } catch (error) {
     console.error('Failed to process quote request:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error).message };
   }
 };
 

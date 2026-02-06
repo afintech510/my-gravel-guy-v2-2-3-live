@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Calendar } from 'lucide-react';
+import { Users, Calendar, MapPin } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Lead } from '@/types/supplierQuote.types';
@@ -17,7 +17,7 @@ export function RecentLeadsList({ leads, selectedLeadId, onSelectLead }: RecentL
       <Card className="p-4 bg-card border-border">
         <div className="flex items-center gap-2 text-muted-foreground mb-3">
           <Users className="h-4 w-4" />
-          <span className="font-medium">Recent Leads</span>
+          <span className="font-medium text-foreground">Recent Leads</span>
         </div>
         <p className="text-sm text-muted-foreground">No leads yet. Create one using the + button.</p>
       </Card>
@@ -28,7 +28,7 @@ export function RecentLeadsList({ leads, selectedLeadId, onSelectLead }: RecentL
     <Card className="p-4 bg-card border-border">
       <div className="flex items-center gap-2 text-muted-foreground mb-3">
         <Users className="h-4 w-4" />
-        <span className="font-medium">Recent Leads</span>
+        <span className="font-medium text-foreground">Recent Leads</span>
       </div>
       
       <ScrollArea className="max-h-64">
@@ -52,8 +52,17 @@ export function RecentLeadsList({ leads, selectedLeadId, onSelectLead }: RecentL
                   {format(new Date(lead.created_at), 'MM/dd/yyyy')}
                 </span>
               </div>
+              
+              {/* Show city, state */}
+              {(lead.job_city || lead.job_state || lead.job_zip) && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                  <MapPin className="h-3 w-3" />
+                  {[lead.job_city, lead.job_state].filter(Boolean).join(', ') || lead.job_zip}
+                </div>
+              )}
+              
               {(lead.material || lead.requested_qty) && (
-                <div className="text-xs text-muted-foreground">
+                <div className="text-xs text-foreground">
                   {lead.material && <span>{lead.material}</span>}
                   {lead.material && lead.requested_qty && <span> • </span>}
                   {lead.requested_qty && (
