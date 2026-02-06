@@ -317,6 +317,63 @@ export type Database = {
           },
         ]
       }
+      leads: {
+        Row: {
+          created_at: string | null
+          display_name: string
+          email: string | null
+          id: string
+          job_address: string | null
+          job_city: string | null
+          job_state: string | null
+          job_zip: string | null
+          material: string | null
+          notes: string | null
+          phone: string | null
+          requested_qty: number | null
+          requested_unit: string | null
+          site_access: string[] | null
+          target_price: number | null
+          timeline: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_name: string
+          email?: string | null
+          id?: string
+          job_address?: string | null
+          job_city?: string | null
+          job_state?: string | null
+          job_zip?: string | null
+          material?: string | null
+          notes?: string | null
+          phone?: string | null
+          requested_qty?: number | null
+          requested_unit?: string | null
+          site_access?: string[] | null
+          target_price?: number | null
+          timeline?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_name?: string
+          email?: string | null
+          id?: string
+          job_address?: string | null
+          job_city?: string | null
+          job_state?: string | null
+          job_zip?: string | null
+          material?: string | null
+          notes?: string | null
+          phone?: string | null
+          requested_qty?: number | null
+          requested_unit?: string | null
+          site_access?: string[] | null
+          target_price?: number | null
+          timeline?: string | null
+        }
+        Relationships: []
+      }
       location_search: {
         Row: {
           city: string | null
@@ -1045,6 +1102,156 @@ export type Database = {
           zip?: string
         }
         Relationships: []
+      }
+      supplier_quotes: {
+        Row: {
+          all_in_delivered_total: number | null
+          application: string | null
+          available_trucks: string[] | null
+          bill_by_load_tickets: boolean | null
+          cc_fee_percent: number | null
+          created_at: string | null
+          created_by: string | null
+          delivery_address: string | null
+          delivery_basis: string | null
+          delivery_city: string | null
+          delivery_flat: boolean | null
+          delivery_hourly: boolean | null
+          delivery_included: boolean | null
+          delivery_rate: number | null
+          delivery_state: string | null
+          delivery_zip: string | null
+          id: string
+          is_all_in: boolean | null
+          lead_id: string | null
+          lead_time: string | null
+          lead_time_notes: string | null
+          material: string | null
+          material_is_total: boolean | null
+          material_is_unit: boolean | null
+          material_price: number | null
+          material_unit: string | null
+          max_qty_per_load: number | null
+          max_qty_unit: string | null
+          payment_methods: string[] | null
+          payment_notes: string | null
+          price_summary: string | null
+          product_id: string | null
+          project_notes: string | null
+          qty_cy: number | null
+          qty_tons: number | null
+          site_access: string[] | null
+          spec_requirement: string | null
+          supplier_address: string | null
+          supplier_name: string | null
+          supplier_notes: string | null
+          supplier_phone: string | null
+          truck_notes: string | null
+        }
+        Insert: {
+          all_in_delivered_total?: number | null
+          application?: string | null
+          available_trucks?: string[] | null
+          bill_by_load_tickets?: boolean | null
+          cc_fee_percent?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          delivery_address?: string | null
+          delivery_basis?: string | null
+          delivery_city?: string | null
+          delivery_flat?: boolean | null
+          delivery_hourly?: boolean | null
+          delivery_included?: boolean | null
+          delivery_rate?: number | null
+          delivery_state?: string | null
+          delivery_zip?: string | null
+          id?: string
+          is_all_in?: boolean | null
+          lead_id?: string | null
+          lead_time?: string | null
+          lead_time_notes?: string | null
+          material?: string | null
+          material_is_total?: boolean | null
+          material_is_unit?: boolean | null
+          material_price?: number | null
+          material_unit?: string | null
+          max_qty_per_load?: number | null
+          max_qty_unit?: string | null
+          payment_methods?: string[] | null
+          payment_notes?: string | null
+          price_summary?: string | null
+          product_id?: string | null
+          project_notes?: string | null
+          qty_cy?: number | null
+          qty_tons?: number | null
+          site_access?: string[] | null
+          spec_requirement?: string | null
+          supplier_address?: string | null
+          supplier_name?: string | null
+          supplier_notes?: string | null
+          supplier_phone?: string | null
+          truck_notes?: string | null
+        }
+        Update: {
+          all_in_delivered_total?: number | null
+          application?: string | null
+          available_trucks?: string[] | null
+          bill_by_load_tickets?: boolean | null
+          cc_fee_percent?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          delivery_address?: string | null
+          delivery_basis?: string | null
+          delivery_city?: string | null
+          delivery_flat?: boolean | null
+          delivery_hourly?: boolean | null
+          delivery_included?: boolean | null
+          delivery_rate?: number | null
+          delivery_state?: string | null
+          delivery_zip?: string | null
+          id?: string
+          is_all_in?: boolean | null
+          lead_id?: string | null
+          lead_time?: string | null
+          lead_time_notes?: string | null
+          material?: string | null
+          material_is_total?: boolean | null
+          material_is_unit?: boolean | null
+          material_price?: number | null
+          material_unit?: string | null
+          max_qty_per_load?: number | null
+          max_qty_unit?: string | null
+          payment_methods?: string[] | null
+          payment_notes?: string | null
+          price_summary?: string | null
+          product_id?: string | null
+          project_notes?: string | null
+          qty_cy?: number | null
+          qty_tons?: number | null
+          site_access?: string[] | null
+          spec_requirement?: string | null
+          supplier_address?: string | null
+          supplier_name?: string | null
+          supplier_notes?: string | null
+          supplier_phone?: string | null
+          truck_notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_quotes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_quotes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       suppliers: {
         Row: {
