@@ -29,7 +29,7 @@ const SitemapSection = ({
   links: { label: string; href: string; description?: string }[]; 
   icon: React.ComponentType<any>;
 }) => (
-  <div className="bg-white rounded-lg shadow-sm border p-6">
+  <div className="bg-card rounded-lg shadow-sm border p-6">
     <div className="flex items-center gap-3 mb-4">
       <div className="p-2 bg-primary/10 rounded-lg">
         <Icon className="h-5 w-5 text-primary" />
@@ -41,13 +41,13 @@ const SitemapSection = ({
         <li key={link.href}>
           <Link 
             to={link.href}
-            className="block p-2 rounded-md hover:bg-gray-50 transition-colors group"
+            className="block p-2 rounded-md hover:bg-muted transition-colors group"
           >
-            <div className="font-medium text-gray-900 group-hover:text-primary">
+            <div className="font-medium text-foreground group-hover:text-primary">
               {link.label}
             </div>
             {link.description && (
-              <div className="text-sm text-gray-600 mt-1">
+              <div className="text-sm text-muted-foreground mt-1">
                 {link.description}
               </div>
             )}
@@ -100,7 +100,7 @@ const Sitemap = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted">
       <Helmet>
         <title>Sitemap | My Gravel Guy</title>
         <meta name="description" content="Find all pages and resources available on My Gravel Guy. Navigate easily through our products, tools, locations, and information pages." />
@@ -109,7 +109,7 @@ const Sitemap = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">Site Map</h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Find everything you need on My Gravel Guy. Browse all our pages, tools, and resources organized by category.
           </p>
         </div>
@@ -159,22 +159,22 @@ const Sitemap = () => {
         </div>
 
         <div className="mt-12 text-center">
-          <div className="bg-white rounded-lg shadow-sm border p-8">
+          <div className="bg-card rounded-lg shadow-sm border p-8">
             <h2 className="text-2xl font-semibold mb-4">Need Help?</h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-muted-foreground mb-6">
               Can't find what you're looking for? We're here to help!
             </p>
             <div className="flex justify-center gap-4">
               <Link
                 to="/contact"
-                className="inline-flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors"
+                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors"
               >
                 <Mail className="h-4 w-4" />
                 Contact Us
               </Link>
               <Link
                 to="/faq"
-                className="inline-flex items-center gap-2 border border-gray-300 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center gap-2 border border-border px-6 py-3 rounded-lg hover:bg-muted transition-colors"
               >
                 <HelpCircle className="h-4 w-4" />
                 View FAQ

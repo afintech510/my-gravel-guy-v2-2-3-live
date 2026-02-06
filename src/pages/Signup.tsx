@@ -31,13 +31,13 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-muted py-12 px-4">
       <div className="max-w-md w-full space-y-8">
         <div>
           <h1 className="text-3xl font-bold text-center">Create your account</h1>
-          <p className="mt-2 text-center text-gray-600">
+          <p className="mt-2 text-center text-muted-foreground">
             Already have an account?{" "}
-            <Link to="/login" className="text-blue-600 hover:text-blue-800">
+            <Link to="/login" className="text-primary hover:text-primary/80">
               Log in
             </Link>
           </p>
@@ -47,7 +47,7 @@ const Signup = () => {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="firstName" className="block text-sm font-medium text-foreground mb-1">
                   First name
                 </label>
                 <Input
@@ -60,7 +60,7 @@ const Signup = () => {
               </div>
               
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="lastName" className="block text-sm font-medium text-foreground mb-1">
                   Last name
                 </label>
                 <Input
@@ -74,7 +74,7 @@ const Signup = () => {
             </div>
             
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1">
                 Email address
               </label>
               <Input
@@ -89,7 +89,7 @@ const Signup = () => {
             </div>
             
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1">
                 Password
               </label>
               <Input
@@ -101,7 +101,7 @@ const Signup = () => {
                 value={formData.password}
                 onChange={handleChange}
               />
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Password must be at least 8 characters long.
               </p>
             </div>
@@ -113,15 +113,15 @@ const Signup = () => {
               name="terms"
               type="checkbox"
               required
-              className="h-4 w-4 rounded border-gray-300 text-blue-600"
+              className="h-4 w-4 rounded border-border text-primary"
             />
-            <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
+            <label htmlFor="terms" className="ml-2 block text-sm text-foreground">
               I agree to the{" "}
-              <a href="#" className="text-blue-600 hover:text-blue-800">
+              <a href="#" className="text-primary hover:text-primary/80">
                 Terms of Service
               </a>
               {" "}and{" "}
-              <a href="#" className="text-blue-600 hover:text-blue-800">
+              <a href="#" className="text-primary hover:text-primary/80">
                 Privacy Policy
               </a>
             </label>

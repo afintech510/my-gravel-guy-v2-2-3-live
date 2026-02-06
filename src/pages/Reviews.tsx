@@ -79,7 +79,7 @@ const Reviews = () => {
   };
   
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
+    <div className="min-h-screen bg-muted py-12 px-4">
       <Helmet>
         <title>Customer Reviews | Gravel Guy</title>
         <meta name="description" content="Read reviews from customers who have purchased from Gravel Guy. Find out what people are saying about our products and service." />
@@ -88,7 +88,7 @@ const Reviews = () => {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-10">
           <h1 className="text-3xl md:text-4xl font-bold mb-4">Customer Reviews</h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             See what our customers have to say about their experience with our products and services.
           </p>
         </div>
@@ -105,12 +105,12 @@ const Reviews = () => {
                   <span className="text-2xl font-bold">
                     {averageRating.toFixed(1)}
                   </span>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-muted-foreground">
                     out of 5
                   </span>
                 </div>
                 
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-muted-foreground mb-4">
                   Based on {total} reviews
                 </p>
                 
@@ -121,13 +121,13 @@ const Reviews = () => {
                       <div className="w-12 text-sm font-medium">
                         {rating} stars
                       </div>
-                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div className="flex-1 bg-muted rounded-full h-2">
                         <div 
                           className="bg-yellow-400 h-2 rounded-full" 
                           style={{ width: `${calculatePercentage(rating.toString())}%` }}
                         />
                       </div>
-                      <div className="w-12 text-right text-sm text-gray-600">
+                      <div className="w-12 text-right text-sm text-muted-foreground">
                         {calculatePercentage(rating.toString())}%
                       </div>
                     </div>
@@ -188,11 +188,11 @@ const Reviews = () => {
         <div className="mt-16">
           <div className="mb-8">
             <h2 className="text-3xl font-bold mb-2">Recent Delivery Locations</h2>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               View our recent successful deliveries across the United States. Each marker represents
               a location where we've delivered gravel, sand, or dirt.
             </p>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-sm text-muted-foreground mt-2">
               Data sourced from our delivery database in real-time.
             </p>
           </div>
