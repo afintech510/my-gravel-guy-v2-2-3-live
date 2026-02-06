@@ -95,7 +95,7 @@ const ProductDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white py-16 px-4">
+      <div className="min-h-screen bg-background py-16 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             <Skeleton className="aspect-square rounded-lg" />
@@ -113,10 +113,10 @@ const ProductDetail = () => {
 
   if (error || !product) {
     return (
-      <div className="min-h-screen bg-white py-16 px-4">
+      <div className="min-h-screen bg-background py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-3xl font-bold mb-4">Product Not Found</h1>
-          <p className="text-gray-600 mb-4">The product you're looking for doesn't exist.</p>
+          <p className="text-muted-foreground mb-4">The product you're looking for doesn't exist.</p>
           <Button asChild>
             <a href="/products">View All Products</a>
           </Button>
@@ -126,7 +126,7 @@ const ProductDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white py-16 px-4">
+    <div className="min-h-screen bg-background py-16 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Left Column - Images and Tabs on Desktop */}
@@ -148,7 +148,7 @@ const ProductDetail = () => {
             />
 
             {!zipCode && (
-              <Card className="bg-gray-50">
+              <Card className="bg-muted">
                 <CardContent className="pt-6">
                   <h3 className="font-semibold mb-4">Check Delivery Availability</h3>
                   <ZipCodeSearch />

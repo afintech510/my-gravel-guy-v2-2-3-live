@@ -29,13 +29,13 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-muted py-12 px-4">
       <div className="max-w-md w-full space-y-8">
         <div>
           <h1 className="text-3xl font-bold text-center">Log in to your account</h1>
-          <p className="mt-2 text-center text-gray-600">
+          <p className="mt-2 text-center text-muted-foreground">
             Or{" "}
-            <Link to="/signup" className="text-blue-600 hover:text-blue-800">
+            <Link to="/signup" className="text-primary hover:text-primary/80">
               create a new account
             </Link>
           </p>
@@ -44,7 +44,7 @@ const Login = () => {
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1">
                 Email address
               </label>
               <Input
@@ -59,7 +59,7 @@ const Login = () => {
             </div>
             
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1">
                 Password
               </label>
               <Input
@@ -80,15 +80,15 @@ const Login = () => {
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
-                className="h-4 w-4 rounded border-gray-300 text-blue-600"
+                className="h-4 w-4 rounded border-border text-primary"
               />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-foreground">
                 Remember me
               </label>
             </div>
 
             <div className="text-sm">
-              <a href="#" className="text-blue-600 hover:text-blue-800">
+              <a href="#" className="text-primary hover:text-primary/80">
                 Forgot your password?
               </a>
             </div>
