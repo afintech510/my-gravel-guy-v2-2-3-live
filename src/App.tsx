@@ -102,7 +102,7 @@ function AppContent() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       <div className="sticky top-0 z-40 w-full">
         <div className="relative">
           <TopBanner />
@@ -170,7 +170,7 @@ function App() {
   return (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="system" storageKey="mgg-theme" enableSystem disableTransitionOnChange>
           <ZipCodeProvider>
             <CartProvider>
               <BlogProvider>
