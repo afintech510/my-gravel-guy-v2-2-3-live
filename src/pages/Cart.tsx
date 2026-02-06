@@ -176,7 +176,7 @@ const Cart = () => {
         </div>
         
         <div className="lg:col-span-1">
-          <div className="bg-gray-50 rounded-lg p-6 sticky top-24">
+          <div className="bg-muted rounded-lg p-6 sticky top-24">
             <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
             
             {/* Order summary details */}
@@ -213,7 +213,7 @@ const Cart = () => {
             
             {/* Balance Due Display */}
             {depositOption && (
-              <div className="mb-4 p-3 bg-white rounded-lg border border-primary/20">
+              <div className="mb-4 p-3 bg-card rounded-lg border border-primary/20">
                 <div className="text-sm text-muted-foreground mb-1">Balance Due:</div>
                 <div className="text-xs space-y-1">
                   <div className="flex justify-between">

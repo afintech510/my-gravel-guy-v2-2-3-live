@@ -493,9 +493,9 @@ const LocationPage = () => {
                           <Link 
                             key={index} 
                             to={`/locations/${nearby.slug}`}
-                            className="flex items-center text-primary hover:underline"
+                            className="flex items-center text-foreground hover:text-primary hover:underline"
                           >
-                            <MapPin className="h-4 w-4 mr-2" />
+                            <MapPin className="h-4 w-4 mr-2 text-primary" />
                             <span>{nearby.city}, {nearby.state}</span>
                           </Link>
                         ))}
