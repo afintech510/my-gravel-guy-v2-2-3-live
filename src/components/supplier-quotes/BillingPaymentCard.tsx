@@ -47,7 +47,7 @@ export function BillingPaymentCard({ data, onChange }: BillingPaymentCardProps) 
             step="0.5"
             min="0"
             max="5"
-            className="bg-muted border-border"
+            className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
           />
         </InputGroup>
         
@@ -65,7 +65,7 @@ export function BillingPaymentCard({ data, onChange }: BillingPaymentCardProps) 
           value={data.payment_notes}
           onChange={(e) => onChange({ payment_notes: e.target.value })}
           placeholder="Additional payment terms or notes..."
-          className="bg-muted border-border min-h-[80px]"
+          className="bg-muted border-border min-h-[80px] text-foreground placeholder:text-muted-foreground"
         />
       </InputGroup>
     </Card>
