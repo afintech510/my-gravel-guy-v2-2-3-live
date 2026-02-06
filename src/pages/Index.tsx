@@ -21,7 +21,7 @@ const Index = () => {
   const {
     zipCode
   } = useZipCode();
-  return <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+  return <div className="min-h-screen bg-background">
       {/* Hero Section */}
      <section 
         className="py-16 px-4 bg-cover bg-center bg-no-repeat min-h-screen flex items-center relative"

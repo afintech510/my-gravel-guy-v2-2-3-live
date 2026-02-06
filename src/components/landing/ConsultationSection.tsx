@@ -20,7 +20,7 @@ export const ConsultationSection = () => {
                 <div className="space-y-6">
                   <div>
                     <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-                      Talk to a Gravel & Dirt Expert – <span className="text-primary">Free</span>
+                      Talk to a Gravel & Dirt Expert – <span className="font-bold text-foreground">Free</span>
                     </h2>
                     <p className="text-muted-foreground leading-relaxed">
                       Get professional advice on driveways, landscaping, hole filling, or site prep. 
