@@ -12,11 +12,11 @@ const DeliveryMapPage = () => {
       </Helmet>
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Recent Delivery Locations</h1>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           View our recent successful deliveries across the United States. Each marker represents
           a location where we've delivered gravel, sand, or dirt.
         </p>
-        <p className="text-sm text-gray-500 mt-2">
+        <p className="text-sm text-muted-foreground mt-2">
           Data sourced from our delivery database in real-time.
         </p>
       </div>

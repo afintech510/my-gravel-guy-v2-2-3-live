@@ -868,7 +868,7 @@ const PaymentSuccess = () => {
                 <AlertCircle className="h-5 w-5 text-amber-600" />
                 <div>
                   <p className="font-medium">Backup Data Processing</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Your order was processed using backup data. This is normal and your payment was successful.
                   </p>
                 </div>
@@ -891,7 +891,7 @@ const PaymentSuccess = () => {
                 <CheckCircle className="h-5 w-5 text-green-600" />
                 <div>
                   <p className="font-medium">Stripe Verified</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Your payment has been verified directly with Stripe. All details are confirmed.
                   </p>
                 </div>
@@ -982,7 +982,7 @@ const PaymentSuccess = () => {
               <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
                 <div className="flex-1">
                   <p className="font-medium">Verifying Payment</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Please wait while we process your order details...
                   </p>
                 </div>
@@ -1118,7 +1118,7 @@ const PaymentSuccess = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white py-16 px-4">
+    <div className="min-h-screen bg-background py-16 px-4">
       <div className="max-w-4xl mx-auto">
         <Card className="bg-green-50 border-green-200 mb-8">
           <CardContent className="pt-6 text-center">
@@ -1193,7 +1193,7 @@ const PaymentSuccess = () => {
                         <h3 className="font-medium text-lg">
                           {resolveProductName(item.product_name)}
                         </h3>
-                        <p className="text-gray-600">Quantity: {item.quantity} tons</p>
+                        <p className="text-muted-foreground">Quantity: {item.quantity} tons</p>
                         <p className="text-lg font-semibold text-green-600">
                           {isDepositPayment 
                             ? `$${(depositAmount || 199).toFixed(2)} (Deposit)`
@@ -1228,7 +1228,7 @@ const PaymentSuccess = () => {
                                 <MapPin className="h-3 w-3" />
                                 Delivery Address
                               </h5>
-                              <div className="text-sm text-gray-600">
+                              <div className="text-sm text-muted-foreground">
                                 <div>{item.delivery_address_street}</div>
                                 <div>
                                   {item.delivery_address_city}, {item.delivery_address_state} {item.delivery_address_zip}
@@ -1243,7 +1243,7 @@ const PaymentSuccess = () => {
                                 <Calendar className="h-3 w-3" />
                                 Delivery Schedule
                               </h5>
-                              <div className="text-sm text-gray-600">
+                              <div className="text-sm text-muted-foreground">
                                 <div className="font-medium">
                                 {(() => {
                                   const date = new Date(item.delivery_date + 'T00:00:00');
@@ -1262,9 +1262,9 @@ const PaymentSuccess = () => {
                         </div>
 
                         {item.delivery_instructions && (
-                          <div className="mt-4 pt-4 border-t border-gray-200">
+                          <div className="mt-4 pt-4 border-t border-border">
                             <h5 className="font-medium text-sm mb-1">Special Instructions</h5>
-                            <p className="text-sm text-gray-600">{item.delivery_instructions}</p>
+                            <p className="text-sm text-muted-foreground">{item.delivery_instructions}</p>
                           </div>
                         )}
                       </div>
@@ -1282,17 +1282,17 @@ const PaymentSuccess = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {isDepositPayment ? (
                 <>
-                  <div className="bg-white p-5 rounded-lg border">
+                  <div className="bg-card p-5 rounded-lg border">
                     <div className="flex items-center mb-3">
                       <span className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold mr-2">1</span>
                       <h3 className="font-medium">Deposit Received</h3>
                     </div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       Your ${depositAmount?.toFixed(2) || '199.00'} deposit has been received and your order is now in our system.
                     </p>
                   </div>
                   
-                  <div className="bg-white p-5 rounded-lg border">
+                  <div className="bg-card p-5 rounded-lg border">
                     <div className="flex items-center mb-3">
                       <span className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold mr-2">2</span>
                       <h3 className="font-medium">Price Negotiation</h3>

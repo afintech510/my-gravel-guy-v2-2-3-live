@@ -435,7 +435,7 @@ const Checkout = () => {
                             {item.tons} tons {item.yards && `(${item.yards.toFixed(1)} cu. yds.)`}
                           </div>
                           {getMaterialSizeInfo(item) && (
-                            <div className="text-xs text-gray-600">
+                            <div className="text-xs text-muted-foreground">
                               {getMaterialSizeInfo(item)}
                             </div>
                           )}
