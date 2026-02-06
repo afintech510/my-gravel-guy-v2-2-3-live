@@ -1,164 +1,207 @@
-
-# Final Polish Pass: Supplier Quotes (Production Hardening)
+# Global Light/Dark Theme System Implementation Plan (Final – Approved)
 
 ## Overview
-This plan applies the approved final polish pass to the Supplier Quotes feature, implementing all four priorities in order. No new features, tables, or refactors - only targeted improvements to visual contrast, keyboard ergonomics, unit-aware pricing display, and editing workflow.
+
+This plan implements a global light/dark theme system across the entire MGG application using a Tailwind + shadcn semantic token approach. It resolves prior issues with missing toggles, theme persistence, flash on load, and poor text contrast (lime-on-light), while explicitly avoiding scope creep.
+
+This is a **polish + production hardening pass only** — no new features, tables, layouts, or refactors.
 
 ---
 
-## Priority 1: Visual Polish (Quick Wins)
+## Phase 1: ThemeProvider Configuration (Single Source of Truth)
 
-### 1A. Fix Pill Contrast (`PillSelect.tsx`)
-Change low-contrast green text to high-contrast foreground text:
+**File:** `src/App.tsx`
 
-| Current | New |
-|---------|-----|
-| `text-green-200` (selected success) | `text-foreground font-medium` |
-| `text-muted-foreground` (unselected) | `text-foreground` |
+Update ThemeProvider configuration to:
 
-### 1B. Fix Checkbox Contrast (`CheckboxBtn.tsx`)
-Change checked state text from `text-primary` to `text-foreground` with a primary-colored icon:
+* Use system preference by default
+* Persist user choice to a custom storage key
+* Disable transition flashes on change
 
 ```tsx
-// Checked state
-'bg-primary/20 text-foreground border border-primary/50'
-<CheckSquare className="w-4 h-4 shrink-0 text-primary" />
+<ThemeProvider
+  attribute="class"
+  defaultTheme="system"
+  storageKey="mgg-theme"
+  enableSystem
+  disableTransitionOnChange
+>
 ```
 
-### 1C. Add Hover Border to Quote Tiles
-Add subtle primary border on hover to both quote list components:
-
-```tsx
-// QuotesForLeadList.tsx & RecentQuotesList.tsx
-className="... hover:border-primary/30 ..."
-```
-
-### 1D. Bold Supplier Names
-Change from `font-medium` to `font-semibold` for supplier names in quote tiles.
+**Important:** Confirm `ThemeProvider` wraps the **entire app router and all layouts** (marketing pages, cart/checkout, dashboard, modals). No route group should exist outside the provider.
 
 ---
 
-## Priority 2: Keyboard & Speed Enhancements
+## Phase 2: Flash Prevention (Pre-Hydration Theme Application)
 
-### 2A. Add Ctrl/Cmd + Enter Shortcut (`DashboardSupplierQuotes.tsx`)
-Add keyboard listener to trigger save on shortcut:
+**File:** `index.html`
 
-```tsx
-useEffect(() => {
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-      e.preventDefault();
-      handleSave();
+Add the following inline script **before** the React root element to prevent light/dark flash on hard refresh. Script is hardened with try/catch for localStorage safety.
+
+```html
+<script>
+  (function () {
+    try {
+      var stored = localStorage.getItem('mgg-theme');
+      var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme =
+        (stored === 'dark' || stored === 'light')
+          ? stored
+          : (prefersDark ? 'dark' : 'light');
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+    } catch (e) {
+      var prefersDarkFallback = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.classList.toggle('dark', !!prefersDarkFallback);
     }
-  };
-  document.addEventListener('keydown', handleKeyDown);
-  return () => document.removeEventListener('keydown', handleKeyDown);
-}, [handleSave]);
-```
-
-### 2B. Add Autofocus to Supplier Name
-Expose ref from SupplierCard and focus after Save & New or on initial load:
-
-```tsx
-// SupplierCard.tsx - expose ref
-const supplierNameRef = useRef<HTMLInputElement>(null);
-useImperativeHandle(ref, () => ({
-  focus: () => supplierNameRef.current?.focus()
-}));
-
-// DashboardSupplierQuotes.tsx - focus after reset
-supplierCardRef.current?.focus();
-```
-
-### 2C. Add Editing Indicator & Cancel Button (`ActionBar.tsx`)
-When editing, show indicator and cancel button:
-
-```tsx
-{isEditing && (
-  <div className="flex items-center gap-2">
-    <span className="text-sm text-amber-600 font-medium">Editing Quote</span>
-    <Button variant="ghost" size="sm" onClick={onCancelEdit}>
-      <X className="h-4 w-4 mr-1" /> Cancel
-    </Button>
-  </div>
-)}
-```
-
-Add `onCancelEdit` prop and handler in DashboardSupplierQuotes:
-
-```tsx
-const handleCancelEdit = useCallback(() => {
-  setFormData(INITIAL_FORM_DATA);
-  setFlags(INITIAL_FLAGS);
-  setEditingQuoteId(null);
-}, []);
+  })();
+</script>
 ```
 
 ---
 
-## Priority 3: Unit-Aware Pricing Display
+## Phase 3: Theme Toggle Placement (Single Control)
 
-### 3A. Update ActionBar Summary
-Show unit based on `material_unit` field (ton or cy), no conversions:
+**File:** `src/components/Navbar.tsx`
 
-```tsx
-// ActionBar.tsx
-const unitLabel = formData.material_unit === 'cy' ? '/cy' : '/ton';
-const unitsLabel = formData.material_unit === 'cy' ? 'cy' : 'tons';
+* Mount the `ThemeToggle` component in the Navbar
+* Place next to the cart icon in desktop view
+* Include in mobile navigation (sheet/drawer)
 
-summaryDisplay = `$${totals.totalCost.toLocaleString(...)} Total • $${totals.pricePerTon.toFixed(2)}${unitLabel} • ${totals.totalTons} ${unitsLabel}`;
-```
+**Important:**
 
-### 3B. Update Quote Tiles Pricing Display
-Same unit-aware logic in `QuotesForLeadList.tsx` and `RecentQuotesList.tsx`:
+* The Navbar is the **only** place where a theme toggle is mounted
+* Do **not** add additional toggles elsewhere
 
-```tsx
-const unitLabel = quote.material_unit === 'cy' ? '/cy' : '/ton';
-const unitsLabel = quote.material_unit === 'cy' ? 'cy' : 'tons';
+**File:** `src/components/TopBanner.tsx`
 
-<div className="text-sm font-semibold text-foreground">
-  ${totals.totalCost...} • ${totals.pricePerTon}${unitLabel} • {totals.totalTons} {unitsLabel}
-</div>
-```
+* Keep theme toggle removed / commented out
+* No changes required
 
 ---
 
-## Priority 4: Production Hardening
+## Phase 4: Deposit Option Contrast Fix (Cart / Checkout)
 
-### 4A. Default Status for New Quotes
-Add `status: 'active'` only on create (not update) in service layer. Since the DB doesn't have a status column in supplier_quotes yet, this is a no-op until schema is updated.
+**File:** `src/components/cart/DepositOption.tsx`
 
-### 4B. Preserve Existing Status on Edit
-The `updateSupplierQuote` function passes only the fields from `formDataToQuoteInsert`, which doesn't include `status`. This means existing status is preserved by default. No change needed.
+Fix lime-on-light readability issues by using dark text with lime accents.
 
-### 4C. is_all_in Override Behavior
-Current `handleFlagChange` does NOT clear other fields when `is_all_in` is toggled - it only uses `disabled` prop to grey out fields. This is correct per requirements. No change needed.
+| Location           | Current        | New                             |
+| ------------------ | -------------- | ------------------------------- |
+| Down Payment label | `text-primary` | `text-foreground font-medium`   |
+| Badge text         | `text-primary` | `text-foreground`               |
+| Price display      | `text-primary` | `text-foreground font-semibold` |
 
-### 4D. Array Field Robustness
-Current `formDataToQuoteInsert` already handles arrays correctly with `length > 0` checks. No change needed.
-
----
-
-## Files to Modify
-
-| File | Changes |
-|------|---------|
-| `PillSelect.tsx` | Fix contrast: `text-foreground` instead of `text-green-200` |
-| `CheckboxBtn.tsx` | Fix contrast: `text-foreground` with `text-primary` icon |
-| `QuotesForLeadList.tsx` | Hover border, bold supplier, unit-aware pricing |
-| `RecentQuotesList.tsx` | Hover border, bold supplier, unit-aware pricing |
-| `ActionBar.tsx` | Unit-aware summary, editing indicator, cancel button |
-| `DashboardSupplierQuotes.tsx` | Keyboard shortcut, cancel handler, autofocus |
-| `SupplierCard.tsx` | Expose focus ref via forwardRef |
+* Keep existing `bg-primary/10` and `border-primary/30`
+* Verify readability in **both light and dark themes** after changes
 
 ---
 
-## What This Does NOT Change
+## Phase 5: Global Contrast Sweep (Targeted)
 
-- No new tables or columns
-- No changes to `formDataToQuoteInsert` logic
-- No changes to flag mutual exclusivity
-- No new required fields
-- No refactoring of working services
-- `is_all_in` remains an override signal only
-- No unit conversions (ton/cy display based on captured unit only)
+### Contrast Rule (Critical)
+
+Replace `text-primary` **only when used for body/value/label text on light backgrounds**.
+
+**Keep `text-primary` for:**
+
+* Icons
+* Accent badges with background
+* Hover states
+* Borders and UI accents
+
+### Targeted Fixes
+
+| File                      | Location | Current        | New                                  | Reason          |
+| ------------------------- | -------- | -------------- | ------------------------------------ | --------------- |
+| `ReviewCard.tsx`          | ~75      | `text-primary` | `text-foreground font-medium`        | Body label      |
+| `ConsultationSection.tsx` | ~23      | `text-primary` | `font-bold text-foreground`          | Inline emphasis |
+| `LocationPage.tsx`        | ~496     | `text-primary` | `text-foreground hover:text-primary` | Link text       |
+
+---
+
+## Phase 6: Replace Hard-Coded Backgrounds with Semantic Tokens
+
+### Token Usage Rules
+
+| Use Case                 | Token           |
+| ------------------------ | --------------- |
+| Page background          | `bg-background` |
+| Primary containers/cards | `bg-card`       |
+| Sub-panels / callouts    | `bg-muted`      |
+| Borders                  | `border-border` |
+
+### Files to Update
+
+| File                  | Current                                     | New             | Reason             |
+| --------------------- | ------------------------------------------- | --------------- | ------------------ |
+| `src/App.tsx`         | `bg-gray-50 dark:bg-gray-900`               | `bg-background` | Page body          |
+| `src/pages/Cart.tsx`  | `bg-gray-50`                                | `bg-muted`      | Section background |
+| `src/pages/Cart.tsx`  | `bg-white`                                  | `bg-card`       | Order summary      |
+| `src/pages/Index.tsx` | `bg-gradient-to-b from-gray-50 to-gray-100` | `bg-background` | Page body          |
+| `DashboardLayout.tsx` | `bg-gray-50`                                | `bg-muted`      | Section background |
+| `DashboardLayout.tsx` | `bg-white`                                  | `bg-card`       | Content container  |
+
+### Forward Rule
+
+Going forward, new components must prefer semantic tokens over hard-coded grays/whites. Hard-coded colors are allowed only inside the Supplier Quotes module (intentional custom theme).
+
+---
+
+## Phase 7: Supplier Quotes Module (Intentional Exception)
+
+**Current State:** Supplier Quotes uses a custom slate-dark theme with hard-coded dark colors.
+
+**This Implementation:**
+
+* No changes to Supplier Quotes internal theming
+* Confirm module remains readable when global theme is light
+* Treat Supplier Quotes as an internal ops tool with intentional dark UI
+
+**Future Scope (not part of this plan):**
+
+* Migrate Supplier Quotes to semantic tokens
+
+---
+
+## Files to Modify (Final List)
+
+* `index.html`
+* `src/App.tsx`
+* `src/components/Navbar.tsx`
+* `src/components/cart/DepositOption.tsx`
+* `src/components/reviews/ReviewCard.tsx`
+* `src/components/landing/ConsultationSection.tsx`
+* `src/pages/LocationPage.tsx`
+* `src/pages/Cart.tsx`
+* `src/pages/Index.tsx`
+* `src/components/dashboard/DashboardLayout.tsx`
+
+---
+
+## Testing Checklist
+
+* [ ] Single theme toggle visible in Navbar (desktop + mobile)
+* [ ] Theme persists using `mgg-theme` localStorage key
+* [ ] System preference applied when no saved value exists
+* [ ] No flash on hard refresh
+* [ ] Cart page readable in both light and dark
+* [ ] Checkout page readable in both light and dark
+* [ ] Deposit option text readable (no lime-on-light)
+* [ ] Dashboard pages inherit theme correctly
+* [ ] Supplier Quotes remains dark-styled and functional
+* [ ] No new hard-coded background colors introduced
+
+---
+
+## Explicit Non-Goals
+
+* No new features or toggles
+* No layout redesigns
+* No Tailwind config changes
+* No CSS variable changes
+* No database or backend changes
+* No changes to Supplier Quotes logic
+
+---
+
+**Status:** Approved for implementation
