@@ -171,6 +171,28 @@ export const createSpecMaterialQuote = async (quoteData: SpecMaterialQuoteData) 
       throw error;
     }
 
+    // Also create a lead entry for the supplier quotes system
+    try {
+      const { createLeadFromForm } = await import('./supplierQuoteService');
+      await createLeadFromForm({
+        displayName: quoteData.company ? `${quoteData.company} - ${quoteData.fullName}` : quoteData.fullName,
+        email: quoteData.email,
+        phone: quoteData.phone,
+        material: quoteData.material,
+        requestedQty: quoteData.tons,
+        requestedUnit: 'tons',
+        jobAddress: quoteData.deliveryStreet,
+        jobCity: quoteData.deliveryCity,
+        jobState: quoteData.deliveryState,
+        jobZip: quoteData.deliveryZip,
+        timeline: quoteData.deliveryWindowPreference,
+        notes: `Spec Materials: ${quoteData.specItemDescription || 'N/A'}\nProject: ${quoteData.projectName || 'N/A'}`,
+      });
+      console.log('Lead created from spec material quote');
+    } catch (leadErr) {
+      console.warn('Failed to create lead from spec quote (non-blocking):', leadErr);
+    }
+
     console.log('Spec quote created successfully:', data);
     return { success: true, orderId, data };
   } catch (error) {
