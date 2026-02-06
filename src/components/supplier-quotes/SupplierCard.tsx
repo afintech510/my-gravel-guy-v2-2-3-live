@@ -23,7 +23,7 @@ export function SupplierCard({ data, onChange }: SupplierCardProps) {
             value={data.supplier_name}
             onChange={(e) => onChange({ supplier_name: e.target.value })}
             placeholder="Company name"
-            className="bg-muted border-border"
+            className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
           />
         </InputGroup>
         
@@ -34,7 +34,7 @@ export function SupplierCard({ data, onChange }: SupplierCardProps) {
               value={data.supplier_phone}
               onChange={(e) => onChange({ supplier_phone: e.target.value })}
               placeholder="(555) 555-5555"
-              className="pl-10 bg-muted border-border"
+              className="pl-10 bg-muted border-border text-foreground placeholder:text-muted-foreground"
             />
           </div>
         </InputGroup>
@@ -47,7 +47,7 @@ export function SupplierCard({ data, onChange }: SupplierCardProps) {
             value={data.supplier_address}
             onChange={(e) => onChange({ supplier_address: e.target.value })}
             placeholder="Search address..."
-            className="pl-10 bg-muted border-border"
+            className="pl-10 bg-muted border-border text-foreground placeholder:text-muted-foreground"
           />
         </div>
       </InputGroup>
@@ -57,7 +57,7 @@ export function SupplierCard({ data, onChange }: SupplierCardProps) {
           value={data.supplier_notes}
           onChange={(e) => onChange({ supplier_notes: e.target.value })}
           placeholder="Additional notes about this supplier..."
-          className="bg-muted border-border min-h-[80px]"
+          className="bg-muted border-border min-h-[80px] text-foreground placeholder:text-muted-foreground"
         />
       </InputGroup>
     </Card>
