@@ -16,12 +16,12 @@ export function PillSelect({ options, selected, onToggle, variant = 'primary' }:
   const getVariantClasses = (isSelected: boolean) => {
     if (variant === 'success') {
       return isSelected
-        ? 'bg-green-900/40 border-green-600 text-green-200'
-        : 'bg-muted border-border text-muted-foreground hover:border-green-600/50';
+        ? 'bg-green-900/40 border-green-600 text-foreground font-medium'
+        : 'bg-muted border-border text-foreground hover:border-green-600/50';
     }
     return isSelected
       ? 'bg-primary border-primary text-primary-foreground'
-      : 'bg-muted border-border text-muted-foreground hover:border-primary/50';
+      : 'bg-muted border-border text-foreground hover:border-primary/50';
   };
 
   return (
@@ -54,12 +54,12 @@ export function StringPillSelect({ options, selected, onToggle, variant = 'succe
   const getVariantClasses = (isSelected: boolean) => {
     if (variant === 'success') {
       return isSelected
-        ? 'bg-green-900/40 border-green-600 text-green-200'
-        : 'bg-muted border-border text-muted-foreground hover:border-green-600/50';
+        ? 'bg-green-900/40 border-green-600 text-foreground font-medium'
+        : 'bg-muted border-border text-foreground hover:border-green-600/50';
     }
     return isSelected
       ? 'bg-primary border-primary text-primary-foreground'
-      : 'bg-muted border-border text-muted-foreground hover:border-primary/50';
+      : 'bg-muted border-border text-foreground hover:border-primary/50';
   };
 
   return (

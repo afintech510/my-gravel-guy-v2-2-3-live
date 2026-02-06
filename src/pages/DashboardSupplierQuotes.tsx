@@ -1,10 +1,10 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 
 // Cards
-import { SupplierCard } from '@/components/supplier-quotes/SupplierCard';
+import { SupplierCard, SupplierCardRef } from '@/components/supplier-quotes/SupplierCard';
 import { ProjectRequirementsCard } from '@/components/supplier-quotes/ProjectRequirementsCard';
 import { QuoteDetailsCard } from '@/components/supplier-quotes/QuoteDetailsCard';
 import { BillingPaymentCard } from '@/components/supplier-quotes/BillingPaymentCard';
@@ -42,6 +42,7 @@ import {
 export default function DashboardSupplierQuotes() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const supplierCardRef = useRef<SupplierCardRef>(null);
 
   // Form state
   const [formData, setFormData] = useState<SupplierQuoteFormData>(INITIAL_FORM_DATA);
@@ -225,6 +226,8 @@ export default function DashboardSupplierQuotes() {
       }));
       setFlags(INITIAL_FLAGS);
       setEditingQuoteId(null);
+      // Focus supplier name field after reset
+      setTimeout(() => supplierCardRef.current?.focus(), 100);
     };
 
     if (editingQuoteId) {
@@ -234,9 +237,33 @@ export default function DashboardSupplierQuotes() {
     }
   }, [formData, flags, editingQuoteId, createQuoteMutation, updateQuoteMutation]);
 
+  const handleCancelEdit = useCallback(() => {
+    setFormData(INITIAL_FORM_DATA);
+    setFlags(INITIAL_FLAGS);
+    setEditingQuoteId(null);
+    setTimeout(() => supplierCardRef.current?.focus(), 100);
+  }, []);
+
   const handleNewLead = useCallback((lead: LeadInsert) => {
     createLeadMutation.mutate(lead);
   }, [createLeadMutation]);
+
+  // Keyboard shortcut: Ctrl/Cmd + Enter to save
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleSave();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleSave]);
+
+  // Autofocus on initial load
+  useEffect(() => {
+    supplierCardRef.current?.focus();
+  }, []);
 
   const priceSummary = generatePriceSummary(formData, flags);
   const isLoading = createQuoteMutation.isPending || updateQuoteMutation.isPending;
@@ -248,6 +275,7 @@ export default function DashboardSupplierQuotes() {
           {/* Main Form - 8 columns */}
           <div className="lg:col-span-8 space-y-6">
             <SupplierCard 
+              ref={supplierCardRef}
               data={formData} 
               onChange={handleFormChange} 
             />
@@ -274,6 +302,7 @@ export default function DashboardSupplierQuotes() {
             <ActionBar
               onSave={handleSave}
               onSaveAndNew={handleSaveAndNew}
+              onCancelEdit={handleCancelEdit}
               isLoading={isLoading}
               priceSummary={priceSummary}
               formData={formData}
