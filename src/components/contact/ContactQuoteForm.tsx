@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { sendQuoteRequestEmail } from '@/services/quoteEmailService';
+import { createLeadFromForm } from '@/services/supplierQuoteService';
 import { Check } from 'lucide-react';
 
 interface FormData {
@@ -143,6 +144,24 @@ const ContactQuoteForm: React.FC = () => {
         `Timing: ${formData.timing}`,
         formData.notes ? `Notes: ${formData.notes}` : null,
       ].filter(Boolean).join('\n');
+
+      // Create lead in leads table (non-blocking)
+      try {
+        await createLeadFromForm({
+          displayName: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          material: formData.materials.join(', '),
+          requestedQty: parseFloat(formData.quantity) || undefined,
+          requestedUnit: 'tons',
+          jobZip: formData.deliveryZip,
+          timeline: formData.timing,
+          notes: `${formData.projectType}\n${formData.notes || ''}`.trim(),
+        });
+        console.log('Lead created from contact form');
+      } catch (leadErr) {
+        console.warn('Failed to create lead from contact form:', leadErr);
+      }
 
       const result = await sendQuoteRequestEmail({
         name: formData.name,

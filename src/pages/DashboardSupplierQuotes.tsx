@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -32,7 +32,10 @@ import {
   fetchQuotesForLead,
   createLead,
   createSupplierQuote,
+  updateSupplierQuote,
+  getSupplierQuoteById,
   formDataToQuoteInsert,
+  quoteToFormData,
   getQuoteStats
 } from '@/services/supplierQuoteService';
 
@@ -44,6 +47,9 @@ export default function DashboardSupplierQuotes() {
   const [formData, setFormData] = useState<SupplierQuoteFormData>(INITIAL_FORM_DATA);
   const [flags, setFlags] = useState<SupplierQuoteFlags>(INITIAL_FLAGS);
   const [isNewLeadModalOpen, setIsNewLeadModalOpen] = useState(false);
+  
+  // Editing state
+  const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
 
   // Queries
   const { data: leads = [] } = useQuery({
@@ -114,6 +120,25 @@ export default function DashboardSupplierQuotes() {
     },
   });
 
+  const updateQuoteMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: ReturnType<typeof formDataToQuoteInsert> }) => 
+      updateSupplierQuote(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['supplier-quotes'] });
+      queryClient.invalidateQueries({ queryKey: ['supplier-quote-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['quotes-for-lead'] });
+      setEditingQuoteId(null);
+      toast({ title: 'Quote updated', description: 'Supplier quote has been updated successfully.' });
+    },
+    onError: () => {
+      toast({ 
+        title: 'Error', 
+        description: 'Failed to update quote.', 
+        variant: 'destructive' 
+      });
+    },
+  });
+
   // Handlers
   const handleFormChange = useCallback((updates: Partial<SupplierQuoteFormData>) => {
     setFormData(prev => ({ ...prev, ...updates }));
@@ -148,6 +173,7 @@ export default function DashboardSupplierQuotes() {
   const handleSelectLead = useCallback((leadId: string) => {
     const lead = leads.find(l => l.id === leadId);
     if (lead) {
+      setEditingQuoteId(null); // Clear any editing state
       setFormData(prev => ({
         ...prev,
         lead_id: leadId,
@@ -162,30 +188,58 @@ export default function DashboardSupplierQuotes() {
     }
   }, [leads]);
 
+  const handleSelectQuote = useCallback(async (quoteId: string) => {
+    try {
+      const quote = await getSupplierQuoteById(quoteId);
+      if (quote) {
+        const { formData: loadedFormData, flags: loadedFlags } = quoteToFormData(quote);
+        setFormData(loadedFormData);
+        setFlags(loadedFlags);
+        setEditingQuoteId(quoteId);
+        toast({ title: 'Quote loaded', description: 'You can now edit this quote.' });
+      }
+    } catch (err) {
+      console.error('Failed to load quote:', err);
+      toast({ title: 'Error', description: 'Failed to load quote for editing.', variant: 'destructive' });
+    }
+  }, [toast]);
+
   const handleSave = useCallback(() => {
     const quoteData = formDataToQuoteInsert(formData, flags);
-    createQuoteMutation.mutate(quoteData);
-  }, [formData, flags, createQuoteMutation]);
+    
+    if (editingQuoteId) {
+      updateQuoteMutation.mutate({ id: editingQuoteId, data: quoteData });
+    } else {
+      createQuoteMutation.mutate(quoteData);
+    }
+  }, [formData, flags, editingQuoteId, createQuoteMutation, updateQuoteMutation]);
 
   const handleSaveAndNew = useCallback(() => {
     const quoteData = formDataToQuoteInsert(formData, flags);
-    createQuoteMutation.mutate(quoteData, {
-      onSuccess: () => {
-        // Reset form but keep the lead
-        setFormData(prev => ({
-          ...INITIAL_FORM_DATA,
-          lead_id: prev.lead_id,
-        }));
-        setFlags(INITIAL_FLAGS);
-      },
-    });
-  }, [formData, flags, createQuoteMutation]);
+    
+    const onSuccessCallback = () => {
+      // Reset form but keep the lead
+      setFormData(prev => ({
+        ...INITIAL_FORM_DATA,
+        lead_id: prev.lead_id,
+      }));
+      setFlags(INITIAL_FLAGS);
+      setEditingQuoteId(null);
+    };
+
+    if (editingQuoteId) {
+      updateQuoteMutation.mutate({ id: editingQuoteId, data: quoteData }, { onSuccess: onSuccessCallback });
+    } else {
+      createQuoteMutation.mutate(quoteData, { onSuccess: onSuccessCallback });
+    }
+  }, [formData, flags, editingQuoteId, createQuoteMutation, updateQuoteMutation]);
 
   const handleNewLead = useCallback((lead: LeadInsert) => {
     createLeadMutation.mutate(lead);
   }, [createLeadMutation]);
 
   const priceSummary = generatePriceSummary(formData, flags);
+  const isLoading = createQuoteMutation.isPending || updateQuoteMutation.isPending;
 
   return (
     <DashboardLayout title="Supplier Quotes" subtitle="Capture and manage quotes from suppliers">
@@ -220,8 +274,11 @@ export default function DashboardSupplierQuotes() {
             <ActionBar
               onSave={handleSave}
               onSaveAndNew={handleSaveAndNew}
-              isLoading={createQuoteMutation.isPending}
+              isLoading={isLoading}
               priceSummary={priceSummary}
+              formData={formData}
+              flags={flags}
+              isEditing={!!editingQuoteId}
             />
           </div>
           
@@ -242,10 +299,14 @@ export default function DashboardSupplierQuotes() {
               <QuotesForLeadList
                 lead={selectedLead}
                 quotes={quotesForLead}
+                onSelectQuote={handleSelectQuote}
               />
             )}
             
-            <RecentQuotesList quotes={allQuotes} />
+            <RecentQuotesList 
+              quotes={allQuotes} 
+              onSelectQuote={handleSelectQuote}
+            />
           </div>
         </div>
       </div>
@@ -258,4 +319,3 @@ export default function DashboardSupplierQuotes() {
     </DashboardLayout>
   );
 }
-

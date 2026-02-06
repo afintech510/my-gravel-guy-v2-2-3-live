@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { MarketMaterialData, Product } from './types';
 import { getMaterialDisplayName } from '@/services/marketMaterialService';
 import { trackMarketQuoteSubmit } from '@/utils/analytics';
+import { createLeadFromForm } from '@/services/supplierQuoteService';
 
 interface ManagedQuoteModuleProps {
   pageData: MarketMaterialData;
@@ -77,9 +78,25 @@ export default function ManagedQuoteModule({
         !!formState.specReference.trim()
       );
 
-      // TODO: Submit quote to backend/edge function
-      // For now, simulate success
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Create lead in the leads table
+      const displayName = formState.companyName 
+        ? `${formState.companyName} - ${formState.contactName}`
+        : formState.contactName;
+      
+      await createLeadFromForm({
+        displayName,
+        email: formState.email || undefined,
+        phone: formState.phone || undefined,
+        material: materialName,
+        requestedQty: formState.estimatedTons ? parseFloat(formState.estimatedTons) : undefined,
+        requestedUnit: 'tons',
+        jobZip: formState.deliveryZip,
+        notes: [
+          formState.specReference ? `Spec: ${formState.specReference}` : '',
+          formState.projectDescription || '',
+          `Source: Market Page - ${canonicalMarketSlug}/${product.slug}`
+        ].filter(Boolean).join('\n'),
+      });
       
       setIsSubmitted(true);
       toast({
@@ -87,6 +104,7 @@ export default function ManagedQuoteModule({
         description: 'Our team will contact you within 24 hours.',
       });
     } catch (error) {
+      console.error('Quote submission error:', error);
       toast({
         title: 'Error',
         description: 'Failed to submit quote request. Please try again.',
