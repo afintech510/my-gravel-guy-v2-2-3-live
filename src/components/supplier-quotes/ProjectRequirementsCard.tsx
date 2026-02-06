@@ -56,7 +56,7 @@ export function ProjectRequirementsCard({
             value={data.lead_id || ''}
             onValueChange={(value) => onChange({ lead_id: value })}
           >
-            <SelectTrigger className="w-[180px] bg-muted border-border">
+            <SelectTrigger className="w-[180px] bg-muted border-border text-foreground">
               <SelectValue placeholder="Select Lead..." />
             </SelectTrigger>
             <SelectContent>
@@ -99,7 +99,7 @@ export function ProjectRequirementsCard({
             value={data.qty_tons}
             onChange={(e) => onChange({ qty_tons: e.target.value })}
             placeholder="0"
-            className="bg-muted border-border"
+            className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
           />
         </InputGroup>
         
@@ -109,7 +109,7 @@ export function ProjectRequirementsCard({
             value={data.qty_cy}
             onChange={(e) => onChange({ qty_cy: e.target.value })}
             placeholder="0"
-            className="bg-muted border-border"
+            className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
           />
         </InputGroup>
       </div>
@@ -120,7 +120,7 @@ export function ProjectRequirementsCard({
             value={data.spec_requirement}
             onChange={(e) => onChange({ spec_requirement: e.target.value })}
             placeholder="e.g., #57 Stone, 3/4 Clear"
-            className="bg-muted border-border"
+            className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
           />
         </InputGroup>
         
@@ -129,7 +129,7 @@ export function ProjectRequirementsCard({
             value={data.application}
             onChange={(e) => onChange({ application: e.target.value })}
             placeholder="e.g., Driveway, Foundation"
-            className="bg-muted border-border"
+            className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
           />
         </InputGroup>
       </div>
@@ -143,7 +143,7 @@ export function ProjectRequirementsCard({
                 value={data.delivery_address}
                 onChange={(e) => onChange({ delivery_address: e.target.value })}
                 placeholder="Street address"
-                className="pl-10 bg-muted border-border"
+                className="pl-10 bg-muted border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
           </InputGroup>
@@ -153,19 +153,19 @@ export function ProjectRequirementsCard({
               value={data.delivery_city}
               onChange={(e) => onChange({ delivery_city: e.target.value })}
               placeholder="City"
-              className="bg-muted border-border"
+              className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
             />
             <Input
               value={data.delivery_state}
               onChange={(e) => onChange({ delivery_state: e.target.value })}
               placeholder="State"
-              className="bg-muted border-border"
+              className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
             />
             <Input
               value={data.delivery_zip}
               onChange={(e) => onChange({ delivery_zip: e.target.value })}
               placeholder="ZIP"
-              className="bg-muted border-border"
+              className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
             />
           </div>
         </div>
@@ -184,7 +184,7 @@ export function ProjectRequirementsCard({
           value={data.project_notes}
           onChange={(e) => onChange({ project_notes: e.target.value })}
           placeholder="Additional project details..."
-          className="bg-muted border-border min-h-[80px]"
+          className="bg-muted border-border min-h-[80px] text-foreground placeholder:text-muted-foreground"
         />
       </InputGroup>
     </Card>

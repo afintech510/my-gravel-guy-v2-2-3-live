@@ -83,7 +83,7 @@ export function QuoteDetailsCard({
               value={data.material_price}
               onChange={(e) => onChange({ material_price: e.target.value })}
               placeholder="0.00"
-              className="bg-muted border-border"
+              className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
               disabled={flags.is_all_in}
             />
           </InputGroup>
@@ -93,7 +93,7 @@ export function QuoteDetailsCard({
               onValueChange={(value) => onChange({ material_unit: value })}
               disabled={flags.is_all_in}
             >
-              <SelectTrigger className="bg-muted border-border">
+              <SelectTrigger className="bg-muted border-border text-foreground">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -112,7 +112,7 @@ export function QuoteDetailsCard({
               value={data.delivery_rate}
               onChange={(e) => onChange({ delivery_rate: e.target.value })}
               placeholder="0.00"
-              className="bg-muted border-border"
+              className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
               disabled={flags.delivery_included || flags.is_all_in}
             />
           </InputGroup>
@@ -122,7 +122,7 @@ export function QuoteDetailsCard({
               onValueChange={(value) => onChange({ delivery_basis: value })}
               disabled={flags.delivery_included || flags.is_all_in}
             >
-              <SelectTrigger className="bg-muted border-border">
+              <SelectTrigger className="bg-muted border-border text-foreground">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -142,7 +142,7 @@ export function QuoteDetailsCard({
             value={data.all_in_delivered_total}
             onChange={(e) => onChange({ all_in_delivered_total: e.target.value })}
             placeholder="0.00"
-            className="bg-muted border-border"
+            className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
             disabled={!flags.is_all_in}
           />
         </InputGroup>
@@ -154,7 +154,7 @@ export function QuoteDetailsCard({
               value={data.max_qty_per_load}
               onChange={(e) => onChange({ max_qty_per_load: e.target.value })}
               placeholder="0"
-              className="bg-muted border-border"
+              className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
             />
           </InputGroup>
           <InputGroup label="Unit">
@@ -162,7 +162,7 @@ export function QuoteDetailsCard({
               value={data.max_qty_unit}
               onValueChange={(value) => onChange({ max_qty_unit: value })}
             >
-              <SelectTrigger className="bg-muted border-border">
+              <SelectTrigger className="bg-muted border-border text-foreground">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -182,7 +182,7 @@ export function QuoteDetailsCard({
               value={data.lead_time}
               onChange={(e) => onChange({ lead_time: e.target.value })}
               placeholder="e.g., 2-3 days"
-              className="pl-10 bg-muted border-border"
+              className="pl-10 bg-muted border-border text-foreground placeholder:text-muted-foreground"
             />
           </div>
         </InputGroup>
@@ -192,7 +192,7 @@ export function QuoteDetailsCard({
             value={data.lead_time_notes}
             onChange={(e) => onChange({ lead_time_notes: e.target.value })}
             placeholder="Additional timing details..."
-            className="bg-muted border-border"
+            className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
           />
         </InputGroup>
       </div>
@@ -210,7 +210,7 @@ export function QuoteDetailsCard({
           value={data.truck_notes}
           onChange={(e) => onChange({ truck_notes: e.target.value })}
           placeholder="Additional notes about delivery trucks..."
-          className="bg-muted border-border min-h-[60px]"
+          className="bg-muted border-border min-h-[60px] text-foreground placeholder:text-muted-foreground"
         />
       </InputGroup>
     </Card>
