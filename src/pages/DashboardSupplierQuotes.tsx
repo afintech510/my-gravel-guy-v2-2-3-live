@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -242,8 +243,12 @@ export default function DashboardSupplierQuotes() {
   const isLoading = createQuoteMutation.isPending || updateQuoteMutation.isPending;
 
   return (
-    <DashboardLayout title="Supplier Quotes" subtitle="Capture and manage quotes from suppliers">
-      <div className="space-y-6">
+    <>
+      <Helmet>
+        <title>MyGravelGuy | Supplier Quotes</title>
+      </Helmet>
+      <DashboardLayout title="Supplier Quotes" subtitle="Capture and manage quotes from suppliers">
+        <div className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Main Form - 8 columns */}
           <div className="lg:col-span-8 space-y-6">
@@ -311,11 +316,12 @@ export default function DashboardSupplierQuotes() {
         </div>
       </div>
       
-      <NewLeadModal
-        open={isNewLeadModalOpen}
-        onOpenChange={setIsNewLeadModalOpen}
-        onSave={handleNewLead}
-      />
-    </DashboardLayout>
+        <NewLeadModal
+          open={isNewLeadModalOpen}
+          onOpenChange={setIsNewLeadModalOpen}
+          onSave={handleNewLead}
+        />
+      </DashboardLayout>
+    </>
   );
 }
