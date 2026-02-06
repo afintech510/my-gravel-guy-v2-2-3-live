@@ -72,8 +72,8 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
   // User authenticated but not admin - show access denied
   if (!isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6 text-center">
+      <div className="min-h-screen flex items-center justify-center bg-muted">
+        <div className="max-w-md w-full bg-card rounded-lg shadow-md p-6 text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
           <p className="text-gray-600 mb-2">Hello {user.email}</p>
           <p className="text-gray-600 mb-6">You need to be an authorized admin to access this dashboard.</p>
@@ -97,7 +97,7 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 w-full">
+    <div className="min-h-screen bg-muted w-full">
       {/* Mobile overlay */}
       {isMobile && sidebarOpen && (
         <div 
@@ -107,7 +107,7 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
       )}
 
       {/* Fixed Header - positioned below main navigation */}
-      <div className="fixed top-20 left-0 right-0 bg-white shadow-sm border-b z-20 h-16">
+      <div className="fixed top-20 left-0 right-0 bg-card shadow-sm border-b z-20 h-16">
         <div className="px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex justify-between items-center h-full">
             <div className="flex items-center gap-2 sm:gap-4">
@@ -193,7 +193,7 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
             : sidebarOpen 
               ? 'ml-64' 
               : 'ml-16'
-        } transition-all duration-300 ease-in-out pt-36 min-h-screen overflow-auto bg-gray-50`}
+        } transition-all duration-300 ease-in-out pt-36 min-h-screen overflow-auto bg-muted`}
       >
         <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           {children}

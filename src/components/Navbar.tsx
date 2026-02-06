@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { useIsMobile } from '../hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import ThemeToggle from './ThemeToggle';
 
 const Navbar = () => {
   const { items } = useCart();
@@ -103,6 +104,7 @@ const Navbar = () => {
                   </Link>
                 )
               ))}
+              <ThemeToggle />
               <Link to="/cart" className="relative">
                 <Button variant="ghost" size="icon">
                   <ShoppingCart className="h-6 w-6" />
@@ -140,6 +142,7 @@ const Navbar = () => {
                   )}
                 </Button>
               </Link>
+              <ThemeToggle />
               <Sheet open={isOpen} onOpenChange={setIsOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon">

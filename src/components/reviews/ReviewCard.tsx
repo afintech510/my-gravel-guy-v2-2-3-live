@@ -72,7 +72,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, className }) => {
         
         {review.admin_response && (
           <div className="mt-4 pl-4 border-l-2 border-primary/20 py-2">
-            <div className="text-sm font-medium text-primary mb-1">
+            <div className="text-sm font-medium text-foreground mb-1">
               Response from Gravel Guy:
             </div>
             <p className="text-sm text-gray-700">

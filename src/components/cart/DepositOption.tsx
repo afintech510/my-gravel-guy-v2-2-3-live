@@ -29,11 +29,11 @@ const DepositOption = ({
         <Checkbox id="deposit-option" checked={isSelected} onCheckedChange={onToggle} className="mt-1" />
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <label htmlFor="deposit-option" className="text-lg font-semibold text-primary cursor-pointer">
+            <label htmlFor="deposit-option" className="text-lg font-semibold text-foreground cursor-pointer">
               $199 Down Payment
             </label>
-            <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/30">
-              <TrendingDown className="w-3 h-3 mr-1" />
+            <Badge variant="secondary" className="bg-primary/10 text-foreground border-primary/30">
+              <TrendingDown className="w-3 h-3 mr-1 text-primary" />
               Best Value
             </Badge>
           </div>
@@ -53,10 +53,10 @@ const DepositOption = ({
             </Badge>
           </div>
           
-          {isSelected && <div className="bg-white/80 border border-primary/20 rounded-lg p-4 space-y-3">
+          {isSelected && <div className="bg-card/80 border border-primary/20 rounded-lg p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <span className="font-medium">Down Payment (Today):</span>
-                <span className="font-bold text-primary text-lg">${depositAmount}</span>
+                <span className="font-bold text-foreground text-lg">${depositAmount}</span>
               </div>
               
               <div className="border-t pt-3">
