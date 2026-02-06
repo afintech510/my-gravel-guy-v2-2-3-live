@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import type { CartItem } from '@/contexts/CartContext';
+import { createLeadFromForm } from './supplierQuoteService';
 
 export interface CartInsertData {
   items: CartItem[];
@@ -88,6 +89,33 @@ export const insertCartToDatabase = async (cartData: CartInsertData) => {
       insertedCount: data?.length || 0,
       cartId: cartId
     });
+
+    // Create lead from cart data (for supplier quotes system)
+    const firstItem = cartData.items[0];
+    if (firstItem?.contactInfo?.name) {
+      try {
+        const productNames = cartData.items.map(item => item.name).join(', ');
+        const totalTons = cartData.items.reduce((sum, item) => sum + (item.tons || 0), 0);
+        const firstAddress = cartData.items.find(item => item.deliveryAddress);
+        
+        await createLeadFromForm({
+          displayName: firstItem.contactInfo.name,
+          email: firstItem.contactInfo.email,
+          phone: firstItem.contactInfo.phone,
+          material: productNames,
+          requestedQty: totalTons,
+          requestedUnit: 'tons',
+          jobAddress: firstAddress?.deliveryAddress?.street,
+          jobCity: firstAddress?.deliveryAddress?.city,
+          jobState: firstAddress?.deliveryAddress?.state,
+          jobZip: firstAddress?.deliveryAddress?.zip,
+          notes: `Cart saved: ${cartId}`,
+        });
+        console.log('Lead created from cart save');
+      } catch (leadErr) {
+        console.warn('Failed to create lead from cart (non-blocking):', leadErr);
+      }
+    }
     
     return { data, cartId };
 

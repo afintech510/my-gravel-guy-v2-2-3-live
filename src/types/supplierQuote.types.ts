@@ -239,3 +239,73 @@ export function generatePriceSummary(
   if (parts.length === 0) return "Draft Quote";
   return parts.join(" • ");
 }
+
+// Quote totals calculator
+export interface QuoteTotals {
+  totalCost: number;
+  pricePerTon: number;
+  totalTons: number;
+}
+
+export function calculateQuoteTotals(
+  data: SupplierQuoteFormData | SupplierQuote,
+  flags?: SupplierQuoteFlags
+): QuoteTotals {
+  // Handle both form data (strings) and quote data (numbers)
+  const isFormData = typeof (data as SupplierQuoteFormData).qty_tons === 'string';
+  
+  const tons = isFormData 
+    ? parseFloat((data as SupplierQuoteFormData).qty_tons) || 0
+    : (data as SupplierQuote).qty_tons || 0;
+  
+  const materialPrice = isFormData
+    ? parseFloat((data as SupplierQuoteFormData).material_price) || 0
+    : (data as SupplierQuote).material_price || 0;
+  
+  const deliveryRate = isFormData
+    ? parseFloat((data as SupplierQuoteFormData).delivery_rate) || 0
+    : (data as SupplierQuote).delivery_rate || 0;
+  
+  const allInTotal = isFormData
+    ? parseFloat((data as SupplierQuoteFormData).all_in_delivered_total) || 0
+    : (data as SupplierQuote).all_in_delivered_total || 0;
+  
+  const ccFeePercent = isFormData
+    ? parseFloat((data as SupplierQuoteFormData).cc_fee_percent) || 0
+    : (data as SupplierQuote).cc_fee_percent || 0;
+
+  // Get flags - either from param or from quote data
+  const effectiveFlags = flags || {
+    is_all_in: (data as SupplierQuote).is_all_in || false,
+    material_is_unit: (data as SupplierQuote).material_is_unit ?? true,
+    material_is_total: (data as SupplierQuote).material_is_total || false,
+    delivery_included: (data as SupplierQuote).delivery_included || false,
+    delivery_flat: (data as SupplierQuote).delivery_flat ?? true,
+    delivery_hourly: (data as SupplierQuote).delivery_hourly || false,
+  };
+
+  let totalCost = 0;
+  
+  if (effectiveFlags.is_all_in) {
+    totalCost = allInTotal;
+  } else {
+    // Calculate material cost
+    const materialCost = effectiveFlags.material_is_total 
+      ? materialPrice 
+      : materialPrice * tons;
+    
+    // Calculate delivery cost (only if not included)
+    const deliveryCost = effectiveFlags.delivery_included ? 0 : deliveryRate;
+    
+    // Subtotal
+    const subtotal = materialCost + deliveryCost;
+    
+    // Add CC fee if applicable
+    const ccFee = (ccFeePercent / 100) * subtotal;
+    totalCost = subtotal + ccFee;
+  }
+  
+  const pricePerTon = tons > 0 ? totalCost / tons : 0;
+  
+  return { totalCost, pricePerTon, totalTons: tons };
+}

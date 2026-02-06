@@ -72,6 +72,44 @@ export async function getLeadById(id: string): Promise<Lead | null> {
   }
 }
 
+// ============ LEAD FROM FORM HELPER ============
+
+export interface LeadFromFormData {
+  displayName: string;
+  email?: string;
+  phone?: string;
+  material?: string;
+  requestedQty?: number;
+  requestedUnit?: string;
+  jobAddress?: string;
+  jobCity?: string;
+  jobState?: string;
+  jobZip?: string;
+  timeline?: string;
+  notes?: string;
+  siteAccess?: string[];
+}
+
+export async function createLeadFromForm(data: LeadFromFormData): Promise<Lead | null> {
+  const lead: LeadInsert = {
+    display_name: data.displayName,
+    email: data.email,
+    phone: data.phone,
+    material: data.material,
+    requested_qty: data.requestedQty,
+    requested_unit: data.requestedUnit || 'tons',
+    job_address: data.jobAddress,
+    job_city: data.jobCity,
+    job_state: data.jobState,
+    job_zip: data.jobZip,
+    timeline: data.timeline,
+    notes: data.notes,
+    site_access: data.siteAccess,
+  };
+  console.log('Creating lead from form:', lead);
+  return createLead(lead);
+}
+
 // ============ SUPPLIER QUOTES ============
 
 export async function fetchSupplierQuotes(limit = 20): Promise<SupplierQuote[]> {
@@ -112,6 +150,25 @@ export async function fetchQuotesForLead(leadId: string): Promise<SupplierQuote[
   }
 }
 
+export async function getSupplierQuoteById(id: string): Promise<SupplierQuote | null> {
+  try {
+    const { data, error } = await (supabase as any)
+      .from('supplier_quotes')
+      .select('*')
+      .eq('id', id)
+      .single();
+      
+    if (error) {
+      console.warn('Error fetching supplier quote:', error.message);
+      return null;
+    }
+    return data as SupplierQuote;
+  } catch (err) {
+    console.warn('Error fetching supplier quote:', err);
+    return null;
+  }
+}
+
 export async function createSupplierQuote(quote: SupplierQuoteInsert): Promise<SupplierQuote | null> {
   try {
     const { data, error } = await (supabase as any)
@@ -131,6 +188,26 @@ export async function createSupplierQuote(quote: SupplierQuoteInsert): Promise<S
     return data as SupplierQuote;
   } catch (err) {
     console.error('Error creating supplier quote:', err);
+    return null;
+  }
+}
+
+export async function updateSupplierQuote(id: string, quote: Partial<SupplierQuoteInsert>): Promise<SupplierQuote | null> {
+  try {
+    const { data, error } = await (supabase as any)
+      .from('supplier_quotes')
+      .update(quote)
+      .eq('id', id)
+      .select()
+      .single();
+      
+    if (error) {
+      console.error('Error updating supplier quote:', error);
+      return null;
+    }
+    return data as SupplierQuote;
+  } catch (err) {
+    console.error('Error updating supplier quote:', err);
     return null;
   }
 }
@@ -180,6 +257,54 @@ export function formDataToQuoteInsert(
     bill_by_load_tickets: data.bill_by_load_tickets,
     payment_notes: data.payment_notes || undefined,
     price_summary: generatePriceSummary(data, flags),
+  };
+}
+
+// Convert quote data to form data for editing
+export function quoteToFormData(quote: SupplierQuote): { formData: SupplierQuoteFormData; flags: SupplierQuoteFlags } {
+  return {
+    formData: {
+      lead_id: quote.lead_id || '',
+      supplier_name: quote.supplier_name || '',
+      supplier_phone: quote.supplier_phone || '',
+      supplier_address: quote.supplier_address || '',
+      supplier_notes: quote.supplier_notes || '',
+      product_id: quote.product_id || null,
+      material: quote.material || '',
+      spec_requirement: quote.spec_requirement || '',
+      application: quote.application || '',
+      qty_tons: quote.qty_tons?.toString() || '',
+      qty_cy: quote.qty_cy?.toString() || '',
+      delivery_address: quote.delivery_address || '',
+      delivery_city: quote.delivery_city || '',
+      delivery_state: quote.delivery_state || '',
+      delivery_zip: quote.delivery_zip || '',
+      site_access: quote.site_access || [],
+      project_notes: quote.project_notes || '',
+      material_price: quote.material_price?.toString() || '',
+      material_unit: quote.material_unit || 'ton',
+      delivery_rate: quote.delivery_rate?.toString() || '',
+      delivery_basis: quote.delivery_basis || 'total',
+      all_in_delivered_total: quote.all_in_delivered_total?.toString() || '',
+      max_qty_per_load: quote.max_qty_per_load?.toString() || '',
+      max_qty_unit: quote.max_qty_unit || 'ton',
+      lead_time: quote.lead_time || '',
+      lead_time_notes: quote.lead_time_notes || '',
+      available_trucks: quote.available_trucks || [],
+      truck_notes: quote.truck_notes || '',
+      payment_methods: quote.payment_methods || [],
+      cc_fee_percent: quote.cc_fee_percent?.toString() || '0',
+      bill_by_load_tickets: quote.bill_by_load_tickets || false,
+      payment_notes: quote.payment_notes || '',
+    },
+    flags: {
+      is_all_in: quote.is_all_in || false,
+      material_is_unit: quote.material_is_unit ?? true,
+      material_is_total: quote.material_is_total || false,
+      delivery_included: quote.delivery_included || false,
+      delivery_flat: quote.delivery_flat ?? true,
+      delivery_hourly: quote.delivery_hourly || false,
+    },
   };
 }
 
