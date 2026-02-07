@@ -452,23 +452,23 @@ const Checkout = () => {
                     </div>
                     
                     {(item.deliveryAddress || item.contactInfo || item.deliveryDate) && (
-                      <div className="bg-gray-50 rounded-lg p-4 space-y-4">
-                        <h4 className="font-medium text-gray-900 mb-3">Delivery Details</h4>
+                      <div className="bg-muted rounded-lg p-4 space-y-4">
+                        <h4 className="font-medium text-foreground mb-3">Delivery Details</h4>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {item.contactInfo && (
                             <div className="space-y-2">
-                              <h5 className="font-medium text-gray-700 text-sm">Contact Information</h5>
+                              <h5 className="font-medium text-foreground text-sm">Contact Information</h5>
                               <div className="space-y-1">
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                   <UserIcon className="h-3 w-3" />
                                   <span>{item.contactInfo.name}</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                   <PhoneIcon className="h-3 w-3" />
                                   <span>{item.contactInfo.phone}</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                   <MailIcon className="h-3 w-3" />
                                   <span>{item.contactInfo.email}</span>
                                 </div>
@@ -478,8 +478,8 @@ const Checkout = () => {
 
                           {item.deliveryAddress && (
                             <div className="space-y-2">
-                              <h5 className="font-medium text-gray-700 text-sm">Delivery Address</h5>
-                              <div className="flex items-start gap-2 text-sm text-gray-600">
+                              <h5 className="font-medium text-foreground text-sm">Delivery Address</h5>
+                              <div className="flex items-start gap-2 text-sm text-muted-foreground">
                                 <MapPinIcon className="h-3 w-3 mt-0.5 flex-shrink-0" />
                                 <div>
                                   <div>{item.deliveryAddress.street}</div>
@@ -490,12 +490,12 @@ const Checkout = () => {
                           )}
                         </div>
 
-                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-200">
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-border">
                            {item.deliveryDate && (
                              <div className="space-y-2">
-                               <h5 className="font-medium text-gray-700 text-sm">Delivery Schedule</h5>
-                               <div className="text-sm text-gray-600">
-                                 <div className="font-medium">
+                               <h5 className="font-medium text-foreground text-sm">Delivery Schedule</h5>
+                               <div className="text-sm text-muted-foreground">
+                                 <div className="font-medium text-foreground">
                                    {(() => {
                                      const date = item.deliveryDate instanceof Date ? item.deliveryDate : new Date(item.deliveryDate);
                                      return date.toLocaleDateString('en-US', {
@@ -518,8 +518,8 @@ const Checkout = () => {
 
                           {item.deliveryInstructions && (
                             <div className="space-y-2">
-                              <h5 className="font-medium text-gray-700 text-sm">Special Instructions</h5>
-                              <div className="flex items-start gap-2 text-sm text-gray-600">
+                              <h5 className="font-medium text-foreground text-sm">Special Instructions</h5>
+                              <div className="flex items-start gap-2 text-sm text-muted-foreground">
                                 <FileTextIcon className="h-3 w-3 mt-0.5 flex-shrink-0" />
                                 <span>{item.deliveryInstructions}</span>
                               </div>
@@ -580,17 +580,17 @@ const Checkout = () => {
         </div>
         
         <div className="lg:col-span-1">
-          <div className="bg-gray-50 rounded-lg p-6 sticky top-24">
+          <div className="bg-muted rounded-lg p-6 sticky top-24">
             <h2 className="text-xl font-semibold mb-4">Payment Summary</h2>
             
-            <div className="space-y-2 mb-4 pb-4 border-b">
+            <div className="space-y-2 mb-4 pb-4 border-b border-border">
               <div className="flex justify-between text-sm">
                 <span>Subtotal</span>
                 <span>${total.toFixed(2)}</span>
               </div>
               
               {hasDiscounts && (
-                <div className="flex justify-between text-sm text-green-600">
+                <div className="flex justify-between text-sm text-primary">
                   <span>Discount</span>
                   <span>-${totalDiscount.toFixed(2)}</span>
                 </div>
@@ -598,12 +598,12 @@ const Checkout = () => {
               
               <div className="flex justify-between text-sm">
                 <span>Delivery</span>
-                <span className="text-green-600 font-medium">FREE</span>
+                <span className="text-primary font-medium">FREE</span>
               </div>
               
               <div className="flex justify-between text-sm">
                 <span>Tax</span>
-                <span className="text-green-600 font-medium">Included</span>
+                <span className="text-primary font-medium">Included</span>
               </div>
             </div>
             
@@ -614,7 +614,7 @@ const Checkout = () => {
             
             {/* Balance Due Display for Deposit Option */}
             {depositOption && (
-              <div className="mb-4 p-3 bg-white rounded-lg border border-primary/20">
+              <div className="mb-4 p-3 bg-card rounded-lg border border-primary/20">
                 <div className="text-sm text-muted-foreground mb-1">Balance Due:</div>
                 <div className="text-xs space-y-1">
                   <div className="flex justify-between">
@@ -634,12 +634,12 @@ const Checkout = () => {
             </div>
             
             {/* Authorization Hold Disclaimer */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-4">
               <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <div className="text-sm text-blue-800">
+                <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-foreground">
                   <p className="font-medium mb-1">Authorization Notice</p>
-                  <p>We will place an authorization hold on your card for the order amount. You will NOT be charged until we confirm your materials and delivery details. The final charge will only occur after your approval.</p>
+                  <p className="text-muted-foreground">We will place an authorization hold on your card for the order amount. You will NOT be charged until we confirm your materials and delivery details. The final charge will only occur after your approval.</p>
                 </div>
               </div>
             </div>
@@ -685,7 +685,7 @@ const Checkout = () => {
               )}
             </Button>
             
-            <p className="text-xs text-gray-500 mt-3 text-center">
+            <p className="text-xs text-muted-foreground mt-3 text-center">
               Secure checkout powered by Stripe • No account required
             </p>
           </div>
