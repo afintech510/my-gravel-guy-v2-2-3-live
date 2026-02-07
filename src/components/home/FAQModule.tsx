@@ -93,13 +93,13 @@ const FAQModule = () => {
   ];
 
   return (
-    <section className="py-16 px-4 bg-gray-50">
+    <section className="py-16 px-4 bg-muted">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
             Frequently Asked Questions
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Get answers to common questions about our delivery services, products, and ordering process.
           </p>
         </div>
@@ -108,11 +108,11 @@ const FAQModule = () => {
           <div className="space-y-4">
             <Accordion type="single" collapsible className="space-y-2">
               {homepageFAQs.slice(0, 4).map((faq, index) => (
-                <AccordionItem key={index} value={`faq-left-${index}`} className="bg-white rounded-lg border shadow-sm">
+                <AccordionItem key={index} value={`faq-left-${index}`} className="bg-card rounded-lg border border-border shadow-sm">
                   <AccordionTrigger className="text-left px-6 py-4 hover:no-underline">
-                    <span className="font-medium text-gray-900">{faq.question}</span>
+                    <span className="font-medium text-foreground">{faq.question}</span>
                   </AccordionTrigger>
-                  <AccordionContent className="px-6 pb-4 text-gray-600">
+                  <AccordionContent className="px-6 pb-4 text-muted-foreground">
                     {faq.answer}
                   </AccordionContent>
                 </AccordionItem>
@@ -123,11 +123,11 @@ const FAQModule = () => {
           <div className="space-y-4">
             <Accordion type="single" collapsible className="space-y-2">
               {homepageFAQs.slice(4, 8).map((faq, index) => (
-                <AccordionItem key={index} value={`faq-right-${index}`} className="bg-white rounded-lg border shadow-sm">
+                <AccordionItem key={index} value={`faq-right-${index}`} className="bg-card rounded-lg border border-border shadow-sm">
                   <AccordionTrigger className="text-left px-6 py-4 hover:no-underline">
-                    <span className="font-medium text-gray-900">{faq.question}</span>
+                    <span className="font-medium text-foreground">{faq.question}</span>
                   </AccordionTrigger>
-                  <AccordionContent className="px-6 pb-4 text-gray-600">
+                  <AccordionContent className="px-6 pb-4 text-muted-foreground">
                     {faq.answer}
                   </AccordionContent>
                 </AccordionItem>
@@ -137,7 +137,7 @@ const FAQModule = () => {
         </div>
         
         <div className="text-center">
-          <p className="text-gray-600 mb-6">
+          <p className="text-muted-foreground mb-6">
             Still have questions? View our complete FAQ section or contact our support team.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
