@@ -209,7 +209,6 @@ export default function DashboardSupplierQuotes() {
           // Delivery Scheduling
           delivery_date: lead.delivery_date || prev.delivery_date,
           delivery_time: lead.delivery_time_preference || prev.delivery_time,
-          delivery_instructions: lead.delivery_instructions || prev.delivery_instructions,
           // Notes
           project_notes: lead.notes || prev.project_notes,
         }));
@@ -300,7 +299,6 @@ export default function DashboardSupplierQuotes() {
         site_access: formData.site_access.length > 0 ? formData.site_access : undefined,
         delivery_date: formData.delivery_date || undefined,
         delivery_time_preference: formData.delivery_time || undefined,
-        delivery_instructions: formData.delivery_instructions || undefined,
         notes: formData.project_notes || undefined,
       },
     });
