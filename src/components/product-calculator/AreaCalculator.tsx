@@ -56,7 +56,7 @@ export default function AreaCalculator({
       {/* Area inputs */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-gray-700">Project Areas</h3>
+          <h3 className="text-sm font-medium text-foreground">Project Areas</h3>
           <Button 
             variant="outline" 
             size="sm" 
@@ -79,7 +79,7 @@ export default function AreaCalculator({
                 placeholder="Length (ft)"
               />
             </div>
-            <span className="text-gray-500">×</span>
+            <span className="text-muted-foreground">×</span>
             <div className="flex-1">
               <Input
                 type="number"
@@ -106,7 +106,7 @@ export default function AreaCalculator({
       {/* Depth slider */}
       <div className="space-y-2">
         <div className="flex justify-between">
-          <h3 className="text-sm font-medium text-gray-700">Material Depth</h3>
+          <h3 className="text-sm font-medium text-foreground">Material Depth</h3>
           <span className="text-sm font-bold">{depth} inches</span>
         </div>
         <Slider
@@ -117,7 +117,7 @@ export default function AreaCalculator({
           step={1}
           className="[&>.relative>.absolute]:bg-primary"
         />
-        <div className="flex justify-between text-xs text-gray-500 mt-1">
+        <div className="flex justify-between text-xs text-muted-foreground mt-1">
           <span>1"</span>
           <span>24"</span>
         </div>
@@ -126,7 +126,7 @@ export default function AreaCalculator({
       {/* Extra percentage slider */}
       <div className="space-y-2">
         <div className="flex justify-between">
-          <h3 className="text-sm font-medium text-gray-700">Order Extra for Compaction</h3>
+          <h3 className="text-sm font-medium text-foreground">Order Extra for Compaction</h3>
           <span className="text-sm font-bold">{extraPercentage}%</span>
         </div>
         <Slider
@@ -137,26 +137,26 @@ export default function AreaCalculator({
           step={1}
           className="[&>.relative>.absolute]:bg-primary"
         />
-        <div className="flex justify-between text-xs text-gray-500 mt-1">
+        <div className="flex justify-between text-xs text-muted-foreground mt-1">
           <span>0%</span>
           <span>30%</span>
         </div>
       </div>
 
       {/* Results display - Updated est. Tons value to be more prominent */}
-      <Card className="p-4 bg-gray-50 mt-6">
-        <h3 className="text-sm font-medium text-gray-700 mb-3">Calculation Results</h3>
+      <Card className="p-4 bg-muted mt-6">
+        <h3 className="text-sm font-medium text-foreground mb-3">Calculation Results</h3>
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <p className="text-xs text-gray-500">Total Area</p>
+            <p className="text-xs text-muted-foreground">Total Area</p>
             <p className="text-lg font-medium">{calculationResult.totalSquareFeet} ft²</p>
           </div>
           <div>
-            <p className="text-xs text-gray-500">Cubic Yards</p>
+            <p className="text-xs text-muted-foreground">Cubic Yards</p>
             <p className="text-lg font-medium">{calculationResult.totalCubicYards.toFixed(2)} yd³</p>
           </div>
           <div>
-            <p className="text-xs text-gray-500">est. Tons</p>
+            <p className="text-xs text-muted-foreground">est. Tons</p>
             <p className="text-2xl font-bold text-primary">{calculationResult.totalTons.toFixed(2)}</p>
           </div>
         </div>

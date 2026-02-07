@@ -47,7 +47,7 @@ export default function ZipCodeChecker() {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-base font-semibold text-gray-800">Delivery Availability</h3>
+      <h3 className="text-base font-semibold text-foreground">Delivery Availability</h3>
       
       {isDeliveryAvailable && !isEditing ? (
         <div className="border rounded-lg p-4">
@@ -60,7 +60,7 @@ export default function ZipCodeChecker() {
                 <p className="text-green-700 font-medium">
                   FREE Delivery Available
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   to {zipCodeData.city}, {zipCodeData.state_id} ({zipCode})
                 </p>
               </div>
@@ -69,7 +69,7 @@ export default function ZipCodeChecker() {
               onClick={handleChangeClick} 
               variant="ghost" 
               size="sm" 
-              className="h-8 text-gray-500 hover:text-gray-700"
+              className="h-8 text-muted-foreground hover:text-foreground"
             >
               <Edit className="h-4 w-4 mr-1" />
               Change
@@ -78,20 +78,20 @@ export default function ZipCodeChecker() {
         </div>
       ) : (
         <div className="border rounded-lg p-4">
-          <p className="text-sm text-gray-600 mb-3">
+          <p className="text-sm text-muted-foreground mb-3">
             Enter your ZIP code to check delivery availability in your area.
           </p>
           
           <form onSubmit={handleSearch} className="flex gap-2">
             <div className="relative flex-grow">
-              <MapPin className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <MapPin className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Enter ZIP code"
                 value={inputValue}
                 onChange={handleInputChange}
                 className={cn(
                   "pl-9",
-                  isSearchLocked ? "bg-gray-50" : "",
+                  isSearchLocked ? "bg-muted" : "",
                   error ? "border-red-300" : ""
                 )}
                 disabled={isSearchLocked || loading}
