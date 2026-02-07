@@ -145,10 +145,10 @@ const HomeCalculator = () => {
   };
 
   return (
-    <section className="py-16 px-4 bg-gray-50">
+    <section className="py-16 px-4 bg-muted">
       <div className="max-w-4xl mx-auto">
        
-        <Card className="bg-white shadow-sm border">
+        <Card className="bg-card shadow-sm border border-border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calculator className="h-5 w-5 text-primary" />
@@ -160,10 +160,10 @@ const HomeCalculator = () => {
             <div className="space-y-4">
               <Label className="text-base font-semibold">Project Areas</Label>
               {areas.map((area, index) => (
-                <div key={area.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                <div key={area.id} className="flex items-center gap-4 p-4 bg-muted rounded-lg">
                   <div className="flex-1 grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-sm text-gray-600">Length (ft)</Label>
+                      <Label className="text-sm text-muted-foreground">Length (ft)</Label>
                       <Input
                         type="number"
                         value={area.length || ''}
@@ -173,7 +173,7 @@ const HomeCalculator = () => {
                       />
                     </div>
                     <div>
-                      <Label className="text-sm text-gray-600">Width (ft)</Label>
+                      <Label className="text-sm text-muted-foreground">Width (ft)</Label>
                       <Input
                         type="number"
                         value={area.width || ''}
@@ -211,7 +211,7 @@ const HomeCalculator = () => {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <Label className="text-base font-semibold">Depth (inches)</Label>
-                <span className="text-sm text-gray-600">{depth}"</span>
+                <span className="text-sm text-muted-foreground">{depth}"</span>
               </div>
               <Slider
                 value={[depth]}
@@ -221,7 +221,7 @@ const HomeCalculator = () => {
                 step={1}
                 className="w-full"
               />
-              <div className="flex justify-between text-xs text-gray-500">
+              <div className="flex justify-between text-xs text-muted-foreground">
                 <span>1"</span>
                 <span>24"</span>
               </div>
@@ -236,7 +236,7 @@ const HomeCalculator = () => {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="cursor-help">
-                          <Info className="h-4 w-4 text-gray-500" />
+                          <Info className="h-4 w-4 text-muted-foreground" />
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -247,7 +247,7 @@ const HomeCalculator = () => {
                     </Tooltip>
                   </TooltipProvider>
                 </div>
-                <span className="text-sm text-gray-600">{orderExtra[0]}%</span>
+                <span className="text-sm text-muted-foreground">{orderExtra[0]}%</span>
               </div>
               <Slider
                 value={orderExtra}
@@ -257,7 +257,7 @@ const HomeCalculator = () => {
                 step={1}
                 className="w-full"
               />
-              <div className="flex justify-between text-xs text-gray-500">
+              <div className="flex justify-between text-xs text-muted-foreground">
                 <span>0%</span>
                 <span>30%</span>
               </div>

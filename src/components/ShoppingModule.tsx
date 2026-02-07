@@ -314,12 +314,12 @@ const ShoppingModule = () => {
         <div className="max-w-6xl mx-auto">
           <div className="text-center">
             <h2 className="text-3xl font-bold mb-8">Shop Materials</h2>
-            <p className="text-gray-600">Loading products...</p>
+            <p className="text-muted-foreground">Loading products...</p>
           </div>
         </div>
       </div>;
   }
-  return <div className="py-8 md:py-16 px-4 bg-white">
+  return <div className="py-8 md:py-16 px-4 bg-card">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-6 md:mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
@@ -333,7 +333,7 @@ const ShoppingModule = () => {
           <CardContent className="p-4 md:p-6">
             <h3 className="text-base md:text-lg font-semibold mb-4">FREE SHIPPING NATIONWIDE</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 md:gap-3">
-              {categories.map(category => <button key={category.id} onClick={() => setSelectedCategory(category.id)} className={cn("flex items-center justify-center p-3 border rounded-md transition-colors", selectedCategory === category.id ? "bg-primary text-primary-foreground border-primary" : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200")}>
+              {categories.map(category => <button key={category.id} onClick={() => setSelectedCategory(category.id)} className={cn("flex items-center justify-center p-3 border rounded-md transition-colors", selectedCategory === category.id ? "bg-primary text-primary-foreground border-primary" : "bg-card hover:bg-muted text-foreground border-border")}>
                   {category.icon}
                   <span className={cn("ml-2", isMobile ? "text-xs" : "text-sm")}>
                     {category.label}
@@ -356,7 +356,7 @@ const ShoppingModule = () => {
               </div>
             </div>
             
-            {filteredProducts.length === 0 ? <p className="text-gray-500 text-center py-8">No products found for this category</p> : <div className="grid grid-cols-1 gap-4 md:gap-6">
+            {filteredProducts.length === 0 ? <p className="text-muted-foreground text-center py-8">No products found for this category</p> : <div className="grid grid-cols-1 gap-4 md:gap-6">
                 {filteredProducts.map(product => {
               const quantity = quantities[product.id.toString()] || 5;
               const totalPrice = calculateFinalPrice(product, quantity);
@@ -369,12 +369,12 @@ const ShoppingModule = () => {
                           <img src={getProductImage(product)} alt={product.name} className="w-16 h-16 object-cover rounded-md flex-shrink-0" />
                           <div className="flex-1 min-w-0">
                             <h4 className="font-semibold text-sm leading-tight">{product.name}</h4>
-                            {product.size && <p className="text-xs text-gray-500 mt-1">{product.size}</p>}
+                            {product.size && <p className="text-xs text-muted-foreground mt-1">{product.size}</p>}
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => navigate(`/products/${product.slug}`)}
-                              className="mt-2 h-6 text-xs border-green-500 bg-gray-50 hover:bg-gray-100 text-green-700"
+                              className="mt-2 h-6 text-xs border-primary bg-muted hover:bg-muted/80 text-primary"
                             >
                               <ExternalLink className="mr-1 h-3 w-3" />
                               Explore
@@ -386,19 +386,19 @@ const ShoppingModule = () => {
                           <div className="flex items-center border rounded-md">
                             <button 
                               onClick={() => updateQuantity(product.id.toString(), -1)} 
-                              className="p-3 hover:bg-gray-100 min-h-[48px] min-w-[48px] flex items-center justify-center" 
+                              className="p-3 hover:bg-muted min-h-[48px] min-w-[48px] flex items-center justify-center" 
                               disabled={quantity <= 3}
                             >
                               <Minus className="h-4 w-4" />
                             </button>
                             <div className="px-3 py-2 text-center">
                               <div className="text-sm font-medium">{quantity} tons</div>
-                              <div className="text-xs text-gray-500">≡ {cubicYards} yd³</div>
-                              <div className="text-xs text-green-600 font-medium">${pricePerTon.toFixed(2)}/ton</div>
+                              <div className="text-xs text-muted-foreground">≡ {cubicYards} yd³</div>
+                              <div className="text-xs text-primary font-medium">${pricePerTon.toFixed(2)}/ton</div>
                             </div>
                             <button 
                               onClick={() => updateQuantity(product.id.toString(), 1)} 
-                              className="p-3 hover:bg-gray-100 min-h-[48px] min-w-[48px] flex items-center justify-center"
+                              className="p-3 hover:bg-muted min-h-[48px] min-w-[48px] flex items-center justify-center"
                             >
                               <Plus className="h-4 w-4" />
                             </button>
@@ -406,7 +406,7 @@ const ShoppingModule = () => {
 
                           <div className="text-right">
                             <div className="text-lg font-bold">${totalPrice.toFixed(2)}</div>
-                            <Button onClick={() => handleAddToCart(product)} className="bg-green-500 hover:bg-green-600 text-white mt-1" size="sm">
+                            <Button onClick={() => handleAddToCart(product)} className="bg-primary hover:bg-primary/90 text-primary-foreground mt-1" size="sm">
                               Add to Cart
                             </Button>
                           </div>
@@ -419,13 +419,13 @@ const ShoppingModule = () => {
                         
                         <div className="flex-1">
                           <h4 className="font-semibold">{product.name}</h4>
-                          {product.size && <p className="text-sm text-gray-500">{product.size}</p>}
-                           {product.short_description && <p className="text-sm text-gray-600 mt-1 line-clamp-2">{product.short_description}</p>}
+                          {product.size && <p className="text-sm text-muted-foreground">{product.size}</p>}
+                           {product.short_description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{product.short_description}</p>}
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => navigate(`/products/${product.slug}`)}
-                            className="mt-2 h-7 text-sm border-green-500 bg-gray-50 hover:bg-gray-100 text-green-700"
+                            className="mt-2 h-7 text-sm border-primary bg-muted hover:bg-muted/80 text-primary"
                           >
                             <ExternalLink className="mr-2 h-3 w-3" />
                             Explore
@@ -436,19 +436,19 @@ const ShoppingModule = () => {
                           <div className="flex items-center border rounded-md">
                             <button 
                               onClick={() => updateQuantity(product.id.toString(), -1)} 
-                              className="p-3 hover:bg-gray-100 min-h-[52px] min-w-[52px] flex items-center justify-center" 
+                              className="p-3 hover:bg-muted min-h-[52px] min-w-[52px] flex items-center justify-center" 
                               disabled={quantity <= 3}
                             >
                               <Minus className="h-5 w-5" />
                             </button>
                             <div className="px-4 py-2 text-center">
                               <div className="font-medium">{quantity} tons</div>
-                              <div className="text-xs text-gray-500">≡ {cubicYards} yd³</div>
-                              <div className="text-xs text-green-600 font-medium">${pricePerTon.toFixed(2)}/ton</div>
+                              <div className="text-xs text-muted-foreground">≡ {cubicYards} yd³</div>
+                              <div className="text-xs text-primary font-medium">${pricePerTon.toFixed(2)}/ton</div>
                             </div>
                             <button 
                               onClick={() => updateQuantity(product.id.toString(), 1)} 
-                              className="p-3 hover:bg-gray-100 min-h-[52px] min-w-[52px] flex items-center justify-center"
+                              className="p-3 hover:bg-muted min-h-[52px] min-w-[52px] flex items-center justify-center"
                             >
                               <Plus className="h-5 w-5" />
                             </button>
@@ -456,7 +456,7 @@ const ShoppingModule = () => {
 
                           <div className="text-right">
                             <div className="text-lg font-bold">${totalPrice.toFixed(2)}</div>
-                            <Button onClick={() => handleAddToCart(product)} className="bg-green-500 hover:bg-green-600 text-white mt-1" size="sm">
+                            <Button onClick={() => handleAddToCart(product)} className="bg-primary hover:bg-primary/90 text-primary-foreground mt-1" size="sm">
                               Add to Cart
                             </Button>
                           </div>

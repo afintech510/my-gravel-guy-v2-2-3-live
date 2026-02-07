@@ -28,7 +28,7 @@ const HowItWorks = () => {
   ];
 
   return (
-    <section className="py-16 px-4 bg-gray-50">
+    <section className="py-16 px-4 bg-muted">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-4">How It Works — Fast, Local Gravel Delivery in 3 Simple Steps</h2>
@@ -36,7 +36,7 @@ const HowItWorks = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {steps.map((step, index) => (
-            <Card key={index} className="border border-gray-200 shadow-sm transition-all hover:shadow-md">
+            <Card key={index} className="border border-border shadow-sm transition-all hover:shadow-md">
               <CardHeader className="pb-2 flex flex-col items-center">
                 <div className="mb-4 p-3 rounded-full bg-primary/10 flex items-center justify-center">
                   {step.link ? (
@@ -50,14 +50,14 @@ const HowItWorks = () => {
                 <CardTitle className="text-xl font-bold">Step {index + 1}: {step.title}</CardTitle>
               </CardHeader>
               <CardContent className="text-center">
-                <p className="text-gray-600">{step.description}</p>
+                <p className="text-muted-foreground">{step.description}</p>
               </CardContent>
             </Card>
           ))}
         </div>
         
         {/* New White Glove Service Section */}
-        <div className="mt-12 p-8 bg-green-50 border border-green-100 rounded-lg">
+        <div className="mt-12 p-8 bg-primary/10 border border-primary/20 rounded-lg">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
             <div className="flex-shrink-0">
               <div className="p-3 rounded-full bg-primary/10 flex items-center justify-center">
@@ -65,10 +65,10 @@ const HowItWorks = () => {
               </div>
             </div>
             <div className="flex-1">
-              <h3 className="text-2xl font-bold mb-3 text-gray-900">
+              <h3 className="text-2xl font-bold mb-3 text-foreground">
                 White Glove Service — We Communicate Every Step of the Way
               </h3>
-              <p className="text-gray-600 leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed">
                 MGG Team will confirm all details before delivery to make sure you get exactly what you expect. We have material application experts available to review your project requirements & tonnage — FREE. Many times our experts can save you money by recommending lower-cost materials available in your region.
               </p>
             </div>

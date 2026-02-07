@@ -77,15 +77,15 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
               <h3 className="text-xl font-semibold mb-2">Local Service</h3>
-              <p className="text-gray-600">Connected with trusted suppliers in your area</p>
+              <p className="text-muted-foreground">Connected with trusted suppliers in your area</p>
             </div>
             <div>
               <h3 className="text-xl font-semibold mb-2">Fast Delivery</h3>
-              <p className="text-gray-600">Most orders delivered within 24-48 hours</p>
+              <p className="text-muted-foreground">Most orders delivered within 24-48 hours</p>
             </div>
             <div>
               <h3 className="text-xl font-semibold mb-2">Best Prices</h3>
-              <p className="text-gray-600">Competitive pricing from local suppliers</p>
+              <p className="text-muted-foreground">Competitive pricing from local suppliers</p>
             </div>
           </div>
         </div>
