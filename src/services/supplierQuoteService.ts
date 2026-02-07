@@ -281,6 +281,13 @@ export function quoteToFormData(quote: SupplierQuote): { formData: SupplierQuote
       delivery_zip: quote.delivery_zip || '',
       site_access: quote.site_access || [],
       project_notes: quote.project_notes || '',
+      // Lead contact info (not stored in quote, but populated from lead)
+      contact_phone: '',
+      contact_email: '',
+      // Delivery scheduling (not stored in quote currently)
+      delivery_date: '',
+      delivery_time: '',
+      delivery_instructions: '',
       material_price: quote.material_price?.toString() || '',
       material_unit: quote.material_unit || 'ton',
       delivery_rate: quote.delivery_rate?.toString() || '',
