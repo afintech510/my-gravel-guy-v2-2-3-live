@@ -84,7 +84,7 @@ export function RecentLeadsList({ leads, selectedLeadId, onSelectLead }: RecentL
         </div>
       </div>
 
-      <ScrollArea className="flex-1 min-h-0">
+      <ScrollArea className="flex-1 min-h-0 max-h-72">
         <div className="space-y-2">
           {filteredLeads.map((lead) => (
             <button
