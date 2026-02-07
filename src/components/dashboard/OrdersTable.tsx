@@ -117,7 +117,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
     const { street, cityStateZip } = formatAddress(order);
     
     if (street === 'N/A') {
-      return <span className="text-gray-500 text-sm">N/A</span>;
+      return <span className="text-muted-foreground text-sm">N/A</span>;
     }
 
     const fullAddress = `${street}, ${cityStateZip}`;
@@ -133,7 +133,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
       >
         <div className="truncate">
           <div className="text-sm truncate">{street}</div>
-          <div className="text-sm text-gray-500 truncate">{cityStateZip}</div>
+          <div className="text-sm text-muted-foreground truncate">{cityStateZip}</div>
         </div>
         <ExternalLink className="h-3 w-3 flex-shrink-0" />
       </a>
@@ -180,7 +180,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
     <div className="space-y-6">
       {title && (
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+          <h2 className="text-2xl font-bold text-foreground">{title}</h2>
         </div>
       )}
 
@@ -192,7 +192,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
       />
 
       {statusFilter === 'quotes' && (
-        <div className="flex items-center gap-2 bg-white rounded-lg shadow px-4 py-3">
+        <div className="flex items-center gap-2 bg-card rounded-lg shadow px-4 py-3">
           <Checkbox 
             id="hide-archived" 
             checked={hideArchived} 
@@ -200,7 +200,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
           />
           <label 
             htmlFor="hide-archived" 
-            className="text-sm font-medium text-gray-700 cursor-pointer"
+            className="text-sm font-medium text-foreground cursor-pointer"
           >
             Hide archived quotes
           </label>
@@ -215,7 +215,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
 
       {!isLoading && (
         <>
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="bg-card rounded-lg shadow overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -234,7 +234,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
               <TableBody>
                 {orders.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-12 text-gray-500">
+                    <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
                       No {statusFilter === 'quotes' ? 'quotes' : statusFilter === 'orders' ? 'orders' : 'records'} found
                     </TableCell>
                   </TableRow>
@@ -341,7 +341,7 @@ const OrdersTable = ({ statusFilter = 'all', title }: OrdersTableProps) => {
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-muted-foreground">
                 Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, data?.total || 0)} of {data?.total || 0} {statusFilter === 'quotes' ? 'quotes' : statusFilter === 'orders' ? 'orders' : 'records'}
               </div>
               <div className="flex items-center space-x-2">
