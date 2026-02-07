@@ -40,21 +40,21 @@ const ProductAccordion = ({ product }: ProductAccordionProps) => {
         <div className="space-y-4">
           <div className="border-b pb-4">
             <h4 className="font-medium mb-2">How much material do I need?</h4>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Use our calculator tool on this page to determine how much material you'll need for your project. 
               You can also contact us for assistance with calculating the right amount.
             </p>
           </div>
           <div className="border-b pb-4">
             <h4 className="font-medium mb-2">How is the material delivered?</h4>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               We deliver using dump trucks. The driver will place the material 
               as close to your desired location as possible, where the truck can safely access.
             </p>
           </div>
           <div className="border-b pb-4">
             <h4 className="font-medium mb-2">What if I order too much or too little?</h4>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               If you order too little, you can always place another order. If you order too much, 
               unfortunately, we cannot take returns on delivered materials.
             </p>
@@ -71,7 +71,7 @@ const ProductAccordion = ({ product }: ProductAccordionProps) => {
         {product.faqs.map((faq, index) => (
           <div key={index} className="border-b pb-4 last:border-0">
             <h4 className="font-medium mb-2">{faq.question}</h4>
-            <p className="text-gray-600">{faq.answer}</p>
+            <p className="text-muted-foreground">{faq.answer}</p>
           </div>
         ))}
       </div>
@@ -139,32 +139,32 @@ const ProductAccordion = ({ product }: ProductAccordionProps) => {
             <h4 className="font-medium mb-4">Our Simple 3-Step Process</h4>
             
             <div className="grid gap-6 md:grid-cols-3">
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-muted p-4 rounded-lg">
                 <div className="rounded-full bg-primary/10 w-10 h-10 flex items-center justify-center mb-3">
                   <span className="font-bold text-primary">1</span>
                 </div>
                 <h5 className="font-medium mb-2">Select & Order</h5>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Choose your material, enter your delivery location, select quantity and delivery date, then complete your order.
                 </p>
               </div>
               
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-muted p-4 rounded-lg">
                 <div className="rounded-full bg-primary/10 w-10 h-10 flex items-center justify-center mb-3">
                   <span className="font-bold text-primary">2</span>
                 </div>
                 <h5 className="font-medium mb-2">Schedule Delivery</h5>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   We'll confirm your order and prepare your materials for delivery on your selected date.
                 </p>
               </div>
               
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-muted p-4 rounded-lg">
                 <div className="rounded-full bg-primary/10 w-10 h-10 flex items-center justify-center mb-3">
                   <span className="font-bold text-primary">3</span>
                 </div>
                 <h5 className="font-medium mb-2">Receive Materials</h5>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Our driver will deliver your materials to your specified location, ready for your project.
                 </p>
               </div>
@@ -276,10 +276,10 @@ const ProductAccordion = ({ product }: ProductAccordionProps) => {
         <AccordionContent className="py-4 px-1">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="border rounded-lg overflow-hidden">
-              <div className="h-40 bg-gray-100"></div>
+              <div className="h-40 bg-muted"></div>
               <div className="p-4">
                 <h4 className="font-medium mb-1">How to Prepare Your Site for Gravel Delivery</h4>
-                <p className="text-sm text-gray-600 mb-3">Tips for ensuring your site is ready for a smooth delivery experience.</p>
+                <p className="text-sm text-muted-foreground mb-3">Tips for ensuring your site is ready for a smooth delivery experience.</p>
                 <Button variant="outline" size="sm" asChild>
                   <a href="/blog/preparing-for-gravel-delivery">Read Article</a>
                 </Button>
@@ -287,10 +287,10 @@ const ProductAccordion = ({ product }: ProductAccordionProps) => {
             </div>
             
             <div className="border rounded-lg overflow-hidden">
-              <div className="h-40 bg-gray-100"></div>
+              <div className="h-40 bg-muted"></div>
               <div className="p-4">
                 <h4 className="font-medium mb-1">5 Creative Ways to Use {product.name}</h4>
-                <p className="text-sm text-gray-600 mb-3">Inspiration for your next landscaping or construction project.</p>
+                <p className="text-sm text-muted-foreground mb-3">Inspiration for your next landscaping or construction project.</p>
                 <Button variant="outline" size="sm" asChild>
                   <a href="/blog/creative-uses-for-gravel">Read Article</a>
                 </Button>

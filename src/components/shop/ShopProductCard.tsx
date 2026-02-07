@@ -111,7 +111,7 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
         {/* Product Image and Basic Info */}
         <div className="flex gap-4 mb-4">
           {product.image && (
-            <div className="w-20 h-20 bg-gray-100 rounded flex-shrink-0">
+            <div className="w-20 h-20 bg-muted rounded flex-shrink-0">
               <img 
                 src={product.image} 
                 alt={product.name} 
@@ -122,8 +122,8 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
           <div className="flex-1">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h3 className="font-semibold text-lg text-gray-900 mb-1">{product.name}</h3>
-                <p className="text-sm text-black font-medium mb-2">
+                <h3 className="font-semibold text-lg text-foreground mb-1">{product.name}</h3>
+                <p className="text-sm text-foreground font-medium mb-2">
                   Starting at ${(displayStartingPrice * 3).toFixed(0)} for 3 tons delivered
                 </p>
               </div>
@@ -136,7 +136,7 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
                 )}
               </div>
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-muted-foreground">
               {getDisplayDescription()}
             </div>
           </div>
@@ -177,12 +177,12 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
               {/* Total Price and Free Delivery */}
               <div className="text-right">
                 <div className="mb-1">
-                  <span className="text-2xl font-bold text-black">
+                  <span className="text-2xl font-bold text-foreground">
                     ${(displayPrice * selectedTons).toFixed(2)}
                   </span>
-                  <span className="ml-2 text-sm text-gray-500">Total</span>
+                  <span className="ml-2 text-sm text-muted-foreground">Total</span>
                 </div>
-                <div className="text-sm text-gray-600 font-medium mb-1">
+                <div className="text-sm text-muted-foreground font-medium mb-1">
                   ${displayPrice.toFixed(2)} per ton
                 </div>
                 <div className="text-sm text-black-600 font-medium">
@@ -210,7 +210,7 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
               <Button
                 variant="outline"
                 onClick={handleViewDetails}
-                className="w-full border-green-500 bg-gray-50 hover:bg-gray-100 text-green-700"
+                className="w-full border-green-500 bg-muted hover:bg-muted/80 text-green-700"
               >
                 <ExternalLink className="mr-2 h-4 w-4" />
                 More Details

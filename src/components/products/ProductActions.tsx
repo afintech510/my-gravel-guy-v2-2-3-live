@@ -126,7 +126,7 @@ const ProductActions = ({
           
           <div className="flex flex-col items-center justify-center">
             <span className="text-4xl font-bold">{selectedTons} tons</span>
-            <span className="text-xl text-gray-500">
+            <span className="text-xl text-muted-foreground">
               ≈ {cubicYards} yd³
             </span>
           </div>
@@ -153,11 +153,11 @@ const ProductActions = ({
             <span>Total:</span>
             <span>${totalPrice.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between items-center text-sm text-gray-600">
+          <div className="flex justify-between items-center text-sm text-muted-foreground">
             <span>${adjustedPrice.toFixed(2)} per ton</span>
             <span></span>
           </div>
-          <div className="flex justify-between items-center text-sm text-gray-600">
+          <div className="flex justify-between items-center text-sm text-muted-foreground">
             <span>Shipping:</span>
             <span className="text-green-600 font-medium">FREE</span>
           </div>

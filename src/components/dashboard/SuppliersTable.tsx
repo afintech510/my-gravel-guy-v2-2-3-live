@@ -134,7 +134,7 @@ const SuppliersTable = () => {
 
       {!isLoading && (
         <>
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="bg-card rounded-lg shadow overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -151,7 +151,7 @@ const SuppliersTable = () => {
               <TableBody>
                 {supplierList.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-12 text-gray-500">
+                    <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
                       No suppliers found
                     </TableCell>
                   </TableRow>
@@ -159,7 +159,7 @@ const SuppliersTable = () => {
                   supplierList.map((supplier) => (
                     <TableRow 
                       key={supplier.id}
-                      className="cursor-pointer hover:bg-gray-50"
+                      className="cursor-pointer hover:bg-muted"
                       onClick={() => handleViewSupplier(supplier)}
                     >
                       <TableCell className="font-medium">

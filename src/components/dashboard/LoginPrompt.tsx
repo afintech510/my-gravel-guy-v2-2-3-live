@@ -23,12 +23,12 @@ const LoginPrompt = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 text-center">
+    <div className="min-h-screen flex items-center justify-center bg-muted">
+      <div className="max-w-md w-full bg-card rounded-lg shadow-md p-8 text-center">
         <div className="mb-6">
           <LogIn className="h-12 w-12 text-primary mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Manager Dashboard</h1>
-          <p className="text-gray-600">Please sign in to access the dashboard</p>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Manager Dashboard</h1>
+          <p className="text-muted-foreground">Please sign in to access the dashboard</p>
         </div>
         
         <Button 
@@ -40,7 +40,7 @@ const LoginPrompt = () => {
           Sign in with Google
         </Button>
         
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted-foreground">
           Only authorized administrators can access this dashboard
         </p>
         
