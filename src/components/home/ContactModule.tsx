@@ -102,13 +102,13 @@ ${formData.additionalDetails}`,
   };
 
   return (
-    <section className="py-16 px-4 bg-white">
+    <section className="py-16 px-4 bg-card">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Get a Free Quote
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Fill out the form below, and we'll get back to you with a customized quote for your project.
           </p>
         </div>
@@ -123,8 +123,8 @@ ${formData.additionalDetails}`,
                 </div>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-1">Call Us Directly</h3>
-                <p className="text-gray-600">(844) 624-0400</p>
+                <h3 className="font-semibold text-foreground mb-1">Call Us Directly</h3>
+                <p className="text-muted-foreground">(844) 624-0400</p>
               </div>
             </div>
 
@@ -135,8 +135,8 @@ ${formData.additionalDetails}`,
                 </div>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-1">Email Us</h3>
-                <p className="text-gray-600">support@mygravelguy.com</p>
+                <h3 className="font-semibold text-foreground mb-1">Email Us</h3>
+                <p className="text-muted-foreground">support@mygravelguy.com</p>
               </div>
             </div>
 
@@ -147,20 +147,20 @@ ${formData.additionalDetails}`,
                 </div>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-1">Our Service</h3>
-                <p className="text-gray-600">Nationwide Delivery Available</p>
+                <h3 className="font-semibold text-foreground mb-1">Our Service</h3>
+                <p className="text-muted-foreground">Nationwide Delivery Available</p>
               </div>
             </div>
           </div>
 
           {/* Quote Form */}
           <div className="lg:col-span-2">
-            <Card className="shadow-sm border">
+            <Card className="shadow-sm border border-border">
               <CardContent className="p-6">
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {/* Name Field */}
                   <div>
-                    <Label htmlFor="fullName" className="text-sm font-medium text-gray-700">
+                    <Label htmlFor="fullName" className="text-sm font-medium text-foreground">
                       Full Name
                     </Label>
                     <Input
@@ -176,7 +176,7 @@ ${formData.additionalDetails}`,
                   {/* Email and Phone */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                      <Label htmlFor="email" className="text-sm font-medium text-foreground">
                         Email
                       </Label>
                       <Input
@@ -190,7 +190,7 @@ ${formData.additionalDetails}`,
                       />
                     </div>
                     <div>
-                      <Label htmlFor="phoneNumber" className="text-sm font-medium text-gray-700">
+                      <Label htmlFor="phoneNumber" className="text-sm font-medium text-foreground">
                         Phone Number
                       </Label>
                       <Input
@@ -206,7 +206,7 @@ ${formData.additionalDetails}`,
 
                   {/* Property Address */}
                   <div>
-                    <Label htmlFor="propertyAddress" className="text-sm font-medium text-gray-700">
+                    <Label htmlFor="propertyAddress" className="text-sm font-medium text-foreground">
                       Property Address
                     </Label>
                     <Input
@@ -222,7 +222,7 @@ ${formData.additionalDetails}`,
                   {/* Project Type and Area */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-sm font-medium text-gray-700">
+                      <Label className="text-sm font-medium text-foreground">
                         Project Type
                       </Label>
                       <Select
@@ -243,7 +243,7 @@ ${formData.additionalDetails}`,
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="approximateArea" className="text-sm font-medium text-gray-700">
+                      <Label htmlFor="approximateArea" className="text-sm font-medium text-foreground">
                         Approximate Area (sq ft)
                       </Label>
                       <Input
@@ -258,7 +258,7 @@ ${formData.additionalDetails}`,
 
                   {/* Additional Details */}
                   <div>
-                    <Label htmlFor="additionalDetails" className="text-sm font-medium text-gray-700">
+                    <Label htmlFor="additionalDetails" className="text-sm font-medium text-foreground">
                       Additional Details
                     </Label>
                     <Textarea
@@ -273,7 +273,7 @@ ${formData.additionalDetails}`,
 
                   {/* Preferred Contact Method */}
                   <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                    <Label className="text-sm font-medium text-foreground mb-2 block">
                       Preferred Contact Method
                     </Label>
                     <RadioGroup
