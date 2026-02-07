@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import type { CartItem } from '@/contexts/CartContext';
-import { createLeadFromForm } from './supplierQuoteService';
+import { createLeadFromForm, findLeadByEmailOrPhone, updateLead } from './supplierQuoteService';
 
 export interface CartInsertData {
   items: CartItem[];
@@ -90,7 +90,7 @@ export const insertCartToDatabase = async (cartData: CartInsertData) => {
       cartId: cartId
     });
 
-    // Create lead from cart data (for supplier quotes system)
+    // Create or update lead from cart data (for supplier quotes system)
     const firstItem = cartData.items[0];
     if (firstItem?.contactInfo?.name) {
       try {
@@ -98,26 +98,82 @@ export const insertCartToDatabase = async (cartData: CartInsertData) => {
         const totalTons = cartData.items.reduce((sum, item) => sum + (item.tons || 0), 0);
         const firstAddress = cartData.items.find(item => item.deliveryAddress);
         
-        await createLeadFromForm({
-          displayName: firstItem.contactInfo.name,
+        // Prepare delivery scheduling data
+        const deliveryDate = firstItem.deliveryDate?.toISOString().split('T')[0];
+        const deliveryTimePreference = firstItem.deliveryTimePreference;
+        const deliveryInstructions = firstItem.deliveryInstructions;
+        
+        console.log('=== LEAD UPSERT: Checking for existing lead ===', {
           email: firstItem.contactInfo.email,
           phone: firstItem.contactInfo.phone,
-          material: productNames,
-          requestedQty: totalTons,
-          requestedUnit: 'tons',
-          jobAddress: firstAddress?.deliveryAddress?.street,
-          jobCity: firstAddress?.deliveryAddress?.city,
-          jobState: firstAddress?.deliveryAddress?.state,
-          jobZip: firstAddress?.deliveryAddress?.zip,
-          // Capture delivery scheduling from cart
-          deliveryDate: firstItem.deliveryDate?.toISOString().split('T')[0],
-          deliveryTimePreference: firstItem.deliveryTimePreference,
-          deliveryInstructions: firstItem.deliveryInstructions,
-          notes: `Cart saved: ${cartId}`,
+          deliveryDate,
+          deliveryTimePreference,
+          deliveryInstructions,
         });
-        console.log('Lead created from cart save');
+        
+        // Check if a lead already exists with this email or phone
+        const existingLead = await findLeadByEmailOrPhone(
+          firstItem.contactInfo.email,
+          firstItem.contactInfo.phone
+        );
+        
+        if (existingLead) {
+          // Update existing lead with delivery scheduling data
+          console.log('=== LEAD UPSERT: Found existing lead, updating ===', {
+            leadId: existingLead.id,
+            existingName: existingLead.display_name,
+          });
+          
+          await updateLead(existingLead.id, {
+            material: productNames,
+            requested_qty: totalTons,
+            requested_unit: 'tons',
+            job_address: firstAddress?.deliveryAddress?.street || existingLead.job_address,
+            job_city: firstAddress?.deliveryAddress?.city || existingLead.job_city,
+            job_state: firstAddress?.deliveryAddress?.state || existingLead.job_state,
+            job_zip: firstAddress?.deliveryAddress?.zip || existingLead.job_zip,
+            delivery_date: deliveryDate,
+            delivery_time_preference: deliveryTimePreference,
+            delivery_instructions: deliveryInstructions,
+            notes: existingLead.notes 
+              ? `${existingLead.notes}\nCart saved: ${cartId}` 
+              : `Cart saved: ${cartId}`,
+          });
+          
+          console.log('=== LEAD UPSERT: Successfully updated existing lead ===', {
+            leadId: existingLead.id,
+            deliveryDate,
+            deliveryTimePreference,
+          });
+        } else {
+          // Create new lead
+          console.log('=== LEAD UPSERT: No existing lead found, creating new ===');
+          
+          await createLeadFromForm({
+            displayName: firstItem.contactInfo.name,
+            email: firstItem.contactInfo.email,
+            phone: firstItem.contactInfo.phone,
+            material: productNames,
+            requestedQty: totalTons,
+            requestedUnit: 'tons',
+            jobAddress: firstAddress?.deliveryAddress?.street,
+            jobCity: firstAddress?.deliveryAddress?.city,
+            jobState: firstAddress?.deliveryAddress?.state,
+            jobZip: firstAddress?.deliveryAddress?.zip,
+            deliveryDate,
+            deliveryTimePreference,
+            deliveryInstructions,
+            notes: `Cart saved: ${cartId}`,
+          });
+          
+          console.log('=== LEAD UPSERT: Successfully created new lead ===', {
+            email: firstItem.contactInfo.email,
+            deliveryDate,
+            deliveryTimePreference,
+          });
+        }
       } catch (leadErr) {
-        console.warn('Failed to create lead from cart (non-blocking):', leadErr);
+        console.warn('Failed to upsert lead from cart (non-blocking):', leadErr);
       }
     }
     
