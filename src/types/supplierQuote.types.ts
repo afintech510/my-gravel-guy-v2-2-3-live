@@ -104,6 +104,15 @@ export interface SupplierQuoteFormData {
   site_access: string[];
   project_notes: string;
   
+  // Lead contact info
+  contact_phone: string;
+  contact_email: string;
+  
+  // Delivery scheduling
+  delivery_date: string;
+  delivery_time: string;
+  delivery_instructions: string;
+  
   material_price: string;
   material_unit: string;
   delivery_rate: string;
@@ -160,6 +169,15 @@ export const INITIAL_FORM_DATA: SupplierQuoteFormData = {
   delivery_zip: '',
   site_access: [],
   project_notes: '',
+  
+  // Lead contact info
+  contact_phone: '',
+  contact_email: '',
+  
+  // Delivery scheduling
+  delivery_date: '',
+  delivery_time: '',
+  delivery_instructions: '',
   
   material_price: '',
   material_unit: 'ton',
