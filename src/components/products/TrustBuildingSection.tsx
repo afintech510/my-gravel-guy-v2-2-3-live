@@ -16,7 +16,7 @@ const TrustFactor: React.FC<TrustFactorProps> = ({ title, description }) => {
         </div>
         <h3 className="font-medium text-base">{title}</h3>
       </div>
-      <p className="text-sm text-gray-600">{description}</p>
+      <p className="text-sm text-muted-foreground">{description}</p>
     </div>
   );
 };
@@ -50,7 +50,7 @@ const TrustBuildingSection: React.FC = () => {
   ];
 
   return (
-    <div className="mt-16 mb-12 bg-gray-50 rounded-lg p-6 border border-gray-100">
+    <div className="mt-16 mb-12 bg-muted rounded-lg p-6 border border-border">
       <h2 className="text-2xl font-semibold text-center mb-8">Why Choose My Gravel Guy</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {trustFactors.map((factor, index) => (

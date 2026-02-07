@@ -28,7 +28,7 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
         
         <TabsContent value="delivery" className="mt-6">
           <h3 className="text-xl font-semibold mb-4">Delivery Information</h3>
-          <ul className="list-disc list-inside space-y-2 text-gray-600">
+          <ul className="list-disc list-inside space-y-2 text-muted-foreground">
             <li>Minimum 72-hour lead time required for all deliveries</li>
             <li>Delivery available Monday through Friday</li>
             <li>Morning (8am-12pm) and afternoon (12pm-4pm) delivery windows</li>

@@ -7,12 +7,12 @@ import { ShoppingCart, Target, TrendingUp, Globe } from 'lucide-react';
 
 const GoogleShopping = () => {
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-muted py-8 px-4">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold text-gray-900">Google Shopping Integration</h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <h1 className="text-4xl font-bold text-foreground">Google Shopping Integration</h1>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Manage your product feeds, monitor Merchant Center status, and optimize your Google Shopping campaigns 
             for maximum visibility and sales.
           </p>
@@ -28,7 +28,7 @@ const GoogleShopping = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 Generate optimized XML feeds for all your landscaping materials with dynamic pricing based on location.
               </p>
             </CardContent>
@@ -42,7 +42,7 @@ const GoogleShopping = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 Create location-specific feeds with regional pricing and availability for better local targeting.
               </p>
             </CardContent>
@@ -56,7 +56,7 @@ const GoogleShopping = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 Monitor product approval status and track performance metrics from Google Merchant Center.
               </p>
             </CardContent>
@@ -70,7 +70,7 @@ const GoogleShopping = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 Specialized handling for bulk landscaping materials with proper weight calculations and delivery specifications.
               </p>
             </CardContent>
@@ -103,7 +103,7 @@ const GoogleShopping = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <h3 className="font-semibold mb-2">Setup Guide</h3>
-                <ul className="text-sm text-gray-600 space-y-1">
+                <ul className="text-sm text-muted-foreground space-y-1">
                   <li>• Create a Google Merchant Center account</li>
                   <li>• Verify and claim your website</li>
                   <li>• Set up Google Cloud project for API access</li>
@@ -113,7 +113,7 @@ const GoogleShopping = () => {
               </div>
               <div>
                 <h3 className="font-semibold mb-2">Best Practices</h3>
-                <ul className="text-sm text-gray-600 space-y-1">
+                <ul className="text-sm text-muted-foreground space-y-1">
                   <li>• Update feeds regularly (daily recommended)</li>
                   <li>• Monitor product approval status</li>
                   <li>• Use geographic targeting for better ROI</li>

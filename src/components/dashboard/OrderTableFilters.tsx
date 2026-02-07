@@ -76,12 +76,12 @@ const OrderTableFilters: React.FC<OrderTableFiltersProps> = ({
   }, [filters, dateRange]);
 
   return (
-    <div className="bg-white rounded-lg shadow">
+    <div className="bg-card rounded-lg shadow">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
-          <div className="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-50 transition-colors">
+          <div className="flex items-center justify-between p-6 cursor-pointer hover:bg-muted transition-colors">
             <div className="flex items-center gap-2">
-              <Filter className="h-5 w-5 text-gray-500" />
+              <Filter className="h-5 w-5 text-muted-foreground" />
               <h3 className="text-lg font-semibold">Filters</h3>
               {activeFilterCount > 0 && (
                 <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">
@@ -90,9 +90,9 @@ const OrderTableFilters: React.FC<OrderTableFiltersProps> = ({
               )}
             </div>
             {isOpen ? (
-              <ChevronDown className="h-4 w-4 text-gray-500 transition-transform" />
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform" />
             ) : (
-              <ChevronRight className="h-4 w-4 text-gray-500 transition-transform" />
+              <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform" />
             )}
           </div>
         </CollapsibleTrigger>
@@ -102,9 +102,9 @@ const OrderTableFilters: React.FC<OrderTableFiltersProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Search */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Search</label>
+                <label className="text-sm font-medium text-foreground">Search</label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Order ID, name, email, phone..."
                     value={filters.searchTerm || ''}
@@ -116,7 +116,7 @@ const OrderTableFilters: React.FC<OrderTableFiltersProps> = ({
 
               {/* Fulfillment Status Filter */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Fulfillment Status</label>
+                <label className="text-sm font-medium text-foreground">Fulfillment Status</label>
                 <Select value={filters.fulfillmentStatus || 'all'} onValueChange={handleFulfillmentStatusChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="All statuses" />
@@ -138,7 +138,7 @@ const OrderTableFilters: React.FC<OrderTableFiltersProps> = ({
 
               {/* Sort */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Sort By</label>
+                <label className="text-sm font-medium text-foreground">Sort By</label>
                 <Select value={filters.sortBy || 'date_desc'} onValueChange={handleSortChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Sort by..." />
@@ -154,7 +154,7 @@ const OrderTableFilters: React.FC<OrderTableFiltersProps> = ({
 
               {/* Date Range */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Delivery Date</label>
+                <label className="text-sm font-medium text-foreground">Delivery Date</label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-start text-left font-normal">
