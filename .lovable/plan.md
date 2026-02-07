@@ -1,155 +1,366 @@
 
 
-# Product Calculator Dark Mode Readability Fix
+# Lead Data Loading & Cart Integration for Supplier Quotes
 
 ## Overview
 
-This plan addresses the dark mode readability issues on the `/product-calculator` page. The screenshot shows:
-
-1. **Gray labels are hard to read** - "Material Category", "Available Materials", "Project Areas", "Material Depth", etc. use `text-gray-700` which is too dark on the dark background
-2. **Product cards have stark white backgrounds** - The `bg-white` and `border-gray-200` classes create jarring contrast against the dark page
-3. **Calculation Results card is too bright** - Uses `bg-gray-50` which appears as a white box
-4. **Trust Banner text is unreadable** - Uses `text-gray-600` for descriptions
+This plan ensures that:
+1. **All lead fields load into the Project Requirements module** when a lead is selected
+2. **Cart saves capture delivery scheduling data** into the leads table
+3. **NEW: A "Save Lead" button** in the module header allows updating lead data directly
 
 ---
 
-## Files to Modify
+## Current State Analysis
+
+### What's Already Working
+- `SupplierQuoteFormData` already has `contact_phone`, `contact_email`, `delivery_date`, `delivery_time`, `delivery_instructions` fields
+- The `ProjectRequirementsCard` component displays these fields
+
+### What's Broken/Missing
+1. **`handleSelectLead`** only populates 8 fields - missing contact/delivery fields
+2. **`Lead` interface** missing delivery scheduling fields
+3. **Database `leads` table** missing 3 delivery scheduling columns
+4. **Cart insert service** doesn't capture delivery scheduling
+5. **No "Save Lead" button** to update lead data from the form
+
+---
+
+## Phase 1: Database Schema Update
+
+Add three columns to the `leads` table for delivery scheduling data:
+
+```sql
+ALTER TABLE leads
+ADD COLUMN IF NOT EXISTS delivery_date date,
+ADD COLUMN IF NOT EXISTS delivery_time_preference text,
+ADD COLUMN IF NOT EXISTS delivery_instructions text;
+```
+
+---
+
+## Phase 2: Type Updates
+
+### File: `src/types/supplierQuote.types.ts`
+
+Add new fields to the `Lead` interface:
+
+```typescript
+export interface Lead {
+  id: string;
+  display_name: string;
+  phone?: string;
+  email?: string;
+  material?: string;
+  requested_qty?: number;
+  requested_unit?: string;
+  job_address?: string;
+  job_city?: string;
+  job_state?: string;
+  job_zip?: string;
+  target_price?: number;
+  timeline?: string;
+  site_access?: string[];
+  notes?: string;
+  // NEW FIELDS
+  delivery_date?: string;
+  delivery_time_preference?: string;
+  delivery_instructions?: string;
+  created_at: string;
+}
+```
+
+---
+
+## Phase 3: Service Updates
+
+### File: `src/services/supplierQuoteService.ts`
+
+**Add `updateLead` function:**
+```typescript
+export async function updateLead(id: string, updates: Partial<LeadInsert>): Promise<Lead | null> {
+  try {
+    const { data, error } = await (supabase as any)
+      .from('leads')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+      
+    if (error) {
+      console.error('Error updating lead:', error);
+      return null;
+    }
+    return data as Lead;
+  } catch (err) {
+    console.error('Error updating lead:', err);
+    return null;
+  }
+}
+```
+
+**Update `LeadFromFormData` interface:**
+```typescript
+export interface LeadFromFormData {
+  // ... existing fields
+  deliveryDate?: string;
+  deliveryTimePreference?: string;
+  deliveryInstructions?: string;
+}
+```
+
+**Update `createLeadFromForm` function** to map the new fields.
+
+---
+
+## Phase 4: Cart Insert Service Update
+
+### File: `src/services/cartInsertService.ts`
+
+Pass delivery scheduling data when creating a lead from cart save:
+
+```typescript
+await createLeadFromForm({
+  displayName: firstItem.contactInfo.name,
+  email: firstItem.contactInfo.email,
+  phone: firstItem.contactInfo.phone,
+  material: productNames,
+  requestedQty: totalTons,
+  requestedUnit: 'tons',
+  jobAddress: firstAddress?.deliveryAddress?.street,
+  jobCity: firstAddress?.deliveryAddress?.city,
+  jobState: firstAddress?.deliveryAddress?.state,
+  jobZip: firstAddress?.deliveryAddress?.zip,
+  // NEW: Capture delivery scheduling
+  deliveryDate: firstItem.deliveryDate?.toISOString().split('T')[0],
+  deliveryTimePreference: firstItem.deliveryTimePreference,
+  deliveryInstructions: firstItem.deliveryInstructions,
+  notes: `Cart saved: ${cartId}`,
+});
+```
+
+---
+
+## Phase 5: Lead Selection - Load ALL Fields
+
+### File: `src/pages/DashboardSupplierQuotes.tsx`
+
+Update `handleSelectLead` to populate ALL lead fields (currently 8, updating to 14):
+
+```typescript
+const handleSelectLead = useCallback(
+  (leadId: string) => {
+    const lead = leads.find((l) => l.id === leadId);
+    if (lead) {
+      setEditingQuoteId(null);
+      setFormData((prev) => ({
+        ...prev,
+        lead_id: leadId,
+        // Material & Quantity
+        material: lead.material || prev.material,
+        qty_tons: lead.requested_qty?.toString() || prev.qty_tons,
+        // Contact Info (NEW)
+        contact_phone: lead.phone || prev.contact_phone,
+        contact_email: lead.email || prev.contact_email,
+        // Delivery Location
+        delivery_address: lead.job_address || prev.delivery_address,
+        delivery_city: lead.job_city || prev.delivery_city,
+        delivery_state: lead.job_state || prev.delivery_state,
+        delivery_zip: lead.job_zip || prev.delivery_zip,
+        site_access: lead.site_access || prev.site_access,
+        // Delivery Scheduling (NEW)
+        delivery_date: lead.delivery_date || prev.delivery_date,
+        delivery_time: lead.delivery_time_preference || prev.delivery_time,
+        delivery_instructions: lead.delivery_instructions || prev.delivery_instructions,
+        // Notes (NEW)
+        project_notes: lead.notes || prev.project_notes,
+      }));
+    }
+  },
+  [leads],
+);
+```
+
+---
+
+## Phase 6: Save Lead Button
+
+### File: `src/components/supplier-quotes/ProjectRequirementsCard.tsx`
+
+**Add new prop and button to the header row:**
+
+```typescript
+interface ProjectRequirementsCardProps {
+  data: SupplierQuoteFormData;
+  onChange: (updates: Partial<SupplierQuoteFormData>) => void;
+  leads: Lead[];
+  onNewLead: () => void;
+  onSaveLead: () => void;  // NEW
+  isSavingLead?: boolean;  // NEW
+}
+```
+
+**Update the header to include the Save button (left of dropdown):**
+
+```tsx
+<SectionHeader icon={Package} title="Project Requirements">
+  <div className="flex items-center gap-2">
+    {/* NEW: Save Lead Button */}
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      onClick={onSaveLead}
+      disabled={!data.lead_id || isSavingLead}
+      className="border-border text-foreground hover:bg-muted"
+    >
+      <Save className="h-4 w-4 mr-1" />
+      {isSavingLead ? 'Saving...' : 'Save Lead'}
+    </Button>
+    
+    {/* Existing Lead Selector */}
+    <Select ...>
+      ...
+    </Select>
+    
+    {/* Existing New Lead Button */}
+    <Button ...>
+      <Plus ... />
+    </Button>
+  </div>
+</SectionHeader>
+```
+
+### File: `src/pages/DashboardSupplierQuotes.tsx`
+
+**Add mutation and handler for saving lead:**
+
+```typescript
+// Add updateLead import
+import { ..., updateLead } from '@/services/supplierQuoteService';
+
+// Add mutation
+const updateLeadMutation = useMutation({
+  mutationFn: ({ id, updates }: { id: string; updates: Partial<LeadInsert> }) =>
+    updateLead(id, updates),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['supplier-leads'] });
+    toast({ title: 'Lead updated', description: 'Lead information saved successfully.' });
+  },
+  onError: () => {
+    toast({ title: 'Error', description: 'Failed to save lead.', variant: 'destructive' });
+  },
+});
+
+// Add handler
+const handleSaveLead = useCallback(() => {
+  if (!formData.lead_id) return;
+  
+  updateLeadMutation.mutate({
+    id: formData.lead_id,
+    updates: {
+      phone: formData.contact_phone || undefined,
+      email: formData.contact_email || undefined,
+      material: formData.material || undefined,
+      requested_qty: formData.qty_tons ? parseFloat(formData.qty_tons) : undefined,
+      job_address: formData.delivery_address || undefined,
+      job_city: formData.delivery_city || undefined,
+      job_state: formData.delivery_state || undefined,
+      job_zip: formData.delivery_zip || undefined,
+      site_access: formData.site_access.length > 0 ? formData.site_access : undefined,
+      delivery_date: formData.delivery_date || undefined,
+      delivery_time_preference: formData.delivery_time || undefined,
+      delivery_instructions: formData.delivery_instructions || undefined,
+      notes: formData.project_notes || undefined,
+    },
+  });
+}, [formData, updateLeadMutation]);
+
+// Update component props
+<ProjectRequirementsCard
+  data={formData}
+  onChange={handleFormChange}
+  leads={leads}
+  onNewLead={() => setIsNewLeadModalOpen(true)}
+  onSaveLead={handleSaveLead}          // NEW
+  isSavingLead={updateLeadMutation.isPending}  // NEW
+/>
+```
+
+---
+
+## Summary of Changes
 
 | File | Changes |
 |------|---------|
-| `src/components/product-calculator/ProductFilterSelector.tsx` | 8 |
-| `src/components/product-calculator/AreaCalculator.tsx` | 8 |
-| `src/components/product-calculator/ZipCodeChecker.tsx` | 8 |
-| `src/components/product-calculator/TrustBanner.tsx` | 1 |
-
-**Total: ~25 targeted replacements across 4 files**
-
----
-
-## Phase 1: ProductFilterSelector.tsx
-
-### Section Labels (Gray on dark background)
-
-| Line | Current | New | Issue |
-|------|---------|-----|-------|
-| 161 | `text-gray-700` | `text-foreground` | "Material Category" label unreadable |
-| 185 | `text-gray-700` | `text-foreground` | "Available Materials" label unreadable |
-
-### Category Filter Buttons (Non-selected state)
-
-| Line | Current | New | Issue |
-|------|---------|-----|-------|
-| 171 | `bg-white hover:bg-gray-50 text-gray-700 border-gray-200` | `bg-card hover:bg-muted text-foreground border-border` | Stark white buttons on dark background |
-
-### Product Cards (Non-selected state)
-
-| Line | Current | New | Issue |
-|------|---------|-----|-------|
-| 200 | `border-gray-200 bg-white hover:border-gray-300` | `border-border bg-card hover:border-border` | White product cards look jarring |
-| 205 | `bg-gray-100` | `bg-muted` | Image placeholder background |
-| 216 | `text-gray-900` | `text-foreground` | Product name color |
-| 220 | `text-gray-500` | `text-muted-foreground` | Size text |
-
-### Empty State
-
-| Line | Current | New | Issue |
-|------|---------|-----|-------|
-| 235 | `text-gray-500 bg-gray-50` | `text-muted-foreground bg-muted` | Empty state message |
-| 188 | `text-gray-500` | `text-muted-foreground` | Loading message |
+| **Database** | Add 3 columns: `delivery_date`, `delivery_time_preference`, `delivery_instructions` |
+| `src/types/supplierQuote.types.ts` | Add 3 fields to `Lead` interface |
+| `src/services/supplierQuoteService.ts` | Add `updateLead` function, update `LeadFromFormData`, update `createLeadFromForm` |
+| `src/services/cartInsertService.ts` | Pass delivery scheduling data when creating lead |
+| `src/pages/DashboardSupplierQuotes.tsx` | Add `updateLeadMutation`, `handleSaveLead`, update `handleSelectLead` to populate 14 fields |
+| `src/components/supplier-quotes/ProjectRequirementsCard.tsx` | Add "Save Lead" button with `Save` icon, left of dropdown |
 
 ---
 
-## Phase 2: AreaCalculator.tsx
+## UI Layout After Changes
 
-### Section Labels
-
-| Line | Current | New | Issue |
-|------|---------|-----|-------|
-| 59 | `text-gray-700` | `text-foreground` | "Project Areas" label unreadable |
-| 109 | `text-gray-700` | `text-foreground` | "Material Depth" label unreadable |
-| 129 | `text-gray-700` | `text-foreground` | "Order Extra for Compaction" label unreadable |
-
-### Slider Labels
-
-| Line | Current | New | Issue |
-|------|---------|-----|-------|
-| 120 | `text-gray-500` | `text-muted-foreground` | Depth range labels (1" - 24") |
-| 140 | `text-gray-500` | `text-muted-foreground` | Extra % range labels (0% - 30%) |
-| 82 | `text-gray-500` | `text-muted-foreground` | "×" symbol between inputs |
-
-### Calculation Results Card
-
-| Line | Current | New | Issue |
-|------|---------|-----|-------|
-| 147 | `bg-gray-50` | `bg-muted` | Card background too bright |
-| 148 | `text-gray-700` | `text-foreground` | "Calculation Results" heading |
-| 151, 155, 159 | `text-gray-500` | `text-muted-foreground` | "Total Area", "Cubic Yards", "est. Tons" labels |
-
----
-
-## Phase 3: ZipCodeChecker.tsx
-
-### Section Labels and Text
-
-| Line | Current | New | Issue |
-|------|---------|-----|-------|
-| 50 | `text-gray-800` | `text-foreground` | "Delivery Availability" heading |
-| 63 | `text-gray-600` | `text-muted-foreground` | Location text under "FREE Delivery Available" |
-| 72 | `text-gray-500 hover:text-gray-700` | `text-muted-foreground hover:text-foreground` | "Change" button |
-| 81 | `text-gray-600` | `text-muted-foreground` | "Enter your ZIP code..." instruction text |
-
-### Input Field States
-
-| Line | Current | New | Issue |
-|------|---------|-----|-------|
-| 87 | `text-gray-400` | `text-muted-foreground` | MapPin icon color |
-| 94 | `bg-gray-50` | `bg-muted` | Locked input background |
+```text
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 📦 Project Requirements                  [Save Lead] [Select Lead ▼] [+]│
+├─────────────────────────────────────────────────────────────────────────┤
+│ MATERIAL & QUANTITY                                                     │
+│ ┌────────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐        │
+│ │ Material       │ │ Spec       │ │ Tons       │ │ Cu Yds     │        │
+│ └────────────────┘ └────────────┘ └────────────┘ └────────────┘        │
+├─────────────────────────────────────────────────────────────────────────┤
+│ 📞 CONTACT INFORMATION                                                  │
+│ ┌─────────────────────────┐ ┌─────────────────────────┐                │
+│ │ 📞 Phone                │ │ 📧 Email                │                │
+│ └─────────────────────────┘ └─────────────────────────┘                │
+├─────────────────────────────────────────────────────────────────────────┤
+│ 📍 DELIVERY LOCATION                                                    │
+│ ...                                                                     │
+├─────────────────────────────────────────────────────────────────────────┤
+│ 🚚 DELIVERY SCHEDULING                                                  │
+│ ┌────────────────┐ ┌────────────────┐ ┌────────────────────────────────┐│
+│ │ 📅 Date        │ │ 🕐 Time        │ │ 📄 Instructions               ││
+│ └────────────────┘ └────────────────┘ └────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## Phase 4: TrustBanner.tsx
+## Data Flow After Implementation
 
-### Trust Item Descriptions
-
-| Line | Current | New | Issue |
-|------|---------|-----|-------|
-| 40 | `text-gray-600` | `text-muted-foreground` | Description text for each trust item |
-
----
-
-## Implementation Summary
-
-All changes follow the established token mapping:
-
-| Use Case | Old Value | New Token |
-|----------|-----------|-----------|
-| Labels/headings | `text-gray-700`, `text-gray-800`, `text-gray-900` | `text-foreground` |
-| Secondary text | `text-gray-500`, `text-gray-600` | `text-muted-foreground` |
-| Card backgrounds | `bg-white`, `bg-gray-50` | `bg-card`, `bg-muted` |
-| Borders | `border-gray-200`, `border-gray-300` | `border-border` |
-| Hover states | `hover:bg-gray-50` | `hover:bg-muted` |
+```text
+CART SAVE                              LEADS TABLE                        PROJECT REQUIREMENTS FORM
++-----------------------+              +---------------------+             +-------------------------+
+| contactInfo.name      | ─────────►   | display_name        | ─────────►  | (header)               |
+| contactInfo.email     | ─────────►   | email               | ─────────►  | contact_email      ✓   |
+| contactInfo.phone     | ─────────►   | phone               | ─────────►  | contact_phone      ✓   |
+| deliveryDate          | ─────────►   | delivery_date       | ─────────►  | delivery_date      ✓   |
+| deliveryTimePreference| ─────────►   | delivery_time_pref  | ─────────►  | delivery_time      ✓   |
+| deliveryInstructions  | ─────────►   | delivery_instructions ──────────► | delivery_instructions ✓|
+| deliveryAddress       | ─────────►   | job_address/city    | ─────────►  | delivery_address   ✓   |
+| tons                  | ─────────►   | requested_qty       | ─────────►  | qty_tons           ✓   |
+| product name          | ─────────►   | material            | ─────────►  | material           ✓   |
++-----------------------+              +---------------------+             +-------------------------+
+                                              ▲
+                                              │
+                                       [Save Lead] button
+                                       updates lead in DB
+```
 
 ---
 
 ## Testing Checklist
 
-After implementation, verify on the `/product-calculator` page:
-
-- [ ] "Material Category" and "Available Materials" labels are readable in dark mode
-- [ ] Category filter buttons have appropriate dark mode styling (not stark white)
-- [ ] Product cards blend naturally with dark theme
-- [ ] Slider labels ("1" - 24"", "0% - 30%") are readable
-- [ ] "Calculation Results" card has muted background, not bright white
-- [ ] ZipCode section text is readable
-- [ ] Trust Banner descriptions are visible
-- [ ] All elements maintain readability in light mode
-
----
-
-## What This Does NOT Change
-
-- No changes to selected/active states (already use `text-primary` and `bg-primary`)
-- No changes to green delivery confirmation styling (intentional accent color)
-- No layout or structural changes
-- No changes to other pages or components
+After implementation:
+- [ ] Save a cart with full delivery details (date, time preference, instructions)
+- [ ] Verify lead is created with all delivery fields populated in the database
+- [ ] Go to `/dashboard/supplier-quotes` and select the lead
+- [ ] Confirm ALL 14 fields populate in the Project Requirements form
+- [ ] Modify contact info or delivery fields in the form
+- [ ] Click "Save Lead" button and verify data updates in the database
+- [ ] Select the lead again and confirm updated data loads correctly
 
