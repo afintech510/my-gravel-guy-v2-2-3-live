@@ -29,7 +29,7 @@ const TrustGrid: React.FC<TrustGridProps> = ({
   }[columns];
 
   return (
-    <div className={cn("w-full rounded-lg border bg-gray-50 p-6", className)}>
+    <div className={cn("w-full rounded-lg border bg-muted p-6", className)}>
       {title && (
         <h2 className="text-2xl font-semibold text-center mb-8">{title}</h2>
       )}
@@ -41,7 +41,7 @@ const TrustGrid: React.FC<TrustGridProps> = ({
             title={item.title}
             description={item.description}
             size={badgeSize}
-            className="bg-white rounded-lg shadow-sm border"
+            className="bg-card rounded-lg shadow-sm border"
           />
         ))}
       </div>

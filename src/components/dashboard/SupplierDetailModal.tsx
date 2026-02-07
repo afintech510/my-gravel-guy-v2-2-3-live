@@ -416,7 +416,7 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                   </div>
 
                   {mode !== 'create' && supplier && (
-                    <div className="text-xs text-gray-500 space-y-1">
+                    <div className="text-xs text-muted-foreground space-y-1">
                       <p>Created: {format(new Date(supplier.created_at), 'MMM d, yyyy h:mm a')}</p>
                       {supplier.updated_at && (
                         <p>Updated: {format(new Date(supplier.updated_at), 'MMM d, yyyy h:mm a')}</p>

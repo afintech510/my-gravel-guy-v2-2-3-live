@@ -59,7 +59,7 @@ const SupplierSelector: React.FC<SupplierSelectorProps> = ({
     return (
       <div className="flex items-center space-x-2">
         <Loader2 className="h-4 w-4 animate-spin" />
-        <span className="text-sm text-gray-600">Loading suppliers...</span>
+        <span className="text-sm text-muted-foreground">Loading suppliers...</span>
       </div>
     );
   }

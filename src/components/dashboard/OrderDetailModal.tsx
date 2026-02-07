@@ -462,7 +462,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
       case 'delivered': return 'bg-green-100 text-green-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
       case 'paid': return 'bg-emerald-100 text-emerald-800';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -520,7 +520,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   checked={isUnlocked}
                   onCheckedChange={setIsUnlocked}
                 />
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-muted-foreground">
                   {isUnlocked ? 'Unlocked' : 'Locked'}
                 </span>
               </div>
@@ -867,7 +867,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                     value={smsPhoneNumber}
                     onChange={(e) => setSmsPhoneNumber(e.target.value)}
                   />
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     Enter phone number with country code (e.g., +1 for US)
                   </p>
                 </div>

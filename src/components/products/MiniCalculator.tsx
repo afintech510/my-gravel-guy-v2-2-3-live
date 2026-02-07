@@ -39,7 +39,7 @@ const MiniCalculator = ({
     onQuantityCalculated(roundedTons);
   };
   return <div className="border rounded-lg overflow-hidden font-montserrat">
-      <div className="bg-gray-50 p-4 border-b">
+      <div className="bg-muted p-4 border-b">
         <div className="flex items-center gap-2">
           <Calculator className="h-5 w-5" />
           <h3 className="font-semibold">Calculate Amount Needed</h3>
@@ -64,7 +64,7 @@ const MiniCalculator = ({
             <span className="text-sm font-semibold">{depth}</span>
           </div>
           <Slider value={[depth]} onValueChange={([value]) => setDepth(value)} min={1} max={24} step={1} />
-          <div className="flex justify-between text-xs text-gray-500">
+          <div className="flex justify-between text-xs text-muted-foreground">
             <span>1"</span>
             <span>12"</span>
             <span>24"</span>
