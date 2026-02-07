@@ -72,6 +72,44 @@ export async function getLeadById(id: string): Promise<Lead | null> {
   }
 }
 
+// Find existing lead by email or phone
+export async function findLeadByEmailOrPhone(email?: string, phone?: string): Promise<Lead | null> {
+  if (!email && !phone) {
+    return null;
+  }
+  
+  try {
+    let query = (supabase as any).from('leads').select('*');
+    
+    // Build OR condition for email/phone match
+    if (email && phone) {
+      query = query.or(`email.eq.${email},phone.eq.${phone}`);
+    } else if (email) {
+      query = query.eq('email', email);
+    } else if (phone) {
+      query = query.eq('phone', phone);
+    }
+    
+    const { data, error } = await query
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+      
+    if (error) {
+      // No match found is not an error
+      if (error.code === 'PGRST116') {
+        return null;
+      }
+      console.warn('Error finding lead:', error.message);
+      return null;
+    }
+    return data as Lead;
+  } catch (err) {
+    console.warn('Error finding lead:', err);
+    return null;
+  }
+}
+
 // ============ LEAD FROM FORM HELPER ============
 
 export interface LeadFromFormData {
