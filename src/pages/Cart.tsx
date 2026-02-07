@@ -131,8 +131,8 @@ const Cart = () => {
     return (
       <div className="py-16 px-4 max-w-6xl mx-auto">
         <div className="text-center space-y-6 py-12">
-          <div className="bg-gray-100 p-6 rounded-full w-20 h-20 mx-auto flex items-center justify-center">
-            <ShoppingCart className="w-10 h-10 text-gray-500" />
+          <div className="bg-muted p-6 rounded-full w-20 h-20 mx-auto flex items-center justify-center">
+            <ShoppingCart className="w-10 h-10 text-muted-foreground" />
           </div>
           <h1 className="text-3xl font-bold">Your cart is empty</h1>
           <p className="text-muted-foreground max-w-md mx-auto">
@@ -188,7 +188,7 @@ const Cart = () => {
               
               {/* Show discount if applied */}
               {hasDiscounts && (
-                <div className="flex justify-between text-sm text-green-600">
+                <div className="flex justify-between text-sm text-primary">
                   <span>Discount</span>
                   <span>-${totalDiscount.toFixed(2)}</span>
                 </div>
@@ -196,12 +196,12 @@ const Cart = () => {
               
               <div className="flex justify-between text-sm">
                 <span>Delivery</span>
-                <span className="text-green-600 font-medium">FREE</span>
+                <span className="text-primary font-medium">FREE</span>
               </div>
               
               <div className="flex justify-between text-sm">
                 <span>Tax</span>
-                <span className="text-green-600 font-medium">Included</span>
+                <span className="text-primary font-medium">Included</span>
               </div>
             </div>
             
@@ -230,8 +230,8 @@ const Cart = () => {
 
             {/* Delivery completion status */}
             {!allItemsComplete && (
-              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
-                <p className="text-sm text-amber-800">
+              <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-md">
+                <p className="text-sm text-foreground">
                   Complete delivery information for all items to proceed automatically to checkout.
                 </p>
               </div>

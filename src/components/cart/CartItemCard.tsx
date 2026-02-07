@@ -146,32 +146,32 @@ const CartItemCard = ({
             
             {/* Display delivery status and date */}
             <div className="flex items-center gap-2 text-sm">
-              {isDeliveryComplete ? <div className="flex items-center text-green-600">
+              {isDeliveryComplete ? <div className="flex items-center text-primary">
                   <CalendarIcon className="h-4 w-4 mr-1" />
                   <span>Delivery: {formatDate(item.deliveryDate)}</span>
-                  <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                  <span className="ml-2 px-2 py-1 bg-primary/20 text-primary rounded-full text-xs">
                     Confirmed
                   </span>
-                </div> : <div className="flex items-center text-amber-600">
+                </div> : <div className="flex items-center text-amber-500">
                   <InfoIcon className="h-4 w-4 mr-1" />
                   <span>Delivery info required</span>
                 </div>}
             </div>
 
             {/* Show saved delivery information when complete */}
-            {isDeliveryComplete && <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2 text-sm">
+            {isDeliveryComplete && <div className="mt-3 p-3 bg-muted rounded-lg space-y-2 text-sm">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {/* Contact Information */}
                   <div className="space-y-2">
-                    <h4 className="font-medium text-gray-900">Contact</h4>
-                    <div className="flex items-center gap-2 text-gray-600">
+                    <h4 className="font-medium text-foreground">Contact</h4>
+                    <div className="flex items-center gap-2 text-muted-foreground">
                       <span className="font-medium">{item.contactInfo?.name}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-600">
+                    <div className="flex items-center gap-2 text-muted-foreground">
                       <PhoneIcon className="h-3 w-3" />
                       <span>{item.contactInfo?.phone}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-600">
+                    <div className="flex items-center gap-2 text-muted-foreground">
                       <MailIcon className="h-3 w-3" />
                       <span>{item.contactInfo?.email}</span>
                     </div>
@@ -179,8 +179,8 @@ const CartItemCard = ({
 
                   {/* Delivery Address */}
                   <div className="space-y-2">
-                    <h4 className="font-medium text-gray-900">Delivery Address</h4>
-                    <div className="flex items-start gap-2 text-gray-600">
+                    <h4 className="font-medium text-foreground">Delivery Address</h4>
+                    <div className="flex items-start gap-2 text-muted-foreground">
                       <MapPinIcon className="h-3 w-3 mt-0.5 flex-shrink-0" />
                       <div>
                         <div>{item.deliveryAddress?.street}</div>
@@ -191,12 +191,12 @@ const CartItemCard = ({
                 </div>
 
                 {/* Optional delivery preferences */}
-                {(item.deliveryTimePreference || item.deliveryInstructions) && <div className="pt-2 border-t border-gray-200 space-y-2">
-                    {item.deliveryTimePreference && <div className="flex items-center gap-2 text-gray-600">
+                {(item.deliveryTimePreference || item.deliveryInstructions) && <div className="pt-2 border-t border-border space-y-2">
+                    {item.deliveryTimePreference && <div className="flex items-center gap-2 text-muted-foreground">
                         <ClockIcon className="h-3 w-3" />
                         <span>Preferred time: {formatDeliveryTimePreference(item.deliveryTimePreference)}</span>
                       </div>}
-                    {item.deliveryInstructions && <div className="flex items-start gap-2 text-gray-600">
+                    {item.deliveryInstructions && <div className="flex items-start gap-2 text-muted-foreground">
                         <FileTextIcon className="h-3 w-3 mt-0.5 flex-shrink-0" />
                         <span>{item.deliveryInstructions}</span>
                       </div>}
@@ -209,12 +209,12 @@ const CartItemCard = ({
             {/* Quantity adjusters and price */}
             <div className="flex items-center gap-3">
               {/* Quantity adjustment buttons */}
-              <div className="flex items-center bg-gray-100 rounded-lg p-1">
-                <Button variant="ghost" size="sm" onClick={() => handleQuantityChange(item.tons - 1)} disabled={item.tons <= 1} className="h-8 w-8 p-0 hover:bg-gray-200">
+              <div className="flex items-center bg-muted rounded-lg p-1">
+                <Button variant="ghost" size="sm" onClick={() => handleQuantityChange(item.tons - 1)} disabled={item.tons <= 1} className="h-8 w-8 p-0 hover:bg-muted-foreground/20">
                   <Minus className="h-4 w-4" />
                 </Button>
                 <span className="mx-3 text-sm font-medium">{item.tons}</span>
-                <Button variant="ghost" size="sm" onClick={() => handleQuantityChange(item.tons + 1)} className="h-8 w-8 p-0 hover:bg-gray-200">
+                <Button variant="ghost" size="sm" onClick={() => handleQuantityChange(item.tons + 1)} className="h-8 w-8 p-0 hover:bg-muted-foreground/20">
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
