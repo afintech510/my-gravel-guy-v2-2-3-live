@@ -173,7 +173,7 @@ const EnhancedDeliveryForm: React.FC<EnhancedDeliveryFormProps> = ({ onSubmit, i
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-2">Delivery Information</h3>
-        <p className="text-sm text-gray-600">Please provide your delivery details and contact information.</p>
+        <p className="text-sm text-muted-foreground">Please provide your delivery details and contact information.</p>
       </div>
 
       <Form {...form}>
@@ -397,7 +397,7 @@ const EnhancedDeliveryForm: React.FC<EnhancedDeliveryFormProps> = ({ onSubmit, i
                   <FormLabel className="text-sm">
                     I agree to receive SMS and email communications about my delivery (required)
                   </FormLabel>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     We'll send you updates about your delivery status and timing.
                   </p>
                 </div>
