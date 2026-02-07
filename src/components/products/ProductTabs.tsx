@@ -18,7 +18,7 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
           <TabsTrigger value="faq">FAQ</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="details" className="prose prose-gray max-w-none mt-6">
+        <TabsContent value="details" className="prose prose-neutral dark:prose-invert max-w-none mt-6">
           <div dangerouslySetInnerHTML={{ __html: product.description }} />
         </TabsContent>
         
