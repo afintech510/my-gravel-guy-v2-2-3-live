@@ -37,7 +37,7 @@ export default function TrustBanner() {
               {item.icon}
             </div>
             <h4 className="font-medium">{item.title}</h4>
-            <p className="text-sm text-gray-600">{item.description}</p>
+            <p className="text-sm text-muted-foreground">{item.description}</p>
           </div>
         ))}
       </div>
