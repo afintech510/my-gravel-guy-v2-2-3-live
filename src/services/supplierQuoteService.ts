@@ -88,6 +88,10 @@ export interface LeadFromFormData {
   timeline?: string;
   notes?: string;
   siteAccess?: string[];
+  // Delivery scheduling fields (from cart saves)
+  deliveryDate?: string;
+  deliveryTimePreference?: string;
+  deliveryInstructions?: string;
 }
 
 export async function createLeadFromForm(data: LeadFromFormData): Promise<Lead | null> {
@@ -105,9 +109,35 @@ export async function createLeadFromForm(data: LeadFromFormData): Promise<Lead |
     timeline: data.timeline,
     notes: data.notes,
     site_access: data.siteAccess,
+    // Delivery scheduling fields
+    delivery_date: data.deliveryDate,
+    delivery_time_preference: data.deliveryTimePreference,
+    delivery_instructions: data.deliveryInstructions,
   };
   console.log('Creating lead from form:', lead);
   return createLead(lead);
+}
+
+// ============ UPDATE LEAD ============
+
+export async function updateLead(id: string, updates: Partial<LeadInsert>): Promise<Lead | null> {
+  try {
+    const { data, error } = await (supabase as any)
+      .from('leads')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+      
+    if (error) {
+      console.error('Error updating lead:', error);
+      return null;
+    }
+    return data as Lead;
+  } catch (err) {
+    console.error('Error updating lead:', err);
+    return null;
+  }
 }
 
 // ============ SUPPLIER QUOTES ============
