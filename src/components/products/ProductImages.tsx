@@ -72,11 +72,11 @@ const ProductImages = ({ product }: ProductImagesProps) => {
   
   return (
     <div className="space-y-3">
-      <div className="relative overflow-hidden rounded-lg border border-gray-200">
-        <AspectRatio ratio={1} className="bg-gray-100">
+      <div className="relative overflow-hidden rounded-lg border border-border">
+        <AspectRatio ratio={1} className="bg-muted">
           {imageError ? (
             <div className="w-full h-full flex items-center justify-center">
-              <ImageOff className="h-12 w-12 text-gray-400" />
+              <ImageOff className="h-12 w-12 text-muted-foreground" />
             </div>
           ) : isVideo(images[selectedImage]) ? (
             <div className="relative w-full h-full">
