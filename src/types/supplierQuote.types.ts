@@ -115,7 +115,6 @@ export interface SupplierQuoteFormData {
   // Delivery scheduling
   delivery_date: string;
   delivery_time: string;
-  delivery_instructions: string;
   
   material_price: string;
   material_unit: string;
@@ -181,7 +180,6 @@ export const INITIAL_FORM_DATA: SupplierQuoteFormData = {
   // Delivery scheduling
   delivery_date: '',
   delivery_time: '',
-  delivery_instructions: '',
   
   material_price: '',
   material_unit: 'ton',
