@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, MapPin, Plus, Phone, Mail, Calendar, Clock, FileText, Truck, Save } from 'lucide-react';
+import { Package, MapPin, Plus, Phone, Mail, Calendar, Clock, Truck, Save } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
@@ -255,7 +255,7 @@ export function ProjectRequirementsCard({
           <Truck className="h-3.5 w-3.5" />
           Delivery Scheduling
         </h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <InputGroup label="Preferred Date">
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -275,18 +275,6 @@ export function ProjectRequirementsCard({
                 type="time"
                 value={data.delivery_time}
                 onChange={(e) => onChange({ delivery_time: e.target.value })}
-                className="pl-10 bg-muted border-border text-foreground placeholder:text-muted-foreground"
-              />
-            </div>
-          </InputGroup>
-          
-          <InputGroup label="Delivery Instructions">
-            <div className="relative">
-              <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={data.delivery_instructions}
-                onChange={(e) => onChange({ delivery_instructions: e.target.value })}
-                placeholder="e.g., Gate code, placement..."
                 className="pl-10 bg-muted border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>

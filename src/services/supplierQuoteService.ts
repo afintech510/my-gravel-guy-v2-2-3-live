@@ -317,7 +317,6 @@ export function quoteToFormData(quote: SupplierQuote): { formData: SupplierQuote
       // Delivery scheduling (not stored in quote currently)
       delivery_date: '',
       delivery_time: '',
-      delivery_instructions: '',
       material_price: quote.material_price?.toString() || '',
       material_unit: quote.material_unit || 'ton',
       delivery_rate: quote.delivery_rate?.toString() || '',
