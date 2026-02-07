@@ -14,6 +14,10 @@ export interface Lead {
   timeline?: string;
   site_access?: string[];
   notes?: string;
+  // Delivery scheduling fields (from cart saves)
+  delivery_date?: string;
+  delivery_time_preference?: string;
+  delivery_instructions?: string;
   created_at: string;
 }
 

@@ -320,6 +320,9 @@ export type Database = {
       leads: {
         Row: {
           created_at: string | null
+          delivery_date: string | null
+          delivery_instructions: string | null
+          delivery_time_preference: string | null
           display_name: string
           email: string | null
           id: string
@@ -338,6 +341,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          delivery_date?: string | null
+          delivery_instructions?: string | null
+          delivery_time_preference?: string | null
           display_name: string
           email?: string | null
           id?: string
@@ -356,6 +362,9 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          delivery_date?: string | null
+          delivery_instructions?: string | null
+          delivery_time_preference?: string | null
           display_name?: string
           email?: string | null
           id?: string

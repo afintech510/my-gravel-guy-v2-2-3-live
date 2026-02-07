@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, MapPin, Plus, Phone, Mail, Calendar, Clock, FileText, Truck } from 'lucide-react';
+import { Package, MapPin, Plus, Phone, Mail, Calendar, Clock, FileText, Truck, Save } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
@@ -17,13 +17,17 @@ interface ProjectRequirementsCardProps {
   onChange: (updates: Partial<SupplierQuoteFormData>) => void;
   leads: Lead[];
   onNewLead: () => void;
+  onSaveLead: () => void;
+  isSavingLead?: boolean;
 }
 
 export function ProjectRequirementsCard({ 
   data, 
   onChange, 
   leads, 
-  onNewLead 
+  onNewLead,
+  onSaveLead,
+  isSavingLead = false,
 }: ProjectRequirementsCardProps) {
   const handleProductSelect = (product: Product | null, customText?: string) => {
     if (product) {
@@ -52,6 +56,20 @@ export function ProjectRequirementsCard({
     <Card className="p-5 bg-card border-border">
       <SectionHeader icon={Package} title="Project Requirements">
         <div className="flex items-center gap-2">
+          {/* Save Lead Button */}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onSaveLead}
+            disabled={!data.lead_id || isSavingLead}
+            className="border-border text-foreground hover:bg-muted"
+          >
+            <Save className="h-4 w-4 mr-1" />
+            {isSavingLead ? 'Saving...' : 'Save Lead'}
+          </Button>
+          
+          {/* Lead Selector */}
           <Select
             value={data.lead_id || ''}
             onValueChange={(value) => onChange({ lead_id: value })}
@@ -71,6 +89,8 @@ export function ProjectRequirementsCard({
               )}
             </SelectContent>
           </Select>
+          
+          {/* New Lead Button */}
           <Button
             type="button"
             variant="outline"
