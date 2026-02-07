@@ -91,16 +91,16 @@ const QuoteFormProduct: React.FC<QuoteFormProductProps> = ({ selectedProduct }) 
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6">
+    <div className="bg-card rounded-lg shadow-sm border border-border p-6">
       <div className="mb-6">
         <h2 className="text-2xl font-bold mb-2">Get a Custom Quote</h2>
         {selectedProduct && (
-          <p className="text-gray-600">
-            Interested in <strong>{selectedProduct.name}</strong>? Get a personalized quote for your project.
+          <p className="text-muted-foreground">
+            Interested in <strong className="text-foreground">{selectedProduct.name}</strong>? Get a personalized quote for your project.
           </p>
         )}
         {!selectedProduct && (
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Get a personalized quote for your material needs.
           </p>
         )}
