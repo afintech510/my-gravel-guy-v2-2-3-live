@@ -109,6 +109,10 @@ export const insertCartToDatabase = async (cartData: CartInsertData) => {
           jobCity: firstAddress?.deliveryAddress?.city,
           jobState: firstAddress?.deliveryAddress?.state,
           jobZip: firstAddress?.deliveryAddress?.zip,
+          // Capture delivery scheduling from cart
+          deliveryDate: firstItem.deliveryDate?.toISOString().split('T')[0],
+          deliveryTimePreference: firstItem.deliveryTimePreference,
+          deliveryInstructions: firstItem.deliveryInstructions,
           notes: `Cart saved: ${cartId}`,
         });
         console.log('Lead created from cart save');

@@ -33,6 +33,7 @@ import {
   createLead,
   createSupplierQuote,
   updateSupplierQuote,
+  updateLead,
   getSupplierQuoteById,
   formDataToQuoteInsert,
   quoteToFormData,
@@ -140,7 +141,21 @@ export default function DashboardSupplierQuotes() {
     },
   });
 
-  // Handlers
+  const updateLeadMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<LeadInsert> }) =>
+      updateLead(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["supplier-leads"] });
+      toast({ title: "Lead updated", description: "Lead information saved successfully." });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to save lead.",
+        variant: "destructive",
+      });
+    },
+  });
   const handleFormChange = useCallback((updates: Partial<SupplierQuoteFormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
   }, []);
@@ -179,13 +194,24 @@ export default function DashboardSupplierQuotes() {
         setFormData((prev) => ({
           ...prev,
           lead_id: leadId,
+          // Material & Quantity
           material: lead.material || prev.material,
           qty_tons: lead.requested_qty?.toString() || prev.qty_tons,
+          // Contact Info
+          contact_phone: lead.phone || prev.contact_phone,
+          contact_email: lead.email || prev.contact_email,
+          // Delivery Location
           delivery_address: lead.job_address || prev.delivery_address,
           delivery_city: lead.job_city || prev.delivery_city,
           delivery_state: lead.job_state || prev.delivery_state,
           delivery_zip: lead.job_zip || prev.delivery_zip,
           site_access: lead.site_access || prev.site_access,
+          // Delivery Scheduling
+          delivery_date: lead.delivery_date || prev.delivery_date,
+          delivery_time: lead.delivery_time_preference || prev.delivery_time,
+          delivery_instructions: lead.delivery_instructions || prev.delivery_instructions,
+          // Notes
+          project_notes: lead.notes || prev.project_notes,
         }));
       }
     },
@@ -257,6 +283,29 @@ export default function DashboardSupplierQuotes() {
     [createLeadMutation],
   );
 
+  const handleSaveLead = useCallback(() => {
+    if (!formData.lead_id) return;
+    
+    updateLeadMutation.mutate({
+      id: formData.lead_id,
+      updates: {
+        phone: formData.contact_phone || undefined,
+        email: formData.contact_email || undefined,
+        material: formData.material || undefined,
+        requested_qty: formData.qty_tons ? parseFloat(formData.qty_tons) : undefined,
+        job_address: formData.delivery_address || undefined,
+        job_city: formData.delivery_city || undefined,
+        job_state: formData.delivery_state || undefined,
+        job_zip: formData.delivery_zip || undefined,
+        site_access: formData.site_access.length > 0 ? formData.site_access : undefined,
+        delivery_date: formData.delivery_date || undefined,
+        delivery_time_preference: formData.delivery_time || undefined,
+        delivery_instructions: formData.delivery_instructions || undefined,
+        notes: formData.project_notes || undefined,
+      },
+    });
+  }, [formData, updateLeadMutation]);
+
   // Keyboard shortcut: Ctrl/Cmd + Enter to save
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -288,6 +337,8 @@ export default function DashboardSupplierQuotes() {
               onChange={handleFormChange}
               leads={leads}
               onNewLead={() => setIsNewLeadModalOpen(true)}
+              onSaveLead={handleSaveLead}
+              isSavingLead={updateLeadMutation.isPending}
             />
 
             <SupplierCard ref={supplierCardRef} data={formData} onChange={handleFormChange} />
