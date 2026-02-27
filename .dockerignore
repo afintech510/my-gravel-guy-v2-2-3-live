@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.claude
+*.md
+!KNOWLEDGE_BASE.md
+.env.local
+.env.development
+SESSION_LOG.md
+sql
+scripts
+supabase

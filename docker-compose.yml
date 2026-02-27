@@ -1,0 +1,15 @@
+services:
+  mygravelguy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mygravelguy
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks:
+      - hosthampton_hampton_net
+
+networks:
+  hosthampton_hampton_net:
+    external: true
