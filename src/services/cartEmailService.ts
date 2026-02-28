@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import type { CartItem } from '@/contexts/CartContext';
+import { generateCartSaveCustomerEmail } from '@/utils/emailTemplates';
 
 export interface CartEmailData {
   items: CartItem[];
@@ -77,6 +78,36 @@ export const sendCartConfirmationEmail = async (emailData: CartEmailData) => {
       console.error('Cart confirmation email error:', error);
     } else {
       console.log('Cart confirmation email sent successfully:', data);
+    }
+
+    // Send customer-facing cart save email
+    if (emailData.actionType === 'save' && customerEmail) {
+      try {
+        const customerHtml = generateCartSaveCustomerEmail({
+          customer_name: customerName,
+          order_id: emailData.cartId,
+          items: orderData.items,
+          total_amount: orderData.total_amount,
+        });
+
+        const { error: custError } = await supabase.functions.invoke('send-email', {
+          body: {
+            to: customerEmail,
+            subject: 'Your Cart Has Been Saved | MyGravelGuy',
+            html: customerHtml,
+            type: 'customer_confirmation',
+            reply_to: 'operations@mygravelguy.com',
+          },
+        });
+
+        if (custError) {
+          console.error('Customer cart save email error:', custError);
+        } else {
+          console.log('Customer cart save email sent to:', customerEmail);
+        }
+      } catch (custErr) {
+        console.error('Customer cart save email exception:', custErr);
+      }
     }
   } catch (error) {
     console.error('Cart confirmation email exception:', error);

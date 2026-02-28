@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Input } from "@/components/ui/input";
 import { Search, Filter, SortAsc, SortDesc } from 'lucide-react';
 import {
@@ -41,6 +42,15 @@ const Shop = () => {
   };
 
   return (
+    <>
+      <Helmet>
+        <title>Shop Bulk Materials Online | My Gravel Guy</title>
+        <meta name="description" content="Shop premium gravel, sand, dirt, and mulch online. Filter by category, compare prices, and order for delivery. Volume discounts on 3+ ton orders." />
+        <link rel="canonical" href="https://mygravelguy.com/shop" />
+        <meta property="og:title" content="Shop Bulk Materials Online | My Gravel Guy" />
+        <meta property="og:description" content="Shop premium gravel, sand, dirt, and mulch. Volume discounts on bulk orders delivered nationwide." />
+        <meta property="og:url" content="https://mygravelguy.com/shop" />
+      </Helmet>
     <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Page Header */}
       <div className="py-8 px-4">
@@ -138,6 +148,7 @@ const Shop = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

@@ -113,9 +113,10 @@ export default function BulkProductCard({
           {/* Larger Product Image */}
           {product.image && (
             <div className="w-full aspect-square bg-gray-100 rounded-lg flex-shrink-0">
-              <img 
-                src={product.image} 
-                alt={product.name} 
+              <img
+                src={product.image}
+                alt={product.name}
+                loading="lazy"
                 className="w-full h-full object-cover rounded-lg"
               />
             </div>

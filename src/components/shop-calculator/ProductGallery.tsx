@@ -43,6 +43,7 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ images, productName }) 
             <img
               src={limitedImages[selectedImage]}
               alt={`${productName} - View ${selectedImage + 1}`}
+              loading="lazy"
               className="object-cover w-full h-full"
               onError={() => {
                 console.log(`Image failed to load for ${productName}:`, limitedImages[selectedImage]);

@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -126,6 +127,42 @@ const ProductDetail = () => {
   }
 
   return (
+    <>
+      <Helmet>
+        <title>{product.name} - Buy Online | My Gravel Guy</title>
+        <meta name="description" content={`Order ${product.name} online. ${product.short_description || product.description?.slice(0, 120) || 'Premium quality bulk materials delivered to your door.'}`.slice(0, 160)} />
+        <link rel="canonical" href={`https://mygravelguy.com/products/${product.slug}`} />
+        <meta property="og:title" content={`${product.name} - My Gravel Guy`} />
+        <meta property="og:description" content={product.short_description || product.description?.slice(0, 160) || ''} />
+        <meta property="og:url" content={`https://mygravelguy.com/products/${product.slug}`} />
+        <meta property="og:type" content="product" />
+        {product.images?.[0] && <meta property="og:image" content={product.images[0]} />}
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": product.name,
+          "description": product.short_description || product.description,
+          "image": product.images || [],
+          "url": `https://mygravelguy.com/products/${product.slug}`,
+          "category": product.category,
+          "offers": {
+            "@type": "Offer",
+            "price": adjustedPrice ?? product.price,
+            "priceCurrency": "USD",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": adjustedPrice ?? product.price,
+              "priceCurrency": "USD",
+              "unitText": "ton"
+            },
+            "availability": "https://schema.org/InStock",
+            "seller": {
+              "@type": "Organization",
+              "name": "My Gravel Guy"
+            }
+          }
+        })}</script>
+      </Helmet>
     <div className="min-h-screen bg-background py-16 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -202,6 +239,7 @@ const ProductDetail = () => {
         />
       </div>
     </div>
+    </>
   );
 };
 

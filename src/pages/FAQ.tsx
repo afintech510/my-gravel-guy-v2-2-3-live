@@ -106,8 +106,23 @@ const FAQ = () => {
   return (
     <>
       <Helmet>
-        <title>FAQ - Gravel Delivery Services</title>
-        <meta name="description" content="Find answers to frequently asked questions about our gravel, sand, and dirt delivery services." />
+        <title>FAQ - Gravel Delivery Services | My Gravel Guy</title>
+        <meta name="description" content="Find answers to frequently asked questions about our gravel, sand, and dirt delivery services. Ordering, delivery, pricing, and product information." />
+        <link rel="canonical" href="https://mygravelguy.com/faq" />
+        <meta property="og:title" content="FAQ - Gravel Delivery Services | My Gravel Guy" />
+        <meta property="og:url" content="https://mygravelguy.com/faq" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": Object.values(faqData).flat().map(item => ({
+            "@type": "Question",
+            "name": item.question,
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": item.answer
+            }
+          }))
+        })}</script>
       </Helmet>
 
       <div className="min-h-screen bg-background">

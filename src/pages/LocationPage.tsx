@@ -398,11 +398,27 @@ const LocationPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <Helmet>
-        <title>{location?.title || `Gravel Delivery Location`}</title>
+        <title>{location?.title || `Gravel Delivery Location`} | My Gravel Guy</title>
         <meta name="description" content={location?.meta_description || location?.description || "Gravel delivery information for this location."} />
+        <link rel="canonical" href={`https://mygravelguy.com/locations/${location?.slug}`} />
         <meta property="og:title" content={location?.title || `Gravel Delivery Location`} />
         <meta property="og:description" content={location?.meta_description || location?.description || "Gravel delivery information for this location."} />
+        <meta property="og:url" content={`https://mygravelguy.com/locations/${location?.slug}`} />
         {location?.image_url && <meta property="og:image" content={location.image_url} />}
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "LocalBusiness",
+          "name": `My Gravel Guy - ${location?.city}, ${location?.state}`,
+          "description": location?.description,
+          "url": `https://mygravelguy.com/locations/${location?.slug}`,
+          "telephone": "+1-844-624-0400",
+          "areaServed": {
+            "@type": "City",
+            "name": location?.city,
+            "containedInPlace": { "@type": "State", "name": location?.state }
+          },
+          "parentOrganization": { "@type": "Organization", "name": "My Gravel Guy" }
+        })}</script>
       </Helmet>
       
       <div className="relative py-20 px-4 bg-gray-800 text-white">

@@ -49,10 +49,11 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
             // Mobile: Keep existing thumbnail layout
             <>
               <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-2">
-                <img 
-                  src={images[activeImageIndex]} 
-                  alt={product.name} 
-                  className="w-full h-full object-cover" 
+                <img
+                  src={images[activeImageIndex]}
+                  alt={product.name}
+                  loading="lazy"
+                  className="w-full h-full object-cover"
                 />
               </div>
               

@@ -21,6 +21,7 @@ export interface ContactInfo {
 }
 
 export interface CartItem extends Product {
+  cartItemId: string; // Unique ID per cart entry — allows duplicate products
   tons: number; // Renamed from quantity for clarity
   yards?: number; // Calculated based on tonYardRatio
   deliveryDate?: Date;
@@ -30,7 +31,7 @@ export interface CartItem extends Product {
   deliveryInstructions?: string;
   contactInfo?: ContactInfo;
   basePrice?: number; // Original product price before ZIP code adjustments
-  
+
   // Additional material properties that map to orders table
   materialCategory?: string;
   materialSubcategory?: string;
@@ -53,13 +54,13 @@ interface CartContextType {
     depth?: number,
     deliveryAddress?: DeliveryAddress
   }) => void;
-  removeFromCart: (productId: string | number) => void;
+  removeFromCart: (cartItemId: string) => void;
   updateDeliveryDetails: (
-    productId: string | number, 
+    cartItemId: string,
     details: Partial<Omit<CartItem, keyof Product | 'tons'>>
   ) => void;
-  updateQuantity: (productId: string | number, newTons: number) => void;
-  updateItemPrice: (productId: string | number, newPrice: number) => void;
+  updateQuantity: (cartItemId: string, newTons: number) => void;
+  updateItemPrice: (cartItemId: string, newPrice: number) => void;
   clearCart: () => void;
   total: number;
   discountTotal: number;
@@ -78,10 +79,14 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-// Helper function to deserialize dates from localStorage
+const generateCartItemId = () =>
+  `cart-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+// Helper function to deserialize dates and backfill cartItemId for legacy items
 const deserializeCartItems = (items: CartItem[]): CartItem[] => {
   return items.map(item => ({
     ...item,
+    cartItemId: item.cartItemId || generateCartItemId(),
     deliveryDate: item.deliveryDate ? new Date(item.deliveryDate) : undefined
   }));
 };
@@ -94,15 +99,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [depositOption, setDepositOption] = useLocalStorage<boolean>('deposit-option', false);
   const { toast } = useToast();
 
-  // Deserialize dates whenever items change from localStorage
+  // Deserialize dates and backfill cartItemId whenever items load from localStorage
   useEffect(() => {
     if (items.length > 0) {
-      const needsDeserialization = items.some(item => 
-        item.deliveryDate && typeof item.deliveryDate === 'string'
+      const needsFix = items.some(item =>
+        (item.deliveryDate && typeof item.deliveryDate === 'string') || !item.cartItemId
       );
-      if (needsDeserialization) {
-        const deserializedItems = deserializeCartItems(items);
-        setItems(deserializedItems);
+      if (needsFix) {
+        const fixedItems = deserializeCartItems(items);
+        setItems(fixedItems);
       }
     }
   }, [setItems]); // Run when setItems changes (but avoid infinite loops)
@@ -143,6 +148,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...currentItems,
       {
         ...product,
+        cartItemId: generateCartItemId(),
         tons,
         yards,
         basePrice: product.price, // Store original price for potential adjustments later
@@ -165,18 +171,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [lastRemovedItem, setItems, setLastRemovedItem]);
 
-  // Modified to store the removed item and display toast with undo action
-  const removeFromCart = useCallback((productId: string | number) => {
+  // Remove a single cart entry by its unique cartItemId
+  const removeFromCart = useCallback((cartItemId: string) => {
     setItems(currentItems => {
-      const itemToRemove = currentItems.find(item => item.id === productId);
+      const itemToRemove = currentItems.find(item => item.cartItemId === cartItemId);
       if (itemToRemove) {
         setLastRemovedItem(itemToRemove);
-        
-        // Show toast with undo button
-        const itemDescription = itemToRemove.materialCategory 
+
+        const itemDescription = itemToRemove.materialCategory
           ? `${itemToRemove.tons} tons of ${itemToRemove.materialCategory}`
           : itemToRemove.name;
-          
+
         toast({
           title: "Item Removed",
           description: `${itemDescription} has been removed from your cart.`,
@@ -190,18 +195,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           className: "border-green-500 border-2 shadow-[0_0_15px_rgba(20,255,106,0.5)]"
         });
       }
-      return currentItems.filter(item => item.id !== productId);
+      return currentItems.filter(item => item.cartItemId !== cartItemId);
     });
   }, [toast, restoreLastRemovedItem, setItems, setLastRemovedItem]);
 
-  // New function to update quantity for a specific cart item with 3 ton minimum
-  const updateQuantity = useCallback((productId: string | number, newTons: number) => {
+  // Update quantity for a specific cart item by cartItemId
+  const updateQuantity = useCallback((cartItemId: string, newTons: number) => {
     const adjustedTons = Math.max(3, newTons); // Enforce minimum of 3 tons
     setItems(currentItems =>
       currentItems.map(item =>
-        item.id === productId
-          ? { 
-              ...item, 
+        item.cartItemId === cartItemId
+          ? {
+              ...item,
               tons: adjustedTons,
               yards: item.tonYardRatio ? adjustedTons / item.tonYardRatio : undefined
             }
@@ -210,25 +215,25 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   }, [setItems]);
 
-  // Modified updateDeliveryDetails to handle price updates
+  // Update delivery details for a specific cart item by cartItemId
   const updateDeliveryDetails = useCallback((
-    productId: string | number,
+    cartItemId: string,
     details: Partial<Omit<CartItem, keyof Product | 'tons'>>
   ) => {
     setItems(currentItems =>
       currentItems.map(item =>
-        item.id === productId
+        item.cartItemId === cartItemId
           ? { ...item, ...details }
           : item
       )
     );
   }, [setItems]);
 
-  // New function to update item price specifically
-  const updateItemPrice = useCallback((productId: string | number, newPrice: number) => {
+  // Update price for a specific cart item by cartItemId
+  const updateItemPrice = useCallback((cartItemId: string, newPrice: number) => {
     setItems(currentItems =>
       currentItems.map(item =>
-        item.id === productId
+        item.cartItemId === cartItemId
           ? { ...item, price: newPrice }
           : item
       )

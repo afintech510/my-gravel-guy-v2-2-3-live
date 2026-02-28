@@ -137,10 +137,30 @@ const Checkout = () => {
         contactEmail: item.contactInfo?.email || undefined, // This is what create-auth-hold looks for
       };
 
+      // Build a description that shows delivery details on the Stripe checkout page
+      const descParts: string[] = [];
+      if (item.contactInfo?.name) descParts.push(`Contact: ${item.contactInfo.name}`);
+      if (item.deliveryAddress) {
+        descParts.push(
+          `Deliver to: ${item.deliveryAddress.street}, ${item.deliveryAddress.city}, ${item.deliveryAddress.state} ${item.deliveryAddress.zip}`
+        );
+      }
+      if (item.deliveryDate) {
+        const d = item.deliveryDate instanceof Date ? item.deliveryDate : new Date(item.deliveryDate);
+        descParts.push(`Date: ${d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`);
+      }
+      if (item.deliveryTimePreference && item.deliveryTimePreference !== 'anytime') {
+        descParts.push(`Time: ${item.deliveryTimePreference === 'morning' ? 'Morning' : 'Afternoon'}`);
+      }
+      // Stripe product_data.description max is 500 chars
+      const description = descParts.length > 0
+        ? descParts.join(' | ').substring(0, 500)
+        : item.short_description?.substring(0, 200) || item.description?.substring(0, 200) || 'Landscape Material';
+
       return {
         id: item.id,
         name: item.name,
-        description: item.short_description?.substring(0, 100) || item.description?.substring(0, 100) || 'Landscape Material',
+        description,
         price: Math.max(0.01, discountedPricePerTon),
         quantity: item.tons,
         image: item.image || item.images?.[0],
@@ -426,7 +446,7 @@ const Checkout = () => {
               
               <div className="space-y-6">
                 {items.map((item, index) => (
-                  <div key={`${item.id}-${index}`} className="border-b pb-6 last:border-b-0">
+                  <div key={item.cartItemId} className="border-b pb-6 last:border-b-0">
                     <div className="flex justify-between mb-4">
                       <div>
                         <div className="font-medium">{item.name}</div>

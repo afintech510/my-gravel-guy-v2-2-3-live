@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Claude Code skills (local dev tools only)
+.claude/skills/
+
+# MCP config (contains access tokens)
+.mcp.json

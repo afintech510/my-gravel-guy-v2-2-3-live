@@ -29,7 +29,7 @@ export function calculateExponentialPrice(
   const calculatedPrice = Math.max(pricePerTon, minimumPrice);
   
   // Round to the nearest 10
-  const roundedPrice = Math.round(calculatedPrice ) /// 10) * 10;
+  const roundedPrice = Math.round(calculatedPrice / 10) * 10;
   
   return roundedPrice;
 }

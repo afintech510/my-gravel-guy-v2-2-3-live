@@ -55,7 +55,24 @@ const BlogPost = () => {
       <Helmet>
         <title>{post.meta_title || post.title} | My Gravel Guy Blog</title>
         <meta name="description" content={post.meta_description || post.excerpt} />
+        <link rel="canonical" href={`https://mygravelguy.com/blog/${slug}`} />
+        <meta property="og:title" content={post.meta_title || post.title} />
+        <meta property="og:description" content={post.meta_description || post.excerpt} />
+        <meta property="og:url" content={`https://mygravelguy.com/blog/${slug}`} />
+        <meta property="og:type" content="article" />
         {post.featured_image && <meta property="og:image" content={post.featured_image} />}
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          "headline": post.title,
+          "description": post.meta_description || post.excerpt,
+          "image": post.featured_image || undefined,
+          "url": `https://mygravelguy.com/blog/${slug}`,
+          "datePublished": post.published_at || post.created_at,
+          "dateModified": post.updated_at || post.published_at,
+          "author": { "@type": "Organization", "name": "My Gravel Guy" },
+          "publisher": { "@type": "Organization", "name": "My Gravel Guy" }
+        })}</script>
       </Helmet>
 
       <div className="min-h-screen bg-gray-50">
@@ -72,10 +89,11 @@ const BlogPost = () => {
           <article className="max-w-4xl mx-auto bg-white rounded-lg shadow overflow-hidden">
             {post.featured_image && (
               <div className="aspect-video w-full">
-                <img 
-                  src={post.featured_image} 
+                <img
+                  src={post.featured_image}
                   alt={post.title}
-                  className="w-full h-full object-cover" 
+                  loading="lazy"
+                  className="w-full h-full object-cover"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = '/placeholder.svg';
                   }}

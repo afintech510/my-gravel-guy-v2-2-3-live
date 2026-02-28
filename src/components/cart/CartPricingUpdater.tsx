@@ -34,7 +34,7 @@ export const CartPricingUpdater = () => {
           
           if (newPricePerTon !== item.price) {
             console.log(`[CartPricingUpdater] Updating ${item.name}: $${item.price} → $${newPricePerTon}`);
-            updateItemPrice(item.id, newPricePerTon);
+            updateItemPrice(item.cartItemId, newPricePerTon);
           }
         });
       } catch (error) {

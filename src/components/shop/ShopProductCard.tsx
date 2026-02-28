@@ -112,9 +112,10 @@ export default function ShopProductCard({ product, isSelected = false, onSelect 
         <div className="flex gap-4 mb-4">
           {product.image && (
             <div className="w-20 h-20 bg-muted rounded flex-shrink-0">
-              <img 
-                src={product.image} 
-                alt={product.name} 
+              <img
+                src={product.image}
+                alt={product.name}
+                loading="lazy"
                 className="w-full h-full object-cover rounded"
               />
             </div>

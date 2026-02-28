@@ -54,7 +54,7 @@ serve(async (req) => {
     
     console.log('Auth check result:', { hasUser: !!user, userEmail: user?.email });
 
-    const { items, orderId, depositOption } = await req.json();
+    const { items, orderId, depositOption, cancelUrl } = await req.json();
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return new Response(
@@ -117,7 +117,7 @@ serve(async (req) => {
       })),
       mode: 'payment',
       success_url: `${req.headers.get('origin')}/payment-success?session_id={CHECKOUT_SESSION_ID}&order_id=${finalOrderId}`,
-      cancel_url: `${req.headers.get('origin')}/cart`,
+      cancel_url: `${req.headers.get('origin')}${cancelUrl || '/cart'}`,
       metadata: {
         orderId: finalOrderId,
         userId: user?.id || 'guest',

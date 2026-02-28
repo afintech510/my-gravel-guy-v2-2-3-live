@@ -1,4 +1,5 @@
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import ZipCodeSearch from '../components/zip-code/ZipCodeSearch';
 import ShoppingModule from '../components/ShoppingModule';
@@ -21,7 +22,33 @@ const Index = () => {
   const {
     zipCode
   } = useZipCode();
-  return <div className="min-h-screen bg-background">
+  return <>
+    <Helmet>
+      <title>My Gravel Guy - Gravel, Sand & Dirt Delivery Nationwide</title>
+      <meta name="description" content="Order premium gravel, sand, dirt, and mulch delivered to your door. Instant pricing, nationwide delivery, and 3-ton minimum orders. Get started today." />
+      <link rel="canonical" href="https://mygravelguy.com/" />
+      <meta property="og:title" content="My Gravel Guy - Gravel, Sand & Dirt Delivery Nationwide" />
+      <meta property="og:description" content="Order premium gravel, sand, dirt, and mulch delivered to your door. Instant pricing and nationwide delivery." />
+      <meta property="og:url" content="https://mygravelguy.com/" />
+      <meta property="og:type" content="website" />
+      <script type="application/ld+json">{JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "My Gravel Guy",
+        "description": "Premium gravel, sand, dirt, and mulch delivery service nationwide.",
+        "url": "https://mygravelguy.com",
+        "telephone": "+1-844-624-0400",
+        "areaServed": "US",
+        "priceRange": "$$",
+        "image": "https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images/og-image.png",
+        "sameAs": ["https://twitter.com/mygravelguy"],
+        "parentOrganization": {
+          "@type": "Organization",
+          "name": "Eastern Building Supply Inc."
+        }
+      })}</script>
+    </Helmet>
+    <div className="min-h-screen bg-background">
       {/* Hero Section */}
      <section 
         className="py-16 px-4 bg-cover bg-center bg-no-repeat min-h-screen flex items-center relative"
@@ -109,6 +136,7 @@ const Index = () => {
       {/* Contact Module */}
       <ContactModule />
     
-    </div>;
+    </div>
+  </>;
 };
 export default Index;

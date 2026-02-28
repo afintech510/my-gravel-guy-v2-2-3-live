@@ -31,9 +31,10 @@ const BlogCard = ({
     <Card className={`overflow-hidden transition-all hover:shadow-md ${className}`}>
       <Link to={`/blog/${slug}`} className="block">
         <div className="aspect-video w-full overflow-hidden">
-          <img 
-            src={featuredImage || '/placeholder.svg'} 
+          <img
+            src={featuredImage || '/placeholder.svg'}
             alt={title}
+            loading="lazy"
             className="h-full w-full object-cover transition-transform hover:scale-105"
             onError={(e) => {
               (e.target as HTMLImageElement).src = '/placeholder.svg';

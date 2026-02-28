@@ -29,9 +29,10 @@ const FeaturedPost = ({
     <div className="relative overflow-hidden rounded-lg bg-background border shadow-sm">
       <div className="grid md:grid-cols-2 gap-6">
         <div className="aspect-video overflow-hidden">
-          <img 
-            src={featuredImage || '/placeholder.svg'} 
+          <img
+            src={featuredImage || '/placeholder.svg'}
             alt={title}
+            loading="lazy"
             className="h-full w-full object-cover"
             onError={(e) => {
               (e.target as HTMLImageElement).src = '/placeholder.svg';
