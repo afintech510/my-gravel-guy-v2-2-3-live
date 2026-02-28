@@ -102,6 +102,7 @@ const ProductImages = ({ product }: ProductImagesProps) => {
             <img
               src={images[selectedImage]}
               alt={`${product?.name} - View ${selectedImage + 1}`}
+              loading="lazy"
               className="object-cover w-full h-full"
               onError={() => {
                 console.log(`Image failed to load for ${product?.name}:`, images[selectedImage]);

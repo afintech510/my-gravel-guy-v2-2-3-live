@@ -26,7 +26,7 @@ export const useCartPricing = () => {
         console.log(`[useCartPricing] Updating price for ${item.name} from $${item.price} to $${adjustedPrice}`);
         
         // Update the item's price in the cart using the correct function
-        updateItemPrice(item.id, adjustedPrice);
+        updateItemPrice(item.cartItemId, adjustedPrice);
       }
     });
   }, [zipCode, items, updateItemPrice]);

@@ -26,7 +26,7 @@ const LandingPage = () => {
         },
         "contactPoint": {
           "@type": "ContactPoint",
-          "telephone": "+1-555-GRAVEL",
+          "telephone": "+1-844-624-0400",
           "contactType": "customer service",
           "areaServed": "US"
         },

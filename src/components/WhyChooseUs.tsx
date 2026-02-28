@@ -55,6 +55,7 @@ const WhyChooseUs = () => {
               <img
                 src="https://losrkjvrcambvgijfism.supabase.co/storage/v1/object/public/images//gravel-in-hand.jpg"
                 alt="Gravel in hand showing quality materials"
+                loading="lazy"
                 className="w-full h-auto rounded-lg shadow-lg"
               />
             </div>

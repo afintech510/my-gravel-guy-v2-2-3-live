@@ -12,3 +12,10 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/*
+Disallow: /stripe-test
+Disallow: /checkout
+Disallow: /payment-success
+
+Sitemap: https://mygravelguy.com/sitemap.xml

@@ -7,8 +7,8 @@ import { useCart } from '../../contexts/CartContext';
 import DeliveryForm from './DeliveryForm';
 interface CartItemCardProps {
   item: CartItem;
-  onRemove: (productId: string | number) => void;
-  onUpdateDelivery: (productId: string | number, details: Partial<CartItem>) => void;
+  onRemove: (cartItemId: string) => void;
+  onUpdateDelivery: (cartItemId: string, details: Partial<CartItem>) => void;
   autoExpandDelivery?: boolean;
 }
 const CartItemCard = ({
@@ -101,7 +101,7 @@ const CartItemCard = ({
   // Handle quantity changes
   const handleQuantityChange = (newTons: number) => {
     if (newTons >= 1) {
-      updateQuantity(item.id, newTons);
+      updateQuantity(item.cartItemId, newTons);
     }
   };
 
@@ -242,7 +242,7 @@ const CartItemCard = ({
         {/* Enhanced Delivery Form - only show if incomplete or being edited */}
         {(!isDeliveryComplete || isDeliveryFormOpen) && <div className="mt-4 pt-4 border-t">
             <DeliveryForm item={item} onSubmit={details => {
-          onUpdateDelivery(item.id, {
+          onUpdateDelivery(item.cartItemId, {
             deliveryDate: details.deliveryDate,
             deliveryAddress: {
               street: details.street,
@@ -266,7 +266,7 @@ const CartItemCard = ({
 
         {/* Remove button - moved to bottom center */}
         <div className="flex justify-center mt-4 pt-4 border-t">
-          <Button variant="outline" size="sm" className="text-red-500 hover:text-red-700 hover:bg-red-50" onClick={() => onRemove(item.id)}>
+          <Button variant="outline" size="sm" className="text-red-500 hover:text-red-700 hover:bg-red-50" onClick={() => onRemove(item.cartItemId)}>
             <Trash2 className="h-4 w-4 mr-2" />
             Remove Item
           </Button>

@@ -6,7 +6,7 @@ import { PhoneCall, MessageCircle, Calendar, Users } from 'lucide-react';
 export const ConsultationSection = () => {
   const handleBookConsultation = () => {
     // This would typically open a calendar booking widget or redirect to scheduling
-    window.open('tel:+1-555-GRAVEL', '_blank');
+    window.open('tel:+18446240400', '_blank');
   };
 
   return (

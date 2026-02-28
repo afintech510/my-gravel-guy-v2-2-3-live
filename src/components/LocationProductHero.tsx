@@ -201,6 +201,7 @@ const LocationProductHero = () => {
                       <img
                         src={product.image || "/placeholder.svg"}
                         alt={product.name}
+                        loading="lazy"
                         className="object-cover w-full h-full rounded-md"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = "/placeholder.svg";

@@ -47,6 +47,7 @@ const ProductCard = ({ product }: { product: Product }) => {
               <img
                 src={imagePath}
                 alt={product.name}
+                loading="lazy"
                 className="object-cover w-full h-full rounded-md"
                 onError={(e) => {
                   console.log(`Image failed to load for ${product.name}:`, imagePath);

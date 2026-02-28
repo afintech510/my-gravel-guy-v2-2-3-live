@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import ZipCodeSearch from '../components/zip-code/ZipCodeSearch';
 import { CheckCircle, Truck, DollarSign, HeadphonesIcon, MapPin, Users, MessageCircle, Camera, Shield } from 'lucide-react';
 
@@ -46,6 +47,15 @@ const About = () => {
   ];
 
   return (
+    <>
+      <Helmet>
+        <title>About My Gravel Guy - Bulk Material Delivery Made Easy</title>
+        <meta name="description" content="My Gravel Guy by Eastern Building Supply Inc. makes ordering gravel, mulch, topsoil, and fill dirt simple. Transparent pricing, nationwide delivery, and real support." />
+        <link rel="canonical" href="https://mygravelguy.com/about" />
+        <meta property="og:title" content="About My Gravel Guy - Bulk Material Delivery Made Easy" />
+        <meta property="og:description" content="Transparent pricing, nationwide delivery, and real support for homeowners and contractors." />
+        <meta property="og:url" content="https://mygravelguy.com/about" />
+      </Helmet>
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <div className="py-20 px-4 bg-muted">
@@ -75,9 +85,10 @@ const About = () => {
             <div className="md:w-1/2 flex justify-center">
               <div className="relative">
                 <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl"></div>
-                <img 
-                  src="/lovable-uploads/4ed875b4-fd42-46f3-8b63-d65844a33ff0.png" 
-                  alt="My Gravel Guy Logo" 
+                <img
+                  src="/lovable-uploads/4ed875b4-fd42-46f3-8b63-d65844a33ff0.png"
+                  alt="My Gravel Guy Logo"
+                  loading="lazy"
                   className="relative h-64 w-auto z-10"
                 />
               </div>
@@ -175,6 +186,7 @@ const About = () => {
         </div>
       </section>
     </div>
+    </>
   );
 };
 

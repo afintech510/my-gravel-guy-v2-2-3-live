@@ -623,3 +623,114 @@ export const generateInternalNotificationEmail = (orderData: OrderData): string 
 </html>
   `;
 };
+
+// ─── Customer Cart Save Email ───
+
+interface CartSaveEmailItem {
+  product_name: string;
+  quantity: number;
+  total_price: number;
+  delivery_date?: string;
+  delivery_address?: { street: string; city: string; state: string; zip: string } | null;
+  delivery_time_preference?: string;
+}
+
+interface CartSaveEmailData {
+  customer_name: string;
+  order_id: string;
+  items: CartSaveEmailItem[];
+  total_amount: number;
+}
+
+export const generateCartSaveCustomerEmail = (data: CartSaveEmailData): string => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Not specified';
+    const date = new Date(dateString + (dateString.includes('T') ? '' : 'T00:00:00'));
+    return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  };
+
+  const formatTime = (pref?: string) => {
+    switch (pref) {
+      case 'anytime': return 'Anytime (7am-5pm)';
+      case 'morning': return 'Morning (7am-12pm)';
+      case 'afternoon': return 'Afternoon (12pm-5pm)';
+      default: return '';
+    }
+  };
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Cart Has Been Saved</title>
+  ${getEmailStyles()}
+</head>
+<body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: 'Helvetica Neue', Arial, sans-serif;">
+  <div class="container" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+    ${getEmailHeader('Your Cart Has Been Saved!')}
+
+    <div class="content-wrapper" style="padding: 30px 20px;">
+      <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+        Hi ${data.customer_name},
+      </p>
+      <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
+        Your delivery details have been saved. Here's a summary of what's in your cart:
+      </p>
+
+      ${data.items.map(item => `
+        <div class="order-item" style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+          <h3 style="margin: 0 0 8px 0; color: #1f2937; font-size: 16px;">${item.product_name}</h3>
+          <p style="margin: 4px 0; color: #6b7280; font-size: 14px;"><strong>Quantity:</strong> ${item.quantity} tons</p>
+          <p style="margin: 4px 0; color: #6b7280; font-size: 14px;"><strong>Price:</strong> $${item.total_price.toFixed(2)}</p>
+          ${item.delivery_address ? `
+            <p style="margin: 4px 0; color: #6b7280; font-size: 14px;"><strong>Deliver to:</strong> ${item.delivery_address.street}, ${item.delivery_address.city}, ${item.delivery_address.state} ${item.delivery_address.zip}</p>
+          ` : ''}
+          ${item.delivery_date ? `
+            <p style="margin: 4px 0; color: #6b7280; font-size: 14px;"><strong>Delivery date:</strong> ${formatDate(item.delivery_date)}</p>
+          ` : ''}
+          ${item.delivery_time_preference ? `
+            <p style="margin: 4px 0; color: #6b7280; font-size: 14px;"><strong>Time preference:</strong> ${formatTime(item.delivery_time_preference)}</p>
+          ` : ''}
+        </div>
+      `).join('')}
+
+      <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 16px; margin: 20px 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: #065f46; font-size: 18px; font-weight: bold;">Total</span>
+          <span style="color: #065f46; font-size: 18px; font-weight: bold;">$${data.total_amount.toFixed(2)}</span>
+        </div>
+        <p style="margin: 4px 0 0 0; color: #059669; font-size: 13px;">Free delivery included</p>
+      </div>
+
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="https://mygravelguy.com/cart"
+           class="button"
+           style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-weight: bold; font-size: 16px;">
+          Return to My Cart
+        </a>
+      </div>
+
+      <p style="color: #6b7280; font-size: 14px; line-height: 1.6; text-align: center;">
+        When you're ready, visit your cart to proceed to checkout.<br>
+        Your card will only be authorized &mdash; never charged until we confirm your order.
+      </p>
+    </div>
+
+    <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0; border-radius: 0 0 8px 8px;">
+      <p style="color: #9ca3af; font-size: 12px; margin: 5px 0;">
+        &copy; 2024 My Gravel Guy. All rights reserved.
+      </p>
+      <p style="color: #9ca3af; font-size: 12px; margin: 5px 0;">
+        This email was sent because you saved delivery information on mygravelguy.com.
+      </p>
+      <p style="color: #9ca3af; font-size: 11px; margin: 10px 0 0 0;">
+        Questions? Reply to this email or contact us at operations@mygravelguy.com
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+};
