@@ -8,5 +8,4 @@ dist
 .env.development
 SESSION_LOG.md
 sql
-scripts
 supabase
