@@ -11,7 +11,7 @@ import { insertOrderToDatabase, testEnhancedDatabaseInsert } from '../services/o
 import { sendBothOrderEmails } from '../services/emailService';
 import { useProductNameResolver } from '../hooks/useProductNameResolver';
 import { getProductById } from '../services/products/productQueries';
-import { trackEcommerce } from '../utils/analytics';
+import { trackEcommerce, trackGoogleAdsConversion } from '../utils/analytics';
 
 interface OrderItem {
   id: string;
@@ -484,14 +484,26 @@ const PaymentSuccess = () => {
       const totalValue = insertedOrders.reduce((sum, order) => sum + order.total_price, 0);
       const purchaseFiredKey = `mgg_purchase_fired_${currentOrderId}`;
       if (!localStorage.getItem(purchaseFiredKey)) {
-        trackEcommerce('purchase', insertedOrders.map(order => ({
-          item_id: order.product_id,
-          item_name: order.product_id,
-          quantity: order.quantity,
-          price: order.total_price / order.quantity
-        })), totalValue);
+        // GA4 purchase event with transaction_id for deduplication
+        if (window.gtag) {
+          window.gtag('event', 'purchase', {
+            transaction_id: currentOrderId,
+            value: totalValue,
+            currency: 'USD',
+            items: insertedOrders.map(order => ({
+              item_id: order.product_id,
+              item_name: order.product_id,
+              quantity: order.quantity,
+              price: order.total_price / order.quantity
+            }))
+          });
+        }
+
+        // Explicit Google Ads conversion (backup — fires even if GA4 import is misconfigured)
+        trackGoogleAdsConversion('purchase', totalValue, currentOrderId);
+
         localStorage.setItem(purchaseFiredKey, 'true');
-        console.log('Purchase conversion tracked:', { orderId: currentOrderId, value: totalValue });
+        console.log('Purchase conversion tracked:', { orderId: currentOrderId, value: totalValue, transactionId: currentOrderId });
       }
 
       // Send emails after successful database insert
