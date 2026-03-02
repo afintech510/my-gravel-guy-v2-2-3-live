@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { CheckCircle, Loader2, MessageSquare } from 'lucide-react';
 import { sendQuoteRequestEmail } from '@/services/quoteEmailService';
+import { trackEvent } from '@/utils/analytics';
 
 interface LargeOrderContactFormProps {
   productName: string;
@@ -44,6 +45,7 @@ const LargeOrderContactForm = ({ productName, zipCode }: LargeOrderContactFormPr
 
       if (result.success) {
         setIsSuccess(true);
+        trackEvent('generate_lead', 'contact_form', 'large_order_landing');
       } else {
         setError(result.error || 'Something went wrong. Please try again.');
       }
