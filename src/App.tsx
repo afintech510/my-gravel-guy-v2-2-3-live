@@ -71,6 +71,7 @@ const ContractorsAggregateLanding = React.lazy(() => import("./pages/Contractors
 const MarketMaterialPage = React.lazy(() => import("./pages/MarketMaterialPage"));
 const ContractorsSpecMaterials = React.lazy(() => import("./pages/ContractorsSpecMaterials"));
 const CrushedStoneLanding = React.lazy(() => import("./pages/CrushedStoneLanding"));
+const DeliveryConfirm = React.lazy(() => import("./pages/DeliveryConfirm"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -172,6 +173,7 @@ function AppContent() {
           <Route path="/contractors-spec-materials" element={<ContractorsSpecMaterials />} />
           <Route path="/57-crushed-stone" element={<CrushedStoneLanding />} />
           <Route path="/markets/:marketSlug/materials/:materialSlug" element={<MarketMaterialPage />} />
+          <Route path="/delivery-confirm" element={<DeliveryConfirm />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
