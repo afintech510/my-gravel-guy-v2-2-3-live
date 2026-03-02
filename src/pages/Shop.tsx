@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Input } from "@/components/ui/input";
 import { Search, Filter, SortAsc, SortDesc } from 'lucide-react';
@@ -22,23 +22,31 @@ import { Product } from '@/services/productTypes';
 
 const Shop = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [categoryProducts, setCategoryProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [sortOrder, setSortOrder] = useState('nameAsc');
+
+  // Apply search filter on top of category filter — search by name and category only
+  const displayProducts = useMemo(() => {
+    if (!searchTerm.trim()) return categoryProducts;
+    const term = searchTerm.toLowerCase().trim();
+    return categoryProducts.filter(product =>
+      product.name.toLowerCase().includes(term) ||
+      product.category.toLowerCase().includes(term)
+    );
+  }, [categoryProducts, searchTerm]);
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
   };
 
   const handleFilterChange = (filters: { category: string; filteredProducts: Product[] }) => {
-    setFilteredProducts(filters.filteredProducts);
+    setCategoryProducts(filters.filteredProducts);
     setIsLoading(false);
   };
 
   const handleSortChange = (value: string) => {
     setSortOrder(value);
-    // Note: The actual sorting is now handled by ShopProductFilterSelector
-    // when it receives the updated sortOrder prop
   };
 
   return (
@@ -50,6 +58,22 @@ const Shop = () => {
         <meta property="og:title" content="Shop Bulk Materials Online | My Gravel Guy" />
         <meta property="og:description" content="Shop premium gravel, sand, dirt, and mulch. Volume discounts on bulk orders delivered nationwide." />
         <meta property="og:url" content="https://mygravelguy.com/shop" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://mygravelguy.com/og-image.png" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            "name": "Shop Bulk Materials Online",
+            "description": "Shop premium gravel, sand, dirt, and mulch online. Filter by category, compare prices, and order for delivery.",
+            "url": "https://mygravelguy.com/shop",
+            "provider": {
+              "@type": "Organization",
+              "name": "My Gravel Guy",
+              "url": "https://mygravelguy.com"
+            }
+          })}
+        </script>
       </Helmet>
     <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Page Header */}
@@ -69,7 +93,7 @@ const Shop = () => {
           <div className="mb-6 flex gap-4 items-center">
 
            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
-              Materials ({filteredProducts.length})
+              Materials ({displayProducts.length})
             </h2>
             
             <div className="relative flex-1 max-w-lg">
@@ -111,8 +135,8 @@ const Shop = () => {
 
           {/* Product Grid */}
           <div className="mb-16">
-            <ShopProductGrid 
-              products={filteredProducts}
+            <ShopProductGrid
+              products={displayProducts}
               loading={isLoading}
               searchTerm={searchTerm}
             />

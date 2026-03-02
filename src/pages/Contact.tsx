@@ -29,6 +29,30 @@ const Contact = () => {
           content="gravel quote, aggregate delivery, stone pricing, bulk material delivery, contractor materials"
         />
         <link rel="canonical" href="https://mygravelguy.com/contact" />
+        <meta property="og:title" content="Get a Quote | Aggregate Sourcing & Delivery | MyGravelGuy" />
+        <meta property="og:description" content="Get delivered pricing on gravel, stone, sand, and base materials from vetted local suppliers. One request, fast response, no hassle." />
+        <meta property="og:url" content="https://mygravelguy.com/contact" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://mygravelguy.com/og-image.png" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ContactPage",
+            "name": "Get a Quote - My Gravel Guy",
+            "url": "https://mygravelguy.com/contact",
+            "mainEntity": {
+              "@type": "Organization",
+              "name": "My Gravel Guy",
+              "url": "https://mygravelguy.com",
+              "contactPoint": {
+                "@type": "ContactPoint",
+                "contactType": "sales",
+                "availableLanguage": "English",
+                "url": "https://mygravelguy.com/contact"
+              }
+            }
+          })}
+        </script>
       </Helmet>
 
       <div className="min-h-screen bg-[#0F1115] text-[#F5F7FA]">

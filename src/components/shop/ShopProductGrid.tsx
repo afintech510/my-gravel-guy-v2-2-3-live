@@ -12,14 +12,8 @@ interface ShopProductGridProps {
 export default function ShopProductGrid({ products, loading, searchTerm }: ShopProductGridProps) {
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
 
-  // Filter products by search term if provided
-  const filteredProducts = searchTerm 
-    ? products.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : products;
+  // Search filtering is now handled by the parent (Shop.tsx)
+  const filteredProducts = products;
 
   const handleProductSelect = (productId: string) => {
     setSelectedProductIds(prev => {

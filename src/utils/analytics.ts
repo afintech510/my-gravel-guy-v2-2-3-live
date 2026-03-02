@@ -428,5 +428,30 @@ export const trackSpecFormSubmit = (tons: number, material: string, hasSpec: boo
   });
 };
 
+// ============================================
+// Google Ads Conversion Tracking
+// ============================================
+
+/**
+ * Track a Google Ads conversion event.
+ * With AW-8424526917 configured in gtag, standard ecommerce events
+ * (purchase, add_to_cart) already flow to Google Ads automatically.
+ * Use this for explicit conversion tracking with specific labels.
+ */
+export const trackGoogleAdsConversion = (
+  conversionLabel: string,
+  value?: number,
+  transactionId?: string
+) => {
+  if (!window.gtag) return;
+
+  window.gtag('event', 'conversion', {
+    send_to: `AW-8424526917/${conversionLabel}`,
+    value: value,
+    currency: 'USD',
+    transaction_id: transactionId
+  });
+};
+
 // Ensure all exports are available
 export type { UTMData };

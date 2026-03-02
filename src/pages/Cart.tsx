@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, ArrowRight, Loader2 } from 'lucide-react';
@@ -148,6 +149,11 @@ const Cart = () => {
   }
 
   return (
+    <>
+    <Helmet>
+      <meta name="robots" content="noindex, nofollow" />
+      <title>Your Cart | My Gravel Guy</title>
+    </Helmet>
     <div className="py-8 px-4 max-w-6xl mx-auto">
       {/* Add the pricing updater component */}
       <CartPricingUpdater />
@@ -266,6 +272,7 @@ const Cart = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

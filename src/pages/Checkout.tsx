@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2, MapPinIcon, PhoneIcon, MailIcon, ClockIcon, FileTextIcon, UserIcon, CreditCard, Database, AlertCircle } from 'lucide-react';
@@ -412,10 +413,15 @@ const Checkout = () => {
   };
 
   return (
+    <>
+    <Helmet>
+      <meta name="robots" content="noindex, nofollow" />
+      <title>Checkout | My Gravel Guy</title>
+    </Helmet>
     <div className="py-8 px-4 max-w-6xl mx-auto">
-      <Button 
-        variant="ghost" 
-        className="mb-6" 
+      <Button
+        variant="ghost"
+        className="mb-6"
         onClick={() => navigate('/cart')}
       >
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Cart
@@ -712,6 +718,7 @@ const Checkout = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
