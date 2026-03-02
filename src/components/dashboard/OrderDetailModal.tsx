@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Lock, Unlock, Upload, Mail, Save, FileText, User, MapPin, DollarSign, MessageSquare, Phone, UserCheck } from 'lucide-react';
+import { Lock, Unlock, Upload, Mail, Save, FileText, User, MapPin, DollarSign, MessageSquare, Phone, UserCheck, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { GroupedOrder, OrderStatus, FulfillmentStatus } from '@/types/order.types';
 import { OrderService } from '@/services/orderService';
@@ -63,6 +63,10 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [customMessage, setCustomMessage] = useState('');
   const [smsPhoneNumber, setSmsPhoneNumber] = useState('');
+
+  // Delivery confirmation state
+  const [confirmSent, setConfirmSent] = useState(false);
+  const [isSendingConfirm, setIsSendingConfirm] = useState(false);
 
   // Reset form when order changes
   React.useEffect(() => {
@@ -117,6 +121,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
         setSmsPhoneNumber(deliveryPhone);
         setSelectedTemplate('');
         setCustomMessage('');
+        setConfirmSent(false);
       }
     };
 
@@ -463,6 +468,83 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
       case 'cancelled': return 'bg-red-100 text-red-800';
       case 'paid': return 'bg-emerald-100 text-emerald-800';
       default: return 'bg-muted text-muted-foreground';
+    }
+  };
+
+  const handleSendDeliveryConfirmation = async () => {
+    if (!order) return;
+    setIsSendingConfirm(true);
+    try {
+      const item = order.items[0];
+      const customerName = item.delivery_name || item.contact_name || '';
+      const customerPhone = item.delivery_phone || item.contact_phone || '';
+      const customerEmail = item.delivery_email || item.contact_email || '';
+      const addressParts = [item.delivery_street, item.delivery_city, item.delivery_state, item.delivery_zip].filter(Boolean);
+
+      const snapshot = {
+        order_id: order.order_id,
+        product_name: item.product_name || item.product_id || 'Your Order',
+        quantity_tons: item.quantity,
+        delivery_address: addressParts.join(', ') || null,
+        delivery_date: item.delivery_date || null,
+        customer_name: customerName || null,
+        customer_email: customerEmail || null,
+        customer_phone: customerPhone || null,
+      };
+
+      const { data: confirm, error: insertErr } = await supabase
+        .from('delivery_confirmations')
+        .insert(snapshot)
+        .select('token')
+        .single();
+
+      if (insertErr || !confirm) throw insertErr || new Error('Failed to create confirmation');
+
+      const confirmUrl = `https://mygravelguy.com/delivery-confirm?token=${confirm.token}`;
+      const firstName = customerName.split(' ')[0] || 'there';
+      const msgBody = `Hi ${firstName}, your ${snapshot.product_name} delivery is complete! Please confirm receipt (takes 1 min): ${confirmUrl}`;
+
+      if (customerPhone) {
+        await supabase.functions.invoke('send-sms', {
+          body: { phoneNumber: customerPhone, message: msgBody, orderId: order.order_id, type: 'delivery_notification' }
+        });
+      }
+
+      if (customerEmail) {
+        const emailHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,sans-serif;">
+<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;">
+  <div style="background:linear-gradient(135deg,#10b981,#059669);padding:28px 24px;text-align:center;">
+    <h1 style="color:#fff;font-size:24px;margin:0;">&#x1FAA8; My Gravel Guy</h1>
+    <p style="color:#d1fae5;margin:8px 0 0;font-size:15px;">Your delivery is complete!</p>
+  </div>
+  <div style="padding:28px 24px;">
+    <p style="color:#374151;font-size:16px;margin:0 0 20px;">Hi ${firstName}, your order has been delivered. Please take a moment to confirm receipt.</p>
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin:0 0 24px;">
+      <p style="margin:4px 0;color:#374151;font-size:14px;"><strong>Order:</strong> ${snapshot.product_name}${snapshot.quantity_tons ? ` &mdash; ${snapshot.quantity_tons} tons` : ''}</p>
+      ${snapshot.delivery_address ? `<p style="margin:4px 0;color:#374151;font-size:14px;"><strong>Delivered to:</strong> ${snapshot.delivery_address}</p>` : ''}
+      ${snapshot.delivery_date ? `<p style="margin:4px 0;color:#374151;font-size:14px;"><strong>Date:</strong> ${snapshot.delivery_date}</p>` : ''}
+    </div>
+    <div style="text-align:center;">
+      <a href="${confirmUrl}" style="display:inline-block;background:#10b981;color:#fff;text-decoration:none;padding:14px 32px;border-radius:6px;font-weight:bold;font-size:16px;">Confirm My Delivery</a>
+    </div>
+    <p style="color:#9ca3af;font-size:12px;text-align:center;margin:20px 0 0;">You can also leave a review and upload a photo — takes about 60 seconds.</p>
+  </div>
+</div>
+</body></html>`;
+
+        await supabase.functions.invoke('send-email', {
+          body: { to: customerEmail, subject: 'Confirm Your My Gravel Guy Delivery', html: emailHtml, type: 'customer_confirmation' }
+        });
+      }
+
+      setConfirmSent(true);
+      toast({ title: 'Confirmation sent!', description: `Link sent to ${customerPhone || customerEmail || 'customer'}` });
+    } catch (err) {
+      console.error('Failed to send delivery confirmation:', err);
+      toast({ title: 'Failed to send confirmation', description: 'Please try again.', variant: 'destructive' });
+    } finally {
+      setIsSendingConfirm(false);
     }
   };
 
@@ -897,13 +979,37 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   />
                 )}
 
-                <Button 
-                  onClick={handleSendSMS} 
+                <Button
+                  onClick={handleSendSMS}
                   disabled={isSendingSMS || !smsPhoneNumber.trim() || !getPreviewMessage().trim()}
                   className="w-full"
                 >
                   <Phone className="h-4 w-4 mr-2" />
                   {isSendingSMS ? 'Sending...' : 'Send SMS'}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Delivery Confirmation */}
+            <Card className="border-green-200 dark:border-green-800">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                  <CheckCircle className="h-4 w-4" />
+                  Delivery Confirmation
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Send the customer a link to confirm delivery, upload a photo, and leave a review. Useful for chargeback protection.
+                </p>
+                <Button
+                  onClick={handleSendDeliveryConfirmation}
+                  disabled={isSendingConfirm || confirmSent}
+                  className={`w-full ${confirmSent ? 'bg-green-600 hover:bg-green-600' : ''}`}
+                  variant={confirmSent ? 'default' : 'outline'}
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  {isSendingConfirm ? 'Sending...' : confirmSent ? 'Confirmation Sent ✓' : 'Send Delivery Confirmation'}
                 </Button>
               </CardContent>
             </Card>
