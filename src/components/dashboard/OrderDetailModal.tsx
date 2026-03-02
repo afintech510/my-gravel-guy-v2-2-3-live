@@ -490,6 +490,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
         customer_name: customerName || null,
         customer_email: customerEmail || null,
         customer_phone: customerPhone || null,
+        stripe_payment_id: order.stripe_payment_intent_id || null,
       };
 
       const { data: confirm, error: insertErr } = await supabase
