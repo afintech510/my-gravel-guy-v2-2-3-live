@@ -145,6 +145,11 @@ const ProductDetail = () => {
           "image": product.images || [],
           "url": `https://mygravelguy.com/products/${product.slug}`,
           "category": product.category,
+          "sku": product.id,
+          "brand": {
+            "@type": "Brand",
+            "name": "My Gravel Guy"
+          },
           "offers": {
             "@type": "Offer",
             "price": adjustedPrice ?? product.price,
@@ -159,6 +164,39 @@ const ProductDetail = () => {
             "seller": {
               "@type": "Organization",
               "name": "My Gravel Guy"
+            },
+            "shippingDetails": {
+              "@type": "OfferShippingDetails",
+              "shippingRate": {
+                "@type": "MonetaryAmount",
+                "value": "0",
+                "currency": "USD"
+              },
+              "shippingDestination": {
+                "@type": "DefinedRegion",
+                "addressCountry": "US"
+              },
+              "deliveryTime": {
+                "@type": "ShippingDeliveryTime",
+                "handlingTime": {
+                  "@type": "QuantitativeValue",
+                  "minValue": 1,
+                  "maxValue": 2,
+                  "unitCode": "DAY"
+                },
+                "transitTime": {
+                  "@type": "QuantitativeValue",
+                  "minValue": 1,
+                  "maxValue": 3,
+                  "unitCode": "DAY"
+                }
+              }
+            },
+            "hasMerchantReturnPolicy": {
+              "@type": "MerchantReturnPolicy",
+              "applicableCountry": "US",
+              "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted",
+              "merchantReturnDays": 0
             }
           }
         })}</script>

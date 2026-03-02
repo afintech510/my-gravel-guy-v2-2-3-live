@@ -55,6 +55,23 @@ const About = () => {
         <meta property="og:title" content="About My Gravel Guy - Bulk Material Delivery Made Easy" />
         <meta property="og:description" content="Transparent pricing, nationwide delivery, and real support for homeowners and contractors." />
         <meta property="og:url" content="https://mygravelguy.com/about" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://mygravelguy.com/og-image.png" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "My Gravel Guy",
+            "legalName": "Eastern Building Supply Inc.",
+            "url": "https://mygravelguy.com",
+            "description": "My Gravel Guy makes ordering gravel, mulch, topsoil, and fill dirt simple. Transparent pricing, nationwide delivery, and real support.",
+            "areaServed": {
+              "@type": "Country",
+              "name": "US"
+            },
+            "knowsAbout": ["Gravel", "Sand", "Mulch", "Topsoil", "Fill Dirt", "Bulk Material Delivery"]
+          })}
+        </script>
       </Helmet>
     <div className="min-h-screen bg-background">
       {/* Hero Section */}

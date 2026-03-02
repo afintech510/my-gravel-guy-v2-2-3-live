@@ -93,11 +93,11 @@ function AppContent() {
   const location = useLocation();
   const isDashboardPage = location.pathname.startsWith('/dashboard');
 
-  // Enable flashing title globally across all pages
+  // Flashing title disabled — hurts SEO and annoys users
   useFlashingTitle({
     flashText: '🚛 FREE Delivery Nationwide',
     interval: 2000,
-    enabled: true
+    enabled: false
   });
 
   React.useEffect(() => {

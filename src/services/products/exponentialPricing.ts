@@ -28,10 +28,8 @@ export function calculateExponentialPrice(
   const minimumPrice = Math.max(basePrice * 0.5, 50); // At least 50% of base price or $50
   const calculatedPrice = Math.max(pricePerTon, minimumPrice);
   
-  // Round to the nearest 10
-  const roundedPrice = Math.round(calculatedPrice / 10) * 10;
-  
-  return roundedPrice;
+  // Round to nearest dollar (no $10 rounding — smoother qty adjustments)
+  return Math.round(calculatedPrice);
 }
 
 /**

@@ -11,6 +11,7 @@ import { insertOrderToDatabase, testEnhancedDatabaseInsert } from '../services/o
 import { sendBothOrderEmails } from '../services/emailService';
 import { useProductNameResolver } from '../hooks/useProductNameResolver';
 import { getProductById } from '../services/products/productQueries';
+import { trackEcommerce } from '../utils/analytics';
 
 interface OrderItem {
   id: string;
@@ -473,11 +474,25 @@ const PaymentSuccess = () => {
         setOriginalOrderTotal(insertedOrders[0]?.balance_due ? insertedOrders[0].balance_due + (insertedOrders[0]?.deposit_amount || 199) : null);
       }
 
-      console.log('=== DATABASE INSERT SUCCESSFUL ===', { 
+      console.log('=== DATABASE INSERT SUCCESSFUL ===', {
         recordCount: insertedOrders.length,
         stripeSessionId,
-        stripePaymentIntentId 
+        stripePaymentIntentId
       });
+
+      // Track purchase conversion for Google Analytics + Google Ads
+      const totalValue = insertedOrders.reduce((sum, order) => sum + order.total_price, 0);
+      const purchaseFiredKey = `mgg_purchase_fired_${currentOrderId}`;
+      if (!localStorage.getItem(purchaseFiredKey)) {
+        trackEcommerce('purchase', insertedOrders.map(order => ({
+          item_id: order.product_id,
+          item_name: order.product_id,
+          quantity: order.quantity,
+          price: order.total_price / order.quantity
+        })), totalValue);
+        localStorage.setItem(purchaseFiredKey, 'true');
+        console.log('Purchase conversion tracked:', { orderId: currentOrderId, value: totalValue });
+      }
 
       // Send emails after successful database insert
       await handleEmailSending(insertedOrders, currentOrderId);

@@ -90,6 +90,61 @@ export default function MarketMaterialPage() {
         <title>{pageData.seo_title || `${materialName} Delivery in ${pageData.market_display_name} | MyGravelGuy`}</title>
         <meta name="description" content={pageData.seo_description || `Order ${materialName} for delivery in ${pageData.market_display_name}. 20-500 tons available with expedited delivery options.`} />
         <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content={pageData.seo_title || `${materialName} Delivery in ${pageData.market_display_name} | MyGravelGuy`} />
+        <meta property="og:description" content={pageData.seo_description || `Order ${materialName} for delivery in ${pageData.market_display_name}. 20-500 tons available with expedited delivery options.`} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content="product" />
+        <meta property="og:image" content={product?.image_url || 'https://mygravelguy.com/og-image.png'} />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": `${materialName} - ${pageData.market_display_name}`,
+            "description": pageData.seo_description || `Order ${materialName} for delivery in ${pageData.market_display_name}.`,
+            "url": canonicalUrl,
+            "image": product?.image_url || undefined,
+            "brand": {
+              "@type": "Brand",
+              "name": "My Gravel Guy"
+            },
+            "offers": {
+              "@type": "Offer",
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock",
+              "seller": {
+                "@type": "Organization",
+                "name": "My Gravel Guy"
+              },
+              "areaServed": {
+                "@type": "City",
+                "name": pageData.market_display_name
+              },
+              "shippingDetails": {
+                "@type": "OfferShippingDetails",
+                "shippingRate": {
+                  "@type": "MonetaryAmount",
+                  "value": "0",
+                  "currency": "USD"
+                },
+                "shippingDestination": {
+                  "@type": "DefinedRegion",
+                  "addressCountry": "US"
+                },
+                "deliveryTime": {
+                  "@type": "ShippingDeliveryTime",
+                  "handlingTime": { "@type": "QuantitativeValue", "minValue": 1, "maxValue": 2, "unitCode": "DAY" },
+                  "transitTime": { "@type": "QuantitativeValue", "minValue": 1, "maxValue": 3, "unitCode": "DAY" }
+                }
+              },
+              "hasMerchantReturnPolicy": {
+                "@type": "MerchantReturnPolicy",
+                "applicableCountry": "US",
+                "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted",
+                "merchantReturnDays": 0
+              }
+            }
+          })}
+        </script>
       </Helmet>
 
       <main className="pb-24 md:pb-0">
