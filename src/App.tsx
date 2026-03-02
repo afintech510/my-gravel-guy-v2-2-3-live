@@ -93,6 +93,7 @@ const PageLoader = () => (
 function AppContent() {
   const location = useLocation();
   const isDashboardPage = location.pathname.startsWith('/dashboard');
+  const isStandalonePage = location.pathname === '/delivery-confirm';
 
   // Flashing title disabled — hurts SEO and annoys users
   useFlashingTitle({
@@ -115,12 +116,14 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <div className="sticky top-0 z-40 w-full">
-        <div className="relative">
-          <TopBanner />
-          <Navbar />
+      {!isStandalonePage && (
+        <div className="sticky top-0 z-40 w-full">
+          <div className="relative">
+            <TopBanner />
+            <Navbar />
+          </div>
         </div>
-      </div>
+      )}
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/" element={<Index />} />
@@ -177,7 +180,7 @@ function AppContent() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
-      {!isDashboardPage && <Footer />}
+      {!isDashboardPage && !isStandalonePage && <Footer />}
     </div>
   );
 }
