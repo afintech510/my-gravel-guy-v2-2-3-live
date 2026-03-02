@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { CheckCircle, Camera, Loader2, AlertCircle, Package } from 'lucide-react';
+import { CheckCircle, Camera, Loader2, AlertCircle, Package, ShieldCheck, PenLine } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import StarRating from '@/components/reviews/StarRating';
 
@@ -9,6 +9,7 @@ interface ConfirmationRecord {
   order_id: string;
   confirmed_at: string | null;
   confirmed_delivery: boolean;
+  verified_at: string | null;
   product_name: string | null;
   quantity_tons: number | null;
   delivery_address: string | null;
@@ -16,8 +17,114 @@ interface ConfirmationRecord {
   customer_name: string | null;
 }
 
-type PageState = 'loading' | 'not_found' | 'already_confirmed' | 'ready' | 'submitting' | 'success';
+type PageState = 'loading' | 'not_found' | 'already_confirmed' | 'verify' | 'ready' | 'submitting' | 'success';
 
+// ── Signature Canvas ──────────────────────────────────────────────────────────
+const SignatureCanvas: React.FC<{
+  onSignatureChange: (blob: Blob | null) => void;
+}> = ({ onSignatureChange }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [hasDrawn, setHasDrawn] = useState(false);
+
+  const getPos = (e: React.TouchEvent | React.MouseEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    if ('touches' in e) {
+      return {
+        x: (e.touches[0].clientX - rect.left) * scaleX,
+        y: (e.touches[0].clientY - rect.top) * scaleY,
+      };
+    }
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY,
+    };
+  };
+
+  const startDraw = (e: React.TouchEvent | React.MouseEvent) => {
+    e.preventDefault();
+    const ctx = canvasRef.current?.getContext('2d');
+    if (!ctx) return;
+    const { x, y } = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    setIsDrawing(true);
+  };
+
+  const draw = (e: React.TouchEvent | React.MouseEvent) => {
+    if (!isDrawing) return;
+    e.preventDefault();
+    const ctx = canvasRef.current?.getContext('2d');
+    if (!ctx) return;
+    const { x, y } = getPos(e);
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#F5F7FA';
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    setHasDrawn(true);
+  };
+
+  const endDraw = () => {
+    setIsDrawing(false);
+    if (hasDrawn) exportSignature();
+  };
+
+  const exportSignature = () => {
+    canvasRef.current?.toBlob(blob => {
+      onSignatureChange(blob);
+    }, 'image/png');
+  };
+
+  const clear = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setHasDrawn(false);
+    onSignatureChange(null);
+  };
+
+  return (
+    <div>
+      <div className="relative border-2 border-[rgba(255,255,255,0.15)] rounded-lg overflow-hidden bg-[#0F1115]">
+        <canvas
+          ref={canvasRef}
+          width={600}
+          height={200}
+          className="w-full h-28 touch-none cursor-crosshair"
+          onMouseDown={startDraw}
+          onMouseMove={draw}
+          onMouseUp={endDraw}
+          onMouseLeave={endDraw}
+          onTouchStart={startDraw}
+          onTouchMove={draw}
+          onTouchEnd={endDraw}
+        />
+        {!hasDrawn && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span className="text-[#6B7280] text-sm">Sign here with your finger or mouse</span>
+          </div>
+        )}
+        {/* Signature line */}
+        <div className="absolute bottom-4 left-6 right-6 border-b border-[rgba(255,255,255,0.15)]" />
+      </div>
+      {hasDrawn && (
+        <button type="button" onClick={clear} className="text-[#6B7280] text-xs mt-1.5 hover:text-[#B7C0CC]">
+          Clear signature
+        </button>
+      )}
+    </div>
+  );
+};
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
 const DeliveryConfirm: React.FC = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
@@ -25,37 +132,96 @@ const DeliveryConfirm: React.FC = () => {
   const [pageState, setPageState] = useState<PageState>('loading');
   const [record, setRecord] = useState<ConfirmationRecord | null>(null);
 
+  // Verification state
+  const [verifyCode, setVerifyCode] = useState('');
+  const [maskedPhone, setMaskedPhone] = useState('');
+  const [codeSent, setCodeSent] = useState(false);
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
+
   // Form state
   const [confirmed, setConfirmed] = useState(false);
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [signatureBlob, setSignatureBlob] = useState<Blob | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Location state
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Capture geolocation on mount
   useEffect(() => {
-    if (!token) {
-      setPageState('not_found');
-      return;
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => {} // silently ignore if denied
+      );
     }
+  }, []);
+
+  useEffect(() => {
+    if (!token) { setPageState('not_found'); return; }
     const load = async () => {
       const { data, error } = await supabase
         .from('delivery_confirmations')
-        .select('token, order_id, confirmed_at, confirmed_delivery, product_name, quantity_tons, delivery_address, delivery_date, customer_name')
+        .select('token, order_id, confirmed_at, confirmed_delivery, verified_at, product_name, quantity_tons, delivery_address, delivery_date, customer_name')
         .eq('token', token)
         .maybeSingle();
 
-      if (error || !data) {
-        setPageState('not_found');
-        return;
-      }
+      if (error || !data) { setPageState('not_found'); return; }
       setRecord(data as ConfirmationRecord);
-      setPageState(data.confirmed_at ? 'already_confirmed' : 'ready');
+      if (data.confirmed_at) setPageState('already_confirmed');
+      else if (data.verified_at) setPageState('ready');
+      else setPageState('verify');
     };
     load();
   }, [token]);
 
+  // ── Verification handlers ──────────────────────────────────────────────────
+  const handleSendCode = async () => {
+    if (!token) return;
+    setIsSendingCode(true);
+    setVerifyError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('delivery-verify', {
+        body: { action: 'send_code', token },
+      });
+      if (error) throw error;
+      const res = typeof data === 'string' ? JSON.parse(data) : data;
+      if (res.error) throw new Error(res.error);
+      setMaskedPhone(res.masked_phone || '');
+      setCodeSent(true);
+    } catch (err: any) {
+      setVerifyError(err.message || 'Failed to send code');
+    } finally {
+      setIsSendingCode(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!token || !verifyCode.trim()) return;
+    setIsVerifying(true);
+    setVerifyError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('delivery-verify', {
+        body: { action: 'verify_code', token, code: verifyCode.trim() },
+      });
+      if (error) throw error;
+      const res = typeof data === 'string' ? JSON.parse(data) : data;
+      if (res.error) throw new Error(res.error);
+      if (res.verified || res.already_verified) setPageState('ready');
+    } catch (err: any) {
+      setVerifyError(err.message || 'Verification failed');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  // ── Form handlers ──────────────────────────────────────────────────────────
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -65,31 +231,33 @@ const DeliveryConfirm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!confirmed) {
-      setSubmitError('Please check the confirmation box to proceed.');
-      return;
-    }
+    if (!confirmed) { setSubmitError('Please check the confirmation box.'); return; }
+    if (!signatureBlob) { setSubmitError('Please draw your signature.'); return; }
     if (!record || !token) return;
 
     setSubmitError(null);
     setPageState('submitting');
 
     try {
+      // Upload photo if provided
       let photoUrl: string | null = null;
-
       if (photoFile) {
         const ext = photoFile.name.split('.').pop() || 'jpg';
         const path = `${token}/${Date.now()}.${ext}`;
-        const { error: uploadErr } = await supabase.storage
-          .from('delivery-photos')
-          .upload(path, photoFile, { contentType: photoFile.type });
-
+        const { error: uploadErr } = await supabase.storage.from('delivery-photos').upload(path, photoFile, { contentType: photoFile.type });
         if (!uploadErr) {
-          const { data: urlData } = supabase.storage
-            .from('delivery-photos')
-            .getPublicUrl(path);
+          const { data: urlData } = supabase.storage.from('delivery-photos').getPublicUrl(path);
           photoUrl = urlData.publicUrl;
         }
+      }
+
+      // Upload signature
+      let signatureUrl: string | null = null;
+      const sigPath = `${token}/signature-${Date.now()}.png`;
+      const { error: sigErr } = await supabase.storage.from('delivery-photos').upload(sigPath, signatureBlob, { contentType: 'image/png' });
+      if (!sigErr) {
+        const { data: sigUrlData } = supabase.storage.from('delivery-photos').getPublicUrl(sigPath);
+        signatureUrl = sigUrlData.publicUrl;
       }
 
       const { error: updateErr } = await supabase
@@ -98,13 +266,15 @@ const DeliveryConfirm: React.FC = () => {
           confirmed_at: new Date().toISOString(),
           confirmed_delivery: true,
           photo_url: photoUrl,
+          signature_url: signatureUrl,
           rating: rating > 0 ? rating : null,
           review_text: reviewText.trim() || null,
+          confirmed_location: location,
+          confirmed_user_agent: navigator.userAgent,
         })
         .eq('token', token);
 
       if (updateErr) throw updateErr;
-
       setPageState('success');
     } catch {
       setSubmitError('Something went wrong. Please try again.');
@@ -118,16 +288,13 @@ const DeliveryConfirm: React.FC = () => {
       return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
         weekday: 'short', month: 'long', day: 'numeric', year: 'numeric',
       });
-    } catch {
-      return dateStr;
-    }
+    } catch { return dateStr; }
   };
 
-  // ── Layout wrapper ──────────────────────────────────────────────────────────
+  // ── Layout ──────────────────────────────────────────────────────────────────
   const Wrap = ({ children }: { children: React.ReactNode }) => (
     <div className="min-h-screen bg-[#0F1115] flex flex-col items-center justify-start py-8 px-4">
       <div className="w-full max-w-md">
-        {/* Brand header */}
         <div className="text-center mb-6">
           <div className="text-3xl mb-1">🪨</div>
           <h1 className="text-xl font-bold text-[#F5F7FA]">My Gravel Guy</h1>
@@ -137,15 +304,26 @@ const DeliveryConfirm: React.FC = () => {
     </div>
   );
 
+  // ── Order summary block (reused) ───────────────────────────────────────────
+  const OrderSummary = () => record ? (
+    <div className="px-6 py-4 border-b border-[rgba(255,255,255,0.08)]">
+      <div className="flex items-start gap-3">
+        <Package className="w-5 h-5 text-[#14FF6A] mt-0.5 flex-shrink-0" />
+        <div className="space-y-1">
+          <p className="text-[#F5F7FA] font-semibold">
+            {record.product_name || 'Your Order'}
+            {record.quantity_tons && <span className="text-[#B7C0CC] font-normal"> · {record.quantity_tons} tons</span>}
+          </p>
+          {record.delivery_address && <p className="text-[#B7C0CC] text-sm">{record.delivery_address}</p>}
+          {record.delivery_date && <p className="text-[#B7C0CC] text-sm">{formatDate(record.delivery_date)}</p>}
+        </div>
+      </div>
+    </div>
+  ) : null;
+
   // ── Loading ─────────────────────────────────────────────────────────────────
   if (pageState === 'loading') {
-    return (
-      <Wrap>
-        <div className="flex justify-center py-16">
-          <Loader2 className="w-8 h-8 text-[#14FF6A] animate-spin" />
-        </div>
-      </Wrap>
-    );
+    return <Wrap><div className="flex justify-center py-16"><Loader2 className="w-8 h-8 text-[#14FF6A] animate-spin" /></div></Wrap>;
   }
 
   // ── Not found ───────────────────────────────────────────────────────────────
@@ -155,13 +333,13 @@ const DeliveryConfirm: React.FC = () => {
         <div className="bg-[#151A22] border border-[rgba(255,255,255,0.10)] rounded-2xl p-8 text-center">
           <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-[#F5F7FA] mb-2">Link Invalid</h2>
-          <p className="text-[#B7C0CC]">This confirmation link is invalid or has expired. Please contact us if you need assistance.</p>
+          <p className="text-[#B7C0CC]">This confirmation link is invalid or has expired.</p>
         </div>
       </Wrap>
     );
   }
 
-  // ── Already confirmed ───────────────────────────────────────────────────────
+  // ── Already confirmed ──────────────────────────────────────────────────────
   if (pageState === 'already_confirmed' && record) {
     return (
       <Wrap>
@@ -171,14 +349,13 @@ const DeliveryConfirm: React.FC = () => {
           <p className="text-[#B7C0CC]">
             This delivery was confirmed on{' '}
             {new Date(record.confirmed_at!).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}.
-            Thank you!
           </p>
         </div>
       </Wrap>
     );
   }
 
-  // ── Success ─────────────────────────────────────────────────────────────────
+  // ── Success ────────────────────────────────────────────────────────────────
   if (pageState === 'success') {
     return (
       <Wrap>
@@ -186,119 +363,129 @@ const DeliveryConfirm: React.FC = () => {
           <CheckCircle className="w-14 h-14 text-[#14FF6A] mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-[#F5F7FA] mb-3">Delivery Confirmed!</h2>
           <p className="text-[#B7C0CC] mb-2">
-            Thank you{record?.customer_name ? `, ${record.customer_name.split(' ')[0]}` : ''}! Your confirmation has been recorded.
+            Thank you{record?.customer_name ? `, ${record.customer_name.split(' ')[0]}` : ''}! Your signed confirmation has been securely recorded.
           </p>
-          {rating > 0 && (
-            <p className="text-[#B7C0CC] text-sm">Your review has been submitted — we appreciate the feedback!</p>
-          )}
+          {rating > 0 && <p className="text-[#B7C0CC] text-sm">Your review has been submitted — we appreciate the feedback!</p>}
         </div>
       </Wrap>
     );
   }
 
-  // ── Form (ready / submitting) ────────────────────────────────────────────────
+  // ── Step 1: Verify identity ────────────────────────────────────────────────
+  if (pageState === 'verify') {
+    return (
+      <Wrap>
+        <div className="bg-[#151A22] border border-[rgba(255,255,255,0.10)] rounded-2xl overflow-hidden">
+          <div className="bg-gradient-to-r from-[#14FF6A]/20 to-[#059669]/20 border-b border-[rgba(255,255,255,0.08)] px-6 py-5">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-[#14FF6A]" />
+              <h2 className="text-lg font-bold text-[#F5F7FA]">Verify Your Identity</h2>
+            </div>
+            <p className="text-[#B7C0CC] text-sm mt-1">Step 1 of 2 — we'll send a code to the phone number on file</p>
+          </div>
+
+          <OrderSummary />
+
+          <div className="px-6 py-5 space-y-4">
+            {!codeSent ? (
+              <>
+                <p className="text-[#B7C0CC] text-sm">
+                  To protect your delivery record, we need to verify it's you. We'll text a 6-digit code to the phone number associated with this order.
+                </p>
+                <button
+                  onClick={handleSendCode}
+                  disabled={isSendingCode}
+                  className="w-full bg-[#14FF6A] text-black font-bold py-4 rounded-lg text-base hover:bg-[#10e05c] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isSendingCode ? <><Loader2 className="w-5 h-5 animate-spin" /> Sending...</> : 'Send Verification Code'}
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-[#B7C0CC] text-sm">
+                  A 6-digit code was sent to <span className="text-[#F5F7FA] font-medium">{maskedPhone}</span>. Enter it below.
+                </p>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={verifyCode}
+                  onChange={e => { setVerifyCode(e.target.value.replace(/\D/g, '')); setVerifyError(null); }}
+                  placeholder="000000"
+                  className="w-full bg-[#0F1115] border border-[rgba(255,255,255,0.15)] rounded-lg px-4 py-4 text-[#F5F7FA] text-center text-2xl font-mono tracking-[0.4em] focus:outline-none focus:border-[#14FF6A] transition-colors placeholder-[#6B7280]"
+                />
+                <button
+                  onClick={handleVerifyCode}
+                  disabled={isVerifying || verifyCode.length < 6}
+                  className="w-full bg-[#14FF6A] text-black font-bold py-4 rounded-lg text-base hover:bg-[#10e05c] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isVerifying ? <><Loader2 className="w-5 h-5 animate-spin" /> Verifying...</> : <><ShieldCheck className="w-5 h-5" /> Verify & Continue</>}
+                </button>
+                <button onClick={handleSendCode} disabled={isSendingCode} className="w-full text-[#6B7280] text-sm hover:text-[#B7C0CC] py-2">
+                  {isSendingCode ? 'Sending...' : "Didn't receive it? Send again"}
+                </button>
+              </>
+            )}
+
+            {verifyError && <p className="text-red-400 text-sm text-center">{verifyError}</p>}
+          </div>
+        </div>
+      </Wrap>
+    );
+  }
+
+  // ── Step 2: Confirmation form (verified) ───────────────────────────────────
   return (
     <Wrap>
       <div className="bg-[#151A22] border border-[rgba(255,255,255,0.10)] rounded-2xl overflow-hidden">
-        {/* Header */}
         <div className="bg-gradient-to-r from-[#14FF6A]/20 to-[#059669]/20 border-b border-[rgba(255,255,255,0.08)] px-6 py-5">
           <h2 className="text-lg font-bold text-[#F5F7FA]">Confirm Your Delivery</h2>
-          <p className="text-[#B7C0CC] text-sm mt-1">Takes about 60 seconds</p>
+          <p className="text-[#B7C0CC] text-sm mt-1">Step 2 of 2 — sign and confirm</p>
         </div>
 
-        {/* Order summary */}
-        {record && (
-          <div className="px-6 py-4 border-b border-[rgba(255,255,255,0.08)]">
-            <div className="flex items-start gap-3">
-              <Package className="w-5 h-5 text-[#14FF6A] mt-0.5 flex-shrink-0" />
-              <div className="space-y-1">
-                <p className="text-[#F5F7FA] font-semibold">
-                  {record.product_name || 'Your Order'}
-                  {record.quantity_tons && (
-                    <span className="text-[#B7C0CC] font-normal"> · {record.quantity_tons} tons</span>
-                  )}
-                </p>
-                {record.delivery_address && (
-                  <p className="text-[#B7C0CC] text-sm">{record.delivery_address}</p>
-                )}
-                {record.delivery_date && (
-                  <p className="text-[#B7C0CC] text-sm">{formatDate(record.delivery_date)}</p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        <OrderSummary />
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-6">
-          {/* Confirmation checkbox — required */}
+          {/* Confirmation checkbox */}
           <label className="flex items-start gap-3 cursor-pointer group">
             <div className="relative mt-0.5">
-              <input
-                type="checkbox"
-                checked={confirmed}
-                onChange={e => { setConfirmed(e.target.checked); setSubmitError(null); }}
-                className="sr-only"
-              />
-              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                confirmed ? 'bg-[#14FF6A] border-[#14FF6A]' : 'border-[rgba(255,255,255,0.30)] group-hover:border-[#14FF6A]'
-              }`}>
-                {confirmed && (
-                  <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
+              <input type="checkbox" checked={confirmed} onChange={e => { setConfirmed(e.target.checked); setSubmitError(null); }} className="sr-only" />
+              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${confirmed ? 'bg-[#14FF6A] border-[#14FF6A]' : 'border-[rgba(255,255,255,0.30)] group-hover:border-[#14FF6A]'}`}>
+                {confirmed && <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
               </div>
             </div>
-            <span className="text-[#F5F7FA] text-sm leading-5">
-              Yes, my materials were delivered to the address above
-            </span>
+            <span className="text-[#F5F7FA] text-sm leading-5">Yes, my materials were delivered to the address above</span>
           </label>
 
-          {/* Photo upload — optional */}
+          {/* Signature — required */}
+          <div>
+            <p className="text-[#B7C0CC] text-sm font-medium mb-2 flex items-center gap-1.5">
+              <PenLine className="w-4 h-4" /> Sign to confirm <span className="text-red-400">*</span>
+            </p>
+            <SignatureCanvas onSignatureChange={setSignatureBlob} />
+          </div>
+
+          {/* Photo — optional */}
           <div>
             <p className="text-[#B7C0CC] text-sm font-medium mb-2">Add a photo <span className="text-[#6B7280]">(optional)</span></p>
             {photoPreview ? (
               <div className="relative">
                 <img src={photoPreview} alt="Preview" className="w-full h-40 object-cover rounded-lg" />
-                <button
-                  type="button"
-                  onClick={() => { setPhotoFile(null); setPhotoPreview(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-                  className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded"
-                >
-                  Remove
-                </button>
+                <button type="button" onClick={() => { setPhotoFile(null); setPhotoPreview(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">Remove</button>
               </div>
             ) : (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full border-2 border-dashed border-[rgba(255,255,255,0.15)] rounded-lg py-6 flex flex-col items-center gap-2 text-[#B7C0CC] hover:border-[#14FF6A]/50 transition-colors"
-              >
-                <Camera className="w-6 h-6" />
-                <span className="text-sm">Take or choose a photo</span>
+              <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full border-2 border-dashed border-[rgba(255,255,255,0.15)] rounded-lg py-6 flex flex-col items-center gap-2 text-[#B7C0CC] hover:border-[#14FF6A]/50 transition-colors">
+                <Camera className="w-6 h-6" /><span className="text-sm">Take or choose a photo</span>
               </button>
             )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handlePhotoChange}
-              className="hidden"
-            />
+            <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoChange} className="hidden" />
           </div>
 
           {/* Star rating — optional */}
           <div>
             <p className="text-[#B7C0CC] text-sm font-medium mb-2">Rate your experience <span className="text-[#6B7280]">(optional)</span></p>
-            <StarRating
-              rating={rating}
-              interactive
-              onRatingChange={setRating}
-              size="lg"
-              className="py-1"
-            />
+            <StarRating rating={rating} interactive onRatingChange={setRating} size="lg" className="py-1" />
           </div>
 
           {/* Review — optional */}
@@ -313,30 +500,18 @@ const DeliveryConfirm: React.FC = () => {
             />
           </div>
 
-          {submitError && (
-            <p className="text-red-400 text-sm">{submitError}</p>
-          )}
+          {submitError && <p className="text-red-400 text-sm">{submitError}</p>}
 
           <button
             type="submit"
             disabled={pageState === 'submitting'}
             className="w-full bg-[#14FF6A] text-black font-bold py-4 rounded-lg text-base hover:bg-[#10e05c] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {pageState === 'submitting' ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Submitting...
-              </>
-            ) : (
-              <>
-                <CheckCircle className="w-5 h-5" />
-                Confirm Delivery
-              </>
-            )}
+            {pageState === 'submitting' ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting...</> : <><CheckCircle className="w-5 h-5" /> Confirm Delivery</>}
           </button>
 
           <p className="text-center text-[#6B7280] text-xs">
-            Your confirmation is securely recorded and helps protect both parties.
+            Your signed confirmation, IP address, and location are securely recorded.
           </p>
         </form>
       </div>
