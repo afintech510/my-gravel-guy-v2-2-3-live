@@ -11,6 +11,7 @@ import { storeCheckoutBackup, createEnhancedBackup } from '../utils/paymentUtils
 import CouponCode from '../components/cart/CouponCode';
 import PaymentMethodLogos from '../components/payment/PaymentMethodLogos';
 import type { OrderInsertData } from '../services/productTypes';
+import { trackEcommerce } from '../utils/analytics';
 
 const Checkout = () => {
   const { items, total, discountTotal, clearCart, appliedCoupon, couponDiscount, depositOption, getPaymentTotal } = useCart();
@@ -342,7 +343,16 @@ const Checkout = () => {
 
       const formattedItems = formatCartItemsForStripe();
       const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
+
+      // Track begin_checkout for GA4 + Google Ads
+      trackEcommerce('begin_checkout', items.map(item => ({
+        item_id: item.id.toString(),
+        item_name: item.name,
+        item_category: item.category || 'Bulk Materials',
+        quantity: item.tons,
+        price: item.price
+      })), discountTotal);
+
       // Send checkout confirmation email first
       await sendCheckoutConfirmationEmail(orderId);
       
