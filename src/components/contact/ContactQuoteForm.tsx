@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { sendQuoteRequestEmail } from '@/services/quoteEmailService';
 import { createLeadFromForm } from '@/services/supplierQuoteService';
 import { Check } from 'lucide-react';
+import { trackEvent } from '@/utils/analytics';
 
 interface FormData {
   name: string;
@@ -178,6 +179,7 @@ const ContactQuoteForm: React.FC = () => {
       if (result.success) {
         setIsSubmitted(true);
         toast.success('Quote request submitted successfully!');
+        trackEvent('generate_lead', 'contact_form', 'contact_page_quote');
       } else {
         toast.error(result.error || 'Failed to submit quote request');
       }

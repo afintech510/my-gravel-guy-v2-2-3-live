@@ -45,9 +45,8 @@ const ContactForm: React.FC<ContactFormProps> = ({ productInfo }) => {
     
     try {
       // Track shop calculator contact form submission
-      console.log('ContactForm: Tracking shop calculator contact form submission');
       trackEvent('form_submit', 'Quote', `Shop Calculator - ${productInfo.name}`, productInfo.quantity);
-      
+
       // Send quote request with database insertion
       const result = await sendQuoteRequestEmail({
         name: data.name,
@@ -59,8 +58,9 @@ const ContactForm: React.FC<ContactFormProps> = ({ productInfo }) => {
         sourcePage: 'Shop Calculator',
         selectedProduct: { name: productInfo.name }
       });
-      
+
       if (result.success) {
+        trackEvent('generate_lead', 'contact_form', 'shop_calculator');
         toast({
           title: 'Quote request sent!',
           description: `We will get back to you as soon as possible. Reference ID: ${result.orderId}`,

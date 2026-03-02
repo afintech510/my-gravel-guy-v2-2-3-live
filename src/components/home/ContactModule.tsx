@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Phone, Mail, MapPin } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { sendQuoteRequestEmail } from '@/services/quoteEmailService';
+import { trackEvent } from '@/utils/analytics';
 
 const ContactModule = () => {
   const { toast } = useToast();
@@ -70,10 +71,11 @@ ${formData.additionalDetails}`,
       if (result.success) {
         toast({
           title: "Quote Request Sent!",
-          description: result.orderId 
+          description: result.orderId
             ? `We'll get back to you within 24 hours with your customized quote. Reference ID: ${result.orderId}`
             : "We'll get back to you within 24 hours with your customized quote.",
         });
+        trackEvent('generate_lead', 'contact_form', 'home_page_contact');
 
         // Reset form
         setFormData({
