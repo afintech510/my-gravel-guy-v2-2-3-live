@@ -236,17 +236,23 @@ const DeliveryConfirm: React.FC = () => {
   useEffect(() => {
     if (!token) { setPageState('not_found'); return; }
     const load = async () => {
-      const { data, error } = await supabase
-        .from('delivery_confirmations')
-        .select('token, order_id, confirmed_at, confirmed_delivery, verified_at, product_name, quantity_tons, delivery_address, delivery_date, customer_name, stripe_payment_id, customer_phone, customer_email')
-        .eq('token', token)
-        .maybeSingle();
+      try {
+        const { data, error } = await supabase
+          .from('delivery_confirmations')
+          .select('token, order_id, confirmed_at, confirmed_delivery, verified_at, product_name, quantity_tons, delivery_address, delivery_date, customer_name, stripe_payment_id, customer_phone, customer_email')
+          .eq('token', token)
+          .maybeSingle();
 
-      if (error || !data) { setPageState('not_found'); return; }
-      setRecord(data as ConfirmationRecord);
-      if (data.confirmed_at) setPageState('already_confirmed');
-      else if (data.verified_at) setPageState('ready');
-      else setPageState('verify');
+        console.log('[DeliveryConfirm] load result:', { data: !!data, error: error?.message });
+        if (error || !data) { setPageState('not_found'); return; }
+        setRecord(data as ConfirmationRecord);
+        if (data.confirmed_at) setPageState('already_confirmed');
+        else if (data.verified_at) setPageState('ready');
+        else setPageState('verify');
+      } catch (err) {
+        console.error('[DeliveryConfirm] load error:', err);
+        setPageState('not_found');
+      }
     };
     load();
   }, [token]);
