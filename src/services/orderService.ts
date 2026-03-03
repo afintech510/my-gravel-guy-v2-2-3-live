@@ -163,12 +163,12 @@ export class OrderService {
           query = query.neq('fulfillment_status', 'Archived');
         }
       } else if (filters.excludeQuotes) {
-        // Orders: exclude cart status, but include ORDER-* prefix orders even if status is 'Quote'
-        // (these are paid quote conversions where the order_id starts with ORDER-)
-        // This ensures paid orders from quote checkout flow appear in the orders list
+        // Orders: exclude carts, exclude archived, and exclude unpaid quotes.
+        // Paid quote conversions (ORDER-* prefix with status='Quote') are kept.
+        // Non-prefixed order IDs (e.g. 20260302-230812) are also included.
         query = query.neq('status', 'cart')
           .or('fulfillment_status.is.null,fulfillment_status.not.in.(Archived)')
-          .like('order_id', 'ORDER-%');
+          .or('status.neq.Quote,order_id.like.ORDER-%');
       }
 
       // Apply search filter - enhanced search across multiple fields
