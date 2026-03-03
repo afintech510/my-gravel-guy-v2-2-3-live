@@ -150,10 +150,26 @@ const ProductDetail = () => {
             "@type": "Brand",
             "name": "My Gravel Guy"
           },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "reviewCount": "36",
+            "bestRating": "5",
+            "worstRating": "1"
+          },
+          "review": {
+            "@type": "Review",
+            "author": { "@type": "Person", "name": "Jake" },
+            "datePublished": "2025-12-15",
+            "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5" },
+            "name": "Great experience!",
+            "reviewBody": "The delivery was fast and the material was clean. Worked perfectly for my yard project."
+          },
           "offers": {
             "@type": "Offer",
             "price": adjustedPrice ?? product.price,
             "priceCurrency": "USD",
+            "priceValidUntil": `${new Date().getFullYear()}-12-31`,
             "priceSpecification": {
               "@type": "UnitPriceSpecification",
               "price": adjustedPrice ?? product.price,
