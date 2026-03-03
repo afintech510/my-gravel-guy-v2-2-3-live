@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { CheckCircle, Camera, Loader2, AlertCircle, Package, ShieldCheck, PenLine } from 'lucide-react';
+import { CheckCircle, Camera, Loader2, AlertCircle, Package, ShieldCheck, PenLine, Smartphone, Mail } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import StarRating from '@/components/reviews/StarRating';
 
@@ -16,6 +16,8 @@ interface ConfirmationRecord {
   delivery_date: string | null;
   customer_name: string | null;
   stripe_payment_id: string | null;
+  customer_phone: string | null;
+  customer_email: string | null;
 }
 
 type PageState = 'loading' | 'not_found' | 'already_confirmed' | 'verify' | 'ready' | 'submitting' | 'success';
@@ -146,6 +148,18 @@ const SignatureCanvas: React.FC<{
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+const maskPhone = (phone: string) => {
+  const digits = phone.replace(/\D/g, '');
+  return '***-***-' + digits.slice(-4);
+};
+
+const maskEmailAddr = (email: string) => {
+  const [local, domain] = email.split('@');
+  if (!domain) return '***@***';
+  const masked = local.length <= 2 ? '*'.repeat(local.length) : local[0] + '*'.repeat(local.length - 2) + local[local.length - 1];
+  return `${masked}@${domain}`;
+};
+
 const formatDate = (dateStr: string | null) => {
   if (!dateStr) return null;
   try {
@@ -224,7 +238,7 @@ const DeliveryConfirm: React.FC = () => {
     const load = async () => {
       const { data, error } = await supabase
         .from('delivery_confirmations')
-        .select('token, order_id, confirmed_at, confirmed_delivery, verified_at, product_name, quantity_tons, delivery_address, delivery_date, customer_name, stripe_payment_id')
+        .select('token, order_id, confirmed_at, confirmed_delivery, verified_at, product_name, quantity_tons, delivery_address, delivery_date, customer_name, stripe_payment_id, customer_phone, customer_email')
         .eq('token', token)
         .maybeSingle();
 
@@ -238,13 +252,13 @@ const DeliveryConfirm: React.FC = () => {
   }, [token]);
 
   // ── Verification handlers ──────────────────────────────────────────────────
-  const handleSendCode = async () => {
+  const handleSendCode = async (method?: 'sms' | 'email') => {
     if (!token) return;
     setIsSendingCode(true);
     setVerifyError(null);
     try {
       const { data, error } = await supabase.functions.invoke('delivery-verify', {
-        body: { action: 'send_code', token },
+        body: { action: 'send_code', token, method },
       });
       if (error) throw error;
       const res = typeof data === 'string' ? JSON.parse(data) : data;
@@ -432,15 +446,32 @@ const DeliveryConfirm: React.FC = () => {
               {!codeSent ? (
                 <>
                   <p className="text-[#B7C0CC] text-sm">
-                    To protect your delivery record, we need to verify it's you. We'll send a 6-digit code to the contact info associated with this order.
+                    To protect your delivery record, we need to verify it's you. Choose how you'd like to receive your 6-digit verification code:
                   </p>
-                  <button
-                    onClick={handleSendCode}
-                    disabled={isSendingCode}
-                    className="w-full bg-[#14FF6A] text-black font-bold py-4 rounded-lg text-base hover:bg-[#10e05c] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    {isSendingCode ? <><Loader2 className="w-5 h-5 animate-spin" /> Sending...</> : 'Send Verification Code'}
-                  </button>
+                  <div className="space-y-3">
+                    {record?.customer_phone && (
+                      <button
+                        onClick={() => handleSendCode('sms')}
+                        disabled={isSendingCode}
+                        className="w-full bg-[#14FF6A] text-black font-bold py-4 rounded-lg text-base hover:bg-[#10e05c] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        {isSendingCode && verifyMethod !== 'email' ? <><Loader2 className="w-5 h-5 animate-spin" /> Sending...</> : <><Smartphone className="w-5 h-5" /> Text me at {maskPhone(record.customer_phone)}</>}
+                      </button>
+                    )}
+                    {record?.customer_email && (
+                      <button
+                        onClick={() => handleSendCode('email')}
+                        disabled={isSendingCode}
+                        className={`w-full font-bold py-4 rounded-lg text-base transition-colors disabled:opacity-50 flex items-center justify-center gap-2 ${
+                          record?.customer_phone
+                            ? 'bg-[#1A1F2B] text-[#F5F7FA] border border-[rgba(255,255,255,0.15)] hover:border-[#14FF6A]'
+                            : 'bg-[#14FF6A] text-black hover:bg-[#10e05c]'
+                        }`}
+                      >
+                        {isSendingCode && verifyMethod !== 'sms' ? <><Loader2 className="w-5 h-5 animate-spin" /> Sending...</> : <><Mail className="w-5 h-5" /> Email me at {maskEmailAddr(record.customer_email)}</>}
+                      </button>
+                    )}
+                  </div>
                 </>
               ) : (
                 <>
@@ -468,7 +499,7 @@ const DeliveryConfirm: React.FC = () => {
                   >
                     {isVerifying ? <><Loader2 className="w-5 h-5 animate-spin" /> Verifying...</> : <><ShieldCheck className="w-5 h-5" /> Verify & Continue</>}
                   </button>
-                  <button onClick={handleSendCode} disabled={isSendingCode} className="w-full text-[#6B7280] text-sm hover:text-[#B7C0CC] py-2">
+                  <button onClick={() => handleSendCode(verifyMethod || undefined)} disabled={isSendingCode} className="w-full text-[#6B7280] text-sm hover:text-[#B7C0CC] py-2">
                     {isSendingCode ? 'Sending...' : `Didn't receive it? Send again${verifyMethod === 'email' ? ' (check spam)' : ''}`}
                   </button>
                 </>
