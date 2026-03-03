@@ -353,9 +353,12 @@ const DeliveryConfirm: React.FC = () => {
   };
 
   // ── Header with logo (stable JSX, not a component) ─────────────────────────
+  const firstName = record?.customer_name?.split(' ')[0];
   const header = (
     <div className="text-center mb-6">
-      <img src={LOGO_URL} alt="My Gravel Guy" className="h-16 w-auto mx-auto mb-1" />
+      <img src={LOGO_URL} alt="My Gravel Guy" className="h-16 w-auto mx-auto mb-3" />
+      <h1 className="text-[#F5F7FA] text-xl font-bold">Thank you{firstName ? `, ${firstName}` : ''}!</h1>
+      <p className="text-[#B7C0CC] text-sm mt-1">Please confirm your delivery below.</p>
     </div>
   );
 
