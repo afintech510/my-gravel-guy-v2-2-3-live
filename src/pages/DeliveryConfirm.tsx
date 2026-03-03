@@ -189,6 +189,8 @@ const DeliveryConfirm: React.FC = () => {
   // Verification state
   const [verifyCode, setVerifyCode] = useState('');
   const [maskedPhone, setMaskedPhone] = useState('');
+  const [maskedEmail, setMaskedEmail] = useState('');
+  const [verifyMethod, setVerifyMethod] = useState<'sms' | 'email' | null>(null);
   const [codeSent, setCodeSent] = useState(false);
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -247,7 +249,9 @@ const DeliveryConfirm: React.FC = () => {
       if (error) throw error;
       const res = typeof data === 'string' ? JSON.parse(data) : data;
       if (res.error) throw new Error(res.error);
+      setVerifyMethod(res.method || 'sms');
       setMaskedPhone(res.masked_phone || '');
+      setMaskedEmail(res.masked_email || '');
       setCodeSent(true);
     } catch (err: any) {
       setVerifyError(err.message || 'Failed to send code');
@@ -419,7 +423,7 @@ const DeliveryConfirm: React.FC = () => {
                 <ShieldCheck className="w-5 h-5 text-[#14FF6A]" />
                 <h2 className="text-lg font-bold text-[#F5F7FA]">Verify Your Identity</h2>
               </div>
-              <p className="text-[#B7C0CC] text-sm mt-1">Step 1 of 2 — we'll send a code to the phone number on file</p>
+              <p className="text-[#B7C0CC] text-sm mt-1">Step 1 of 2 — we'll send a code to verify your identity</p>
             </div>
 
             {record && <OrderSummary record={record} />}
@@ -428,7 +432,7 @@ const DeliveryConfirm: React.FC = () => {
               {!codeSent ? (
                 <>
                   <p className="text-[#B7C0CC] text-sm">
-                    To protect your delivery record, we need to verify it's you. We'll text a 6-digit code to the phone number associated with this order.
+                    To protect your delivery record, we need to verify it's you. We'll send a 6-digit code to the contact info associated with this order.
                   </p>
                   <button
                     onClick={handleSendCode}
@@ -441,7 +445,11 @@ const DeliveryConfirm: React.FC = () => {
               ) : (
                 <>
                   <p className="text-[#B7C0CC] text-sm">
-                    A 6-digit code was sent to <span className="text-[#F5F7FA] font-medium">{maskedPhone}</span>. Enter it below.
+                    A 6-digit code was sent to{' '}
+                    <span className="text-[#F5F7FA] font-medium">
+                      {verifyMethod === 'email' ? maskedEmail : maskedPhone}
+                    </span>
+                    {verifyMethod === 'email' ? '. Check your inbox (and spam folder).' : '. Enter it below.'}
                   </p>
                   <input
                     type="text"
@@ -461,7 +469,7 @@ const DeliveryConfirm: React.FC = () => {
                     {isVerifying ? <><Loader2 className="w-5 h-5 animate-spin" /> Verifying...</> : <><ShieldCheck className="w-5 h-5" /> Verify & Continue</>}
                   </button>
                   <button onClick={handleSendCode} disabled={isSendingCode} className="w-full text-[#6B7280] text-sm hover:text-[#B7C0CC] py-2">
-                    {isSendingCode ? 'Sending...' : "Didn't receive it? Send again"}
+                    {isSendingCode ? 'Sending...' : `Didn't receive it? Send again${verifyMethod === 'email' ? ' (check spam)' : ''}`}
                   </button>
                 </>
               )}
