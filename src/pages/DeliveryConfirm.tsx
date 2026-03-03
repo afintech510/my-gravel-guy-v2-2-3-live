@@ -218,6 +218,7 @@ const DeliveryConfirm: React.FC = () => {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [signatureBlob, setSignatureBlob] = useState<Blob | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Location state
@@ -234,23 +235,29 @@ const DeliveryConfirm: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!token) { setPageState('not_found'); return; }
+    if (!token) { setDebugInfo(`no token in URL | search: ${window.location.search} | href: ${window.location.href}`); setPageState('not_found'); return; }
     const load = async () => {
       try {
+        setDebugInfo(`loading... token=${token.substring(0, 8)}... | UA=${navigator.userAgent.substring(0, 60)}`);
         const { data, error } = await supabase
           .from('delivery_confirmations')
           .select('token, order_id, confirmed_at, confirmed_delivery, verified_at, product_name, quantity_tons, delivery_address, delivery_date, customer_name, stripe_payment_id, customer_phone, customer_email')
           .eq('token', token)
           .maybeSingle();
 
-        console.log('[DeliveryConfirm] load result:', { data: !!data, error: error?.message });
-        if (error || !data) { setPageState('not_found'); return; }
+        console.log('[DeliveryConfirm] load result:', { data: !!data, error: error?.message, token });
+        if (error || !data) {
+          setDebugInfo(`token=${token} | data=${JSON.stringify(data)} | error=${error?.message || 'none'} | code=${error?.code || 'none'}`);
+          setPageState('not_found');
+          return;
+        }
         setRecord(data as ConfirmationRecord);
         if (data.confirmed_at) setPageState('already_confirmed');
         else if (data.verified_at) setPageState('ready');
         else setPageState('verify');
-      } catch (err) {
+      } catch (err: any) {
         console.error('[DeliveryConfirm] load error:', err);
+        setDebugInfo(`catch: ${err?.message || String(err)} | token=${token}`);
         setPageState('not_found');
       }
     };
@@ -391,6 +398,12 @@ const DeliveryConfirm: React.FC = () => {
             <h2 className="text-xl font-bold text-[#F5F7FA] mb-2">Link Invalid</h2>
             <p className="text-[#B7C0CC]">This confirmation link is invalid or has expired.</p>
           </div>
+          {/* Temporary debug info - remove after fixing mobile issue */}
+          {debugInfo && (
+            <div className="mt-4 bg-[#1a1a2e] border border-yellow-600/30 rounded-lg p-3 text-left">
+              <p className="text-yellow-500 text-xs font-mono break-all">{debugInfo}</p>
+            </div>
+          )}
         </div>
       </div>
     );
