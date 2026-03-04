@@ -417,6 +417,23 @@ serve(async (req) => {
               quote_converted: true, // Important: Mark as converted
               updated_at: new Date().toISOString()
             };
+
+            // Add UTM attribution data if present
+            if (backupData.utmData) {
+              const utm = backupData.utmData;
+              if (utm.gclid) quoteUpdateData.gclid = utm.gclid;
+              if (utm.gbraid) quoteUpdateData.gbraid = utm.gbraid;
+              if (utm.wbraid) quoteUpdateData.wbraid = utm.wbraid;
+              if (utm.utm_source) quoteUpdateData.utm_source = utm.utm_source;
+              if (utm.utm_medium) quoteUpdateData.utm_medium = utm.utm_medium;
+              if (utm.utm_campaign) quoteUpdateData.utm_campaign = utm.utm_campaign;
+              if (utm.utm_term) quoteUpdateData.utm_term = utm.utm_term;
+              if (utm.utm_content) quoteUpdateData.utm_content = utm.utm_content;
+              if (utm.landing_page_url) quoteUpdateData.landing_page_url = utm.landing_page_url;
+              if (utm.referrer) quoteUpdateData.referrer = utm.referrer;
+              if (utm.user_agent) quoteUpdateData.user_agent = utm.user_agent;
+              console.log('=== APPLYING UTM DATA TO QUOTE CONVERSION ===', utm);
+            }
             
             console.log('=== STARTING DATABASE UPDATE ===', {
               updateData: quoteUpdateData,
@@ -540,14 +557,31 @@ serve(async (req) => {
             updateData.is_deposit_payment = true;
             updateData.deposit_amount = 199;
             updateData.balance_due = originalTotal - totalCouponDiscount - 199;
-            
-            console.log('=== APPLYING DEPOSIT TO CART CONVERSION ===', { 
+
+            console.log('=== APPLYING DEPOSIT TO CART CONVERSION ===', {
               depositAmount: updateData.deposit_amount,
               balanceDue: updateData.balance_due,
               originalTotal: originalTotal
             });
           }
-          
+
+          // Add UTM attribution data if present
+          if (backupData.utmData) {
+            const utm = backupData.utmData;
+            if (utm.gclid) updateData.gclid = utm.gclid;
+            if (utm.gbraid) updateData.gbraid = utm.gbraid;
+            if (utm.wbraid) updateData.wbraid = utm.wbraid;
+            if (utm.utm_source) updateData.utm_source = utm.utm_source;
+            if (utm.utm_medium) updateData.utm_medium = utm.utm_medium;
+            if (utm.utm_campaign) updateData.utm_campaign = utm.utm_campaign;
+            if (utm.utm_term) updateData.utm_term = utm.utm_term;
+            if (utm.utm_content) updateData.utm_content = utm.utm_content;
+            if (utm.landing_page_url) updateData.landing_page_url = utm.landing_page_url;
+            if (utm.referrer) updateData.referrer = utm.referrer;
+            if (utm.user_agent) updateData.user_agent = utm.user_agent;
+            console.log('=== APPLYING UTM DATA TO CART CONVERSION ===', utm);
+          }
+
           const { data: cartUpdateData, error: updateError } = await supabase
             .from('orders')
             .update(updateData)
@@ -607,6 +641,9 @@ serve(async (req) => {
               finalItemPrice: isDepositPayment ? depositAmount / backupData.items.length : finalItemPrice
             });
 
+            // Extract UTM attribution data from backup
+            const utm = backupData.utmData || {};
+
             return {
               order_id: verificationResult.orderId,
               stripe_payment_intent_id: paymentIntentId || null,
@@ -633,6 +670,18 @@ serve(async (req) => {
               is_deposit_payment: isDepositPayment,
               deposit_amount: depositAmount,
               balance_due: balanceDue,
+              // UTM attribution data
+              gclid: utm.gclid || null,
+              gbraid: utm.gbraid || null,
+              wbraid: utm.wbraid || null,
+              utm_source: utm.utm_source || null,
+              utm_medium: utm.utm_medium || null,
+              utm_campaign: utm.utm_campaign || null,
+              utm_term: utm.utm_term || null,
+              utm_content: utm.utm_content || null,
+              landing_page_url: utm.landing_page_url || null,
+              referrer: utm.referrer || null,
+              user_agent: utm.user_agent || null,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             };
