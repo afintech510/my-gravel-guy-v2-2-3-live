@@ -1,0 +1,10 @@
+name = "mygravelguy-prerender"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+
+# Route the worker on the mygravelguy.com domain
+# Uncomment and set your zone_id after `wrangler login`
+# [env.production]
+# routes = [
+#   { pattern = "mygravelguy.com/*", zone_id = "YOUR_ZONE_ID" }
+# ]
