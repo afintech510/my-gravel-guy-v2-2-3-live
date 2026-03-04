@@ -64,6 +64,19 @@ export const sendQuoteRequestEmail = async (formData: QuoteFormData): Promise<{ 
 
     console.log('Quote order record created, now sending emails');
 
+    // Fire-and-forget: send instant SMS/Slack alert to admin(s)
+    supabase.functions.invoke('notify-new-quote', {
+      body: {
+        orderId: dbResult.orderId,
+        customerName: formData.name,
+        customerPhone: formData.phone,
+        material: formData.material || formData.selectedProduct?.name || 'General Inquiry',
+        estimatedTons: formData.estimatedTons,
+        zipCode: formData.zipCode,
+        sourcePage: formData.sourcePage,
+      }
+    }).catch(err => console.warn('Quote alert failed (non-blocking):', err));
+
     // Generate email content with order ID reference
     const emailHtml = generateQuoteRequestEmail({
       ...formData,
