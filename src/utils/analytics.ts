@@ -429,6 +429,58 @@ export const trackSpecFormSubmit = (tons: number, material: string, hasSpec: boo
 };
 
 // ============================================
+// Google Ads Enhanced Conversions
+// ============================================
+
+/**
+ * Set user data for Google Ads Enhanced Conversions.
+ * Google will hash plain-text values automatically when
+ * enhanced conversions are enabled in the Ads account.
+ * Call this before firing purchase/conversion events.
+ */
+export const setEnhancedConversionData = (userData: {
+  email?: string;
+  phone?: string;
+  firstName?: string;
+  lastName?: string;
+  street?: string;
+  city?: string;
+  region?: string;
+  postalCode?: string;
+  country?: string;
+}) => {
+  if (!window.gtag) return;
+
+  const data: Record<string, any> = {};
+
+  if (userData.email) {
+    data.email = userData.email.trim().toLowerCase();
+  }
+  if (userData.phone) {
+    // Normalize to E.164: +1XXXXXXXXXX
+    let phone = userData.phone.replace(/\D/g, '');
+    if (phone.length === 10) phone = '1' + phone;
+    data.phone_number = '+' + phone;
+  }
+  if (userData.firstName || userData.lastName) {
+    data.address = {
+      ...(userData.firstName && { first_name: userData.firstName.trim().toLowerCase() }),
+      ...(userData.lastName && { last_name: userData.lastName.trim().toLowerCase() }),
+      ...(userData.street && { street: userData.street.trim() }),
+      ...(userData.city && { city: userData.city.trim() }),
+      ...(userData.region && { region: userData.region.trim() }),
+      ...(userData.postalCode && { postal_code: userData.postalCode.trim() }),
+      ...(userData.country && { country: (userData.country || 'US').trim() }),
+    };
+  }
+
+  if (Object.keys(data).length > 0) {
+    window.gtag('set', 'user_data', data);
+    console.log('Enhanced conversion data set');
+  }
+};
+
+// ============================================
 // Google Ads Conversion Tracking
 // ============================================
 
