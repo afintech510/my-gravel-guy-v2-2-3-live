@@ -43,10 +43,13 @@ export async function fetchProductsFromSupabase(forceRefresh = false): Promise<P
       return SAMPLE_PRODUCTS;
     }
 
-    console.log('Raw products data from Supabase:', productsData);
-    
+    // Filter out inactive products (active column not in generated types, so filter client-side)
+    const activeProducts = productsData.filter((row: any) => row.active !== false);
+
+    console.log('Raw products data from Supabase:', activeProducts);
+
     // Transform raw data into Product objects
-    const products: Product[] = productsData.map((row, index) => transformProductRow(row, index));
+    const products: Product[] = activeProducts.map((row, index) => transformProductRow(row, index));
     
     console.log('Transformed products:', products);
     
