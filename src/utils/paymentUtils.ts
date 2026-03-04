@@ -14,6 +14,19 @@ interface CheckoutBackup {
     discount: number;
     applied: boolean;
   } | null;
+  utmData?: {
+    gclid?: string;
+    gbraid?: string;
+    wbraid?: string;
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+    utm_term?: string;
+    utm_content?: string;
+    landing_page_url?: string;
+    referrer?: string;
+    user_agent?: string;
+  } | null;
 }
 
 // Enhanced interface for order data with all required fields that match orders table schema
@@ -334,21 +347,38 @@ export const createEnhancedBackup = (orderId: string, cartItems: any[], customer
   console.log('Order ID:', orderId);
   console.log('Cart items count:', cartItems.length);
   console.log('Provided customer info:', customerInfo);
-  
+
   const preparedItems = prepareItemsForStripe(cartItems);
   const baseTotal = preparedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  
+
   // Extract coupon information
   const couponInfo = extractCouponInfo(cartItems);
   const finalTotal = baseTotal - couponInfo.totalDiscount;
-  
+
   // Extract customer info from cart items if not provided
   const extractedCustomerInfo = customerInfo || extractCustomerInfo(cartItems);
-  
+
+  // Extract UTM attribution data from localStorage
+  let utmData: CheckoutBackup['utmData'] = null;
+  try {
+    const stored = localStorage.getItem('mgg_utm_params');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Only include if there are actual UTM params (not just timestamps)
+      const { captured_at, ...utmFields } = parsed;
+      if (Object.values(utmFields).some(v => v)) {
+        utmData = utmFields;
+      }
+    }
+  } catch {
+    console.warn('Failed to extract UTM params for backup');
+  }
+
   console.log('Final customer info for backup:', extractedCustomerInfo);
   console.log('Pricing info:', { baseTotal, couponDiscount: couponInfo.totalDiscount, finalTotal });
-  
-  const backup = {
+  console.log('UTM attribution data:', utmData);
+
+  const backup: CheckoutBackup = {
     orderId,
     items: preparedItems,
     total: finalTotal, // Use the discounted total
@@ -363,17 +393,20 @@ export const createEnhancedBackup = (orderId: string, cartItems: any[], customer
       code: couponInfo.couponCode,
       discount: couponInfo.totalDiscount,
       applied: true
-    } : null
+    } : null,
+    // Add UTM attribution data
+    utmData
   };
-  
+
   console.log('Enhanced backup created:', {
     orderId: backup.orderId,
     itemsCount: backup.items.length,
     hasCustomerEmail: !!backup.customerInfo?.email,
     customerEmail: backup.customerInfo?.email,
     hasCoupon: !!backup.couponInfo,
+    hasUtmData: !!backup.utmData,
     finalTotal: backup.total
   });
-  
+
   return backup;
 };
