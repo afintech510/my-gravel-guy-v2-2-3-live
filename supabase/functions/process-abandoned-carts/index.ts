@@ -154,11 +154,17 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    // Twilio credentials for SMS recovery on high-value carts
+    const twilioAccountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
+    const twilioAuthToken = Deno.env.get("TWILIO_AUTH_TOKEN");
+    const twilioPhoneNumber = Deno.env.get("TWILIO_PHONE_NUMBER");
+    const SMS_THRESHOLD = 1000; // Send SMS for carts over $1,000
+
     // 1. Find all cart orders older than 1 hour with a customer email
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { data: cartOrders, error: cartErr } = await supabase
       .from("orders")
-      .select("order_id, delivery_email, delivery_name, product_id, quantity, unit_price, total_price, delivery_street, delivery_city, delivery_state, delivery_zip, delivery_date, created_at")
+      .select("order_id, delivery_email, delivery_name, delivery_phone, product_id, quantity, unit_price, total_price, delivery_street, delivery_city, delivery_state, delivery_zip, delivery_date, created_at")
       .eq("status", "cart")
       .not("delivery_email", "is", null)
       .lt("created_at", oneHourAgo);
@@ -216,6 +222,7 @@ serve(async (req) => {
 
     // 4. Process each cart
     let emailsSent = 0;
+    let smsSent = 0;
     const now = Date.now();
 
     for (const [orderId, rows] of cartMap) {
@@ -313,11 +320,55 @@ serve(async (req) => {
 
         emailsSent++;
       }
+
+      // SMS recovery for high-value carts (>$1K) — send on sequence 1 only
+      const phone = rows[0].delivery_phone;
+      if (
+        eligible.includes(1) &&
+        total >= SMS_THRESHOLD &&
+        phone &&
+        twilioAccountSid &&
+        twilioAuthToken &&
+        twilioPhoneNumber
+      ) {
+        try {
+          let formattedPhone = phone.replace(/\D/g, "");
+          if (!formattedPhone.startsWith("1") && formattedPhone.length === 10) {
+            formattedPhone = "1" + formattedPhone;
+          }
+          formattedPhone = "+" + formattedPhone;
+
+          const productNames = items.map((i) => i.product_name).join(", ");
+          const smsBody =
+            `Hi ${name.split(" ")[0]}, you left $${total.toFixed(0)} of ${productNames} in your cart at MyGravelGuy. ` +
+            `Your price includes free delivery. Complete your order: https://mygravelguy.com/cart ` +
+            `Reply STOP to opt out.`;
+
+          const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`;
+          const smsRes = await fetch(twilioUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              Authorization: "Basic " + btoa(`${twilioAccountSid}:${twilioAuthToken}`),
+            },
+            body: new URLSearchParams({
+              From: twilioPhoneNumber,
+              To: formattedPhone,
+              Body: smsBody,
+            }),
+          });
+          const smsData = await smsRes.json();
+          console.log(`SMS sent to ${formattedPhone} for ${orderId} ($${total.toFixed(0)}):`, smsData.sid || smsData);
+          smsSent++;
+        } catch (smsErr) {
+          console.error(`SMS failed for ${orderId}:`, smsErr);
+        }
+      }
     }
 
-    console.log(`Abandoned cart processing complete: ${emailsSent} emails sent`);
+    console.log(`Abandoned cart processing complete: ${emailsSent} emails sent, ${smsSent} SMS sent`);
     return new Response(
-      JSON.stringify({ message: "Processing complete", emailsSent, cartsChecked: cartMap.size }),
+      JSON.stringify({ message: "Processing complete", emailsSent, smsSent, cartsChecked: cartMap.size }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
