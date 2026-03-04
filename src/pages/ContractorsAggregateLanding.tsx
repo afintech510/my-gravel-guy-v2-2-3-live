@@ -31,6 +31,11 @@ const ContractorsAggregateLanding: React.FC = () => {
           name="description"
           content="One vendor for gravel, sand, base, and fill—sourced and delivered anywhere in the U.S. Fast turnarounds for construction professionals."
         />
+        <link rel="canonical" href="https://mygravelguy.com/contractors/aggregate" />
+        <meta property="og:title" content="Aggregate Delivery for Contractors | MyGravelGuy" />
+        <meta property="og:description" content="One vendor for gravel, sand, base, and fill—delivered anywhere in the U.S. for construction professionals." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://mygravelguy.com/contractors/aggregate" />
       </Helmet>
       <div className="min-h-screen bg-[#0F1115]">
         <HeroSection onOrderInstantly={goToShop} onGetQuote={openQuoteModal} />

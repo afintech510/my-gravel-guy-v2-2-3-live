@@ -17,12 +17,12 @@ const LandingPage = () => {
     "@graph": [
       {
         "@type": "Organization",
-        "@id": "https://www.mygravelguy.com/#organization",
+        "@id": "https://mygravelguy.com/#organization",
         "name": "MyGravelGuy",
-        "url": "https://www.mygravelguy.com",
+        "url": "https://mygravelguy.com",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://www.mygravelguy.com/logo.png"
+          "url": "https://mygravelguy.com/logo.png"
         },
         "contactPoint": {
           "@type": "ContactPoint",
@@ -40,7 +40,7 @@ const LandingPage = () => {
         "@type": "Service",
         "name": "Bulk Gravel Delivery",
         "provider": {
-          "@id": "https://www.mygravelguy.com/#organization"
+          "@id": "https://mygravelguy.com/#organization"
         },
         "areaServed": {
           "@type": "Country",
@@ -70,8 +70,8 @@ const LandingPage = () => {
         <meta property="og:title" content="Buy Gravel Online | Bulk Gravel, Topsoil & Dirt Delivery" />
         <meta property="og:description" content="Reserve bulk gravel, topsoil, and dirt online with a $199 refundable deposit. Wholesale prices, photo confirmation, nationwide delivery." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.mygravelguy.com/landing" />
-        <link rel="canonical" href="https://www.mygravelguy.com/landing" />
+        <meta property="og:url" content="https://mygravelguy.com/landing" />
+        <link rel="canonical" href="https://mygravelguy.com/landing" />
         <script type="application/ld+json">
           {JSON.stringify(structuredData)}
         </script>

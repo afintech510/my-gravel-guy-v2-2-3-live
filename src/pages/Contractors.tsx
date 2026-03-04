@@ -25,6 +25,10 @@ const Contractors = () => {
           content="contractor gravel delivery, bulk aggregate, construction materials, nationwide stone delivery, commercial gravel"
         />
         <link rel="canonical" href="https://mygravelguy.com/contractors" />
+        <meta property="og:title" content="Contractor Gravel & Aggregate Delivery | MyGravelGuy" />
+        <meta property="og:description" content="Nationwide aggregate sourcing and delivery for construction teams. One point of contact for gravel, stone, and sand across all 50 states." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://mygravelguy.com/contractors" />
       </Helmet>
 
       <div className="min-h-screen bg-[#0F1115] text-[#F5F7FA]">

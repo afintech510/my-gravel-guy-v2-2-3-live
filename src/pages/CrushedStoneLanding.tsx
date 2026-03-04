@@ -377,6 +377,44 @@ const CrushedStoneLanding = () => {
         />
         <meta property="og:type" content="product" />
         <meta property="og:url" content="https://mygravelguy.com/57-crushed-stone" />
+        {product && (
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Product",
+              "name": product.name,
+              "description": product.short_description || product.description,
+              "url": "https://mygravelguy.com/57-crushed-stone",
+              "brand": {
+                "@type": "Brand",
+                "name": "My Gravel Guy"
+              },
+              "offers": {
+                "@type": "Offer",
+                "price": pricePerTon ?? product.price,
+                "priceCurrency": "USD",
+                "priceValidUntil": `${new Date().getFullYear()}-12-31`,
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                  "@type": "Organization",
+                  "name": "My Gravel Guy"
+                },
+                "shippingDetails": {
+                  "@type": "OfferShippingDetails",
+                  "shippingRate": {
+                    "@type": "MonetaryAmount",
+                    "value": "0",
+                    "currency": "USD"
+                  },
+                  "shippingDestination": {
+                    "@type": "DefinedRegion",
+                    "addressCountry": "US"
+                  }
+                }
+              }
+            })}
+          </script>
+        )}
       </Helmet>
 
       <div className="min-h-screen bg-background">
