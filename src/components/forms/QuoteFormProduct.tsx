@@ -70,6 +70,7 @@ const QuoteFormProduct: React.FC<QuoteFormProductProps> = ({ selectedProduct }) 
       });
       
       if (result.success) {
+        trackEvent('generate_lead', 'quote_form', `product_detail_${selectedProduct?.slug || 'unknown'}`);
         toast({
           title: 'Quote request sent!',
           description: `We will get back to you with a custom quote within 24 hours. Reference ID: ${result.orderId}`,

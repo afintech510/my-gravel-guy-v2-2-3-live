@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { sendQuoteRequestEmail } from '@/services/quoteEmailService';
+import { trackEvent } from '@/utils/analytics';
 
 interface FormData {
   name: string;
@@ -129,6 +130,8 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess }) => {
       if (result.success) {
         setIsSubmitted(true);
         toast.success('Quote request submitted successfully!');
+        trackEvent('form_submit', 'Quote', 'Contractors Quote Form', 1);
+        trackEvent('generate_lead', 'quote_form', 'contractors_page');
         onSuccess?.();
         
         // Reset form

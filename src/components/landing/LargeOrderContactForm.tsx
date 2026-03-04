@@ -32,6 +32,7 @@ const LargeOrderContactForm = ({ productName, zipCode }: LargeOrderContactFormPr
 
     setIsSubmitting(true);
     try {
+      trackEvent('form_submit', 'Quote', `Large Order - ${productName}`, 1);
       const result = await sendQuoteRequestEmail({
         name: name.trim(),
         email: email.trim(),
