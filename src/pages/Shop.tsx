@@ -24,7 +24,7 @@ const Shop = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryProducts, setCategoryProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [sortOrder, setSortOrder] = useState('nameAsc');
+  const [sortOrder, setSortOrder] = useState('recommended');
 
   // Apply search filter on top of category filter — search by name and category only
   const displayProducts = useMemo(() => {
@@ -122,6 +122,7 @@ const Shop = () => {
                 <DropdownMenuLabel>Sort By</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuRadioGroup value={sortOrder} onValueChange={handleSortChange}>
+                  <DropdownMenuRadioItem value="recommended">Recommended</DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="nameAsc">Name (A-Z)</DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="nameDesc">Name (Z-A)</DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="priceAsc">Price (Low-High)</DropdownMenuRadioItem>

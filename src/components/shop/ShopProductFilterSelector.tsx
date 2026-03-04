@@ -20,20 +20,20 @@ export default function ShopProductFilterSelector({ onFilterChange, sortOrder = 
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   
-  // Updated categories with new specific gravel types
+  // Categories ordered by popularity (most ordered first)
   const categories = [
     { id: 'all', label: 'All Products', icon: <Package className="h-5 w-5" /> },
-    { id: 'walkway-gravel', label: 'Walkway Gravel', icon: <Route className="h-5 w-5" /> },
-    { id: 'natural-gravel', label: 'Natural Gravel', icon: <Layers className="h-5 w-5" /> },
-    { id: 'river-rock', label: 'River Rock', icon: <Mountain className="h-5 w-5" /> },
-    { id: 'driveway-gravel', label: 'Driveway Gravel', icon: <RockingChair className="h-5 w-5" /> },
     { id: 'crushed-stone', label: 'Crushed Stone', icon: <Building2 className="h-5 w-5" /> },
+    { id: 'driveway-gravel', label: 'Driveway Gravel', icon: <RockingChair className="h-5 w-5" /> },
     { id: 'rock', label: 'Rock & Stone', icon: <Mountain className="h-5 w-5" /> },
-    { id: 'crushed-gravel', label: 'Crushed Gravel', icon: <RockingChair className="h-5 w-5" /> },
-    { id: 'crushed-concrete', label: 'Crushed Concrete', icon: <Building2 className="h-5 w-5" /> },
     { id: 'soil-dirt', label: 'Soil & Dirt', icon: <Shovel className="h-5 w-5" /> },
     { id: 'sand', label: 'Sand', icon: <Waves className="h-5 w-5" /> },
+    { id: 'natural-gravel', label: 'Natural Gravel', icon: <Layers className="h-5 w-5" /> },
     { id: 'mulch', label: 'Mulch', icon: <Flower className="h-5 w-5" /> },
+    { id: 'crushed-gravel', label: 'Crushed Gravel', icon: <RockingChair className="h-5 w-5" /> },
+    { id: 'walkway-gravel', label: 'Walkway Gravel', icon: <Route className="h-5 w-5" /> },
+    { id: 'river-rock', label: 'River Rock', icon: <Mountain className="h-5 w-5" /> },
+    { id: 'crushed-concrete', label: 'Crushed Concrete', icon: <Building2 className="h-5 w-5" /> },
   ];
 
   // Load products
@@ -86,10 +86,81 @@ export default function ShopProductFilterSelector({ onFilterChange, sortOrder = 
     return match ? parseFloat(match[1]) : 0;
   };
 
+  // Category display order based on popularity (most ordered first)
+  const CATEGORY_PRIORITY: Record<string, number> = {
+    'crushed-stone': 0,
+    'driveway-gravel': 1,
+    'rock-stone': 2,
+    'soil': 3,
+    'sand': 4,
+    'natural-gravel': 5,
+    'dirt': 6,
+    'mulch': 7,
+    'crushed-gravel': 8,
+    'walkway-gravel': 9,
+    'river-rock': 10,
+    'crushed-concrete': 11,
+  };
+
+  // Product display order within each category (most popular first, then alphabetical)
+  const PRODUCT_PRIORITY: Record<string, number> = {
+    // Crushed Stone — #57 is the bestseller
+    '#57 Crushed Stone': 0,
+    '#8 Stone': 1,
+    '#67 Stone': 2,
+    '#10 Screenings': 3,
+    // Driveway Gravel — default size first
+    'Driveway Gravel': 0,
+    'Driveway Gravel 3/4"': 1,
+    'Driveway Gravel 1 1/2"': 2,
+    'Driveway Gravel 3/8"': 3,
+    // Rock & Stone
+    'Pea Gravel': 0,
+    'Crusher Run': 1,
+    'Decomposed Granite': 2,
+    'Road Base': 3,
+    'Crushed Stone #57': 4,
+    // Soil
+    'Topsoil': 0,
+    'Compost': 1,
+    'Loam': 2,
+    // Sand
+    'Playground Sand': 0,
+    'Washed Sand': 1,
+    'Mason Sand': 2,
+    'Beach Sand': 3,
+    // Natural Gravel
+    'Natural Pea Gravel 3/8"': 0,
+    'Drainage Rock': 1,
+    'Natural Gravel': 2,
+    // Dirt
+    'Clean Fill': 0,
+    'Dirt Fill': 1,
+    // Mulch
+    'Natural Brown Mulch': 0,
+    'Chocolate Brown Mulch': 1,
+    'Jet Black Mulch': 2,
+    'Red Mulch': 3,
+    // Walkway Gravel
+    'Walkway Gravel': 0,
+    // River Rock
+    'River Rock': 0,
+    'River Rock Large': 1,
+  };
+
   // Function to sort products based on sortOrder
   const sortProducts = (productsToSort: Product[], order: string) => {
     return [...productsToSort].sort((a, b) => {
       switch (order) {
+        case 'recommended': {
+          const catA = CATEGORY_PRIORITY[a.category?.toLowerCase() || ''] ?? 99;
+          const catB = CATEGORY_PRIORITY[b.category?.toLowerCase() || ''] ?? 99;
+          if (catA !== catB) return catA - catB;
+          const prodA = PRODUCT_PRIORITY[a.name] ?? 50;
+          const prodB = PRODUCT_PRIORITY[b.name] ?? 50;
+          if (prodA !== prodB) return prodA - prodB;
+          return a.name.localeCompare(b.name);
+        }
         case 'nameDesc':
           return b.name.localeCompare(a.name);
         case 'priceAsc':
