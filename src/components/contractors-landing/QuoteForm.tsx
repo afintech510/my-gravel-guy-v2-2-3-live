@@ -2,11 +2,15 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { sendQuoteRequestEmail } from '@/services/quoteEmailService';
 import { trackEvent } from '@/utils/analytics';
+import { US_STATES } from '@/utils/usStates';
 
 interface FormData {
   name: string;
   phone: string;
   email: string;
+  deliveryStreet: string;
+  deliveryCity: string;
+  deliveryState: string;
   deliveryZip: string;
   material: string;
   quantity: string;
@@ -27,6 +31,9 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess }) => {
     name: '',
     phone: '',
     email: '',
+    deliveryStreet: '',
+    deliveryCity: '',
+    deliveryState: '',
     deliveryZip: '',
     material: '',
     quantity: '',
@@ -120,6 +127,9 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess }) => {
         email: formData.email,
         phone: formData.phone,
         zipCode: formData.deliveryZip,
+        street: formData.deliveryStreet,
+        city: formData.deliveryCity,
+        state: formData.deliveryState,
         material: formData.material,
         estimatedTons: parseFloat(formData.quantity) || undefined,
         timeframe: formData.timeframe,
@@ -139,6 +149,9 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess }) => {
           name: '',
           phone: '',
           email: '',
+          deliveryStreet: '',
+          deliveryCity: '',
+          deliveryState: '',
           deliveryZip: '',
           material: '',
           quantity: '',
@@ -261,22 +274,58 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ onSuccess }) => {
           </div>
         </div>
 
-        {/* Delivery ZIP */}
+        {/* Delivery Address */}
         <div>
           <input
             type="text"
-            name="deliveryZip"
-            value={formData.deliveryZip}
+            name="deliveryStreet"
+            value={formData.deliveryStreet}
             onChange={handleChange}
-            placeholder="Delivery ZIP Code *"
-            maxLength={5}
-            className={`w-full bg-[#0F1115] border ${
-              errors.deliveryZip ? 'border-red-500' : 'border-[rgba(255,255,255,0.10)]'
-            } rounded-lg px-4 py-3 text-[#F5F7FA] placeholder-[#B7C0CC]/50 focus:outline-none focus:border-[#BADF24] transition-colors`}
+            placeholder="Delivery Street Address"
+            className="w-full bg-[#0F1115] border border-[rgba(255,255,255,0.10)] rounded-lg px-4 py-3 text-[#F5F7FA] placeholder-[#B7C0CC]/50 focus:outline-none focus:border-[#BADF24] transition-colors"
           />
-          {errors.deliveryZip && (
-            <p className="text-red-500 text-xs mt-1">{errors.deliveryZip}</p>
-          )}
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <input
+              type="text"
+              name="deliveryCity"
+              value={formData.deliveryCity}
+              onChange={handleChange}
+              placeholder="City"
+              className="w-full bg-[#0F1115] border border-[rgba(255,255,255,0.10)] rounded-lg px-4 py-3 text-[#F5F7FA] placeholder-[#B7C0CC]/50 focus:outline-none focus:border-[#BADF24] transition-colors"
+            />
+          </div>
+          <div>
+            <select
+              name="deliveryState"
+              value={formData.deliveryState}
+              onChange={handleChange}
+              className="w-full bg-[#0F1115] border border-[rgba(255,255,255,0.10)] rounded-lg px-4 py-3 text-[#F5F7FA] focus:outline-none focus:border-[#BADF24] transition-colors appearance-none cursor-pointer"
+              style={selectStyle}
+            >
+              <option value="" className="bg-[#0F1115]">State</option>
+              {US_STATES.map((st) => (
+                <option key={st} value={st} className="bg-[#0F1115]">{st}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <input
+              type="text"
+              name="deliveryZip"
+              value={formData.deliveryZip}
+              onChange={handleChange}
+              placeholder="ZIP *"
+              maxLength={5}
+              className={`w-full bg-[#0F1115] border ${
+                errors.deliveryZip ? 'border-red-500' : 'border-[rgba(255,255,255,0.10)]'
+              } rounded-lg px-4 py-3 text-[#F5F7FA] placeholder-[#B7C0CC]/50 focus:outline-none focus:border-[#BADF24] transition-colors`}
+            />
+            {errors.deliveryZip && (
+              <p className="text-red-500 text-xs mt-1">{errors.deliveryZip}</p>
+            )}
+          </div>
         </div>
 
         {/* Material */}

@@ -12,6 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Product } from '@/services/productTypes';
 import { trackEvent } from '../../utils/analytics';
 import { sendQuoteRequestEmail } from '../../services/quoteEmailService';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { US_STATES } from '@/utils/usStates';
 import { Loader2 } from 'lucide-react';
 
 interface QuoteFormProductProps {
@@ -22,6 +24,9 @@ const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Please enter a valid email'),
   phone: z.string().min(10, 'Please enter a valid phone number'),
+  street: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
   zipCode: z.string().min(5, 'Please enter a valid ZIP code'),
   estimatedTons: z.string().optional(),
   message: z.string().optional(),
@@ -40,6 +45,9 @@ const QuoteFormProduct: React.FC<QuoteFormProductProps> = ({ selectedProduct }) 
       name: '',
       email: '',
       phone: '',
+      street: '',
+      city: '',
+      state: '',
       zipCode: '',
       estimatedTons: '',
       message: selectedProduct ? `I'm interested in getting a quote for ${selectedProduct.name}.` : '',
@@ -64,6 +72,9 @@ const QuoteFormProduct: React.FC<QuoteFormProductProps> = ({ selectedProduct }) 
         phone: data.phone,
         message: `${data.estimatedTons ? `Estimated Tons: ${data.estimatedTons}\n` : ''}${data.message || 'No additional details provided'}`,
         zipCode: data.zipCode,
+        street: data.street,
+        city: data.city,
+        state: data.state,
         estimatedTons: data.estimatedTons ? parseInt(data.estimatedTons) : undefined,
         sourcePage: 'Product Quote Form',
         selectedProduct: selectedProduct
@@ -161,6 +172,58 @@ const QuoteFormProduct: React.FC<QuoteFormProductProps> = ({ selectedProduct }) 
                   <FormControl>
                     <Input placeholder="12345" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="street"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Delivery Street Address (Optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="123 Main St" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="city"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>City</FormLabel>
+                  <FormControl>
+                    <Input placeholder="City" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="state"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>State</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="State" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="max-h-[200px]">
+                      {US_STATES.map((st) => (
+                        <SelectItem key={st} value={st}>{st}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

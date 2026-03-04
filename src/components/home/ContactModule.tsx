@@ -11,6 +11,7 @@ import { Phone, Mail, MapPin } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { sendQuoteRequestEmail } from '@/services/quoteEmailService';
 import { trackEvent } from '@/utils/analytics';
+import { US_STATES } from '@/utils/usStates';
 
 const ContactModule = () => {
   const { toast } = useToast();
@@ -18,7 +19,10 @@ const ContactModule = () => {
     fullName: '',
     email: '',
     phoneNumber: '',
-    propertyAddress: '',
+    deliveryStreet: '',
+    deliveryCity: '',
+    deliveryState: '',
+    deliveryZip: '',
     projectType: '',
     approximateArea: '',
     additionalDetails: '',
@@ -35,7 +39,7 @@ const ContactModule = () => {
     e.preventDefault();
     
     // Basic validation
-    if (!formData.fullName || !formData.email || !formData.propertyAddress) {
+    if (!formData.fullName || !formData.email || !formData.deliveryZip) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields.",
@@ -50,18 +54,21 @@ const ContactModule = () => {
       console.log('Submitting contact form:', formData);
       
       // Prepare data for quote email service
+      const messageLines = [];
+      if (formData.projectType) messageLines.push(`Project Type: ${formData.projectType}`);
+      if (formData.approximateArea) messageLines.push(`Approximate Area: ${formData.approximateArea} sq ft`);
+      messageLines.push(`Preferred Contact: ${formData.preferredContact}`);
+      if (formData.additionalDetails) messageLines.push(`\nAdditional Details:\n${formData.additionalDetails}`);
+
       const quoteFormData = {
         name: formData.fullName,
         email: formData.email,
         phone: formData.phoneNumber,
-        message: `Property Address: ${formData.propertyAddress}
-Project Type: ${formData.projectType || 'Not specified'}
-Approximate Area: ${formData.approximateArea || 'Not specified'}
-Preferred Contact: ${formData.preferredContact}
-
-Additional Details:
-${formData.additionalDetails}`,
-        zipCode: '', // We don't collect ZIP separately, it's in the address
+        message: messageLines.join('\n'),
+        street: formData.deliveryStreet,
+        city: formData.deliveryCity,
+        state: formData.deliveryState,
+        zipCode: formData.deliveryZip,
         sourcePage: 'home-contact-module'
       };
       
@@ -84,7 +91,10 @@ ${formData.additionalDetails}`,
           fullName: '',
           email: '',
           phoneNumber: '',
-          propertyAddress: '',
+          deliveryStreet: '',
+          deliveryCity: '',
+          deliveryState: '',
+          deliveryZip: '',
           projectType: '',
           approximateArea: '',
           additionalDetails: '',
@@ -208,19 +218,64 @@ ${formData.additionalDetails}`,
                     </div>
                   </div>
 
-                  {/* Property Address */}
+                  {/* Delivery Address */}
                   <div>
-                    <Label htmlFor="propertyAddress" className="text-sm font-medium text-foreground">
-                      Property Address
+                    <Label htmlFor="deliveryStreet" className="text-sm font-medium text-foreground">
+                      Delivery Street Address
                     </Label>
                     <Input
-                      id="propertyAddress"
-                      value={formData.propertyAddress}
-                      onChange={(e) => handleInputChange('propertyAddress', e.target.value)}
-                      placeholder="123 Main St, City, State, Zip"
-                      required
+                      id="deliveryStreet"
+                      value={formData.deliveryStreet}
+                      onChange={(e) => handleInputChange('deliveryStreet', e.target.value)}
+                      placeholder="123 Main St"
                       className="mt-1"
                     />
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <Label htmlFor="deliveryCity" className="text-sm font-medium text-foreground">
+                        City
+                      </Label>
+                      <Input
+                        id="deliveryCity"
+                        value={formData.deliveryCity}
+                        onChange={(e) => handleInputChange('deliveryCity', e.target.value)}
+                        placeholder="City"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-foreground">
+                        State
+                      </Label>
+                      <Select
+                        value={formData.deliveryState}
+                        onValueChange={(value) => handleInputChange('deliveryState', value)}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="State" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {US_STATES.map((st) => (
+                            <SelectItem key={st} value={st}>{st}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="deliveryZip" className="text-sm font-medium text-foreground">
+                        ZIP *
+                      </Label>
+                      <Input
+                        id="deliveryZip"
+                        value={formData.deliveryZip}
+                        onChange={(e) => handleInputChange('deliveryZip', e.target.value)}
+                        placeholder="ZIP Code"
+                        maxLength={5}
+                        required
+                        className="mt-1"
+                      />
+                    </div>
                   </div>
 
                   {/* Project Type and Area */}

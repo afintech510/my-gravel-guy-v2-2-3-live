@@ -5,6 +5,9 @@ interface QuoteFormData {
   phone: string;
   message: string;
   zipCode: string;
+  street?: string;
+  city?: string;
+  state?: string;
   selectedProduct?: { name: string } | null;
   material?: string;
   estimatedTons?: number;
@@ -52,7 +55,7 @@ export const generateQuoteRequestEmail = (formData: QuoteFormData): string => {
         <p><strong>Name:</strong> ${formData.name}</p>
         <p><strong>Phone:</strong> ${formData.phone}</p>
         <p><strong>Email:</strong> ${formData.email}</p>
-        <p><strong>Delivery ZIP:</strong> ${formData.zipCode}</p>
+        ${formData.street ? `<p><strong>Delivery Address:</strong> ${formData.street}${formData.city ? `, ${formData.city}` : ''}${formData.state ? `, ${formData.state}` : ''} ${formData.zipCode}</p>` : `<p><strong>Delivery ZIP:</strong> ${formData.zipCode}</p>`}
         
         <h2 style="color: #374151;">Material Details</h2>
         ${materialSection}

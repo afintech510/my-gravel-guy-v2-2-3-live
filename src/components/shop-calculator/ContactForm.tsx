@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { trackEvent } from '../../utils/analytics';
 import { sendQuoteRequestEmail } from '../../services/quoteEmailService';
+import { US_STATES } from '@/utils/usStates';
 
 interface ContactFormProps {
   productInfo: {
@@ -22,6 +23,9 @@ const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Please enter a valid email'),
   phone: z.string().optional(),
+  street: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
   zipCode: z.string().min(5, 'Please enter a valid ZIP code'),
   message: z.string().optional(),
 });
@@ -35,6 +39,9 @@ const ContactForm: React.FC<ContactFormProps> = ({ productInfo }) => {
       name: '',
       email: '',
       phone: '',
+      street: '',
+      city: '',
+      state: '',
       zipCode: '',
       message: `I'm interested in ordering ${Math.round(productInfo.quantity)} tons of ${productInfo.name}.`,
     },
@@ -53,6 +60,9 @@ const ContactForm: React.FC<ContactFormProps> = ({ productInfo }) => {
         email: data.email,
         phone: data.phone || '',
         message: data.message || `I'm interested in ordering ${Math.round(productInfo.quantity)} tons of ${productInfo.name}.`,
+        street: data.street,
+        city: data.city,
+        state: data.state,
         zipCode: data.zipCode,
         estimatedTons: Math.round(productInfo.quantity),
         sourcePage: 'Shop Calculator',
@@ -114,13 +124,41 @@ const ContactForm: React.FC<ContactFormProps> = ({ productInfo }) => {
 
       <div>
         <Input
-          placeholder="ZIP Code"
-          {...form.register('zipCode')}
+          placeholder="Delivery Street Address"
+          {...form.register('street')}
           className="w-full"
         />
-        {form.formState.errors.zipCode && (
-          <p className="text-xs text-red-500 mt-1">{form.formState.errors.zipCode.message}</p>
-        )}
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        <div>
+          <Input
+            placeholder="City"
+            {...form.register('city')}
+            className="w-full"
+          />
+        </div>
+        <div>
+          <select
+            {...form.register('state')}
+            className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <option value="">State</option>
+            {US_STATES.map((st) => (
+              <option key={st} value={st}>{st}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <Input
+            placeholder="ZIP Code *"
+            {...form.register('zipCode')}
+            className="w-full"
+          />
+          {form.formState.errors.zipCode && (
+            <p className="text-xs text-red-500 mt-1">{form.formState.errors.zipCode.message}</p>
+          )}
+        </div>
       </div>
       
       <div>

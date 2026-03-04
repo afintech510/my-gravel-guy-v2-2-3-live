@@ -6,6 +6,9 @@ export interface QuoteOrderData {
   customerEmail: string;
   customerPhone: string;
   zipCode: string;
+  street?: string;
+  city?: string;
+  state?: string;
   projectDetails: string;
   estimatedTons?: number;
   productId?: string;
@@ -55,6 +58,9 @@ export const createQuoteOrder = async (quoteData: QuoteOrderData) => {
     delivery_name: quoteData.customerName,
     delivery_email: quoteData.customerEmail,
     delivery_phone: quoteData.customerPhone,
+    delivery_street: quoteData.street || null,
+    delivery_city: quoteData.city || null,
+    delivery_state: quoteData.state || null,
     delivery_zip: quoteData.zipCode,
     delivery_time_preference: quoteData.timeframe || null,
     notes: notesLines.join('\n'),
