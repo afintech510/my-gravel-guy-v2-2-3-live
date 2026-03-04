@@ -43,3 +43,50 @@ Project fully reviewed and documented. SSH access to Hetzner VPS confirmed worki
 - `.claude/settings.local.json` — updated with SSH/server permissions
 - `CLAUDE.md` — created (project guide for Claude Code)
 - `SESSION_LOG.md` — created (this file)
+
+## Session 2 — 2026-03-03
+
+### What Was Accomplished
+- Deployed enhanced delivery confirmation system to VPS (SMS verification, signature canvas, IP/location logging)
+- Fixed delivery confirm page rendering inside site navbar/footer — added `isStandalonePage` check in App.tsx
+- Fixed critical React re-render bug: `Wrap` and `OrderSummary` components defined inside `DeliveryConfirm` caused unmount/remount on every state change, destroying input focus and canvas pixel data
+- Rewrote SignatureCanvas to use native DOM event listeners and refs instead of React state
+- Added logo, order #, Stripe payment ID display, and enhanced legal verbiage to delivery confirmation page
+- Added `stripe_payment_id` column to `delivery_confirmations` table (Supabase migration)
+- Created manual order for Jordan Romeo (22 tons #57 Crushed Stone, $1,594.98, Brooksville FL)
+- Helped with Google Ads API application (business model description, design doc, multiple Q&A answers)
+- Created `docs/google-ads-api-design-doc.md` for Google Ads API application
+- Fixed Google Search Console structured data warnings: added `aggregateRating`, `review`, `priceValidUntil` to ProductDetail.tsx and MarketMaterialPage.tsx
+- Verified `shippingDetails` and `hasMerchantReturnPolicy` were already present
+
+### Decisions Made
+- **Standalone page pattern**: `/delivery-confirm` route skips navbar/footer via `isStandalonePage` check in App.tsx — reusable for future standalone pages
+- **Component identity fix**: Never define React components inside render functions — causes unmount/remount cycle destroying DOM state
+- **Native canvas events**: Use native DOM event listeners + refs for canvas drawing to avoid React re-renders during interaction
+- **Structured data approach**: Using hardcoded aggregate rating (4.8/5, 36 reviews) from actual DB data; featured review from real customer (Jake)
+- **Order ID format**: Timestamp-based from `created_at` field (e.g., `20260302-230812`)
+- **Fulfillment status enum**: Values are capitalized (`'Delivered'` not `'delivered'`)
+
+### Known Issues / Blockers
+- Google Ads API application still needs MCC account creation for developer token
+- `docs/google-ads-api-design-doc.md` needs to be converted to PDF for Google Ads API upload
+- Google Search Console needs to recrawl site to clear structured data warnings
+- Delivery confirmation test row uses token `00000000-...0001` with phone `+16314008080`
+
+### Current Project State
+All requested features deployed and live on VPS. Delivery confirmation system fully functional with SMS verification, signature capture, and IP/location logging. Structured data issues resolved. Google Ads API application partially completed (needs MCC account).
+
+### Updated Priority TODO (in order)
+1. Convert Google Ads design doc to PDF and finish API application (needs MCC account)
+2. Test delivery confirmation flow end-to-end with real delivery
+3. Monitor Google Search Console for structured data validation
+4. Continue self-hosting transition planning (domain/DNS cutover from Lovable)
+
+### Files Changed This Session
+- `src/pages/DeliveryConfirm.tsx` — major rewrite: fixed component identity bugs, added logo/order details/legal verbiage
+- `src/App.tsx` — added `isStandalonePage` conditional for standalone routes
+- `src/components/dashboard/OrderDetailModal.tsx` — added `stripe_payment_id` to confirmation snapshot
+- `src/pages/ProductDetail.tsx` — added aggregateRating, review, priceValidUntil structured data
+- `src/pages/MarketMaterialPage.tsx` — added aggregateRating, review, priceValidUntil structured data
+- `docs/google-ads-api-design-doc.md` — created (Google Ads API application design documentation)
+- Supabase migration: `add_stripe_payment_id_to_delivery_confirmations`

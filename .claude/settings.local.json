@@ -9,7 +9,12 @@
       "Bash(npm run build*)",
       "Bash(npm run preview*)",
       "Bash(git:*)",
-      "Bash(nslookup -type=NS mygravelguy.com)"
+      "Bash(nslookup -type=NS mygravelguy.com)",
+      "Bash(npm install -D vitest @testing-library/react @testing-library/user-event @testing-library/jest-dom jsdom)",
+      "Bash(npm test)",
+      "Bash(npx vite build)",
+      "mcp__supabase__apply_migration",
+      "mcp__supabase__execute_sql"
     ],
     "additionalDirectories": [
       "C:\\Users\\alark\\projects\\host-hampton-ops"
