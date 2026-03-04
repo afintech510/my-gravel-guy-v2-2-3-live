@@ -11,7 +11,7 @@ import { insertOrderToDatabase, testEnhancedDatabaseInsert } from '../services/o
 import { sendBothOrderEmails } from '../services/emailService';
 import { useProductNameResolver } from '../hooks/useProductNameResolver';
 import { getProductById } from '../services/products/productQueries';
-import { trackEcommerce, trackGoogleAdsConversion } from '../utils/analytics';
+import { trackEcommerce, trackGoogleAdsConversion, setEnhancedConversionData } from '../utils/analytics';
 
 interface OrderItem {
   id: string;
@@ -484,6 +484,23 @@ const PaymentSuccess = () => {
       const totalValue = insertedOrders.reduce((sum, order) => sum + order.total_price, 0);
       const purchaseFiredKey = `mgg_purchase_fired_${currentOrderId}`;
       if (!localStorage.getItem(purchaseFiredKey)) {
+        // Set Enhanced Conversion user data before firing purchase events
+        const firstOrder = insertedOrders[0];
+        if (firstOrder) {
+          const nameParts = (firstOrder.delivery_name || '').split(' ');
+          setEnhancedConversionData({
+            email: firstOrder.delivery_email,
+            phone: firstOrder.delivery_phone,
+            firstName: nameParts[0],
+            lastName: nameParts.slice(1).join(' '),
+            street: firstOrder.delivery_street,
+            city: firstOrder.delivery_city,
+            region: firstOrder.delivery_state,
+            postalCode: firstOrder.delivery_zip,
+            country: 'US',
+          });
+        }
+
         // GA4 purchase event with transaction_id for deduplication
         if (window.gtag) {
           window.gtag('event', 'purchase', {
