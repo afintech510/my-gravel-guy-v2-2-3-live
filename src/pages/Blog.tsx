@@ -18,6 +18,11 @@ const Blog = () => {
       <Helmet>
         <title>Blog | My Gravel Guy</title>
         <meta name="description" content="Expert tips and advice on gravel, sand, and dirt for your landscaping and construction projects." />
+        <link rel="canonical" href="https://mygravelguy.com/blog" />
+        <meta property="og:title" content="Blog | My Gravel Guy" />
+        <meta property="og:description" content="Expert tips and advice on gravel, sand, and dirt for your landscaping and construction projects." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://mygravelguy.com/blog" />
       </Helmet>
 
       <div className="container mx-auto px-4 py-8">

@@ -81,8 +81,13 @@ const Reviews = () => {
   return (
     <div className="min-h-screen bg-muted py-12 px-4">
       <Helmet>
-        <title>Customer Reviews | Gravel Guy</title>
-        <meta name="description" content="Read reviews from customers who have purchased from Gravel Guy. Find out what people are saying about our products and service." />
+        <title>Customer Reviews | My Gravel Guy</title>
+        <meta name="description" content="Read reviews from customers who have purchased from My Gravel Guy. See what people are saying about our bulk material delivery service." />
+        <link rel="canonical" href="https://mygravelguy.com/reviews" />
+        <meta property="og:title" content="Customer Reviews | My Gravel Guy" />
+        <meta property="og:description" content="Read reviews from customers who have ordered bulk gravel, sand, and mulch delivery from My Gravel Guy." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://mygravelguy.com/reviews" />
       </Helmet>
       
       <div className="max-w-6xl mx-auto">

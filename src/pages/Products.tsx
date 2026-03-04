@@ -49,10 +49,10 @@ const Products = () => {
       <Helmet>
         <title>Gravel, Sand, Dirt & Mulch Products | My Gravel Guy</title>
         <meta name="description" content="Browse our full catalog of premium gravel, sand, dirt, mulch, and base materials. Filter by category, size, and type. Delivered nationwide with volume discounts." />
-        <link rel="canonical" href="https://mygravelguy.com/products" />
+        <link rel="canonical" href="https://mygravelguy.com/shop" />
         <meta property="og:title" content="Gravel, Sand, Dirt & Mulch Products | My Gravel Guy" />
         <meta property="og:description" content="Browse premium bulk materials — gravel, sand, dirt, mulch. Nationwide delivery with volume discounts." />
-        <meta property="og:url" content="https://mygravelguy.com/products" />
+        <meta property="og:url" content="https://mygravelguy.com/shop" />
       </Helmet>
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-7xl mx-auto">

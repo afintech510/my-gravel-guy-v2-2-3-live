@@ -1,6 +1,7 @@
 
 import { useLocation, Link } from "react-router-dom";
 import { useEffect, useRef } from "react";
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Store } from "lucide-react";
 
@@ -22,6 +23,11 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
+    <>
+      <Helmet>
+        <title>Page Not Found | My Gravel Guy</title>
+        <meta name="robots" content="noindex, follow" />
+      </Helmet>
     <div className="min-h-screen flex items-center justify-center bg-muted p-4">
       <div className="text-center max-w-md w-full bg-card rounded-lg shadow-md p-8">
         <h1 className="text-4xl font-bold mb-4">404</h1>
@@ -42,6 +48,7 @@ const NotFound = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
