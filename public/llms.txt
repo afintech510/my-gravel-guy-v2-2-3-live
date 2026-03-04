@@ -1,0 +1,88 @@
+# MyGravelGuy.com
+
+> Nationwide bulk landscape materials delivery marketplace. Order gravel, sand, topsoil, mulch, crushed stone, and more online with instant delivered pricing.
+
+## About
+
+MyGravelGuy connects customers (homeowners and contractors) with local quarries and suppliers to deliver bulk landscape materials directly to their jobsite or property. We serve all 50 states with 33,700+ ZIP codes in our delivery network.
+
+**Business Model**: Online ordering with instant pricing, supplier sourcing, and delivery coordination. One point of contact for bulk material delivery anywhere in the US.
+
+**Tagline**: "Do You Have a Gravel Guy?"
+
+## Products & Services
+
+We offer 47+ bulk landscape materials across 12 categories:
+
+- **Crushed Stone**: #57 Stone, #67 Stone, #8 Stone, #10 Screenings, Crushed Stone (various sizes)
+- **Crushed Gravel**: 3/4", 1.5", 2-3", 3/8" sizes
+- **Crushed Concrete**: Recycled concrete aggregate, RCA Blend
+- **Driveway Gravel**: Multiple sizes optimized for driveways
+- **Natural Gravel**: Drainage rock, pea gravel
+- **River Rock**: Decorative 1" and 2-3" sizes
+- **Sand**: Beach sand, mason sand, playground sand, washed sand
+- **Mulch**: Chocolate brown, jet black, natural brown, red
+- **Soil**: Topsoil, compost, loam
+- **Dirt**: Clean fill, dirt fill
+- **Rock & Stone**: Crusher run, decomposed granite, pea gravel, road base
+- **Walkway Gravel**: Decorative sizes for pathways
+
+### Pricing
+- Instant delivered pricing based on ZIP code
+- Volume discounts on larger orders (exponential pricing curve)
+- 3-ton minimum per order
+- Free delivery included in every price
+- Average order: 16 tons, ~$1,473
+
+### Payment Options
+- Full payment via credit card (Stripe)
+- $199 refundable deposit option with balance due on delivery
+- Custom quotes for large or specialty orders
+
+## Key Pages
+
+- Homepage: https://mygravelguy.com/
+- Shop All Products: https://mygravelguy.com/shop
+- Product Catalog: https://mygravelguy.com/products
+- For Contractors: https://mygravelguy.com/contractors
+- Material Calculator: https://mygravelguy.com/calculator
+- Product Quiz: https://mygravelguy.com/quiz
+- Blog: https://mygravelguy.com/blog
+- Customer Reviews: https://mygravelguy.com/reviews
+- Delivery Locations: https://mygravelguy.com/locations
+- Delivery Info: https://mygravelguy.com/delivery-info
+- FAQ: https://mygravelguy.com/faq
+- About Us: https://mygravelguy.com/about
+- Contact: https://mygravelguy.com/contact
+
+## Customer Segments
+
+### Homeowners
+- DIY driveway, landscaping, patio, drainage projects
+- Typical order: 3-10 tons
+- Value instant pricing and online ordering convenience
+
+### Contractors (Primary Growth Target)
+- Landscapers, general contractors, excavation companies, playground/turf installers
+- Key use case: sourcing materials when working outside their normal area
+- Typical order: 15-50+ tons
+- Value one point of contact for nationwide material sourcing
+
+## Coverage
+
+- All 50 US states
+- 33,700+ ZIP codes with location-based pricing
+- 196 delivery location pages for local service areas
+- 22+ suppliers in our network across the country
+
+## Contact
+
+- Website: https://mygravelguy.com
+- Phone: (844) 624-0400
+- Email: support@mygravelguy.com
+- Hours: Mon-Fri 8am-5pm ET, Sat 8am-1pm ET
+- Company: Eastern Building Supply Inc.
+
+## Sitemap
+
+https://mygravelguy.com/sitemap.xml
