@@ -10,6 +10,9 @@ interface QuoteFormData {
   phone: string;
   message: string;
   zipCode: string;
+  street?: string;
+  city?: string;
+  state?: string;
   selectedProduct?: { name: string } | null;
   estimatedTons?: number;
   projectType?: string;
@@ -29,6 +32,9 @@ export const sendQuoteRequestEmail = async (formData: QuoteFormData): Promise<{ 
       customerEmail: formData.email,
       customerPhone: formData.phone,
       zipCode: formData.zipCode,
+      street: formData.street,
+      city: formData.city,
+      state: formData.state,
       projectDetails: formData.message,
       estimatedTons: formData.estimatedTons,
       productName: formData.selectedProduct?.name,
