@@ -65,6 +65,8 @@ ${formData.additionalDetails}`,
         sourcePage: 'home-contact-module'
       };
       
+      trackEvent('form_submit', 'Quote', 'Home Contact Form', 1);
+
       // Send quote request email using the quote service
       const result = await sendQuoteRequestEmail(quoteFormData);
       

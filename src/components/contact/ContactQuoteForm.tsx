@@ -302,7 +302,7 @@ const ContactQuoteForm: React.FC = () => {
             name="deliveryZip"
             value={formData.deliveryZip}
             onChange={handleChange}
-            placeholder="Delivery Address or ZIP Code *"
+            placeholder="Delivery ZIP Code *"
             maxLength={5}
             className={`w-full bg-[#0F1115] border ${
               errors.deliveryZip ? 'border-red-500' : 'border-[rgba(255,255,255,0.10)]'
