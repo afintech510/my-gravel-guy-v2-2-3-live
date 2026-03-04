@@ -179,6 +179,7 @@ const ContactQuoteForm: React.FC = () => {
       if (result.success) {
         setIsSubmitted(true);
         toast.success('Quote request submitted successfully!');
+        trackEvent('form_submit', 'Quote', 'Contact Page Quote', 1);
         trackEvent('generate_lead', 'contact_form', 'contact_page_quote');
       } else {
         toast.error(result.error || 'Failed to submit quote request');
