@@ -153,8 +153,8 @@ export function OrderItemsManager({
     try {
       const item = localItems.find(i => i.id === itemId);
       
-      // For "general-quote" items, clear product info instead of deleting
-      if (item?.product_name === 'general-quote' || item?.unit_price === 0) {
+      // For "general-quote" placeholder items, clear product info instead of deleting
+      if (item?.product_name === 'general-quote') {
         const clearedItem = {
           ...item,
           product_name: 'general-quote',
