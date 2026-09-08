@@ -198,7 +198,7 @@ const MaterialCalculator = () => {
   const lookupCityState = async (zipCode: string) => {
     try {
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${zipCode}&key=REDACTED_GOOGLE_MAPS_KEY`
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${zipCode}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`
       );
       const data = await response.json();
       

@@ -28,3 +28,10 @@ dist-ssr
 
 # MCP config (contains access tokens)
 .mcp.json
+
+# secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
