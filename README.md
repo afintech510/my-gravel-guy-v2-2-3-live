@@ -1,73 +1,63 @@
-# Welcome to your Lovable project
+# MyGravelGuy
 
-## Project info
+E-commerce and delivery platform for a gravel and construction-materials business.
+Customers size a job with a materials calculator, check that their ZIP is in the
+delivery area, order by the ton, and track delivery. Staff get an operations
+dashboard for orders, expenses, and analytics.
 
-**URL**: https://lovable.dev/projects/c72fdf66-8407-47e7-89a3-b3f2180e5078
+Roughly 1,600 commits of production work.
 
-## How can I edit this code?
+## Stack
 
-There are several ways of editing your application.
+React 18 · TypeScript · Vite · Tailwind + shadcn/ui · Supabase (PostgreSQL, Edge
+Functions, Auth, Storage) · Mapbox GL for delivery mapping · Google Maps Geocoding
+for ZIP resolution · a Cloudflare Worker for edge routing · Docker for self-hosting
 
-**Use Lovable**
+## What's interesting here
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/c72fdf66-8407-47e7-89a3-b3f2180e5078) and start prompting.
+- **Materials calculator drives the cart.** Customers enter dimensions and depth;
+  the app converts to tonnage per material density and prices the order. Selling
+  bulk aggregate by volume is where this category of site usually gets it wrong.
+- **ZIP-gated delivery.** `ZipCodeContext` gates pricing and availability on the
+  service area, so customers never reach checkout for an address that can't be
+  served. `DeliveryMap` renders coverage with Mapbox.
+- **Programmatic local SEO.** Landing pages are generated per material and per
+  location (`CrushedStoneLanding`, `LocationProductHero`,
+  `ContractorsAggregateLanding`), with a sitemap and prerendered routes produced at
+  build time by `scripts/generate-sitemap.mjs` and
+  `scripts/generate-prerender-routes.mjs`.
+- **Contractor-specific flows** separate from retail — spec materials, bulk pricing,
+  and aggregate landing pages for trade buyers.
+- **Operations dashboard** covering orders, expenses, and analysis, not just a
+  storefront.
 
-Changes made via Lovable will be committed automatically to this repo.
+## Development
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+npm install
+cp .env.example .env      # Supabase URL + publishable key, Google Maps key
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+```bash
+npm test                  # unit tests
+npm run generate-sitemap  # rebuild sitemap and prerender routes
+npm run build
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+`VITE_*` values are public by design — they ship in the client bundle. Restrict the
+Google Maps key by HTTP referrer in the Google Cloud console; server-side secrets
+belong in Supabase Edge Function config, not here.
 
-**Use GitHub Codespaces**
+## Layout
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/c72fdf66-8407-47e7-89a3-b3f2180e5078) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+```
+src/pages/           routes — storefront, calculator, checkout, dashboard, blog
+src/components/      shared UI
+src/contexts/        cart, ZIP/service-area, blog state
+src/integrations/    Supabase client
+cloudflare-worker/   edge worker
+scripts/             sitemap and prerender generation
+docs/                design notes
+KNOWLEDGE_BASE.md    architecture and domain reference
+```
