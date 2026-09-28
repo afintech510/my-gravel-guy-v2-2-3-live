@@ -1,8 +1,107 @@
+# MyGravelGuy.com — robots.txt
+#
+# Every crawler group below carries the same Disallow list as the
+# wildcard fallback. Per the robots.txt spec, a crawler uses only its
+# own most-specific matching group, not a merge of its group + `*` —
+# so each AI/search bot needs its own explicit Disallow lines, or it
+# would silently bypass them via its own "Allow: /" group.
+#
+# AI-crawler groups (Google AI Overviews/AI Mode/Gemini, ChatGPT,
+# Perplexity, Claude, Apple Intelligence) are explicit and permissive
+# on purpose — see docs/metro/research/aeo-plan.md and
+# docs/metro/research/aeo-foundations-changes.md. Owner action required:
+# verify Cloudflare "Block AI bots" / Bot Fight Mode is not silently
+# challenging these bots at the edge (not controllable from this file).
+
 User-agent: Googlebot
 Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/*
+Disallow: /stripe-test
+Disallow: /checkout
+Disallow: /payment-success
+
+# Google-Extended does not crawl; it's a data-usage token governing
+# Gemini app/Vertex AI grounding + training-data permission for
+# already-crawled content. Allowing it does not affect Search ranking
+# or AI Overview eligibility (those run on Googlebot above).
+User-agent: Google-Extended
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/*
+Disallow: /stripe-test
+Disallow: /checkout
+Disallow: /payment-success
 
 User-agent: Bingbot
 Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/*
+Disallow: /stripe-test
+Disallow: /checkout
+Disallow: /payment-success
+
+# ChatGPT search citations (developers.openai.com/api/docs/bots)
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/*
+Disallow: /stripe-test
+Disallow: /checkout
+Disallow: /payment-success
+
+# Live user-triggered ChatGPT browsing fetches
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/*
+Disallow: /stripe-test
+Disallow: /checkout
+Disallow: /payment-success
+
+# GPTBot is training-data crawling only (not live ChatGPT citation),
+# allowed here for consistency with the other OpenAI bots.
+User-agent: GPTBot
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/*
+Disallow: /stripe-test
+Disallow: /checkout
+Disallow: /payment-success
+
+# Perplexity answer-engine citations (docs.perplexity.ai/guides/bots)
+User-agent: PerplexityBot
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/*
+Disallow: /stripe-test
+Disallow: /checkout
+Disallow: /payment-success
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/*
+Disallow: /stripe-test
+Disallow: /checkout
+Disallow: /payment-success
+
+User-agent: Claude-SearchBot
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/*
+Disallow: /stripe-test
+Disallow: /checkout
+Disallow: /payment-success
+
+# Apple Intelligence / Siri / Spotlight summarization training use
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/*
+Disallow: /stripe-test
+Disallow: /checkout
+Disallow: /payment-success
 
 User-agent: Twitterbot
 Allow: /

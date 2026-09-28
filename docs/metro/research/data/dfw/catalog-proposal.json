@@ -1,0 +1,503 @@
+[
+  {
+    "category": "gravel",
+    "slug": "pea-gravel",
+    "name": "Pea Gravel (3/8\")",
+    "unit": "ton",
+    "competitorCount": 4,
+    "medianPricePerUnit": 156.17,
+    "suggestedNodePricePerUnit": 216.91,
+    "shortDescription": "Rounded 3/8\" pea gravel for walkways, playgrounds, and decorative ground cover.",
+    "bestFor": [
+      "walkways",
+      "fire pits",
+      "playgrounds"
+    ],
+    "swatch": "#C9B79C",
+    "popular": true,
+    "sources": [
+      "https://mulchmound.com/products/frisco-texas-stone-delivery",
+      "https://mygravelbuddy.com/product/3-8-inch-natural-pea-gravel/",
+      "https://www.outdoorwarehousesupply.com/product-category/bulk-materials/gravel/",
+      "https://mygravelmonkey.com/llms.txt"
+    ]
+  },
+  {
+    "category": "gravel",
+    "slug": "road-base",
+    "name": "Road Base / Flex Base / Crusher Run",
+    "unit": "ton",
+    "competitorCount": 4,
+    "medianPricePerUnit": 90.71,
+    "suggestedNodePricePerUnit": 128.53,
+    "shortDescription": "Compactable road base / flex base / crusher run for driveways and sub-base.",
+    "bestFor": [
+      "driveway base",
+      "shed pads",
+      "compaction base"
+    ],
+    "swatch": "#8C8C8C",
+    "popular": true,
+    "sources": [
+      "https://mulchmound.com/products/dallas-texas-stone-delivery",
+      "https://mulchmound.com/products/fort-worth-texas-stone-delivery",
+      "https://mulchmound.com/products/plano-texas-stone-delivery",
+      "https://mulchmound.com/products/frisco-texas-stone-delivery"
+    ]
+  },
+  {
+    "category": "gravel",
+    "slug": "decomposed-granite",
+    "name": "Decomposed Granite",
+    "unit": "ton",
+    "competitorCount": 4,
+    "medianPricePerUnit": 189.12,
+    "suggestedNodePricePerUnit": 261.39,
+    "shortDescription": "Compactable decomposed granite for natural-look paths and patios.",
+    "bestFor": [
+      "garden paths",
+      "patios",
+      "xeriscaping"
+    ],
+    "swatch": "#C2A374",
+    "popular": true,
+    "sources": [
+      "https://mygravelbuddy.com/product/decomposed-granite/",
+      "https://www.outdoorwarehousesupply.com/product-category/bulk-materials/gravel/",
+      "https://fortworthgrass.com/bulk-materials",
+      "https://mygravelmonkey.com/llms.txt"
+    ]
+  },
+  {
+    "category": "sand",
+    "slug": "mason-sand",
+    "name": "Masonry / Mason Sand",
+    "unit": "ton",
+    "competitorCount": 4,
+    "medianPricePerUnit": 129.7,
+    "suggestedNodePricePerUnit": 181.17,
+    "shortDescription": "Fine masonry sand for mortar mixes, paver joints, and play sand substitute.",
+    "bestFor": [
+      "mortar mix",
+      "paver joint sand",
+      "leveling"
+    ],
+    "swatch": "#E3C16F",
+    "popular": true,
+    "sources": [
+      "https://mygravelbuddy.com/product/mason-sand/",
+      "https://www.outdoorwarehousesupply.com/product-category/bulk-materials/sand-soil-mulch/",
+      "https://fortworthgrass.com/bulk-materials",
+      "https://mygravelmonkey.com/llms.txt"
+    ]
+  },
+  {
+    "category": "soil",
+    "slug": "topsoil",
+    "name": "Screened Topsoil",
+    "unit": "yd",
+    "competitorCount": 4,
+    "medianPricePerUnit": 55,
+    "suggestedNodePricePerUnit": 80.33,
+    "shortDescription": "Screened topsoil for new lawns, beds, and grading over DFW's heavy clay.",
+    "bestFor": [
+      "new lawns",
+      "flower beds",
+      "grading over clay"
+    ],
+    "swatch": "#4A3728",
+    "popular": true,
+    "sources": [
+      "https://mulchmound.com/products/dallas-texas-soil-delivery",
+      "https://mulchmound.com/products/fort-worth-texas-soil-delivery",
+      "https://mulchmound.com/products/plano-texas-soil-delivery",
+      "https://mulchmound.com/products/frisco-texas-soil-delivery"
+    ]
+  },
+  {
+    "category": "mulch",
+    "slug": "hardwood-mulch",
+    "name": "Natural/Brown Hardwood Mulch (double shredded)",
+    "unit": "yd",
+    "competitorCount": 3,
+    "medianPricePerUnit": 55,
+    "suggestedNodePricePerUnit": 80.33,
+    "shortDescription": "Natural or dyed brown double-shredded hardwood mulch, the default bed mulch across DFW yards.",
+    "bestFor": [
+      "flower beds",
+      "tree rings",
+      "general landscaping"
+    ],
+    "swatch": "#6F4E37",
+    "popular": true,
+    "sources": [
+      "https://mulchmound.com/products/dallas-texas-mulch-delivery",
+      "https://mulchmound.com/products/fort-worth-texas-mulch-delivery",
+      "https://mulchmound.com/products/plano-texas-mulch-delivery",
+      "https://mulchmound.com/products/frisco-texas-mulch-delivery"
+    ]
+  },
+  {
+    "category": "gravel",
+    "slug": "crushed-stone-57",
+    "name": "Crushed Limestone #57 / 3/4\" Crushed Stone",
+    "unit": "ton",
+    "competitorCount": 3,
+    "medianPricePerUnit": 95,
+    "suggestedNodePricePerUnit": 134.32,
+    "shortDescription": "#57 crushed limestone, the DFW standard for drainage, driveways, and French drains.",
+    "bestFor": [
+      "driveways",
+      "drainage",
+      "under-slab base"
+    ],
+    "swatch": "#8A8A82",
+    "popular": true,
+    "sources": [
+      "https://mulchmound.com/products/dallas-texas-stone-delivery",
+      "https://mulchmound.com/products/fort-worth-texas-stone-delivery",
+      "https://mulchmound.com/products/plano-texas-stone-delivery",
+      "https://mulchmound.com/products/frisco-texas-stone-delivery"
+    ]
+  },
+  {
+    "category": "sand",
+    "slug": "play-sand",
+    "name": "Play / Playground Sand",
+    "unit": "ton",
+    "competitorCount": 3,
+    "medianPricePerUnit": 71.85,
+    "suggestedNodePricePerUnit": 103.07,
+    "shortDescription": "Washed, screened play sand safe for sandboxes and play areas.",
+    "bestFor": [
+      "sandboxes",
+      "playgrounds"
+    ],
+    "swatch": "#F0E2B6",
+    "popular": false,
+    "sources": [
+      "https://mulchmound.com/products/dallas-texas-sand-delivery",
+      "https://mulchmound.com/products/fort-worth-texas-sand-delivery",
+      "https://mulchmound.com/products/plano-texas-sand-delivery",
+      "https://mulchmound.com/products/frisco-texas-sand-delivery"
+    ]
+  },
+  {
+    "category": "mulch",
+    "slug": "native-tree-mulch",
+    "name": "Native/Shredded Tree Mulch",
+    "unit": "yd",
+    "competitorCount": 2,
+    "medianPricePerUnit": 87,
+    "suggestedNodePricePerUnit": 123.53,
+    "shortDescription": "Locally chipped native tree mulch, an economical bulk ground cover.",
+    "bestFor": [
+      "large-acreage properties",
+      "budget bed coverage"
+    ],
+    "swatch": "#5C4630",
+    "popular": false,
+    "sources": [
+      "https://fortworthgrass.com/bulk-materials",
+      "https://mygravelmonkey.com/llms.txt"
+    ]
+  },
+  {
+    "category": "gravel",
+    "slug": "river-rock",
+    "name": "River Rock",
+    "unit": "ton",
+    "competitorCount": 2,
+    "medianPricePerUnit": 392.32,
+    "suggestedNodePricePerUnit": 535.71,
+    "shortDescription": "Larger rounded river rock for xeriscaping, drainage channels, and accent beds.",
+    "bestFor": [
+      "xeriscaping",
+      "dry creek beds",
+      "drainage channels"
+    ],
+    "swatch": "#A66E4E",
+    "popular": true,
+    "sources": [
+      "https://mygravelbuddy.com/product/river-rock/",
+      "https://mygravelmonkey.com/llms.txt"
+    ]
+  },
+  {
+    "category": "gravel",
+    "slug": "rip-rap",
+    "name": "Rip Rap",
+    "unit": "ton",
+    "competitorCount": 2,
+    "medianPricePerUnit": 144.18,
+    "suggestedNodePricePerUnit": 200.71,
+    "shortDescription": "Large crushed stone or limestone rip rap for erosion control on slopes and banks.",
+    "bestFor": [
+      "erosion control",
+      "creek banks",
+      "drainage swales"
+    ],
+    "swatch": "#767672",
+    "popular": false,
+    "sources": [
+      "https://mygravelbuddy.com/product/riprap-med/",
+      "https://www.outdoorwarehousesupply.com/product-category/bulk-materials/gravel/"
+    ]
+  },
+  {
+    "category": "gravel",
+    "slug": "drain-rock",
+    "name": "Drain Rock",
+    "unit": "ton",
+    "competitorCount": 2,
+    "medianPricePerUnit": 184.47,
+    "suggestedNodePricePerUnit": 255.11,
+    "shortDescription": "Clean drainage rock for French drains and gravel drain fields.",
+    "bestFor": [
+      "French drains",
+      "drain fields",
+      "downspout beds"
+    ],
+    "swatch": "#6B7280",
+    "popular": false,
+    "sources": [
+      "https://mygravelbuddy.com/product/drain-rock/",
+      "https://mygravelmonkey.com/llms.txt"
+    ]
+  },
+  {
+    "category": "sand",
+    "slug": "concrete-sand",
+    "name": "Concrete Sand",
+    "unit": "ton",
+    "competitorCount": 2,
+    "medianPricePerUnit": 138.41,
+    "suggestedNodePricePerUnit": 192.92,
+    "shortDescription": "Coarse concrete sand for concrete mix and drainage layers.",
+    "bestFor": [
+      "concrete mix",
+      "drainage layers",
+      "paver base"
+    ],
+    "swatch": "#D8C9A3",
+    "popular": true,
+    "sources": [
+      "https://mygravelbuddy.com/product/concrete-sand/",
+      "https://www.outdoorwarehousesupply.com/product-category/bulk-materials/sand-soil-mulch/"
+    ]
+  },
+  {
+    "category": "sand",
+    "slug": "fill-sand",
+    "name": "Fill Sand",
+    "unit": "ton",
+    "competitorCount": 2,
+    "medianPricePerUnit": 51.11,
+    "suggestedNodePricePerUnit": 75.07,
+    "shortDescription": "Economical fill sand for grading and leveling low spots.",
+    "bestFor": [
+      "grading",
+      "leveling",
+      "pool base"
+    ],
+    "swatch": "#E8D9B5",
+    "popular": false,
+    "sources": [
+      "https://mulchmound.com/products/dallas-texas-sand-delivery",
+      "https://mulchmound.com/products/fort-worth-texas-sand-delivery",
+      "https://mulchmound.com/products/plano-texas-sand-delivery",
+      "https://mulchmound.com/products/frisco-texas-sand-delivery"
+    ]
+  },
+  {
+    "category": "soil",
+    "slug": "garden-blend-soil",
+    "name": "Garden / Gardening Blend Soil",
+    "unit": "yd",
+    "competitorCount": 2,
+    "medianPricePerUnit": 55,
+    "suggestedNodePricePerUnit": 80.33,
+    "shortDescription": "Enriched garden/planting soil blend for raised beds and vegetable gardens.",
+    "bestFor": [
+      "raised beds",
+      "vegetable gardens"
+    ],
+    "swatch": "#5B4636",
+    "popular": true,
+    "sources": [
+      "https://mulchmound.com/products/dallas-texas-soil-delivery",
+      "https://mulchmound.com/products/fort-worth-texas-soil-delivery",
+      "https://mulchmound.com/products/plano-texas-soil-delivery",
+      "https://mulchmound.com/products/frisco-texas-soil-delivery"
+    ]
+  },
+  {
+    "category": "soil",
+    "slug": "fill-dirt",
+    "name": "Fill Dirt",
+    "unit": "ton",
+    "competitorCount": 2,
+    "medianPricePerUnit": 161.88,
+    "suggestedNodePricePerUnit": 224.61,
+    "shortDescription": "Unscreened fill dirt for grading, drainage correction, and low-spot fill.",
+    "bestFor": [
+      "grading",
+      "drainage correction",
+      "large fill jobs"
+    ],
+    "swatch": "#3E2C1E",
+    "popular": false,
+    "sources": [
+      "https://mygravelbuddy.com/product/fill-dirt/",
+      "https://mygravelmonkey.com/llms.txt"
+    ]
+  },
+  {
+    "category": "mulch",
+    "slug": "dyed-black-mulch",
+    "name": "Dyed Black Mulch",
+    "unit": "yd",
+    "competitorCount": 1,
+    "medianPricePerUnit": 64,
+    "suggestedNodePricePerUnit": 92.47,
+    "shortDescription": "Dyed black hardwood mulch for high-contrast modern bed designs.",
+    "bestFor": [
+      "modern landscaping",
+      "commercial beds"
+    ],
+    "swatch": "#2B2B2B",
+    "popular": true,
+    "sources": [
+      "https://mulchmound.com/products/dallas-texas-mulch-delivery",
+      "https://mulchmound.com/products/fort-worth-texas-mulch-delivery",
+      "https://mulchmound.com/products/plano-texas-mulch-delivery",
+      "https://mulchmound.com/products/frisco-texas-mulch-delivery"
+    ]
+  },
+  {
+    "category": "mulch",
+    "slug": "dyed-red-mulch",
+    "name": "Dyed Red Mulch",
+    "unit": "yd",
+    "competitorCount": 1,
+    "medianPricePerUnit": 46,
+    "suggestedNodePricePerUnit": 68.17,
+    "shortDescription": "Dyed red/brown hardwood mulch, a popular color choice alongside black and natural.",
+    "bestFor": [
+      "flower beds",
+      "curb appeal refresh"
+    ],
+    "swatch": "#8B3A2F",
+    "popular": false,
+    "sources": [
+      "https://mulchmound.com/products/dallas-texas-mulch-delivery",
+      "https://mulchmound.com/products/fort-worth-texas-mulch-delivery",
+      "https://mulchmound.com/products/plano-texas-mulch-delivery",
+      "https://mulchmound.com/products/frisco-texas-mulch-delivery"
+    ]
+  },
+  {
+    "category": "mulch",
+    "slug": "cedar-mulch",
+    "name": "Cedar Mulch",
+    "unit": "yd",
+    "competitorCount": 1,
+    "medianPricePerUnit": 55,
+    "suggestedNodePricePerUnit": 80.33,
+    "shortDescription": "Aromatic cedar mulch, naturally insect-resistant and slower to break down than dyed hardwood.",
+    "bestFor": [
+      "beds near structures",
+      "insect-sensitive areas"
+    ],
+    "swatch": "#A9713D",
+    "popular": false,
+    "sources": [
+      "https://mulchmound.com/products/dallas-texas-mulch-delivery",
+      "https://mulchmound.com/products/fort-worth-texas-mulch-delivery",
+      "https://mulchmound.com/products/plano-texas-mulch-delivery",
+      "https://mulchmound.com/products/frisco-texas-mulch-delivery"
+    ]
+  },
+  {
+    "category": "mulch",
+    "slug": "pine-bark-mulch",
+    "name": "Pine Bark Mulch",
+    "unit": "yd",
+    "competitorCount": 1,
+    "medianPricePerUnit": 55,
+    "suggestedNodePricePerUnit": 80.33,
+    "shortDescription": "Chunky pine bark mulch for a coarser, longer-lasting ground cover.",
+    "bestFor": [
+      "shrub beds",
+      "erosion-prone slopes"
+    ],
+    "swatch": "#7B4B2A",
+    "popular": false,
+    "sources": [
+      "https://mulchmound.com/products/dallas-texas-mulch-delivery",
+      "https://mulchmound.com/products/fort-worth-texas-mulch-delivery",
+      "https://mulchmound.com/products/plano-texas-mulch-delivery",
+      "https://mulchmound.com/products/frisco-texas-mulch-delivery"
+    ]
+  },
+  {
+    "category": "mulch",
+    "slug": "playground-mulch",
+    "name": "Playground Mulch",
+    "unit": "yd",
+    "competitorCount": 1,
+    "medianPricePerUnit": 52,
+    "suggestedNodePricePerUnit": 76.28,
+    "shortDescription": "Engineered wood fiber mulch rated for fall-zone safety under play equipment.",
+    "bestFor": [
+      "playgrounds",
+      "school/park projects"
+    ],
+    "swatch": "#D2B48C",
+    "popular": false,
+    "sources": [
+      "https://mulchmound.com/products/dallas-texas-mulch-delivery",
+      "https://mulchmound.com/products/fort-worth-texas-mulch-delivery",
+      "https://mulchmound.com/products/plano-texas-mulch-delivery",
+      "https://mulchmound.com/products/frisco-texas-mulch-delivery"
+    ]
+  },
+  {
+    "category": "gravel",
+    "slug": "native-gravel",
+    "name": "Native Gravel (small/large)",
+    "unit": "ton",
+    "competitorCount": 1,
+    "medianPricePerUnit": 71.43,
+    "suggestedNodePricePerUnit": 102.51,
+    "shortDescription": "Local native gravel blend, an economical all-purpose bulk gravel.",
+    "bestFor": [
+      "general fill",
+      "budget driveways"
+    ],
+    "swatch": "#C2B280",
+    "popular": false,
+    "sources": [
+      "https://www.outdoorwarehousesupply.com/product-category/bulk-materials/gravel/"
+    ]
+  },
+  {
+    "category": "sand",
+    "slug": "washed-sand",
+    "name": "Washed Sand",
+    "unit": "ton",
+    "competitorCount": 1,
+    "medianPricePerUnit": 233.67,
+    "suggestedNodePricePerUnit": 321.53,
+    "shortDescription": "Washed sand for masonry and general construction use.",
+    "bestFor": [
+      "masonry",
+      "construction backfill"
+    ],
+    "swatch": "#DCC896",
+    "popular": false,
+    "sources": [
+      "https://mygravelmonkey.com/llms.txt"
+    ]
+  }
+]

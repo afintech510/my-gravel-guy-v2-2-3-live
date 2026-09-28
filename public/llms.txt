@@ -1,87 +1,44 @@
 # MyGravelGuy.com
 
-> Nationwide bulk landscape materials delivery marketplace. Order gravel, sand, topsoil, mulch, crushed stone, and more online with instant delivered pricing.
+> Metro-by-metro bulk landscape materials delivery. Order gravel, sand, topsoil, and mulch online with instant delivered pricing by ZIP code. MyGravelGuy launches one metro at a time, backed by a real local delivery operation in each market — not a nationwide broker network.
 
 ## About
 
-MyGravelGuy connects customers (homeowners and contractors) with local quarries and suppliers to deliver bulk landscape materials directly to their jobsite or property. We serve all 50 states with 33,700+ ZIP codes in our delivery network.
+MyGravelGuy delivers bulk gravel, sand, topsoil, and mulch directly to homeowners and contractors, metro by metro. We are not a nationwide marketplace; we launch and support one metro at a time. Our sister yard, Eastern Landscape & Mason Supply (Center Moriches, NY), has completed thousands of bulk material deliveries on Long Island since 2023 — the operational playbook behind every metro we launch.
 
-**Business Model**: Online ordering with instant pricing, supplier sourcing, and delivery coordination. One point of contact for bulk material delivery anywhere in the US.
+**How ordering works**: enter your delivery address, choose a material and quantity, see an instant delivered price for your ZIP, pick a delivery date, and pay online. No quote-and-wait process for served ZIPs. A 3-ton minimum applies per order.
 
 **Tagline**: "Do You Have a Gravel Guy?"
 
+## Markets
+
+- **Dallas–Fort Worth, TX** — launching. https://mygravelguy.com/dallas-fort-worth
+  - Gravel delivery: https://mygravelguy.com/dallas-fort-worth/gravel-delivery
+  - Mulch delivery: https://mygravelguy.com/dallas-fort-worth/mulch-delivery
+  - Sand delivery: https://mygravelguy.com/dallas-fort-worth/sand-delivery
+  - Soil delivery: https://mygravelguy.com/dallas-fort-worth/soil-delivery
+  - Pricing is in setup with local partner yards; treat any price shown as an estimate until noted otherwise on the page.
+- **Long Island, NY** — pilot market, fulfilled by our sister yard Eastern Landscape & Mason Supply out of Center Moriches, NY. https://mygravelguy.com/long-island
+
+Additional metros will be added to this list as they launch — do not assume nationwide coverage beyond the markets listed here.
+
+## Reference content
+
+- Gravel Driveway Hub (cost, materials, and how-much-do-I-need guidance) — in progress, not yet live: https://mygravelguy.com/gravel-driveways
+- FAQ: https://mygravelguy.com/faq
+- Delivery information: https://mygravelguy.com/delivery
+
 ## Products & Services
 
-We offer 47+ bulk landscape materials across 12 categories:
+Bulk gravel (crushed stone, driveway gravel, pea gravel, crusher run), sand, topsoil, and mulch. Instant delivered pricing by ZIP code within served metros only. 3-ton minimum. Free delivery included in the delivered price.
 
-- **Crushed Stone**: #57 Stone, #67 Stone, #8 Stone, #10 Screenings, Crushed Stone (various sizes)
-- **Crushed Gravel**: 3/4", 1.5", 2-3", 3/8" sizes
-- **Crushed Concrete**: Recycled concrete aggregate, RCA Blend
-- **Driveway Gravel**: Multiple sizes optimized for driveways
-- **Natural Gravel**: Drainage rock, pea gravel
-- **River Rock**: Decorative 1" and 2-3" sizes
-- **Sand**: Beach sand, mason sand, playground sand, washed sand
-- **Mulch**: Chocolate brown, jet black, natural brown, red
-- **Soil**: Topsoil, compost, loam
-- **Dirt**: Clean fill, dirt fill
-- **Rock & Stone**: Crusher run, decomposed granite, pea gravel, road base
-- **Walkway Gravel**: Decorative sizes for pathways
+## Company
 
-### Pricing
-- Instant delivered pricing based on ZIP code
-- Volume discounts on larger orders (exponential pricing curve)
-- 3-ton minimum per order
-- Free delivery included in every price
-- Average order: 16 tons, ~$1,473
-
-### Payment Options
-- Full payment via credit card (Stripe)
-- $199 refundable deposit option with balance due on delivery
-- Custom quotes for large or specialty orders
-
-## Key Pages
-
-- Homepage: https://mygravelguy.com/
-- Shop All Products: https://mygravelguy.com/shop
-- Product Catalog: https://mygravelguy.com/products
-- For Contractors: https://mygravelguy.com/contractors
-- Material Calculator: https://mygravelguy.com/calculator
-- Product Quiz: https://mygravelguy.com/quiz
-- Blog: https://mygravelguy.com/blog
-- Customer Reviews: https://mygravelguy.com/reviews
-- Delivery Locations: https://mygravelguy.com/locations
-- Delivery Info: https://mygravelguy.com/delivery-info
-- FAQ: https://mygravelguy.com/faq
-- About Us: https://mygravelguy.com/about
-- Contact: https://mygravelguy.com/contact
-
-## Customer Segments
-
-### Homeowners
-- DIY driveway, landscaping, patio, drainage projects
-- Typical order: 3-10 tons
-- Value instant pricing and online ordering convenience
-
-### Contractors (Primary Growth Target)
-- Landscapers, general contractors, excavation companies, playground/turf installers
-- Key use case: sourcing materials when working outside their normal area
-- Typical order: 15-50+ tons
-- Value one point of contact for nationwide material sourcing
-
-## Coverage
-
-- All 50 US states
-- 33,700+ ZIP codes with location-based pricing
-- 196 delivery location pages for local service areas
-- 22+ suppliers in our network across the country
-
-## Contact
-
-- Website: https://mygravelguy.com
+- Company: Eastern Building Supply Inc.
+- Sister operation: Eastern Landscape & Mason Supply (Center Moriches, NY) — fulfillment partner for the Long Island pilot
 - Phone: (844) 624-0400
 - Email: support@mygravelguy.com
-- Hours: Mon-Fri 8am-5pm ET, Sat 8am-1pm ET
-- Company: Eastern Building Supply Inc.
+- Contact page: https://mygravelguy.com/contact
 
 ## Sitemap
 

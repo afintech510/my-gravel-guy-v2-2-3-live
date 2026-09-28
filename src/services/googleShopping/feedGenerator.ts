@@ -44,7 +44,7 @@ export class GoogleShoppingFeedGenerator {
   private baseUrl: string;
   private brandName: string;
   private defaultZipCode: string;
-  private shippingConfig: any;
+  private shippingConfig: ReturnType<typeof generateUSShippingConfig>;
 
   constructor(baseUrl: string = 'https://mygravelguy.com', brandName: string = 'My Gravel Guy', defaultZipCode: string = '75001') {
     this.baseUrl = baseUrl;
@@ -165,7 +165,7 @@ export class GoogleShoppingFeedGenerator {
    */
   private createOptimizedDescription(product: Product): string {
     // Strip HTML tags from description
-    let cleanDescription = this.stripHtmlTags(product.description || '');
+    const cleanDescription = this.stripHtmlTags(product.description || '');
     
     // Start with key selling points
     const keyPoints = [

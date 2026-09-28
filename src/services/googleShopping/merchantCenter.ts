@@ -1,4 +1,16 @@
 
+// @deprecated — calls Google's Content API for Shopping v2.1 (`shoppingcontent.googleapis.com`)
+// directly from whatever runtime imports this class, using an OAuth access token passed in
+// via MerchantCenterConfig. Two independent problems, per
+// docs/metro/research/ai-ads-and-google-shopping.md (Part B, esp. B3/B4):
+//   1. Content API v2.1 began progressive errors on 2026-09-01 and is heading to a blanket
+//      HTTP 410 Gone — this is a sunsetting API, not a stable one to build new callers against.
+//   2. `GoogleShoppingManager.tsx` previously called this class from the browser with the
+//      access token sitting in React state/a plain <Textarea>, i.e. exposed client-side.
+// Kept in the repo (not deleted) only as a reference for the previous request/response
+// shape. Do not add new callers — use `merchantApiClient.ts` (calls the
+// `google-merchant-sync` edge function, which mints its own Google credential server-side
+// against the current Merchant API) instead.
 import { GoogleShoppingProduct } from './feedGenerator';
 import { isContinentalUSState } from './usTargeting';
 
@@ -30,7 +42,7 @@ export class GoogleMerchantCenterAPI {
   /**
    * Upload product to Google Merchant Center with US restrictions
    */
-  async uploadProduct(product: GoogleShoppingProduct): Promise<any> {
+  async uploadProduct(product: GoogleShoppingProduct): Promise<unknown> {
     const url = `${this.baseUrl}/${this.config.merchantId}/products`;
     
     const requestBody = {
@@ -101,7 +113,7 @@ export class GoogleMerchantCenterAPI {
   /**
    * Batch upload multiple products with US restrictions
    */
-  async batchUploadProducts(products: GoogleShoppingProduct[]): Promise<any> {
+  async batchUploadProducts(products: GoogleShoppingProduct[]): Promise<unknown> {
     const url = `${this.baseUrl}/products/batch`;
     
     const entries = products.map((product, index) => ({
@@ -222,13 +234,22 @@ export class GoogleMerchantCenterAPI {
       }
 
       const data = await response.json();
-      
-      return data.resources?.map((item: any) => ({
-        productId: item.productId,
-        status: item.destinationStatuses?.[0]?.status || 'pending',
-        issues: item.itemLevelIssues || [],
-        lastUpdated: item.lastUpdateDate || new Date().toISOString()
-      })) || [];
+
+      interface RawProductStatus {
+        productId: string;
+        destinationStatuses?: Array<{ status?: ProductStatus['status'] }>;
+        itemLevelIssues?: ProductStatus['issues'];
+        lastUpdateDate?: string;
+      }
+
+      return (
+        (data.resources as RawProductStatus[] | undefined)?.map(item => ({
+          productId: item.productId,
+          status: item.destinationStatuses?.[0]?.status || 'pending',
+          issues: item.itemLevelIssues || [],
+          lastUpdated: item.lastUpdateDate || new Date().toISOString(),
+        })) || []
+      );
     } catch (error) {
       console.error('Error getting product statuses:', error);
       throw error;

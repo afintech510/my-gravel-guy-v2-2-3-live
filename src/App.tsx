@@ -16,6 +16,7 @@ import RouteTracker from "./components/analytics/RouteTracker";
 import TopBanner from "./components/TopBanner";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import { METROS } from "./metro/config";
 
 // Eager-load the homepage for instant first paint
 import Index from "./pages/Index";
@@ -72,6 +73,17 @@ const MarketMaterialPage = React.lazy(() => import("./pages/MarketMaterialPage")
 const ContractorsSpecMaterials = React.lazy(() => import("./pages/ContractorsSpecMaterials"));
 const CrushedStoneLanding = React.lazy(() => import("./pages/CrushedStoneLanding"));
 const DeliveryConfirm = React.lazy(() => import("./pages/DeliveryConfirm"));
+const MetroHomePage = React.lazy(() => import("./pages/metro/MetroHomePage"));
+const MetroCategoryPage = React.lazy(() => import("./pages/metro/MetroCategoryPage"));
+const MetroTownPage = React.lazy(() => import("./pages/metro/MetroTownPage"));
+const GravelDrivewayHub = React.lazy(() => import("./pages/guides/GravelDrivewayHub"));
+const GravelDrivewayCost = React.lazy(() => import("./pages/guides/GravelDrivewayCost"));
+const BestGravel = React.lazy(() => import("./pages/guides/BestGravel"));
+const HowMuchGravel = React.lazy(() => import("./pages/guides/HowMuchGravel"));
+const DepthAndLayers = React.lazy(() => import("./pages/guides/DepthAndLayers"));
+const CrusherRunVs57VsFlexBase = React.lazy(() => import("./pages/guides/CrusherRunVs57VsFlexBase"));
+const GuideMaintenance = React.lazy(() => import("./pages/guides/Maintenance"));
+const DallasFortWorthGuide = React.lazy(() => import("./pages/guides/DallasFortWorthGuide"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -94,6 +106,9 @@ function AppContent() {
   const location = useLocation();
   const isDashboardPage = location.pathname.startsWith('/dashboard');
   const isStandalonePage = location.pathname === '/delivery-confirm';
+  const isMetroPage = METROS.some(
+    metro => location.pathname === `/${metro.slug}` || location.pathname.startsWith(`/${metro.slug}/`)
+  );
 
   // Flashing title disabled — hurts SEO and annoys users
   useFlashingTitle({
@@ -116,7 +131,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {!isStandalonePage && (
+      {!isStandalonePage && !isMetroPage && (
         <div className="sticky top-0 z-40 w-full">
           <div className="relative">
             <TopBanner />
@@ -177,10 +192,25 @@ function AppContent() {
           <Route path="/57-crushed-stone" element={<CrushedStoneLanding />} />
           <Route path="/markets/:marketSlug/materials/:materialSlug" element={<MarketMaterialPage />} />
           <Route path="/delivery-confirm" element={<DeliveryConfirm />} />
+          {METROS.map(metro => (
+            <React.Fragment key={metro.slug}>
+              <Route path={`/${metro.slug}`} element={<MetroHomePage metro={metro} />} />
+              <Route path={`/${metro.slug}/towns/:townSlug`} element={<MetroTownPage metro={metro} />} />
+              <Route path={`/${metro.slug}/:categorySegment`} element={<MetroCategoryPage metro={metro} />} />
+            </React.Fragment>
+          ))}
+          <Route path="/gravel-driveways" element={<GravelDrivewayHub />} />
+          <Route path="/gravel-driveways/cost" element={<GravelDrivewayCost />} />
+          <Route path="/gravel-driveways/best-gravel" element={<BestGravel />} />
+          <Route path="/gravel-driveways/how-much-gravel" element={<HowMuchGravel />} />
+          <Route path="/gravel-driveways/depth-and-layers" element={<DepthAndLayers />} />
+          <Route path="/gravel-driveways/crusher-run-vs-57-vs-flex-base" element={<CrusherRunVs57VsFlexBase />} />
+          <Route path="/gravel-driveways/maintenance" element={<GuideMaintenance />} />
+          <Route path="/gravel-driveways/dallas-fort-worth" element={<DallasFortWorthGuide />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
-      {!isDashboardPage && !isStandalonePage && <Footer />}
+      {!isDashboardPage && !isStandalonePage && !isMetroPage && <Footer />}
     </div>
   );
 }

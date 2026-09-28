@@ -1,0 +1,2349 @@
+{
+  "generatedAt": "2026-09-28T11:18:04.548Z",
+  "siteBaseUrl": "https://mygravelguy.com",
+  "brand": "MyGravelGuy",
+  "referenceQuantity": 10,
+  "metros": [
+    {
+      "slug": "dallas-fort-worth",
+      "name": "Dallas–Fort Worth",
+      "status": "coming-soon",
+      "priceBookConfirmed": false,
+      "zones": [
+        {
+          "slug": "dfw-core",
+          "name": "DFW Core (Dallas & Tarrant)",
+          "zips": [
+            "75001",
+            "75006",
+            "75019",
+            "75038",
+            "75039",
+            "75040",
+            "75041",
+            "75042",
+            "75043",
+            "75044",
+            "75048",
+            "75050",
+            "75051",
+            "75052",
+            "75054",
+            "75060",
+            "75061",
+            "75062",
+            "75063",
+            "75080",
+            "75081",
+            "75088",
+            "75089",
+            "75104",
+            "75115",
+            "75116",
+            "75134",
+            "75137",
+            "75141",
+            "75146",
+            "75149",
+            "75150",
+            "75159",
+            "75172",
+            "75180",
+            "75181",
+            "75182",
+            "75201",
+            "75202",
+            "75203",
+            "75204",
+            "75205",
+            "75206",
+            "75207",
+            "75208",
+            "75209",
+            "75210",
+            "75211",
+            "75212",
+            "75214",
+            "75215",
+            "75216",
+            "75217",
+            "75218",
+            "75219",
+            "75220",
+            "75223",
+            "75224",
+            "75225",
+            "75226",
+            "75227",
+            "75228",
+            "75229",
+            "75230",
+            "75231",
+            "75232",
+            "75233",
+            "75234",
+            "75235",
+            "75236",
+            "75237",
+            "75238",
+            "75240",
+            "75241",
+            "75243",
+            "75244",
+            "75246",
+            "75247",
+            "75248",
+            "75249",
+            "75251",
+            "75253",
+            "75254",
+            "75261",
+            "75270",
+            "75390",
+            "76001",
+            "76002",
+            "76005",
+            "76006",
+            "76010",
+            "76011",
+            "76012",
+            "76013",
+            "76014",
+            "76015",
+            "76016",
+            "76017",
+            "76018",
+            "76021",
+            "76022",
+            "76034",
+            "76036",
+            "76039",
+            "76040",
+            "76051",
+            "76052",
+            "76053",
+            "76054",
+            "76060",
+            "76063",
+            "76092",
+            "76102",
+            "76103",
+            "76104",
+            "76105",
+            "76106",
+            "76107",
+            "76108",
+            "76109",
+            "76110",
+            "76111",
+            "76112",
+            "76114",
+            "76115",
+            "76116",
+            "76117",
+            "76118",
+            "76119",
+            "76120",
+            "76123",
+            "76126",
+            "76127",
+            "76129",
+            "76131",
+            "76132",
+            "76133",
+            "76134",
+            "76135",
+            "76137",
+            "76140",
+            "76148",
+            "76155",
+            "76164",
+            "76177",
+            "76179",
+            "76180",
+            "76182",
+            "76244",
+            "76248"
+          ],
+          "minUnits": 3
+        },
+        {
+          "slug": "dfw-north",
+          "name": "DFW North (Collin & Denton)",
+          "zips": [
+            "75002",
+            "75007",
+            "75009",
+            "75010",
+            "75013",
+            "75022",
+            "75023",
+            "75024",
+            "75025",
+            "75028",
+            "75033",
+            "75034",
+            "75035",
+            "75036",
+            "75056",
+            "75057",
+            "75065",
+            "75067",
+            "75068",
+            "75069",
+            "75070",
+            "75071",
+            "75072",
+            "75074",
+            "75075",
+            "75077",
+            "75078",
+            "75082",
+            "75093",
+            "75094",
+            "75098",
+            "75164",
+            "75166",
+            "75173",
+            "75252",
+            "75287",
+            "75407",
+            "75409",
+            "75424",
+            "75442",
+            "75454",
+            "76201",
+            "76203",
+            "76205",
+            "76207",
+            "76208",
+            "76209",
+            "76210",
+            "76226",
+            "76227",
+            "76247",
+            "76249",
+            "76258",
+            "76259",
+            "76262",
+            "76266"
+          ],
+          "minUnits": 3
+        },
+        {
+          "slug": "dfw-outer",
+          "name": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+          "zips": [
+            "75032",
+            "75087",
+            "75101",
+            "75114",
+            "75119",
+            "75125",
+            "75126",
+            "75132",
+            "75142",
+            "75143",
+            "75152",
+            "75154",
+            "75157",
+            "75158",
+            "75160",
+            "75161",
+            "75165",
+            "75167",
+            "75189",
+            "76009",
+            "76028",
+            "76031",
+            "76033",
+            "76041",
+            "76044",
+            "76050",
+            "76058",
+            "76059",
+            "76061",
+            "76064",
+            "76065",
+            "76084",
+            "76093",
+            "76623",
+            "76651",
+            "76670"
+          ],
+          "minUnits": 3
+        }
+      ],
+      "products": [
+        {
+          "id": "mgg-dallas-fort-worth-gravel-pea-gravel",
+          "metroSlug": "dallas-fort-worth",
+          "metroName": "Dallas–Fort Worth",
+          "categorySlug": "gravel",
+          "categoryName": "Gravel",
+          "variantSlug": "pea-gravel",
+          "variantName": "Pea Gravel (3/8\")",
+          "unit": "ton",
+          "referenceQuantity": 10,
+          "title": "Pea Gravel (3/8\") — 10 tons delivered in Dallas–Fort Worth",
+          "description": "Rounded 3/8\" pea gravel for walkways, patios, fire pits and playgrounds. Best for: walkways, patios, fire pits. Priced as a fixed 10-ton delivered load for Dallas–Fort Worth; delivery is included in the price shown. Minimum order is 3 tons and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/dallas-fort-worth/gravel-delivery?variant=pea-gravel",
+          "imageLink": "https://mygravelguy.com/images/placeholder/gravel.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 900,
+          "zonePrices": [
+            {
+              "zoneSlug": "dfw-core",
+              "zoneName": "DFW Core (Dallas & Tarrant)",
+              "referenceQuantityPrice": 900,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 335,
+              "pricePerUnit": 90
+            },
+            {
+              "zoneSlug": "dfw-north",
+              "zoneName": "DFW North (Collin & Denton)",
+              "referenceQuantityPrice": 925,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 355,
+              "pricePerUnit": 92.5
+            },
+            {
+              "zoneSlug": "dfw-outer",
+              "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+              "referenceQuantityPrice": 975,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 395,
+              "pricePerUnit": 97.5
+            }
+          ]
+        },
+        {
+          "id": "mgg-dallas-fort-worth-gravel-57-limestone",
+          "metroSlug": "dallas-fort-worth",
+          "metroName": "Dallas–Fort Worth",
+          "categorySlug": "gravel",
+          "categoryName": "Gravel",
+          "variantSlug": "57-limestone",
+          "variantName": "#57 Crushed Limestone",
+          "unit": "ton",
+          "referenceQuantity": 10,
+          "title": "#57 Crushed Limestone — 10 tons delivered in Dallas–Fort Worth",
+          "description": "Angular crushed limestone in the 3/4\"-1\" range, the DFW standard for drainage and driveway base. Best for: driveways, drainage, under-slab base. Priced as a fixed 10-ton delivered load for Dallas–Fort Worth; delivery is included in the price shown. Minimum order is 3 tons and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/dallas-fort-worth/gravel-delivery?variant=57-limestone",
+          "imageLink": "https://mygravelguy.com/images/placeholder/gravel.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 825,
+          "zonePrices": [
+            {
+              "zoneSlug": "dfw-core",
+              "zoneName": "DFW Core (Dallas & Tarrant)",
+              "referenceQuantityPrice": 825,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 315,
+              "pricePerUnit": 82.5
+            },
+            {
+              "zoneSlug": "dfw-north",
+              "zoneName": "DFW North (Collin & Denton)",
+              "referenceQuantityPrice": 850,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 330,
+              "pricePerUnit": 85
+            },
+            {
+              "zoneSlug": "dfw-outer",
+              "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+              "referenceQuantityPrice": 895,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 370,
+              "pricePerUnit": 89.5
+            }
+          ]
+        },
+        {
+          "id": "mgg-dallas-fort-worth-gravel-flex-base",
+          "metroSlug": "dallas-fort-worth",
+          "metroName": "Dallas–Fort Worth",
+          "categorySlug": "gravel",
+          "categoryName": "Gravel",
+          "variantSlug": "flex-base",
+          "variantName": "Flex Base / Road Base",
+          "unit": "ton",
+          "referenceQuantity": 10,
+          "title": "Flex Base / Road Base — 10 tons delivered in Dallas–Fort Worth",
+          "description": "Crushed limestone road base blended with fines that compacts into a solid driving surface. Best for: driveway base, shed pads, compaction base. Priced as a fixed 10-ton delivered load for Dallas–Fort Worth; delivery is included in the price shown. Minimum order is 3 tons and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/dallas-fort-worth/gravel-delivery?variant=flex-base",
+          "imageLink": "https://mygravelguy.com/images/placeholder/gravel.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 635,
+          "zonePrices": [
+            {
+              "zoneSlug": "dfw-core",
+              "zoneName": "DFW Core (Dallas & Tarrant)",
+              "referenceQuantityPrice": 635,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 255,
+              "pricePerUnit": 63.5
+            },
+            {
+              "zoneSlug": "dfw-north",
+              "zoneName": "DFW North (Collin & Denton)",
+              "referenceQuantityPrice": 660,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 275,
+              "pricePerUnit": 66
+            },
+            {
+              "zoneSlug": "dfw-outer",
+              "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+              "referenceQuantityPrice": 705,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 315,
+              "pricePerUnit": 70.5
+            }
+          ]
+        },
+        {
+          "id": "mgg-dallas-fort-worth-gravel-decomposed-granite",
+          "metroSlug": "dallas-fort-worth",
+          "metroName": "Dallas–Fort Worth",
+          "categorySlug": "gravel",
+          "categoryName": "Gravel",
+          "variantSlug": "decomposed-granite",
+          "variantName": "Decomposed Granite",
+          "unit": "ton",
+          "referenceQuantity": 10,
+          "title": "Decomposed Granite — 10 tons delivered in Dallas–Fort Worth",
+          "description": "Fine, compactable granite stone with a natural tan color used for paths and patios. Best for: garden paths, patios, xeriscaping. Priced as a fixed 10-ton delivered load for Dallas–Fort Worth; delivery is included in the price shown. Minimum order is 3 tons and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/dallas-fort-worth/gravel-delivery?variant=decomposed-granite",
+          "imageLink": "https://mygravelguy.com/images/placeholder/gravel.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 1210,
+          "zonePrices": [
+            {
+              "zoneSlug": "dfw-core",
+              "zoneName": "DFW Core (Dallas & Tarrant)",
+              "referenceQuantityPrice": 1210,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 430,
+              "pricePerUnit": 121
+            },
+            {
+              "zoneSlug": "dfw-north",
+              "zoneName": "DFW North (Collin & Denton)",
+              "referenceQuantityPrice": 1235,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 450,
+              "pricePerUnit": 123.5
+            },
+            {
+              "zoneSlug": "dfw-outer",
+              "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+              "referenceQuantityPrice": 1285,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 485,
+              "pricePerUnit": 128.5
+            }
+          ]
+        },
+        {
+          "id": "mgg-dallas-fort-worth-gravel-rip-rap",
+          "metroSlug": "dallas-fort-worth",
+          "metroName": "Dallas–Fort Worth",
+          "categorySlug": "gravel",
+          "categoryName": "Gravel",
+          "variantSlug": "rip-rap",
+          "variantName": "Rip Rap",
+          "unit": "ton",
+          "referenceQuantity": 10,
+          "title": "Rip Rap — 10 tons delivered in Dallas–Fort Worth",
+          "description": "Large crushed limestone rip rap for erosion control on slopes and creek banks. Best for: erosion control, creek banks, drainage swales. Priced as a fixed 10-ton delivered load for Dallas–Fort Worth; delivery is included in the price shown. Minimum order is 3 tons and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/dallas-fort-worth/gravel-delivery?variant=rip-rap",
+          "imageLink": "https://mygravelguy.com/images/placeholder/gravel.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 860,
+          "zonePrices": [
+            {
+              "zoneSlug": "dfw-core",
+              "zoneName": "DFW Core (Dallas & Tarrant)",
+              "referenceQuantityPrice": 860,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 325,
+              "pricePerUnit": 86
+            },
+            {
+              "zoneSlug": "dfw-north",
+              "zoneName": "DFW North (Collin & Denton)",
+              "referenceQuantityPrice": 885,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 345,
+              "pricePerUnit": 88.5
+            },
+            {
+              "zoneSlug": "dfw-outer",
+              "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+              "referenceQuantityPrice": 935,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 380,
+              "pricePerUnit": 93.5
+            }
+          ]
+        },
+        {
+          "id": "mgg-dallas-fort-worth-gravel-river-rock",
+          "metroSlug": "dallas-fort-worth",
+          "metroName": "Dallas–Fort Worth",
+          "categorySlug": "gravel",
+          "categoryName": "Gravel",
+          "variantSlug": "river-rock",
+          "variantName": "River Rock 1-3\"",
+          "unit": "ton",
+          "referenceQuantity": 10,
+          "title": "River Rock 1-3\" — 10 tons delivered in Dallas–Fort Worth",
+          "description": "Smooth, rounded multi-color river stone in the 1\"-3\" range. Best for: landscape beds, dry creek beds, erosion control. Priced as a fixed 10-ton delivered load for Dallas–Fort Worth; delivery is included in the price shown. Minimum order is 3 tons and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/dallas-fort-worth/gravel-delivery?variant=river-rock",
+          "imageLink": "https://mygravelguy.com/images/placeholder/gravel.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 1230,
+          "zonePrices": [
+            {
+              "zoneSlug": "dfw-core",
+              "zoneName": "DFW Core (Dallas & Tarrant)",
+              "referenceQuantityPrice": 1230,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 435,
+              "pricePerUnit": 123
+            },
+            {
+              "zoneSlug": "dfw-north",
+              "zoneName": "DFW North (Collin & Denton)",
+              "referenceQuantityPrice": 1255,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 455,
+              "pricePerUnit": 125.5
+            },
+            {
+              "zoneSlug": "dfw-outer",
+              "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+              "referenceQuantityPrice": 1305,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 490,
+              "pricePerUnit": 130.5
+            }
+          ]
+        },
+        {
+          "id": "mgg-dallas-fort-worth-sand-mason-sand",
+          "metroSlug": "dallas-fort-worth",
+          "metroName": "Dallas–Fort Worth",
+          "categorySlug": "sand",
+          "categoryName": "Sand",
+          "variantSlug": "mason-sand",
+          "variantName": "Mason Sand",
+          "unit": "ton",
+          "referenceQuantity": 10,
+          "title": "Mason Sand — 10 tons delivered in Dallas–Fort Worth",
+          "description": "Fine, washed sand used in masonry mortar and for leveling under pavers. Best for: mortar mix, paver leveling, sandboxes. Priced as a fixed 10-ton delivered load for Dallas–Fort Worth; delivery is included in the price shown. Minimum order is 3 tons and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/dallas-fort-worth/sand-delivery?variant=mason-sand",
+          "imageLink": "https://mygravelguy.com/images/placeholder/sand.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 750,
+          "zonePrices": [
+            {
+              "zoneSlug": "dfw-core",
+              "zoneName": "DFW Core (Dallas & Tarrant)",
+              "referenceQuantityPrice": 750,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 290,
+              "pricePerUnit": 75
+            },
+            {
+              "zoneSlug": "dfw-north",
+              "zoneName": "DFW North (Collin & Denton)",
+              "referenceQuantityPrice": 775,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 310,
+              "pricePerUnit": 77.5
+            },
+            {
+              "zoneSlug": "dfw-outer",
+              "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+              "referenceQuantityPrice": 825,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 350,
+              "pricePerUnit": 82.5
+            }
+          ]
+        },
+        {
+          "id": "mgg-dallas-fort-worth-sand-bank-sand",
+          "metroSlug": "dallas-fort-worth",
+          "metroName": "Dallas–Fort Worth",
+          "categorySlug": "sand",
+          "categoryName": "Sand",
+          "variantSlug": "bank-sand",
+          "variantName": "Bank Sand (fill)",
+          "unit": "ton",
+          "referenceQuantity": 10,
+          "title": "Bank Sand (fill) — 10 tons delivered in Dallas–Fort Worth",
+          "description": "Unwashed sand pulled from a sand bank, used as general fill. Best for: fill, grading, backfill. Priced as a fixed 10-ton delivered load for Dallas–Fort Worth; delivery is included in the price shown. Minimum order is 3 tons and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/dallas-fort-worth/sand-delivery?variant=bank-sand",
+          "imageLink": "https://mygravelguy.com/images/placeholder/sand.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 685,
+          "zonePrices": [
+            {
+              "zoneSlug": "dfw-core",
+              "zoneName": "DFW Core (Dallas & Tarrant)",
+              "referenceQuantityPrice": 685,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 270,
+              "pricePerUnit": 68.5
+            },
+            {
+              "zoneSlug": "dfw-north",
+              "zoneName": "DFW North (Collin & Denton)",
+              "referenceQuantityPrice": 710,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 290,
+              "pricePerUnit": 71
+            },
+            {
+              "zoneSlug": "dfw-outer",
+              "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+              "referenceQuantityPrice": 755,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 330,
+              "pricePerUnit": 75.5
+            }
+          ]
+        },
+        {
+          "id": "mgg-dallas-fort-worth-sand-concrete-sand",
+          "metroSlug": "dallas-fort-worth",
+          "metroName": "Dallas–Fort Worth",
+          "categorySlug": "sand",
+          "categoryName": "Sand",
+          "variantSlug": "concrete-sand",
+          "variantName": "Concrete Sand",
+          "unit": "ton",
+          "referenceQuantity": 10,
+          "title": "Concrete Sand — 10 tons delivered in Dallas–Fort Worth",
+          "description": "Coarse, washed concrete sand for concrete mix and drainage layers. Best for: concrete mix, drainage layers, paver base. Priced as a fixed 10-ton delivered load for Dallas–Fort Worth; delivery is included in the price shown. Minimum order is 3 tons and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/dallas-fort-worth/sand-delivery?variant=concrete-sand",
+          "imageLink": "https://mygravelguy.com/images/placeholder/sand.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 770,
+          "zonePrices": [
+            {
+              "zoneSlug": "dfw-core",
+              "zoneName": "DFW Core (Dallas & Tarrant)",
+              "referenceQuantityPrice": 770,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 300,
+              "pricePerUnit": 77
+            },
+            {
+              "zoneSlug": "dfw-north",
+              "zoneName": "DFW North (Collin & Denton)",
+              "referenceQuantityPrice": 795,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 315,
+              "pricePerUnit": 79.5
+            },
+            {
+              "zoneSlug": "dfw-outer",
+              "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+              "referenceQuantityPrice": 845,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 355,
+              "pricePerUnit": 84.5
+            }
+          ]
+        },
+        {
+          "id": "mgg-dallas-fort-worth-sand-play-sand",
+          "metroSlug": "dallas-fort-worth",
+          "metroName": "Dallas–Fort Worth",
+          "categorySlug": "sand",
+          "categoryName": "Sand",
+          "variantSlug": "play-sand",
+          "variantName": "Play / Playground Sand",
+          "unit": "ton",
+          "referenceQuantity": 10,
+          "title": "Play / Playground Sand — 10 tons delivered in Dallas–Fort Worth",
+          "description": "Washed, screened play sand safe for sandboxes and play areas. Best for: sandboxes, playgrounds. Priced as a fixed 10-ton delivered load for Dallas–Fort Worth; delivery is included in the price shown. Minimum order is 3 tons and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/dallas-fort-worth/sand-delivery?variant=play-sand",
+          "imageLink": "https://mygravelguy.com/images/placeholder/sand.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 905,
+          "zonePrices": [
+            {
+              "zoneSlug": "dfw-core",
+              "zoneName": "DFW Core (Dallas & Tarrant)",
+              "referenceQuantityPrice": 905,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 340,
+              "pricePerUnit": 90.5
+            },
+            {
+              "zoneSlug": "dfw-north",
+              "zoneName": "DFW North (Collin & Denton)",
+              "referenceQuantityPrice": 930,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 355,
+              "pricePerUnit": 93
+            },
+            {
+              "zoneSlug": "dfw-outer",
+              "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+              "referenceQuantityPrice": 975,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 395,
+              "pricePerUnit": 97.5
+            }
+          ]
+        },
+        {
+          "id": "mgg-dallas-fort-worth-sand-washed-sand",
+          "metroSlug": "dallas-fort-worth",
+          "metroName": "Dallas–Fort Worth",
+          "categorySlug": "sand",
+          "categoryName": "Sand",
+          "variantSlug": "washed-sand",
+          "variantName": "Washed Sand",
+          "unit": "ton",
+          "referenceQuantity": 10,
+          "title": "Washed Sand — 10 tons delivered in Dallas–Fort Worth",
+          "description": "Washed sand for masonry and general construction use. Best for: masonry, construction backfill. Priced as a fixed 10-ton delivered load for Dallas–Fort Worth; delivery is included in the price shown. Minimum order is 3 tons and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/dallas-fort-worth/sand-delivery?variant=washed-sand",
+          "imageLink": "https://mygravelguy.com/images/placeholder/sand.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 760,
+          "zonePrices": [
+            {
+              "zoneSlug": "dfw-core",
+              "zoneName": "DFW Core (Dallas & Tarrant)",
+              "referenceQuantityPrice": 760,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 295,
+              "pricePerUnit": 76
+            },
+            {
+              "zoneSlug": "dfw-north",
+              "zoneName": "DFW North (Collin & Denton)",
+              "referenceQuantityPrice": 785,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 315,
+              "pricePerUnit": 78.5
+            },
+            {
+              "zoneSlug": "dfw-outer",
+              "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+              "referenceQuantityPrice": 835,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 350,
+              "pricePerUnit": 83.5
+            }
+          ]
+        },
+        {
+          "id": "mgg-dallas-fort-worth-mulch-native-hardwood",
+          "metroSlug": "dallas-fort-worth",
+          "metroName": "Dallas–Fort Worth",
+          "categorySlug": "mulch",
+          "categoryName": "Mulch",
+          "variantSlug": "native-hardwood",
+          "variantName": "Double-Shred Native Hardwood",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "Double-Shred Native Hardwood — 10 yards delivered in Dallas–Fort Worth",
+          "description": "Double-shredded native hardwood mulch, the standard un-dyed landscape mulch. Best for: garden beds, tree rings, general landscaping. Priced as a fixed 10-yard delivered load for Dallas–Fort Worth; delivery is included in the price shown. Minimum order is 3 yards and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/dallas-fort-worth/mulch-delivery?variant=native-hardwood",
+          "imageLink": "https://mygravelguy.com/images/placeholder/mulch.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Mulch",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 575,
+          "zonePrices": [
+            {
+              "zoneSlug": "dfw-core",
+              "zoneName": "DFW Core (Dallas & Tarrant)",
+              "referenceQuantityPrice": 575,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 240,
+              "pricePerUnit": 57.5
+            },
+            {
+              "zoneSlug": "dfw-north",
+              "zoneName": "DFW North (Collin & Denton)",
+              "referenceQuantityPrice": 600,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 260,
+              "pricePerUnit": 60
+            },
+            {
+              "zoneSlug": "dfw-outer",
+              "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+              "referenceQuantityPrice": 650,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 295,
+              "pricePerUnit": 65
+            }
+          ]
+        },
+        {
+          "id": "mgg-dallas-fort-worth-mulch-black-dyed",
+          "metroSlug": "dallas-fort-worth",
+          "metroName": "Dallas–Fort Worth",
+          "categorySlug": "mulch",
+          "categoryName": "Mulch",
+          "variantSlug": "black-dyed",
+          "variantName": "Black Dyed Mulch",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "Black Dyed Mulch — 10 yards delivered in Dallas–Fort Worth",
+          "description": "Hardwood mulch dyed black for a dark, uniform bed color that holds through the season. Best for: garden beds, foundation plantings, high-contrast borders. Priced as a fixed 10-yard delivered load for Dallas–Fort Worth; delivery is included in the price shown. Minimum order is 3 yards and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/dallas-fort-worth/mulch-delivery?variant=black-dyed",
+          "imageLink": "https://mygravelguy.com/images/placeholder/mulch.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Mulch",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 620,
+          "zonePrices": [
+            {
+              "zoneSlug": "dfw-core",
+              "zoneName": "DFW Core (Dallas & Tarrant)",
+              "referenceQuantityPrice": 620,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 250,
+              "pricePerUnit": 62
+            },
+            {
+              "zoneSlug": "dfw-north",
+              "zoneName": "DFW North (Collin & Denton)",
+              "referenceQuantityPrice": 645,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 270,
+              "pricePerUnit": 64.5
+            },
+            {
+              "zoneSlug": "dfw-outer",
+              "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+              "referenceQuantityPrice": 690,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 310,
+              "pricePerUnit": 69
+            }
+          ]
+        },
+        {
+          "id": "mgg-dallas-fort-worth-mulch-brown-dyed",
+          "metroSlug": "dallas-fort-worth",
+          "metroName": "Dallas–Fort Worth",
+          "categorySlug": "mulch",
+          "categoryName": "Mulch",
+          "variantSlug": "brown-dyed",
+          "variantName": "Brown Dyed Mulch",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "Brown Dyed Mulch — 10 yards delivered in Dallas–Fort Worth",
+          "description": "Hardwood mulch dyed brown for a rich, natural-looking bed color that holds through the season. Best for: garden beds, foundation plantings, walkway borders. Priced as a fixed 10-yard delivered load for Dallas–Fort Worth; delivery is included in the price shown. Minimum order is 3 yards and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/dallas-fort-worth/mulch-delivery?variant=brown-dyed",
+          "imageLink": "https://mygravelguy.com/images/placeholder/mulch.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Mulch",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 650,
+          "zonePrices": [
+            {
+              "zoneSlug": "dfw-core",
+              "zoneName": "DFW Core (Dallas & Tarrant)",
+              "referenceQuantityPrice": 650,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 260,
+              "pricePerUnit": 65
+            },
+            {
+              "zoneSlug": "dfw-north",
+              "zoneName": "DFW North (Collin & Denton)",
+              "referenceQuantityPrice": 675,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 280,
+              "pricePerUnit": 67.5
+            },
+            {
+              "zoneSlug": "dfw-outer",
+              "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+              "referenceQuantityPrice": 725,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 320,
+              "pricePerUnit": 72.5
+            }
+          ]
+        },
+        {
+          "id": "mgg-dallas-fort-worth-mulch-dyed-red",
+          "metroSlug": "dallas-fort-worth",
+          "metroName": "Dallas–Fort Worth",
+          "categorySlug": "mulch",
+          "categoryName": "Mulch",
+          "variantSlug": "dyed-red",
+          "variantName": "Red Dyed Mulch",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "Red Dyed Mulch — 10 yards delivered in Dallas–Fort Worth",
+          "description": "Hardwood mulch dyed red/brown, a popular color choice alongside black and natural. Best for: flower beds, curb appeal refresh. Priced as a fixed 10-yard delivered load for Dallas–Fort Worth; delivery is included in the price shown. Minimum order is 3 yards and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/dallas-fort-worth/mulch-delivery?variant=dyed-red",
+          "imageLink": "https://mygravelguy.com/images/placeholder/mulch.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Mulch",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 630,
+          "zonePrices": [
+            {
+              "zoneSlug": "dfw-core",
+              "zoneName": "DFW Core (Dallas & Tarrant)",
+              "referenceQuantityPrice": 630,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 255,
+              "pricePerUnit": 63
+            },
+            {
+              "zoneSlug": "dfw-north",
+              "zoneName": "DFW North (Collin & Denton)",
+              "referenceQuantityPrice": 655,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 275,
+              "pricePerUnit": 65.5
+            },
+            {
+              "zoneSlug": "dfw-outer",
+              "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+              "referenceQuantityPrice": 700,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 310,
+              "pricePerUnit": 70
+            }
+          ]
+        },
+        {
+          "id": "mgg-dallas-fort-worth-mulch-cedar",
+          "metroSlug": "dallas-fort-worth",
+          "metroName": "Dallas–Fort Worth",
+          "categorySlug": "mulch",
+          "categoryName": "Mulch",
+          "variantSlug": "cedar",
+          "variantName": "Cedar Mulch",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "Cedar Mulch — 10 yards delivered in Dallas–Fort Worth",
+          "description": "Shredded cedar mulch with a natural reddish-brown color and characteristic cedar scent. Best for: garden beds, play areas, pest-averse plantings. Priced as a fixed 10-yard delivered load for Dallas–Fort Worth; delivery is included in the price shown. Minimum order is 3 yards and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/dallas-fort-worth/mulch-delivery?variant=cedar",
+          "imageLink": "https://mygravelguy.com/images/placeholder/mulch.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Mulch",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 765,
+          "zonePrices": [
+            {
+              "zoneSlug": "dfw-core",
+              "zoneName": "DFW Core (Dallas & Tarrant)",
+              "referenceQuantityPrice": 765,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 295,
+              "pricePerUnit": 76.5
+            },
+            {
+              "zoneSlug": "dfw-north",
+              "zoneName": "DFW North (Collin & Denton)",
+              "referenceQuantityPrice": 790,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 315,
+              "pricePerUnit": 79
+            },
+            {
+              "zoneSlug": "dfw-outer",
+              "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+              "referenceQuantityPrice": 840,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 355,
+              "pricePerUnit": 84
+            }
+          ]
+        },
+        {
+          "id": "mgg-dallas-fort-worth-mulch-pine-bark",
+          "metroSlug": "dallas-fort-worth",
+          "metroName": "Dallas–Fort Worth",
+          "categorySlug": "mulch",
+          "categoryName": "Mulch",
+          "variantSlug": "pine-bark",
+          "variantName": "Pine Bark Mulch",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "Pine Bark Mulch — 10 yards delivered in Dallas–Fort Worth",
+          "description": "Chunky pine bark mulch for a coarser, longer-lasting ground cover. Best for: shrub beds, erosion-prone slopes. Priced as a fixed 10-yard delivered load for Dallas–Fort Worth; delivery is included in the price shown. Minimum order is 3 yards and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/dallas-fort-worth/mulch-delivery?variant=pine-bark",
+          "imageLink": "https://mygravelguy.com/images/placeholder/mulch.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Mulch",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 725,
+          "zonePrices": [
+            {
+              "zoneSlug": "dfw-core",
+              "zoneName": "DFW Core (Dallas & Tarrant)",
+              "referenceQuantityPrice": 725,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 285,
+              "pricePerUnit": 72.5
+            },
+            {
+              "zoneSlug": "dfw-north",
+              "zoneName": "DFW North (Collin & Denton)",
+              "referenceQuantityPrice": 750,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 305,
+              "pricePerUnit": 75
+            },
+            {
+              "zoneSlug": "dfw-outer",
+              "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+              "referenceQuantityPrice": 800,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 340,
+              "pricePerUnit": 80
+            }
+          ]
+        },
+        {
+          "id": "mgg-dallas-fort-worth-mulch-playground-mulch",
+          "metroSlug": "dallas-fort-worth",
+          "metroName": "Dallas–Fort Worth",
+          "categorySlug": "mulch",
+          "categoryName": "Mulch",
+          "variantSlug": "playground-mulch",
+          "variantName": "Playground Mulch",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "Playground Mulch — 10 yards delivered in Dallas–Fort Worth",
+          "description": "Engineered wood fiber mulch for fall-zone ground cover under play equipment. Best for: playgrounds, school/park projects. Priced as a fixed 10-yard delivered load for Dallas–Fort Worth; delivery is included in the price shown. Minimum order is 3 yards and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/dallas-fort-worth/mulch-delivery?variant=playground-mulch",
+          "imageLink": "https://mygravelguy.com/images/placeholder/mulch.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Mulch",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 620,
+          "zonePrices": [
+            {
+              "zoneSlug": "dfw-core",
+              "zoneName": "DFW Core (Dallas & Tarrant)",
+              "referenceQuantityPrice": 620,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 250,
+              "pricePerUnit": 62
+            },
+            {
+              "zoneSlug": "dfw-north",
+              "zoneName": "DFW North (Collin & Denton)",
+              "referenceQuantityPrice": 645,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 270,
+              "pricePerUnit": 64.5
+            },
+            {
+              "zoneSlug": "dfw-outer",
+              "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+              "referenceQuantityPrice": 690,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 310,
+              "pricePerUnit": 69
+            }
+          ]
+        },
+        {
+          "id": "mgg-dallas-fort-worth-soil-sandy-loam",
+          "metroSlug": "dallas-fort-worth",
+          "metroName": "Dallas–Fort Worth",
+          "categorySlug": "soil",
+          "categoryName": "Soil",
+          "variantSlug": "sandy-loam",
+          "variantName": "Sandy Loam Topsoil",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "Sandy Loam Topsoil — 10 yards delivered in Dallas–Fort Worth",
+          "description": "Screened sandy loam topsoil blended for good drainage and general planting over DFW's heavy clay. Best for: new lawns, grading, general planting. Priced as a fixed 10-yard delivered load for Dallas–Fort Worth; delivery is included in the price shown. Minimum order is 3 yards and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/dallas-fort-worth/soil-delivery?variant=sandy-loam",
+          "imageLink": "https://mygravelguy.com/images/placeholder/soil.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Compost & Soil",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 620,
+          "zonePrices": [
+            {
+              "zoneSlug": "dfw-core",
+              "zoneName": "DFW Core (Dallas & Tarrant)",
+              "referenceQuantityPrice": 620,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 250,
+              "pricePerUnit": 62
+            },
+            {
+              "zoneSlug": "dfw-north",
+              "zoneName": "DFW North (Collin & Denton)",
+              "referenceQuantityPrice": 645,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 270,
+              "pricePerUnit": 64.5
+            },
+            {
+              "zoneSlug": "dfw-outer",
+              "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+              "referenceQuantityPrice": 690,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 310,
+              "pricePerUnit": 69
+            }
+          ]
+        },
+        {
+          "id": "mgg-dallas-fort-worth-soil-garden-mix",
+          "metroSlug": "dallas-fort-worth",
+          "metroName": "Dallas–Fort Worth",
+          "categorySlug": "soil",
+          "categoryName": "Soil",
+          "variantSlug": "garden-mix",
+          "variantName": "Garden / Raised-Bed Mix",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "Garden / Raised-Bed Mix — 10 yards delivered in Dallas–Fort Worth",
+          "description": "Topsoil blended with compost for raised beds and vegetable gardens. Best for: raised beds, vegetable gardens, planter fill. Priced as a fixed 10-yard delivered load for Dallas–Fort Worth; delivery is included in the price shown. Minimum order is 3 yards and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/dallas-fort-worth/soil-delivery?variant=garden-mix",
+          "imageLink": "https://mygravelguy.com/images/placeholder/soil.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Compost & Soil",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 805,
+          "zonePrices": [
+            {
+              "zoneSlug": "dfw-core",
+              "zoneName": "DFW Core (Dallas & Tarrant)",
+              "referenceQuantityPrice": 805,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 310,
+              "pricePerUnit": 80.5
+            },
+            {
+              "zoneSlug": "dfw-north",
+              "zoneName": "DFW North (Collin & Denton)",
+              "referenceQuantityPrice": 830,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 325,
+              "pricePerUnit": 83
+            },
+            {
+              "zoneSlug": "dfw-outer",
+              "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+              "referenceQuantityPrice": 880,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 365,
+              "pricePerUnit": 88
+            }
+          ]
+        },
+        {
+          "id": "mgg-dallas-fort-worth-soil-compost",
+          "metroSlug": "dallas-fort-worth",
+          "metroName": "Dallas–Fort Worth",
+          "categorySlug": "soil",
+          "categoryName": "Soil",
+          "variantSlug": "compost",
+          "variantName": "Compost",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "Compost — 10 yards delivered in Dallas–Fort Worth",
+          "description": "Decomposed organic matter used to amend and enrich existing soil. Best for: soil amendment, topdressing, garden beds. Priced as a fixed 10-yard delivered load for Dallas–Fort Worth; delivery is included in the price shown. Minimum order is 3 yards and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/dallas-fort-worth/soil-delivery?variant=compost",
+          "imageLink": "https://mygravelguy.com/images/placeholder/soil.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Compost & Soil",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 700,
+          "zonePrices": [
+            {
+              "zoneSlug": "dfw-core",
+              "zoneName": "DFW Core (Dallas & Tarrant)",
+              "referenceQuantityPrice": 700,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 275,
+              "pricePerUnit": 70
+            },
+            {
+              "zoneSlug": "dfw-north",
+              "zoneName": "DFW North (Collin & Denton)",
+              "referenceQuantityPrice": 725,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 295,
+              "pricePerUnit": 72.5
+            },
+            {
+              "zoneSlug": "dfw-outer",
+              "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+              "referenceQuantityPrice": 770,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 330,
+              "pricePerUnit": 77
+            }
+          ]
+        },
+        {
+          "id": "mgg-dallas-fort-worth-soil-select-fill",
+          "metroSlug": "dallas-fort-worth",
+          "metroName": "Dallas–Fort Worth",
+          "categorySlug": "soil",
+          "categoryName": "Soil",
+          "variantSlug": "select-fill",
+          "variantName": "Select Fill Dirt",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "Select Fill Dirt — 10 yards delivered in Dallas–Fort Worth",
+          "description": "Clean, low-organic fill dirt used to raise or level grade. Best for: grading, fill, low spots. Priced as a fixed 10-yard delivered load for Dallas–Fort Worth; delivery is included in the price shown. Minimum order is 3 yards and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/dallas-fort-worth/soil-delivery?variant=select-fill",
+          "imageLink": "https://mygravelguy.com/images/placeholder/soil.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Compost & Soil",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 440,
+          "zonePrices": [
+            {
+              "zoneSlug": "dfw-core",
+              "zoneName": "DFW Core (Dallas & Tarrant)",
+              "referenceQuantityPrice": 440,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 200,
+              "pricePerUnit": 44
+            },
+            {
+              "zoneSlug": "dfw-north",
+              "zoneName": "DFW North (Collin & Denton)",
+              "referenceQuantityPrice": 460,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 215,
+              "pricePerUnit": 46
+            },
+            {
+              "zoneSlug": "dfw-outer",
+              "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
+              "referenceQuantityPrice": 510,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 255,
+              "pricePerUnit": 51
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "long-island",
+      "name": "Long Island",
+      "status": "pilot",
+      "priceBookConfirmed": false,
+      "zones": [
+        {
+          "slug": "li-core",
+          "name": "Core (Center Moriches area)",
+          "zips": [
+            "11934",
+            "11940",
+            "11949",
+            "11955",
+            "11950",
+            "11951",
+            "11967",
+            "11941"
+          ],
+          "minUnits": 1
+        },
+        {
+          "slug": "li-west-hamptons",
+          "name": "West Hamptons",
+          "zips": [
+            "11960",
+            "11972",
+            "11977",
+            "11978",
+            "11959",
+            "11942"
+          ],
+          "minUnits": 3
+        },
+        {
+          "slug": "li-brookhaven",
+          "name": "Brookhaven",
+          "zips": [
+            "11772",
+            "11713",
+            "11719",
+            "11980",
+            "11961",
+            "11763",
+            "11727",
+            "11742",
+            "11953",
+            "11738",
+            "11720",
+            "11784"
+          ],
+          "minUnits": 3
+        },
+        {
+          "slug": "li-east-end",
+          "name": "East End",
+          "zips": [
+            "11946",
+            "11968",
+            "11976",
+            "11963",
+            "11932",
+            "11937",
+            "11901",
+            "11933",
+            "11947",
+            "11952",
+            "11948",
+            "11956",
+            "11931",
+            "11935"
+          ],
+          "minUnits": 3
+        },
+        {
+          "slug": "li-north-shore",
+          "name": "North Shore",
+          "zips": [
+            "11792",
+            "11786",
+            "11778",
+            "11789"
+          ],
+          "minUnits": 5
+        }
+      ],
+      "products": [
+        {
+          "id": "mgg-long-island-gravel-pea-gravel-38",
+          "metroSlug": "long-island",
+          "metroName": "Long Island",
+          "categorySlug": "gravel",
+          "categoryName": "Gravel",
+          "variantSlug": "pea-gravel-38",
+          "variantName": "3/8\" Pea Gravel",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "3/8\" Pea Gravel — 10 yards delivered in Long Island",
+          "description": "Small, smooth rounded stone commonly used for walkways, patios and drainage. Best for: Walkways, Patios, French drains. Priced as a fixed 10-yard delivered load for Long Island; delivery is included in the price shown. Minimum order is 1 yard and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/long-island/gravel-delivery?variant=pea-gravel-38",
+          "imageLink": "https://mygravelguy.com/images/placeholder/gravel.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 1000,
+          "zonePrices": [
+            {
+              "zoneSlug": "li-core",
+              "zoneName": "Core (Center Moriches area)",
+              "referenceQuantityPrice": 1000,
+              "minOrderQuantity": 1,
+              "minOrderPrice": 140,
+              "pricePerUnit": 100
+            },
+            {
+              "zoneSlug": "li-west-hamptons",
+              "zoneName": "West Hamptons",
+              "referenceQuantityPrice": 1070,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 375,
+              "pricePerUnit": 107
+            },
+            {
+              "zoneSlug": "li-brookhaven",
+              "zoneName": "Brookhaven",
+              "referenceQuantityPrice": 1070,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 375,
+              "pricePerUnit": 107
+            },
+            {
+              "zoneSlug": "li-east-end",
+              "zoneName": "East End",
+              "referenceQuantityPrice": 1115,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 410,
+              "pricePerUnit": 111.5
+            },
+            {
+              "zoneSlug": "li-north-shore",
+              "zoneName": "North Shore",
+              "referenceQuantityPrice": 1160,
+              "minOrderQuantity": 5,
+              "minOrderPrice": 625,
+              "pricePerUnit": 116
+            }
+          ]
+        },
+        {
+          "id": "mgg-long-island-gravel-washed-gravel-34",
+          "metroSlug": "long-island",
+          "metroName": "Long Island",
+          "categorySlug": "gravel",
+          "categoryName": "Gravel",
+          "variantSlug": "washed-gravel-34",
+          "variantName": "3/4\" Washed Gravel",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "3/4\" Washed Gravel — 10 yards delivered in Long Island",
+          "description": "Washed, angular 3/4\" stone used as a drainage and base material. Best for: Drainage, Driveways, Base layer. Priced as a fixed 10-yard delivered load for Long Island; delivery is included in the price shown. Minimum order is 1 yard and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/long-island/gravel-delivery?variant=washed-gravel-34",
+          "imageLink": "https://mygravelguy.com/images/placeholder/gravel.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 1000,
+          "zonePrices": [
+            {
+              "zoneSlug": "li-core",
+              "zoneName": "Core (Center Moriches area)",
+              "referenceQuantityPrice": 1000,
+              "minOrderQuantity": 1,
+              "minOrderPrice": 140,
+              "pricePerUnit": 100
+            },
+            {
+              "zoneSlug": "li-west-hamptons",
+              "zoneName": "West Hamptons",
+              "referenceQuantityPrice": 1070,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 375,
+              "pricePerUnit": 107
+            },
+            {
+              "zoneSlug": "li-brookhaven",
+              "zoneName": "Brookhaven",
+              "referenceQuantityPrice": 1070,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 375,
+              "pricePerUnit": 107
+            },
+            {
+              "zoneSlug": "li-east-end",
+              "zoneName": "East End",
+              "referenceQuantityPrice": 1115,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 410,
+              "pricePerUnit": 111.5
+            },
+            {
+              "zoneSlug": "li-north-shore",
+              "zoneName": "North Shore",
+              "referenceQuantityPrice": 1160,
+              "minOrderQuantity": 5,
+              "minOrderPrice": 625,
+              "pricePerUnit": 116
+            }
+          ]
+        },
+        {
+          "id": "mgg-long-island-gravel-bluestone-34",
+          "metroSlug": "long-island",
+          "metroName": "Long Island",
+          "categorySlug": "gravel",
+          "categoryName": "Gravel",
+          "variantSlug": "bluestone-34",
+          "variantName": "3/4\" Bluestone",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "3/4\" Bluestone — 10 yards delivered in Long Island",
+          "description": "Crushed blue-gray traprock in the 3/4\" range, a common Long Island driveway stone. Best for: Driveways, Parking areas, Base layer. Priced as a fixed 10-yard delivered load for Long Island; delivery is included in the price shown. Minimum order is 1 yard and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/long-island/gravel-delivery?variant=bluestone-34",
+          "imageLink": "https://mygravelguy.com/images/placeholder/gravel.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 1165,
+          "zonePrices": [
+            {
+              "zoneSlug": "li-core",
+              "zoneName": "Core (Center Moriches area)",
+              "referenceQuantityPrice": 1165,
+              "minOrderQuantity": 1,
+              "minOrderPrice": 155,
+              "pricePerUnit": 116.5
+            },
+            {
+              "zoneSlug": "li-west-hamptons",
+              "zoneName": "West Hamptons",
+              "referenceQuantityPrice": 1235,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 425,
+              "pricePerUnit": 123.5
+            },
+            {
+              "zoneSlug": "li-brookhaven",
+              "zoneName": "Brookhaven",
+              "referenceQuantityPrice": 1235,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 425,
+              "pricePerUnit": 123.5
+            },
+            {
+              "zoneSlug": "li-east-end",
+              "zoneName": "East End",
+              "referenceQuantityPrice": 1275,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 455,
+              "pricePerUnit": 127.5
+            },
+            {
+              "zoneSlug": "li-north-shore",
+              "zoneName": "North Shore",
+              "referenceQuantityPrice": 1320,
+              "minOrderQuantity": 5,
+              "minOrderPrice": 710,
+              "pricePerUnit": 132
+            }
+          ]
+        },
+        {
+          "id": "mgg-long-island-gravel-bluestone-38",
+          "metroSlug": "long-island",
+          "metroName": "Long Island",
+          "categorySlug": "gravel",
+          "categoryName": "Gravel",
+          "variantSlug": "bluestone-38",
+          "variantName": "3/8\" Bluestone",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "3/8\" Bluestone — 10 yards delivered in Long Island",
+          "description": "Crushed blue-gray traprock in a finer 3/8\" size for a tighter walking surface. Best for: Walkways, Patios, Fine driveway topping. Priced as a fixed 10-yard delivered load for Long Island; delivery is included in the price shown. Minimum order is 1 yard and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/long-island/gravel-delivery?variant=bluestone-38",
+          "imageLink": "https://mygravelguy.com/images/placeholder/gravel.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 1165,
+          "zonePrices": [
+            {
+              "zoneSlug": "li-core",
+              "zoneName": "Core (Center Moriches area)",
+              "referenceQuantityPrice": 1165,
+              "minOrderQuantity": 1,
+              "minOrderPrice": 155,
+              "pricePerUnit": 116.5
+            },
+            {
+              "zoneSlug": "li-west-hamptons",
+              "zoneName": "West Hamptons",
+              "referenceQuantityPrice": 1235,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 425,
+              "pricePerUnit": 123.5
+            },
+            {
+              "zoneSlug": "li-brookhaven",
+              "zoneName": "Brookhaven",
+              "referenceQuantityPrice": 1235,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 425,
+              "pricePerUnit": 123.5
+            },
+            {
+              "zoneSlug": "li-east-end",
+              "zoneName": "East End",
+              "referenceQuantityPrice": 1275,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 455,
+              "pricePerUnit": 127.5
+            },
+            {
+              "zoneSlug": "li-north-shore",
+              "zoneName": "North Shore",
+              "referenceQuantityPrice": 1320,
+              "minOrderQuantity": 5,
+              "minOrderPrice": 710,
+              "pricePerUnit": 132
+            }
+          ]
+        },
+        {
+          "id": "mgg-long-island-gravel-whitestone-34",
+          "metroSlug": "long-island",
+          "metroName": "Long Island",
+          "categorySlug": "gravel",
+          "categoryName": "Gravel",
+          "variantSlug": "whitestone-34",
+          "variantName": "3/4\" Whitestone",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "3/4\" Whitestone — 10 yards delivered in Long Island",
+          "description": "Crushed light-colored stone in the 3/4\" range used as a decorative driveway topping. Best for: Driveways, Decorative landscaping, Parking areas. Priced as a fixed 10-yard delivered load for Long Island; delivery is included in the price shown. Minimum order is 1 yard and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/long-island/gravel-delivery?variant=whitestone-34",
+          "imageLink": "https://mygravelguy.com/images/placeholder/gravel.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 1625,
+          "zonePrices": [
+            {
+              "zoneSlug": "li-core",
+              "zoneName": "Core (Center Moriches area)",
+              "referenceQuantityPrice": 1625,
+              "minOrderQuantity": 1,
+              "minOrderPrice": 200,
+              "pricePerUnit": 162.5
+            },
+            {
+              "zoneSlug": "li-west-hamptons",
+              "zoneName": "West Hamptons",
+              "referenceQuantityPrice": 1695,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 565,
+              "pricePerUnit": 169.5
+            },
+            {
+              "zoneSlug": "li-brookhaven",
+              "zoneName": "Brookhaven",
+              "referenceQuantityPrice": 1695,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 565,
+              "pricePerUnit": 169.5
+            },
+            {
+              "zoneSlug": "li-east-end",
+              "zoneName": "East End",
+              "referenceQuantityPrice": 1740,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 595,
+              "pricePerUnit": 174
+            },
+            {
+              "zoneSlug": "li-north-shore",
+              "zoneName": "North Shore",
+              "referenceQuantityPrice": 1785,
+              "minOrderQuantity": 5,
+              "minOrderPrice": 940,
+              "pricePerUnit": 178.5
+            }
+          ]
+        },
+        {
+          "id": "mgg-long-island-gravel-rca-state",
+          "metroSlug": "long-island",
+          "metroName": "Long Island",
+          "categorySlug": "gravel",
+          "categoryName": "Gravel",
+          "variantSlug": "rca-state",
+          "variantName": "State-Grade RCA (driveway base)",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "State-Grade RCA (driveway base) — 10 yards delivered in Long Island",
+          "description": "Recycled concrete aggregate meeting NYSDOT base specifications. Best for: Driveway base, Road base, Compacted surfaces. Priced as a fixed 10-yard delivered load for Long Island; delivery is included in the price shown. Minimum order is 1 yard and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/long-island/gravel-delivery?variant=rca-state",
+          "imageLink": "https://mygravelguy.com/images/placeholder/gravel.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 400,
+          "zonePrices": [
+            {
+              "zoneSlug": "li-core",
+              "zoneName": "Core (Center Moriches area)",
+              "referenceQuantityPrice": 400,
+              "minOrderQuantity": 1,
+              "minOrderPrice": 80,
+              "pricePerUnit": 40
+            },
+            {
+              "zoneSlug": "li-west-hamptons",
+              "zoneName": "West Hamptons",
+              "referenceQuantityPrice": 470,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 195,
+              "pricePerUnit": 47
+            },
+            {
+              "zoneSlug": "li-brookhaven",
+              "zoneName": "Brookhaven",
+              "referenceQuantityPrice": 470,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 195,
+              "pricePerUnit": 47
+            },
+            {
+              "zoneSlug": "li-east-end",
+              "zoneName": "East End",
+              "referenceQuantityPrice": 515,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 230,
+              "pricePerUnit": 51.5
+            },
+            {
+              "zoneSlug": "li-north-shore",
+              "zoneName": "North Shore",
+              "referenceQuantityPrice": 560,
+              "minOrderQuantity": 5,
+              "minOrderPrice": 325,
+              "pricePerUnit": 56
+            }
+          ]
+        },
+        {
+          "id": "mgg-long-island-sand-fine-sand",
+          "metroSlug": "long-island",
+          "metroName": "Long Island",
+          "categorySlug": "sand",
+          "categoryName": "Sand",
+          "variantSlug": "fine-sand",
+          "variantName": "Fine Sand",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "Fine Sand — 10 yards delivered in Long Island",
+          "description": "Fine-graded sand used for leveling, play areas and light fill. Best for: Paver leveling, Play areas, Fill. Priced as a fixed 10-yard delivered load for Long Island; delivery is included in the price shown. Minimum order is 1 yard and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/long-island/sand-delivery?variant=fine-sand",
+          "imageLink": "https://mygravelguy.com/images/placeholder/sand.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 690,
+          "zonePrices": [
+            {
+              "zoneSlug": "li-core",
+              "zoneName": "Core (Center Moriches area)",
+              "referenceQuantityPrice": 690,
+              "minOrderQuantity": 1,
+              "minOrderPrice": 110,
+              "pricePerUnit": 69
+            },
+            {
+              "zoneSlug": "li-west-hamptons",
+              "zoneName": "West Hamptons",
+              "referenceQuantityPrice": 760,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 285,
+              "pricePerUnit": 76
+            },
+            {
+              "zoneSlug": "li-brookhaven",
+              "zoneName": "Brookhaven",
+              "referenceQuantityPrice": 760,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 285,
+              "pricePerUnit": 76
+            },
+            {
+              "zoneSlug": "li-east-end",
+              "zoneName": "East End",
+              "referenceQuantityPrice": 800,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 315,
+              "pricePerUnit": 80
+            },
+            {
+              "zoneSlug": "li-north-shore",
+              "zoneName": "North Shore",
+              "referenceQuantityPrice": 845,
+              "minOrderQuantity": 5,
+              "minOrderPrice": 470,
+              "pricePerUnit": 84.5
+            }
+          ]
+        },
+        {
+          "id": "mgg-long-island-sand-concrete-sand",
+          "metroSlug": "long-island",
+          "metroName": "Long Island",
+          "categorySlug": "sand",
+          "categoryName": "Sand",
+          "variantSlug": "concrete-sand",
+          "variantName": "State Concrete Sand",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "State Concrete Sand — 10 yards delivered in Long Island",
+          "description": "Coarse, NYSDOT-spec concrete sand used as a mixing and bedding sand. Best for: Concrete mix, Paver base, Pipe bedding. Priced as a fixed 10-yard delivered load for Long Island; delivery is included in the price shown. Minimum order is 1 yard and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/long-island/sand-delivery?variant=concrete-sand",
+          "imageLink": "https://mygravelguy.com/images/placeholder/sand.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 690,
+          "zonePrices": [
+            {
+              "zoneSlug": "li-core",
+              "zoneName": "Core (Center Moriches area)",
+              "referenceQuantityPrice": 690,
+              "minOrderQuantity": 1,
+              "minOrderPrice": 110,
+              "pricePerUnit": 69
+            },
+            {
+              "zoneSlug": "li-west-hamptons",
+              "zoneName": "West Hamptons",
+              "referenceQuantityPrice": 760,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 285,
+              "pricePerUnit": 76
+            },
+            {
+              "zoneSlug": "li-brookhaven",
+              "zoneName": "Brookhaven",
+              "referenceQuantityPrice": 760,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 285,
+              "pricePerUnit": 76
+            },
+            {
+              "zoneSlug": "li-east-end",
+              "zoneName": "East End",
+              "referenceQuantityPrice": 800,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 315,
+              "pricePerUnit": 80
+            },
+            {
+              "zoneSlug": "li-north-shore",
+              "zoneName": "North Shore",
+              "referenceQuantityPrice": 845,
+              "minOrderQuantity": 5,
+              "minOrderPrice": 470,
+              "pricePerUnit": 84.5
+            }
+          ]
+        },
+        {
+          "id": "mgg-long-island-mulch-black-mulch",
+          "metroSlug": "long-island",
+          "metroName": "Long Island",
+          "categorySlug": "mulch",
+          "categoryName": "Mulch",
+          "variantSlug": "black-mulch",
+          "variantName": "Black Mulch",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "Black Mulch — 10 yards delivered in Long Island",
+          "description": "Hardwood mulch dyed black for a dark, uniform bed color that holds through the season. Best for: Garden beds, Foundation plantings, High-contrast borders. Priced as a fixed 10-yard delivered load for Long Island; delivery is included in the price shown. Minimum order is 1 yard and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/long-island/mulch-delivery?variant=black-mulch",
+          "imageLink": "https://mygravelguy.com/images/placeholder/mulch.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Mulch",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 440,
+          "zonePrices": [
+            {
+              "zoneSlug": "li-core",
+              "zoneName": "Core (Center Moriches area)",
+              "referenceQuantityPrice": 440,
+              "minOrderQuantity": 1,
+              "minOrderPrice": 85,
+              "pricePerUnit": 44
+            },
+            {
+              "zoneSlug": "li-west-hamptons",
+              "zoneName": "West Hamptons",
+              "referenceQuantityPrice": 510,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 210,
+              "pricePerUnit": 51
+            },
+            {
+              "zoneSlug": "li-brookhaven",
+              "zoneName": "Brookhaven",
+              "referenceQuantityPrice": 510,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 210,
+              "pricePerUnit": 51
+            },
+            {
+              "zoneSlug": "li-east-end",
+              "zoneName": "East End",
+              "referenceQuantityPrice": 550,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 240,
+              "pricePerUnit": 55
+            },
+            {
+              "zoneSlug": "li-north-shore",
+              "zoneName": "North Shore",
+              "referenceQuantityPrice": 595,
+              "minOrderQuantity": 5,
+              "minOrderPrice": 345,
+              "pricePerUnit": 59.5
+            }
+          ]
+        },
+        {
+          "id": "mgg-long-island-mulch-dark-natural-mulch",
+          "metroSlug": "long-island",
+          "metroName": "Long Island",
+          "categorySlug": "mulch",
+          "categoryName": "Mulch",
+          "variantSlug": "dark-natural-mulch",
+          "variantName": "Dark Natural Mulch",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "Dark Natural Mulch — 10 yards delivered in Long Island",
+          "description": "Un-dyed shredded hardwood mulch that weathers to a dark natural brown. Best for: Garden beds, Tree rings, General landscaping. Priced as a fixed 10-yard delivered load for Long Island; delivery is included in the price shown. Minimum order is 1 yard and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/long-island/mulch-delivery?variant=dark-natural-mulch",
+          "imageLink": "https://mygravelguy.com/images/placeholder/mulch.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Mulch",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 300,
+          "zonePrices": [
+            {
+              "zoneSlug": "li-core",
+              "zoneName": "Core (Center Moriches area)",
+              "referenceQuantityPrice": 300,
+              "minOrderQuantity": 1,
+              "minOrderPrice": 70,
+              "pricePerUnit": 30
+            },
+            {
+              "zoneSlug": "li-west-hamptons",
+              "zoneName": "West Hamptons",
+              "referenceQuantityPrice": 370,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 165,
+              "pricePerUnit": 37
+            },
+            {
+              "zoneSlug": "li-brookhaven",
+              "zoneName": "Brookhaven",
+              "referenceQuantityPrice": 370,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 165,
+              "pricePerUnit": 37
+            },
+            {
+              "zoneSlug": "li-east-end",
+              "zoneName": "East End",
+              "referenceQuantityPrice": 415,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 200,
+              "pricePerUnit": 41.5
+            },
+            {
+              "zoneSlug": "li-north-shore",
+              "zoneName": "North Shore",
+              "referenceQuantityPrice": 460,
+              "minOrderQuantity": 5,
+              "minOrderPrice": 275,
+              "pricePerUnit": 46
+            }
+          ]
+        },
+        {
+          "id": "mgg-long-island-mulch-chocolate-mulch",
+          "metroSlug": "long-island",
+          "metroName": "Long Island",
+          "categorySlug": "mulch",
+          "categoryName": "Mulch",
+          "variantSlug": "chocolate-mulch",
+          "variantName": "Chocolate Mulch",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "Chocolate Mulch — 10 yards delivered in Long Island",
+          "description": "Hardwood mulch dyed a deep chocolate brown for a rich, natural-looking bed color. Best for: Garden beds, Foundation plantings, Walkway borders. Priced as a fixed 10-yard delivered load for Long Island; delivery is included in the price shown. Minimum order is 1 yard and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/long-island/mulch-delivery?variant=chocolate-mulch",
+          "imageLink": "https://mygravelguy.com/images/placeholder/mulch.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Mulch",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 440,
+          "zonePrices": [
+            {
+              "zoneSlug": "li-core",
+              "zoneName": "Core (Center Moriches area)",
+              "referenceQuantityPrice": 440,
+              "minOrderQuantity": 1,
+              "minOrderPrice": 85,
+              "pricePerUnit": 44
+            },
+            {
+              "zoneSlug": "li-west-hamptons",
+              "zoneName": "West Hamptons",
+              "referenceQuantityPrice": 510,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 210,
+              "pricePerUnit": 51
+            },
+            {
+              "zoneSlug": "li-brookhaven",
+              "zoneName": "Brookhaven",
+              "referenceQuantityPrice": 510,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 210,
+              "pricePerUnit": 51
+            },
+            {
+              "zoneSlug": "li-east-end",
+              "zoneName": "East End",
+              "referenceQuantityPrice": 550,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 240,
+              "pricePerUnit": 55
+            },
+            {
+              "zoneSlug": "li-north-shore",
+              "zoneName": "North Shore",
+              "referenceQuantityPrice": 595,
+              "minOrderQuantity": 5,
+              "minOrderPrice": 345,
+              "pricePerUnit": 59.5
+            }
+          ]
+        },
+        {
+          "id": "mgg-long-island-mulch-red-mulch",
+          "metroSlug": "long-island",
+          "metroName": "Long Island",
+          "categorySlug": "mulch",
+          "categoryName": "Mulch",
+          "variantSlug": "red-mulch",
+          "variantName": "Red Mulch",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "Red Mulch — 10 yards delivered in Long Island",
+          "description": "Hardwood mulch dyed red for a bold bed color that holds through the season. Best for: Garden beds, Foundation plantings, Accent borders. Priced as a fixed 10-yard delivered load for Long Island; delivery is included in the price shown. Minimum order is 1 yard and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/long-island/mulch-delivery?variant=red-mulch",
+          "imageLink": "https://mygravelguy.com/images/placeholder/mulch.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Mulch",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 500,
+          "zonePrices": [
+            {
+              "zoneSlug": "li-core",
+              "zoneName": "Core (Center Moriches area)",
+              "referenceQuantityPrice": 500,
+              "minOrderQuantity": 1,
+              "minOrderPrice": 90,
+              "pricePerUnit": 50
+            },
+            {
+              "zoneSlug": "li-west-hamptons",
+              "zoneName": "West Hamptons",
+              "referenceQuantityPrice": 570,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 225,
+              "pricePerUnit": 57
+            },
+            {
+              "zoneSlug": "li-brookhaven",
+              "zoneName": "Brookhaven",
+              "referenceQuantityPrice": 570,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 225,
+              "pricePerUnit": 57
+            },
+            {
+              "zoneSlug": "li-east-end",
+              "zoneName": "East End",
+              "referenceQuantityPrice": 615,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 260,
+              "pricePerUnit": 61.5
+            },
+            {
+              "zoneSlug": "li-north-shore",
+              "zoneName": "North Shore",
+              "referenceQuantityPrice": 660,
+              "minOrderQuantity": 5,
+              "minOrderPrice": 375,
+              "pricePerUnit": 66
+            }
+          ]
+        },
+        {
+          "id": "mgg-long-island-soil-screened-topsoil",
+          "metroSlug": "long-island",
+          "metroName": "Long Island",
+          "categorySlug": "soil",
+          "categoryName": "Soil",
+          "variantSlug": "screened-topsoil",
+          "variantName": "Screened Organic Topsoil",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "Screened Organic Topsoil — 10 yards delivered in Long Island",
+          "description": "Screened topsoil with organic content, suited for new lawns and general planting. Best for: New lawns, Grading, General planting. Priced as a fixed 10-yard delivered load for Long Island; delivery is included in the price shown. Minimum order is 1 yard and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/long-island/soil-delivery?variant=screened-topsoil",
+          "imageLink": "https://mygravelguy.com/images/placeholder/soil.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Compost & Soil",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 365,
+          "zonePrices": [
+            {
+              "zoneSlug": "li-core",
+              "zoneName": "Core (Center Moriches area)",
+              "referenceQuantityPrice": 365,
+              "minOrderQuantity": 1,
+              "minOrderPrice": 75,
+              "pricePerUnit": 36.5
+            },
+            {
+              "zoneSlug": "li-west-hamptons",
+              "zoneName": "West Hamptons",
+              "referenceQuantityPrice": 435,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 185,
+              "pricePerUnit": 43.5
+            },
+            {
+              "zoneSlug": "li-brookhaven",
+              "zoneName": "Brookhaven",
+              "referenceQuantityPrice": 435,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 185,
+              "pricePerUnit": 43.5
+            },
+            {
+              "zoneSlug": "li-east-end",
+              "zoneName": "East End",
+              "referenceQuantityPrice": 475,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 215,
+              "pricePerUnit": 47.5
+            },
+            {
+              "zoneSlug": "li-north-shore",
+              "zoneName": "North Shore",
+              "referenceQuantityPrice": 520,
+              "minOrderQuantity": 5,
+              "minOrderPrice": 310,
+              "pricePerUnit": 52
+            }
+          ]
+        },
+        {
+          "id": "mgg-long-island-soil-compost",
+          "metroSlug": "long-island",
+          "metroName": "Long Island",
+          "categorySlug": "soil",
+          "categoryName": "Soil",
+          "variantSlug": "compost",
+          "variantName": "Certified Organic Compost",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "Certified Organic Compost — 10 yards delivered in Long Island",
+          "description": "Certified organic compost used to amend and enrich existing soil. Best for: Soil amendment, Topdressing, Garden beds. Priced as a fixed 10-yard delivered load for Long Island; delivery is included in the price shown. Minimum order is 1 yard and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/long-island/soil-delivery?variant=compost",
+          "imageLink": "https://mygravelguy.com/images/placeholder/soil.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Compost & Soil",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 465,
+          "zonePrices": [
+            {
+              "zoneSlug": "li-core",
+              "zoneName": "Core (Center Moriches area)",
+              "referenceQuantityPrice": 465,
+              "minOrderQuantity": 1,
+              "minOrderPrice": 85,
+              "pricePerUnit": 46.5
+            },
+            {
+              "zoneSlug": "li-west-hamptons",
+              "zoneName": "West Hamptons",
+              "referenceQuantityPrice": 535,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 215,
+              "pricePerUnit": 53.5
+            },
+            {
+              "zoneSlug": "li-brookhaven",
+              "zoneName": "Brookhaven",
+              "referenceQuantityPrice": 535,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 215,
+              "pricePerUnit": 53.5
+            },
+            {
+              "zoneSlug": "li-east-end",
+              "zoneName": "East End",
+              "referenceQuantityPrice": 575,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 245,
+              "pricePerUnit": 57.5
+            },
+            {
+              "zoneSlug": "li-north-shore",
+              "zoneName": "North Shore",
+              "referenceQuantityPrice": 620,
+              "minOrderQuantity": 5,
+              "minOrderPrice": 360,
+              "pricePerUnit": 62
+            }
+          ]
+        },
+        {
+          "id": "mgg-long-island-soil-clean-fill",
+          "metroSlug": "long-island",
+          "metroName": "Long Island",
+          "categorySlug": "soil",
+          "categoryName": "Soil",
+          "variantSlug": "clean-fill",
+          "variantName": "Clean Fill",
+          "unit": "yd",
+          "referenceQuantity": 10,
+          "title": "Clean Fill — 10 yards delivered in Long Island",
+          "description": "Clean, low-organic fill dirt used to raise or level grade. Best for: Grading, Fill, Low spots. Priced as a fixed 10-yard delivered load for Long Island; delivery is included in the price shown. Minimum order is 1 yard and varies by delivery zone; the price shown reflects this metro's lowest-cost zone — see the zone-specific listing for the exact delivered price to your ZIP code.",
+          "link": "https://mygravelguy.com/long-island/soil-delivery?variant=clean-fill",
+          "imageLink": "https://mygravelguy.com/images/placeholder/soil.jpg",
+          "brand": "MyGravelGuy",
+          "condition": "new",
+          "availability": "out_of_stock",
+          "googleProductCategory": "Home & Garden > Lawn & Garden > Compost & Soil",
+          "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
+          "basePrice": 215,
+          "zonePrices": [
+            {
+              "zoneSlug": "li-core",
+              "zoneName": "Core (Center Moriches area)",
+              "referenceQuantityPrice": 215,
+              "minOrderQuantity": 1,
+              "minOrderPrice": 60,
+              "pricePerUnit": 21.5
+            },
+            {
+              "zoneSlug": "li-west-hamptons",
+              "zoneName": "West Hamptons",
+              "referenceQuantityPrice": 285,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 140,
+              "pricePerUnit": 28.5
+            },
+            {
+              "zoneSlug": "li-brookhaven",
+              "zoneName": "Brookhaven",
+              "referenceQuantityPrice": 285,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 140,
+              "pricePerUnit": 28.5
+            },
+            {
+              "zoneSlug": "li-east-end",
+              "zoneName": "East End",
+              "referenceQuantityPrice": 325,
+              "minOrderQuantity": 3,
+              "minOrderPrice": 170,
+              "pricePerUnit": 32.5
+            },
+            {
+              "zoneSlug": "li-north-shore",
+              "zoneName": "North Shore",
+              "referenceQuantityPrice": 370,
+              "minOrderQuantity": 5,
+              "minOrderPrice": 235,
+              "pricePerUnit": 37
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

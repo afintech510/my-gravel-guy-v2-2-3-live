@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,124 +7,95 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { 
-  Download, 
-  Upload, 
-  RefreshCw, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Download,
+  RefreshCw,
+  CheckCircle,
+  XCircle,
   AlertTriangle,
   ShoppingCart,
   TrendingUp,
-  Eye,
   MapPin,
-  Shield
+  Shield,
+  PlayCircle,
+  UploadCloud,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleShoppingFeedGenerator, GoogleShoppingProduct } from '@/services/googleShopping/feedGenerator';
-import { GoogleMerchantCenterAPI, ProductStatus, MerchantCenterConfig } from '@/services/googleShopping/merchantCenter';
 import { isContinentalUSZipCode, getContinentalUSRegion } from '@/services/googleShopping/usTargeting';
+import {
+  runMerchantSyncDryRun,
+  runMerchantSyncLive,
+  type MerchantSyncResponse,
+} from '@/services/googleShopping/merchantApiClient';
 
-interface GoogleShoppingManagerProps {
-  merchantId?: string;
-  accessToken?: string;
-}
-
-const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManagerProps) => {
+const GoogleShoppingManager = () => {
+  // --- Legacy continental-US flat feed preview (client-side only, no Google credential
+  // involved — safe to keep as a manual inspection tool; see index.ts's barrel-file comment
+  // for why this is not the path used to actually sync with Google anymore). ---
   const [feedGenerator] = useState(new GoogleShoppingFeedGenerator());
-  const [merchantAPI, setMerchantAPI] = useState<GoogleMerchantCenterAPI | null>(null);
-  
   const [products, setProducts] = useState<GoogleShoppingProduct[]>([]);
-  const [productStatuses, setProductStatuses] = useState<ProductStatus[]>([]);
   const [xmlFeed, setXmlFeed] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [zipCode, setZipCode] = useState('75001');
   const [zipCodeValid, setZipCodeValid] = useState(true);
-  
-  const [config, setConfig] = useState<MerchantCenterConfig>({
-    merchantId: merchantId || '',
-    accessToken: accessToken || ''
-  });
+
+  // --- Merchant API sync (google-merchant-sync edge function) ---
+  const [metroSlug, setMetroSlug] = useState('');
+  const [isDryRunning, setIsDryRunning] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<MerchantSyncResponse | null>(null);
 
   const { toast } = useToast();
 
-  // Initialize Merchant Center API when config changes
-  useEffect(() => {
-    if (config.merchantId && config.accessToken) {
-      setMerchantAPI(new GoogleMerchantCenterAPI(config));
-    }
-  }, [config]);
-
-  // Validate ZIP code for continental US
-  useEffect(() => {
-    const isValid = isContinentalUSZipCode(zipCode);
+  const handleZipChange = (value: string) => {
+    setZipCode(value);
+    const isValid = isContinentalUSZipCode(value);
     setZipCodeValid(isValid);
-    
-    if (!isValid && zipCode.length === 5) {
+    if (!isValid && value.length === 5) {
       toast({
         title: 'Invalid ZIP Code',
         description: 'Please enter a ZIP code from the continental United States (48 states)',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
-  }, [zipCode, toast]);
+  };
 
-  /**
-   * Generate product feed with US restrictions
-   */
   const handleGenerateFeed = async () => {
     if (!zipCodeValid) {
       toast({
         title: 'Invalid ZIP Code',
         description: 'Please enter a valid continental US ZIP code before generating the feed',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
 
     setIsGenerating(true);
     try {
-      console.log('Generating Continental US Google Shopping feed...');
-      
       const generatedProducts = await feedGenerator.generateFeed();
       setProducts(generatedProducts);
-      
       const xml = await feedGenerator.generateXMLFeed();
       setXmlFeed(xml);
-      
+
       const region = getContinentalUSRegion(zipCode);
-      
       toast({
         title: 'Feed Generated',
-        description: `Successfully generated Continental US feed with ${generatedProducts.length} products for ${region} region`
+        description: `Generated ${generatedProducts.length} products for ${region} region (preview only)`,
       });
     } catch (error) {
       console.error('Error generating feed:', error);
-      toast({
-        title: 'Generation Failed',
-        description: 'Failed to generate product feed',
-        variant: 'destructive'
-      });
+      toast({ title: 'Generation Failed', description: 'Failed to generate product feed', variant: 'destructive' });
     } finally {
       setIsGenerating(false);
     }
   };
 
-  /**
-   * Download XML feed
-   */
   const handleDownloadFeed = () => {
     if (!xmlFeed) {
-      toast({
-        title: 'No Feed Available',
-        description: 'Please generate a feed first',
-        variant: 'destructive'
-      });
+      toast({ title: 'No Feed Available', description: 'Please generate a feed first', variant: 'destructive' });
       return;
     }
-
     const region = getContinentalUSRegion(zipCode);
     const blob = new Blob([xmlFeed], { type: 'application/xml' });
     const url = URL.createObjectURL(blob);
@@ -135,114 +106,50 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-
-    toast({
-      title: 'Feed Downloaded',
-      description: 'Continental US XML feed has been downloaded successfully'
-    });
+    toast({ title: 'Feed Downloaded', description: 'Continental US XML feed has been downloaded' });
   };
 
-  /**
-   * Upload products to Merchant Center
-   */
-  const handleUploadToMerchant = async () => {
-    if (!merchantAPI) {
-      toast({
-        title: 'Configuration Required',
-        description: 'Please configure Merchant Center credentials first',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    if (products.length === 0) {
-      toast({
-        title: 'No Products',
-        description: 'Please generate a feed first',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    setIsUploading(true);
+  const handleDryRun = async () => {
+    setIsDryRunning(true);
     try {
-      console.log(`Uploading ${products.length} products to Merchant Center...`);
-      
-      // Upload in batches of 50 to avoid API limits
-      const batchSize = 50;
-      const batches = [];
-      for (let i = 0; i < products.length; i += batchSize) {
-        batches.push(products.slice(i, i + batchSize));
-      }
-
-      let uploadedCount = 0;
-      for (const batch of batches) {
-        await merchantAPI.batchUploadProducts(batch);
-        uploadedCount += batch.length;
-        
-        // Update progress
-        toast({
-          title: 'Upload Progress',
-          description: `Uploaded ${uploadedCount} of ${products.length} products`
-        });
-      }
-
+      const result = await runMerchantSyncDryRun(metroSlug || undefined);
+      setSyncResult(result);
       toast({
-        title: 'Upload Complete',
-        description: `Successfully uploaded ${products.length} products to Google Merchant Center`
+        title: 'Dry run complete',
+        description: `${result.counts.regions} region(s), ${result.counts.productInputs} product(s), ${result.counts.regionalInventories} regional price row(s) built — nothing sent to Google.`,
       });
-
-      // Refresh product statuses
-      await handleRefreshStatuses();
     } catch (error) {
-      console.error('Error uploading to Merchant Center:', error);
+      console.error('Dry run failed:', error);
       toast({
-        title: 'Upload Failed',
-        description: 'Failed to upload products to Merchant Center',
-        variant: 'destructive'
+        title: 'Dry run failed',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive',
       });
     } finally {
-      setIsUploading(false);
+      setIsDryRunning(false);
     }
   };
 
-  /**
-   * Refresh product statuses from Merchant Center
-   */
-  const handleRefreshStatuses = async () => {
-    if (!merchantAPI) return;
-
+  const handleLiveSync = async () => {
+    setIsSyncing(true);
     try {
-      const statuses = await merchantAPI.getAllProductStatuses();
-      setProductStatuses(statuses);
-      
+      const result = await runMerchantSyncLive(metroSlug || undefined);
+      setSyncResult(result);
+      const failed = result.results?.failed ?? 0;
       toast({
-        title: 'Statuses Updated',
-        description: `Retrieved status for ${statuses.length} products`
+        title: failed > 0 ? 'Sync completed with errors' : 'Sync complete',
+        description: `${result.results?.succeeded ?? 0} succeeded, ${failed} failed. See details below.`,
+        variant: failed > 0 ? 'destructive' : 'default',
       });
     } catch (error) {
-      console.error('Error refreshing statuses:', error);
+      console.error('Live sync failed:', error);
       toast({
-        title: 'Status Refresh Failed',
-        description: 'Failed to retrieve product statuses',
-        variant: 'destructive'
+        title: 'Sync failed',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive',
       });
-    }
-  };
-
-  /**
-   * Get status badge component
-   */
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return <Badge variant="default" className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Approved</Badge>;
-      case 'disapproved':
-        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Disapproved</Badge>;
-      case 'pending':
-        return <Badge variant="secondary"><AlertTriangle className="h-3 w-3 mr-1" />Pending</Badge>;
-      default:
-        return <Badge variant="outline">Unknown</Badge>;
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -252,43 +159,130 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" />
-            Google Shopping Integration - Continental US Only
+            Google Shopping Integration
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Alert>
             <Shield className="h-4 w-4" />
             <AlertDescription>
-              This integration is configured for <strong>Continental US delivery only</strong> (48 states). 
-              Products will be restricted to prevent international variations and ensure proper geographic targeting.
-              Alaska, Hawaii, and US territories are excluded from targeting.
+              Merchant Center sync now runs server-side through the <code>google-merchant-sync</code> edge
+              function — no Google credential is ever held in this browser tab. See{' '}
+              <code>docs/metro/research/merchant-api-implementation.md</code> for setup.
             </AlertDescription>
           </Alert>
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="feed" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="feed">Continental US Feed</TabsTrigger>
-          <TabsTrigger value="merchant">Merchant Center</TabsTrigger>
-          <TabsTrigger value="config">Configuration</TabsTrigger>
+      <Tabs defaultValue="sync" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="sync">Merchant API Sync</TabsTrigger>
+          <TabsTrigger value="feed">Legacy Feed Preview</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="sync">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Regions, Products & Regional Inventory
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Alert>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  Reads the pre-built price book (regenerate it with{' '}
+                  <code>node scripts/metro/export-price-book.mjs</code> after any pricing change) and builds one
+                  Merchant API region per delivery zone, one product per material variant, and one regional
+                  inventory price override per zone. Dry run never contacts Google.
+                </AlertDescription>
+              </Alert>
+
+              <div className="flex gap-4 items-end flex-wrap">
+                <div className="flex-1 min-w-[200px]">
+                  <Label htmlFor="metroSlug">Metro filter (optional)</Label>
+                  <Input
+                    id="metroSlug"
+                    value={metroSlug}
+                    onChange={e => setMetroSlug(e.target.value)}
+                    placeholder="e.g. dallas-fort-worth (blank = all metros)"
+                  />
+                </div>
+                <Button onClick={handleDryRun} disabled={isDryRunning} variant="outline" className="flex items-center gap-2">
+                  {isDryRunning ? <RefreshCw className="h-4 w-4 animate-spin" /> : <PlayCircle className="h-4 w-4" />}
+                  {isDryRunning ? 'Running…' : 'Dry run sync'}
+                </Button>
+                <Button onClick={handleLiveSync} disabled={isSyncing} className="flex items-center gap-2">
+                  {isSyncing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
+                  {isSyncing ? 'Syncing…' : 'Sync to Merchant Center'}
+                </Button>
+              </div>
+
+              {syncResult && (
+                <div className="space-y-3">
+                  <div className="flex gap-2 flex-wrap">
+                    <Badge variant={syncResult.dryRun ? 'secondary' : 'default'}>
+                      {syncResult.dryRun ? 'Dry run' : 'Live sync'}
+                    </Badge>
+                    <Badge variant="outline">{syncResult.counts.regions} regions</Badge>
+                    <Badge variant="outline">{syncResult.counts.productInputs} products</Badge>
+                    <Badge variant="outline">{syncResult.counts.regionalInventories} regional prices</Badge>
+                    {syncResult.results && (
+                      <>
+                        <Badge className="bg-green-500">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          {syncResult.results.succeeded} ok
+                        </Badge>
+                        {syncResult.results.failed > 0 && (
+                          <Badge variant="destructive">
+                            <XCircle className="h-3 w-3 mr-1" />
+                            {syncResult.results.failed} failed
+                          </Badge>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  {syncResult.results && syncResult.results.failures.length > 0 && (
+                    <div className="max-h-64 overflow-y-auto border rounded p-3 bg-red-50 space-y-1">
+                      {syncResult.results.failures.map((failure, i) => (
+                        <div key={`${failure.kind}-${failure.key}-${i}`} className="text-sm">
+                          <span className="font-medium">{failure.kind}</span> {failure.key}:{' '}
+                          {failure.error || `HTTP ${failure.status}`}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <details className="text-sm">
+                    <summary className="cursor-pointer font-medium">Raw response JSON</summary>
+                    <pre className="mt-2 max-h-96 overflow-auto bg-gray-50 border rounded p-3 text-xs">
+                      {JSON.stringify(syncResult, null, 2)}
+                    </pre>
+                  </details>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="feed">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MapPin className="h-5 w-5" />
-                Generate Continental US Product Feed
+                Legacy Continental-US Feed Preview
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <Alert>
                 <Shield className="h-4 w-4" />
                 <AlertDescription>
-                  Feed generation is restricted to continental US ZIP codes only. 
-                  This prevents Google from creating international product variations.
+                  This tab is client-side only (no Google API calls) and reflects the old flat, single-price feed
+                  shape. It's kept for quick manual inspection; it is not what gets pushed to Merchant Center — use
+                  the Merchant API Sync tab for that.
                 </AlertDescription>
               </Alert>
 
@@ -298,7 +292,7 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
                   <Input
                     id="zipcode"
                     value={zipCode}
-                    onChange={(e) => setZipCode(e.target.value)}
+                    onChange={e => handleZipChange(e.target.value)}
                     placeholder="Enter continental US ZIP code"
                     className={!zipCodeValid && zipCode.length === 5 ? 'border-red-500' : ''}
                   />
@@ -318,16 +312,8 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
                     </div>
                   )}
                 </div>
-                <Button 
-                  onClick={handleGenerateFeed} 
-                  disabled={isGenerating || !zipCodeValid}
-                  className="flex items-center gap-2"
-                >
-                  {isGenerating ? (
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <TrendingUp className="h-4 w-4" />
-                  )}
+                <Button onClick={handleGenerateFeed} disabled={isGenerating || !zipCodeValid} className="flex items-center gap-2">
+                  {isGenerating ? <RefreshCw className="h-4 w-4 animate-spin" /> : <TrendingUp className="h-4 w-4" />}
                   {isGenerating ? 'Generating...' : 'Generate US Feed'}
                 </Button>
               </div>
@@ -338,11 +324,7 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
                     <span className="text-sm text-gray-600">
                       Generated {products.length} continental US products for {getContinentalUSRegion(zipCode)} region
                     </span>
-                    <Button
-                      onClick={handleDownloadFeed}
-                      variant="outline"
-                      className="flex items-center gap-2"
-                    >
+                    <Button onClick={handleDownloadFeed} variant="outline" className="flex items-center gap-2">
                       <Download className="h-4 w-4" />
                       Download Continental US XML
                     </Button>
@@ -350,7 +332,7 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
 
                   <div className="max-h-96 overflow-y-auto border rounded p-4 bg-gray-50">
                     <div className="space-y-2">
-                      {products.slice(0, 10).map((product) => (
+                      {products.slice(0, 10).map(product => (
                         <div key={product.id} className="flex justify-between items-center p-2 bg-white rounded text-sm">
                           <span className="font-medium">{product.title}</span>
                           <div className="flex gap-2">
@@ -374,139 +356,6 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
           </Card>
         </TabsContent>
 
-        <TabsContent value="merchant">
-          <Card>
-            <CardHeader>
-              <CardTitle>Merchant Center Management</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-4">
-                <Button
-                  onClick={handleUploadToMerchant}
-                  disabled={isUploading || !merchantAPI || products.length === 0}
-                  className="flex items-center gap-2"
-                >
-                  {isUploading ? (
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Upload className="h-4 w-4" />
-                  )}
-                  {isUploading ? 'Uploading...' : 'Upload to Merchant Center'}
-                </Button>
-                
-                <Button
-                  onClick={handleRefreshStatuses}
-                  disabled={!merchantAPI}
-                  variant="outline"
-                  className="flex items-center gap-2"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                  Refresh Statuses
-                </Button>
-              </div>
-
-              {productStatuses.length > 0 && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Product Status Overview</h3>
-                  
-                  <div className="grid grid-cols-3 gap-4">
-                    <Card>
-                      <CardContent className="pt-4">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-green-600">
-                            {productStatuses.filter(p => p.status === 'approved').length}
-                          </div>
-                          <div className="text-sm text-gray-600">Approved</div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card>
-                      <CardContent className="pt-4">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-yellow-600">
-                            {productStatuses.filter(p => p.status === 'pending').length}
-                          </div>
-                          <div className="text-sm text-gray-600">Pending</div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card>
-                      <CardContent className="pt-4">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-red-600">
-                            {productStatuses.filter(p => p.status === 'disapproved').length}
-                          </div>
-                          <div className="text-sm text-gray-600">Disapproved</div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  <div className="max-h-96 overflow-y-auto border rounded">
-                    <div className="space-y-1">
-                      {productStatuses.map((status) => (
-                        <div key={status.productId} className="flex justify-between items-center p-3 border-b last:border-b-0">
-                          <span className="font-medium">{status.productId}</span>
-                          {getStatusBadge(status.status)}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="config">
-          <Card>
-            <CardHeader>
-              <CardTitle>API Configuration</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Alert>
-                <Eye className="h-4 w-4" />
-                <AlertDescription>
-                  Configure your Google Merchant Center API credentials. You'll need a Merchant Center account and API access.
-                </AlertDescription>
-              </Alert>
-
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="merchantId">Merchant ID</Label>
-                  <Input
-                    id="merchantId"
-                    value={config.merchantId}
-                    onChange={(e) => setConfig(prev => ({ ...prev, merchantId: e.target.value }))}
-                    placeholder="Enter your Merchant Center ID"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="accessToken">Access Token</Label>
-                  <Textarea
-                    id="accessToken"
-                    value={config.accessToken}
-                    onChange={(e) => setConfig(prev => ({ ...prev, accessToken: e.target.value }))}
-                    placeholder="Enter your OAuth2 access token"
-                    rows={3}
-                  />
-                </div>
-
-                <Alert>
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    Access tokens expire regularly. You'll need to refresh them using your OAuth2 flow.
-                    Consider implementing automated token refresh in production.
-                  </AlertDescription>
-                </Alert>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
         <TabsContent value="analytics">
           <Card>
             <CardHeader>
@@ -516,7 +365,8 @@ const GoogleShoppingManager = ({ merchantId, accessToken }: GoogleShoppingManage
               <Alert>
                 <TrendingUp className="h-4 w-4" />
                 <AlertDescription>
-                  Analytics integration coming soon. This will show performance metrics from Google Ads and Merchant Center.
+                  Analytics integration coming soon. This will show performance metrics from Google Ads and
+                  Merchant Center.
                 </AlertDescription>
               </Alert>
             </CardContent>

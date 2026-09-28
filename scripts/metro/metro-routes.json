@@ -1,0 +1,140 @@
+[
+  {
+    "path": "/dallas-fort-worth",
+    "kind": "metro-home",
+    "metroSlug": "dallas-fort-worth",
+    "sourceFile": "src/metro/config/dallasFortWorth.ts"
+  },
+  {
+    "path": "/dallas-fort-worth/gravel-delivery",
+    "kind": "metro-category",
+    "metroSlug": "dallas-fort-worth",
+    "sourceFile": "src/metro/config/dallasFortWorth.ts"
+  },
+  {
+    "path": "/dallas-fort-worth/sand-delivery",
+    "kind": "metro-category",
+    "metroSlug": "dallas-fort-worth",
+    "sourceFile": "src/metro/config/dallasFortWorth.ts"
+  },
+  {
+    "path": "/dallas-fort-worth/mulch-delivery",
+    "kind": "metro-category",
+    "metroSlug": "dallas-fort-worth",
+    "sourceFile": "src/metro/config/dallasFortWorth.ts"
+  },
+  {
+    "path": "/dallas-fort-worth/soil-delivery",
+    "kind": "metro-category",
+    "metroSlug": "dallas-fort-worth",
+    "sourceFile": "src/metro/config/dallasFortWorth.ts"
+  },
+  {
+    "path": "/long-island",
+    "kind": "metro-home",
+    "metroSlug": "long-island",
+    "sourceFile": "src/metro/config/longIsland.ts"
+  },
+  {
+    "path": "/long-island/gravel-delivery",
+    "kind": "metro-category",
+    "metroSlug": "long-island",
+    "sourceFile": "src/metro/config/longIsland.ts"
+  },
+  {
+    "path": "/long-island/sand-delivery",
+    "kind": "metro-category",
+    "metroSlug": "long-island",
+    "sourceFile": "src/metro/config/longIsland.ts"
+  },
+  {
+    "path": "/long-island/mulch-delivery",
+    "kind": "metro-category",
+    "metroSlug": "long-island",
+    "sourceFile": "src/metro/config/longIsland.ts"
+  },
+  {
+    "path": "/long-island/soil-delivery",
+    "kind": "metro-category",
+    "metroSlug": "long-island",
+    "sourceFile": "src/metro/config/longIsland.ts"
+  },
+  {
+    "path": "/long-island/towns/center-moriches",
+    "kind": "metro-town",
+    "metroSlug": "long-island",
+    "sourceFile": "src/metro/config/longIsland.ts"
+  },
+  {
+    "path": "/long-island/towns/east-moriches",
+    "kind": "metro-town",
+    "metroSlug": "long-island",
+    "sourceFile": "src/metro/config/longIsland.ts"
+  },
+  {
+    "path": "/long-island/towns/manorville",
+    "kind": "metro-town",
+    "metroSlug": "long-island",
+    "sourceFile": "src/metro/config/longIsland.ts"
+  },
+  {
+    "path": "/long-island/towns/mastic",
+    "kind": "metro-town",
+    "metroSlug": "long-island",
+    "sourceFile": "src/metro/config/longIsland.ts"
+  },
+  {
+    "path": "/long-island/towns/mastic-beach",
+    "kind": "metro-town",
+    "metroSlug": "long-island",
+    "sourceFile": "src/metro/config/longIsland.ts"
+  },
+  {
+    "path": "/long-island/towns/shirley",
+    "kind": "metro-town",
+    "metroSlug": "long-island",
+    "sourceFile": "src/metro/config/longIsland.ts"
+  },
+  {
+    "path": "/long-island/towns/eastport",
+    "kind": "metro-town",
+    "metroSlug": "long-island",
+    "sourceFile": "src/metro/config/longIsland.ts"
+  },
+  {
+    "path": "/long-island/towns/westhampton-beach",
+    "kind": "metro-town",
+    "metroSlug": "long-island",
+    "sourceFile": "src/metro/config/longIsland.ts"
+  },
+  {
+    "path": "/long-island/towns/quogue",
+    "kind": "metro-town",
+    "metroSlug": "long-island",
+    "sourceFile": "src/metro/config/longIsland.ts"
+  },
+  {
+    "path": "/long-island/towns/remsenburg",
+    "kind": "metro-town",
+    "metroSlug": "long-island",
+    "sourceFile": "src/metro/config/longIsland.ts"
+  },
+  {
+    "path": "/long-island/towns/southampton",
+    "kind": "metro-town",
+    "metroSlug": "long-island",
+    "sourceFile": "src/metro/config/longIsland.ts"
+  },
+  {
+    "path": "/long-island/towns/hampton-bays",
+    "kind": "metro-town",
+    "metroSlug": "long-island",
+    "sourceFile": "src/metro/config/longIsland.ts"
+  },
+  {
+    "path": "/long-island/towns/riverhead",
+    "kind": "metro-town",
+    "metroSlug": "long-island",
+    "sourceFile": "src/metro/config/longIsland.ts"
+  }
+]
