@@ -13,6 +13,7 @@ export const dallasFortWorth: GuideContent = {
   howWeKnow:
     "MyGravelGuy's DFW delivered pricing below is generated from the same live pricing engine used at checkout; it's marked as estimated until our DFW partner yard's price sheet is finalized.",
   lastUpdated: '2026-09-28',
+  group: 'Metro Guides',
   faqs: [
     {
       question: 'What gravel do DFW yards typically stock for driveways?',

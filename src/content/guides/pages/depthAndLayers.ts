@@ -13,6 +13,7 @@ export const depthAndLayers: GuideContent = {
   howWeKnow:
     "These depth ranges reflect standard aggregate-industry practice and what Eastern LM's yard team has seen hold up (and fail) across thousands of Long Island driveway deliveries since 2023.",
   lastUpdated: '2026-09-28',
+  group: 'Build, Maintain & Fix',
   faqs: [
     {
       question: 'What are the layers in a gravel driveway?',

@@ -1,0 +1,207 @@
+name: Docker Build Check
+
+# BUILD-ONLY verification for the metro/prerender pivot (feature/metro-ui).
+# Exercises the untested Debian (node:20-bookworm-slim) + Playwright
+# (`npx playwright install --with-deps chromium`) + `npm run build:prerender`
+# Docker build stage end-to-end, then smoke-tests the built image's nginx
+# container over HTTP. This workflow never pushes an image anywhere and
+# never touches the VPS — it's a local-to-the-runner build+run+curl+discard.
+#
+# Only `.github/workflows/deploy.yml` (push to `main`) deploys to production;
+# that workflow is untouched by this file and is not triggered by pushes to
+# feature branches or by pull_request events — verified by reading its
+# `on:` block (`push: branches: [main]`, `workflow_dispatch` only).
+#
+# No secrets are used or required. See the "Build image" step below for why:
+# the Supabase URL/anon key the prerender route generator needs
+# (scripts/generate-prerender-routes.mjs) come from the committed .env file
+# (public anon/publishable key, protected by Supabase RLS — the same key
+# already ships in every client bundle), which is NOT excluded by
+# .dockerignore and is picked up automatically by the Dockerfile's `COPY . .`.
+#
+# See docs/metro/DEPLOY-CHECKLIST.md for the full pre-merge gate list this
+# workflow is one part of.
+
+on:
+  push:
+    branches: [feature/metro-ui]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-build-check-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docker-build:
+    name: Docker build + container smoke test
+    runs-on: ubuntu-latest
+    # Playwright's `--with-deps` apt install + npm ci + vite build + a 110-route
+    # headless-Chromium prerender pass is meaningfully slower than a plain
+    # `vite build`. Local (Windows, no Docker) timing for just the
+    # build:prerender step was ~110s; add npm ci, apt-get, and Docker layer
+    # overhead on a shared GitHub-hosted runner and 25 min is a safe ceiling
+    # while still catching a truly hung build. Raise this (and the matching
+    # `command_timeout: 20m` in deploy.yml — see DEPLOY-CHECKLIST.md) together
+    # if routes keep growing.
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image (build-only, no push, no secrets)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          load: true
+          tags: mygravelguy:ci-check
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run container
+        run: |
+          docker run -d --name mgg-ci -p 8080:80 mygravelguy:ci-check
+          echo "Waiting for nginx to accept connections..."
+          ok=""
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8080/ >/dev/null 2>&1; then
+              echo "nginx responded after ${i}s"
+              ok=1
+              break
+            fi
+            sleep 1
+          done
+          if [ -z "$ok" ]; then
+            echo "FAIL: nginx never became reachable on :8080"
+            docker logs mgg-ci || true
+            exit 1
+          fi
+
+      # Proves the Debian + Playwright + build:prerender stage actually shipped
+      # real prerendered HTML into the runtime image — not just that `vite
+      # build` succeeded. A route-specific <title> and at least one JSON-LD
+      # block can only be present if scripts/prerender/prerender.mjs ran
+      # Chromium against that route and wrote dist/<route>/index.html (see
+      # nginx/default.conf's `try_files $uri $uri/index.html /index.html;`).
+      # If this stage silently failed/skipped, every route would instead
+      # serve Vite's generic index.html shell with no page-specific title.
+      - name: Smoke test prerendered routes (200 + route-specific title + JSON-LD)
+        run: |
+          set -e
+          check_route() {
+            path="$1"
+            expect_title_substring="$2"
+            echo "--- GET ${path} ---"
+
+            code="$(curl -s -o /tmp/body.html -w '%{http_code}' "http://127.0.0.1:8080${path}")"
+            echo "status: ${code}"
+            if [ "$code" != "200" ]; then
+              echo "FAIL: ${path} returned ${code}, expected 200"
+              exit 1
+            fi
+
+            title="$(grep -oE '<title>[^<]*</title>' /tmp/body.html | head -1)"
+            echo "title: ${title}"
+            if ! printf '%s' "$title" | grep -qi "$expect_title_substring"; then
+              echo "FAIL: ${path} — expected <title> to contain '${expect_title_substring}', got: ${title}"
+              exit 1
+            fi
+
+            if ! grep -q 'application/ld+json' /tmp/body.html; then
+              echo "FAIL: ${path} — no <script type=\"application/ld+json\"> found (prerender output missing or fell back to SPA shell)"
+              exit 1
+            fi
+
+            echo "OK: ${path}"
+          }
+
+          check_route "/" "Gravel"
+          check_route "/dallas-fort-worth" "Dallas"
+          check_route "/gravel-driveways/cost" "Cost"
+          check_route "/products/pea-gravel" "Pea Gravel"
+
+      # Two of the 301s from nginx/redirects.conf (AEO-FOUNDATIONS agent's
+      # redirect map, included into nginx/default.conf ahead of the SPA
+      # fallback). `location =` blocks are exact-match and take precedence
+      # over `location /` regardless of include order, so these should 301
+      # even though "/products" is also a prerendered STATIC_ROUTES path
+      # (see docs/metro/DEPLOY-CHECKLIST.md for that nuance).
+      - name: Verify nginx redirects (nginx/redirects.conf)
+        run: |
+          set -e
+          check_redirect() {
+            path="$1"
+            expect_location="$2"
+
+            code="$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080${path}")"
+            location="$(curl -s -o /dev/null -w '%{redirect_url}' "http://127.0.0.1:8080${path}")"
+            echo "${path} -> ${code} ${location}"
+
+            if [ "$code" != "301" ]; then
+              echo "FAIL: ${path} returned ${code}, expected 301"
+              exit 1
+            fi
+            if [ "$location" != "$expect_location" ]; then
+              echo "FAIL: ${path} redirected to '${location}', expected '${expect_location}'"
+              exit 1
+            fi
+          }
+
+          check_redirect "/delivery-info" "https://mygravelguy.com/delivery"
+          check_redirect "/products" "https://mygravelguy.com/shop"
+
+      - name: Dump container logs on failure
+        if: failure()
+        run: docker logs mgg-ci || true
+
+      - name: Clean up container
+        if: always()
+        run: docker rm -f mgg-ci || true
+
+  lint-and-test:
+    name: Scoped tests + typecheck (no Docker)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Scoped vitest (metro / content / googleShopping)
+        run: npx vitest run src/metro src/content src/services/googleShopping
+
+      # `npx tsc --noEmit -p tsconfig.app.json` currently reports 19
+      # pre-existing errors on this branch (verified before writing this
+      # workflow), all in src/components/dashboard/OrderDetailModal.tsx,
+      # src/pages/DeliveryConfirm.tsx, src/pages/MarketMaterialPage.tsx, and
+      # src/pages/CrushedStoneLanding.tsx — Supabase generated-types drift
+      # (e.g. the `delivery_confirmations` table missing from the generated
+      # `Database` type) and a couple of unrelated component prop-shape
+      # mismatches. None are in src/metro/**, src/content/**, or
+      # src/services/googleShopping/** (the areas this branch actually
+      # touches for the metro pivot) and none are new — this is pre-existing
+      # debt, not something to gate this PR on. Kept as `continue-on-error`
+      # (not scoped/excluded) so the full error list still prints in the log
+      # and a NEW error introduced by a future change is visible for review,
+      # rather than silently passing. Flip this to a hard failure once the
+      # pre-existing 19 are cleaned up.
+      - name: Typecheck (non-blocking — see comment above)
+        continue-on-error: true
+        run: npx tsc --noEmit -p tsconfig.app.json

@@ -9,3 +9,20 @@ dist
 SESSION_LOG.md
 sql
 supabase
+
+# Metro research/planning docs — not read by any build script at build time
+# (verified: grep for readFile/require/import/fetch of "docs/" across
+# scripts/**, src/metro/**, src/services/googleShopping/** turned up nothing;
+# every "docs/" hit in those files is a comment, not a filesystem read). Most
+# of this is already caught by the `*.md` rule above, but this also drops the
+# raw competitor-scrape data (docs/metro/research/data/**, csv/json, ~435KB)
+# and QA screenshots (docs/metro/screenshots/**, png) that aren't markdown.
+# See docs/metro/DEPLOY-CHECKLIST.md for how this was verified.
+docs/
+
+# Raw research scratch file (root-level competitor pricing scrape) — not
+# referenced by any build script.
+DFW_bulk-materials-pricing.csv
+
+# Agent/session tooling state — never needed in the image.
+.nimbalyst/

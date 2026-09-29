@@ -13,6 +13,7 @@ export const howMuchGravel: GuideContent = {
   howWeKnow:
     "This calculator uses the same length-times-width-times-depth math Eastern LM's yard team uses to plan real driveway deliveries, converted with each material's actual tons-per-yard ratio rather than a generic estimate.",
   lastUpdated: '2026-09-28',
+  group: 'Cost & Planning',
   faqs: [
     {
       question: 'How many tons of gravel do I need for a 100 foot driveway?',

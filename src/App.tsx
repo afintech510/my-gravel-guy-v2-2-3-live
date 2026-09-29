@@ -17,6 +17,7 @@ import TopBanner from "./components/TopBanner";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { METROS } from "./metro/config";
+import { METRO_CONFIRMATION_PATH } from "./metro/checkout/contract";
 
 // Eager-load the homepage for instant first paint
 import Index from "./pages/Index";
@@ -76,6 +77,7 @@ const DeliveryConfirm = React.lazy(() => import("./pages/DeliveryConfirm"));
 const MetroHomePage = React.lazy(() => import("./pages/metro/MetroHomePage"));
 const MetroCategoryPage = React.lazy(() => import("./pages/metro/MetroCategoryPage"));
 const MetroTownPage = React.lazy(() => import("./pages/metro/MetroTownPage"));
+const MetroOrderConfirmedPage = React.lazy(() => import("./pages/metro/MetroOrderConfirmedPage"));
 const GravelDrivewayHub = React.lazy(() => import("./pages/guides/GravelDrivewayHub"));
 const GravelDrivewayCost = React.lazy(() => import("./pages/guides/GravelDrivewayCost"));
 const BestGravel = React.lazy(() => import("./pages/guides/BestGravel"));
@@ -84,6 +86,21 @@ const DepthAndLayers = React.lazy(() => import("./pages/guides/DepthAndLayers"))
 const CrusherRunVs57VsFlexBase = React.lazy(() => import("./pages/guides/CrusherRunVs57VsFlexBase"));
 const GuideMaintenance = React.lazy(() => import("./pages/guides/Maintenance"));
 const DallasFortWorthGuide = React.lazy(() => import("./pages/guides/DallasFortWorthGuide"));
+const GravelVsAsphaltCost = React.lazy(() => import("./pages/guides/GravelVsAsphaltCost"));
+const InstallationSteps = React.lazy(() => import("./pages/guides/InstallationSteps"));
+const GravelDrivewayDrainage = React.lazy(() => import("./pages/guides/GravelDrivewayDrainage"));
+const Stone57Vs8 = React.lazy(() => import("./pages/guides/Stone57Vs8"));
+const PeaGravelProsCons = React.lazy(() => import("./pages/guides/PeaGravelProsCons"));
+const HowLongGravelDrivewayLasts = React.lazy(() => import("./pages/guides/HowLongGravelDrivewayLasts"));
+const WeedsAndErosionControl = React.lazy(() => import("./pages/guides/WeedsAndErosionControl"));
+const DecomposedGraniteDriveways = React.lazy(() => import("./pages/guides/DecomposedGraniteDriveways"));
+const RecycledConcreteAndMillings = React.lazy(() => import("./pages/guides/RecycledConcreteAndMillings"));
+const GravelParkingPadRvPad = React.lazy(() => import("./pages/guides/GravelParkingPadRvPad"));
+const SnowIcePlowingGravelDriveway = React.lazy(() => import("./pages/guides/SnowIcePlowingGravelDriveway"));
+const PermitsAndHoaGravelDriveway = React.lazy(() => import("./pages/guides/PermitsAndHoaGravelDriveway"));
+const TruckloadCoverageAndDeliveryMinimums = React.lazy(() => import("./pages/guides/TruckloadCoverageAndDeliveryMinimums"));
+const DiyVsHireGravelDelivery = React.lazy(() => import("./pages/guides/DiyVsHireGravelDelivery"));
+const GravelDrivewayCostIndexPage = React.lazy(() => import("./pages/guides/GravelDrivewayCostIndexPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -106,9 +123,9 @@ function AppContent() {
   const location = useLocation();
   const isDashboardPage = location.pathname.startsWith('/dashboard');
   const isStandalonePage = location.pathname === '/delivery-confirm';
-  const isMetroPage = METROS.some(
-    metro => location.pathname === `/${metro.slug}` || location.pathname.startsWith(`/${metro.slug}/`)
-  );
+  const isMetroPage =
+    location.pathname === METRO_CONFIRMATION_PATH ||
+    METROS.some(metro => location.pathname === `/${metro.slug}` || location.pathname.startsWith(`/${metro.slug}/`));
 
   // Flashing title disabled — hurts SEO and annoys users
   useFlashingTitle({
@@ -192,6 +209,7 @@ function AppContent() {
           <Route path="/57-crushed-stone" element={<CrushedStoneLanding />} />
           <Route path="/markets/:marketSlug/materials/:materialSlug" element={<MarketMaterialPage />} />
           <Route path="/delivery-confirm" element={<DeliveryConfirm />} />
+          <Route path={METRO_CONFIRMATION_PATH} element={<MetroOrderConfirmedPage />} />
           {METROS.map(metro => (
             <React.Fragment key={metro.slug}>
               <Route path={`/${metro.slug}`} element={<MetroHomePage metro={metro} />} />
@@ -207,6 +225,21 @@ function AppContent() {
           <Route path="/gravel-driveways/crusher-run-vs-57-vs-flex-base" element={<CrusherRunVs57VsFlexBase />} />
           <Route path="/gravel-driveways/maintenance" element={<GuideMaintenance />} />
           <Route path="/gravel-driveways/dallas-fort-worth" element={<DallasFortWorthGuide />} />
+          <Route path="/gravel-driveways/gravel-vs-asphalt-cost" element={<GravelVsAsphaltCost />} />
+          <Route path="/gravel-driveways/installation-steps" element={<InstallationSteps />} />
+          <Route path="/gravel-driveways/gravel-driveway-drainage" element={<GravelDrivewayDrainage />} />
+          <Route path="/gravel-driveways/57-vs-8-stone" element={<Stone57Vs8 />} />
+          <Route path="/gravel-driveways/pea-gravel-driveway-pros-cons" element={<PeaGravelProsCons />} />
+          <Route path="/gravel-driveways/how-long-gravel-driveway-lasts" element={<HowLongGravelDrivewayLasts />} />
+          <Route path="/gravel-driveways/weeds-and-erosion-control" element={<WeedsAndErosionControl />} />
+          <Route path="/gravel-driveways/decomposed-granite-driveways" element={<DecomposedGraniteDriveways />} />
+          <Route path="/gravel-driveways/recycled-concrete-and-millings" element={<RecycledConcreteAndMillings />} />
+          <Route path="/gravel-driveways/gravel-parking-pad-rv-pad" element={<GravelParkingPadRvPad />} />
+          <Route path="/gravel-driveways/snow-ice-plowing-gravel-driveway" element={<SnowIcePlowingGravelDriveway />} />
+          <Route path="/gravel-driveways/permits-and-hoa-gravel-driveway" element={<PermitsAndHoaGravelDriveway />} />
+          <Route path="/gravel-driveways/truckload-coverage-and-delivery-minimums" element={<TruckloadCoverageAndDeliveryMinimums />} />
+          <Route path="/gravel-driveways/diy-vs-hire-gravel-delivery" element={<DiyVsHireGravelDelivery />} />
+          <Route path="/gravel-driveways/cost-index" element={<GravelDrivewayCostIndexPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

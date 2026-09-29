@@ -3,6 +3,8 @@
 _Branch: `feature/metro-ui` · Started 2026-09-27 · Status: draft for owner review_
 
 > **Current status (2026-09-28)** — DFW = metro #1 (owner pick); Long Island (Eastern LM) = pilot/reference metro. Metro storefront is built on this branch: routes `/dallas-fort-worth`, `/long-island`, metro × category pages, and town pages, on a tested pricing/dates engine (44/44 tests passing, `tsc`/`eslint` clean). **Nothing committed or pushed yet.** **Top objective: get cited as a reference in Google Search AI Overviews / AI Mode and Gemini — ChatGPT citations come second** (§9). Two research docs are still in progress: `docs/metro/research/dfw-pricing-v2.md` (price-book v2) and `docs/metro/research/external-llm-competitor-synthesis.md` (cross-checked competitor synthesis). Full running log: `docs/metro/HANDOFF-LOG.md`.
+>
+> **Owner decision (2026-09-28):** **no Google Business Profile / Google Maps listing for DFW** — MGG has no DFW physical presence and GBP forbids virtual offices; every GBP/map-pack/GBP-dependent-LSA tactic is removed from the DFW plan and replaced with Google Shopping regional listings, Search + ChatGPT ads (ZIP targeting), AEO content, partner-yard co-marketing, Nextdoor/Facebook, pile signs + truck QR, and permit/CO-based subdivision targeting (§11, and in full in `docs/metro/research/dfw-90-day-gtm-v2.md`, the new authoritative DFW 90-day GTM plan). Long Island/ELM's own GBP is unaffected (real storefront). **Twilio 10DLC is already registered and approved — done ✓.** Metro Stripe checkout is **in progress (2026-09-28)** — live-site Stripe checkout already works; metro-specific checkout is being built now, not yet shipped.
 
 ## 0. The one-line thesis
 
@@ -142,6 +144,8 @@ flowchart LR
   N3 --> D
 ```
 
+_Diagram note: the `GBP` demand-layer node applies only to metros with a real, verifiable storefront (Long Island/ELM). DFW has no GBP node per the 2026-09-28 owner decision (§11) — its demand layer runs on Google Shopping regional listings, AEO content, and the other non-GBP tactics in `docs/metro/research/dfw-90-day-gtm-v2.md` instead._
+
 ### Definitions
 
 - **Metro** — a marketed area with its own URL, price book, and launch date (e.g. `long-island`). Contains zones.
@@ -155,7 +159,7 @@ flowchart LR
 2. Zones drawn and delivered price computed for every hero SKU × zone.
 3. Daily capacity (loads/day by truck size) entered so the date picker is honest.
 4. Metro page + material pages + town pages *only for towns with real deliveries*.
-5. GBP / Merchant Center local setup done (see §5).
+5. Merchant Center local setup done (see §5) — **plus GBP local setup only where the metro has a real, GBP-eligible storefront (e.g. Long Island/ELM). DFW has no GBP step here per the 2026-09-28 owner decision (§11); its local-visibility equivalent is Google Shopping regional listings + AEO content.**
 6. First 10 deliveries photographed → used on pages and for review asks.
 
 ### Metro sequencing
@@ -206,7 +210,7 @@ Ranked by expected impact ÷ effort. **O** = organic / owned, no ad spend.
 | # | Idea | Why it fits | Effort |
 |---|---|---|---|
 | 1 | **Pile sign + truck QR.** Every delivery gets a stake sign in the pile: "Delivered by MyGravelGuy — order yours in 60 seconds" + QR to the town page. | Piles sit in driveways for days; neighbors ask. Zero-cost local ad that compounds per delivery. | Low |
-| 2 | **Photo-proof → review ask.** Driver photo of drop → text: "Here's your delivery 📷 — 10 seconds to leave a review?" linked to the metro GBP. | Reviews drive the map pack and Shopping seller ratings; ELM already gets great feedback — capture it systematically. | Low |
+| 2 | **Photo-proof → review ask.** Driver photo of drop → text: "Here's your delivery 📷 — 10 seconds to leave a review?" linked to the metro's review destination — **for Long Island/ELM, the real ELM GBP; for DFW (no GBP, owner decision 2026-09-28), an on-site schema-eligible first-party review plus Facebook/Nextdoor/BBB-style platforms that don't require a storefront.** | Reviews drive Shopping seller ratings and (for LI) the map pack; ELM already gets great feedback — capture it systematically. | Low |
 | 3 | **Seasonal reorder texts** (consented customers): "Last April you got 6 yd black mulch at 12 Main St. Same again? Reply YES." One-tap reorder. | 49% of ELM deliveries are repeat customers; spring is 55% of volume. | Low–Med |
 | 4 | **Spring pre-book** (Feb–Mar): reserve your May delivery date, small discount, deposit via existing auth-hold. | Flattens May peak, locks demand before competitors' ads start. | Med |
 | 5 | **Estate / property-manager accounts** for the Hamptons: one account, many properties, saved drop pins + gate codes, monthly invoice. | East End tickets $700–$1,200; caretakers & house managers reorder for many homes. Leverage Host Hampton / property-watch relationships. | Med |
@@ -234,7 +238,7 @@ _Full findings: `docs/metro/research/ai-ads-and-google-shopping.md`._
 - **`unit_pricing_measure` doesn't support ton or cubic yard** — the allowed unit list has no bulk-material unit; leave it unset and keep "$/ton"/"$/yd" as free text, as today.
 - **Local Inventory Ads (LIA) require a real, GBP-verified storefront.** MGG-brand DFW (partner yards, no MGG storefront) doesn't qualify. Long Island qualifies only through **ELM's own** Merchant Center account + GBP — run as an "buy from Eastern LM" listing, not a MyGravelGuy one.
 - **Security bug:** the Merchant Center OAuth token is currently exposed client-side in `GoogleShoppingManager.tsx`. Move the integration into a (currently-missing) `google-shopping-feed` Supabase edge function so the browser never holds the credential.
-- **Setup steps, in order:** (1) migrate `merchantCenter.ts` off Content API v2.1 onto Merchant API; (2) build the server-side edge function and move the OAuth token there; (3) define one `region` per DFW zone from `dfwZips.ts`; (4) push a `regionalInventories` row per product × zone from the metro price book, leaving the base product price as a "starting at" reference; (5) encode the 3-ton minimum via `min_order_quantity`/`bulk_price` instead of only baking it into `price`; (6) skip LIA for MGG-brand DFW, but add willing partner yards' own GBP "Products" tab entries (free, no ad spend); (7) for Long Island, run LIA/free local listings out of ELM's own account in parallel with MGG's regional online listing.
+- **Setup steps, in order:** (1) migrate `merchantCenter.ts` off Content API v2.1 onto Merchant API; (2) build the server-side edge function and move the OAuth token there; (3) define one `region` per DFW zone from `dfwZips.ts`; (4) push a `regionalInventories` row per product × zone from the metro price book, leaving the base product price as a "starting at" reference; (5) encode the 3-ton minimum via `min_order_quantity`/`bulk_price` instead of only baking it into `price`; (6) skip LIA for MGG-brand DFW, but add willing partner yards' own GBP "Products" tab entries (free, no ad spend — with the partner's explicit consent if that listing names MyGravelGuy, per the 2026-09-28 owner decision); (7) for Long Island, run LIA/free local listings out of ELM's own account in parallel with MGG's regional online listing.
 
 ---
 
@@ -311,6 +315,11 @@ Old `/locations/:slug` pages: noindex + 301 to nearest live metro or `/waitlist`
 11. **Fix the Google Shopping feed** (§5): approve the Content API → Merchant API migration and the move of Merchant Center OAuth off the client, both now urgent (likely already broken in production).
 12. **Metro #2 candidates** after seeing MGG data — Houston/Austin lead on this pass's research (§6).
 
+**Resolved 2026-09-28 (no longer open):**
+- **DFW Google Business Profile / Maps listing:** decided — none. No DFW physical presence, and GBP forbids virtual offices. Every GBP/map-pack/GBP-dependent-LSA tactic is removed from the DFW plan; see §11 and `docs/metro/research/dfw-90-day-gtm-v2.md` for the non-GBP replacement stack. Long Island/ELM's own GBP is unaffected.
+- **Twilio 10DLC registration:** done ✓ — already registered and approved.
+- **Metro Stripe checkout:** in progress (2026-09-28) — live-site Stripe checkout already works; metro-specific checkout is being built now.
+
 ---
 
 ## 9. AEO — getting cited by Google AI Overviews/AI Mode, Gemini and ChatGPT
@@ -340,15 +349,17 @@ _Full audit: `docs/metro/research/seo-technical-audit.md`._
 
 ## 11. Paid & low-cost acquisition
 
-_Full docs: `docs/metro/research/ai-ads-and-google-shopping.md` (Part A, ad platforms) and `docs/metro/research/dfw-low-cost-gtm-and-tiktok.md`. External-LLM prompt set for cross-checking this research: `docs/metro/prompts/external-llm-prompts.md`._
+_Full docs: `docs/metro/research/ai-ads-and-google-shopping.md` (Part A, ad platforms), `docs/metro/research/dfw-low-cost-gtm-and-tiktok.md` (superseded on GBP/LSA, kept for TikTok/partnership/print detail), and the current authoritative DFW plan, **`docs/metro/research/dfw-90-day-gtm-v2.md`**. External-LLM prompt set for cross-checking this research: `docs/metro/prompts/external-llm-prompts.md`._
+
+> **Owner decision (2026-09-28) — no DFW Google Business Profile / Maps listing.** MGG has no DFW physical presence and GBP forbids virtual offices. Every GBP, map-pack, and GBP-dependent Local Services Ads (LSA) tactic is removed from the DFW plan. Replacements: Google Shopping regional listings (Merchant API `regions`/`regionalInventories`), Search + ChatGPT ads with ZIP targeting, AEO/organic content, partner-yard co-marketing, Nextdoor and Facebook, pile signs + truck QR codes, and permit/Certificate-of-Occupancy-based subdivision targeting. A partner yard's own GBP may mention MGG ordering with the partner's explicit consent, but never an MGG-branded DFW listing — Long Island/ELM's own GBP (real storefront) is unaffected. Reviews for DFW: collect on-site (schema-eligible first-party reviews) and on Facebook/Nextdoor/BBB-style platforms that don't require a storefront, not via a DFW GBP. **Twilio 10DLC is already registered and approved — done ✓.** Full detail: `docs/metro/research/dfw-90-day-gtm-v2.md`.
 
 - **ChatGPT ads** are now self-serve, no minimum spend, CPC bidding, with **ZIP-level geo targeting** (finest grain available; no radius targeting) — the one genuinely new paid channel worth a controlled test, targeted to the exact DFW ZIP set already in `dfwZips.ts`. Landscaping/home-improvement is a permitted vertical. Recommend a small, easily-paused budget (not the stale $50k/$250k pilot-era minimums, which no longer apply to self-serve) sized against DFW order economics once the metro landing page exists.
 - **Google AI Overview / AI Mode ads ride automatically** on MGG's existing Search/Shopping/PMax campaigns (`AW-8424526917`) — no new campaign type, no opt-out, no segmented reporting. The only leverage is feed/creative quality (§5), not a new platform to stand up.
 - **Perplexity has no ads today** (discontinued Feb 2026, subscription-only) — only the free Merchant Program is actionable. Microsoft Copilot ads are real but under-documented; lower priority.
 - **ChatGPT Instant Checkout is not a near-term fit** — reportedly pulled back, and its flat-price/tokenized-checkout model doesn't suit zone-priced, truck-minimum bulk orders. Apply for the free product feed only.
 - **TikTok verdict: organic-first, paid capped at $1,000 inside a $5,000 total DFW GTM budget.** No bulk-materials business (DFW or national) has a proven viral playbook — closest comps are DIY driveway/backyard-transformation creators, not materials suppliers. TikTok also has the **weakest buyer-fit of any channel evaluated**: only ~24% of US adults are daily users and usage collapses past age 50 (Pew, Nov 2025), versus Facebook (80% of 30–49s) and Nextdoor (majority-homeowner user base). Gated by explicit kill ($2 CPC / no organic lift → stop) and scale rules, only after a free 3-week organic filter.
-- **Top-5 low-cost tactics** (near-zero cost, highest intent-per-contact, ahead of any social platform): (1) Google Business Profile as a service-area business; (2) landscaper/pool-builder/fence-company partnerships (referral fee or reseller rate); (3) builder punch-list teams + HOA/property-manager partnerships (annual/seasonal contract pricing, a proven model per the T&C Materials comp in Houston); (4) a first-order coupon tied to a single SMS keyword (the attribution backbone for every offline tactic); (5) Google Shopping free listings.
-- **$5,000 DFW budget split:** TikTok paid $1,000 (hard cap) · Nextdoor Local Deals $600 · print (yard signs/door hangers/truck magnets, QR-coded, targeted at the fastest-growing new-construction suburbs — Celina, Princeton, Prosper, Forney, Anna) $700 · Google Ads/LSA reserve $800 (contingent on a week-1 eligibility check — pure bulk-material delivery, not installation, is not confirmed eligible for Local Services Ads) · Facebook/Instagram paid boost $500 · PR/content production $400 · reserve $1,000.
+- **Top-5 low-cost tactics** (near-zero cost, highest intent-per-contact, ahead of any social platform): (1) ~~Google Business Profile as a service-area business~~ **removed (owner decision 2026-09-28) — replaced by Google Shopping regional listings + AEO content**; (2) landscaper/pool-builder/fence-company partnerships (referral fee or reseller rate); (3) builder punch-list teams + HOA/property-manager partnerships (annual/seasonal contract pricing, a proven model per the T&C Materials comp in Houston); (4) a first-order coupon tied to a single SMS keyword (the attribution backbone for every offline tactic); (5) Google Shopping free listings.
+- **$5,000 DFW budget split — reallocated 2026-09-28:** TikTok paid $1,000 (hard cap) · Nextdoor Local Deals $600 · print (yard signs/door hangers/truck magnets, QR-coded, targeted at the fastest-growing new-construction suburbs — Celina, Princeton, Prosper, Forney, Anna) $700 · ~~Google Ads/LSA reserve $800~~ **removed — no DFW LSA (GBP-dependent); reallocated to ZIP-targeted Search ads, Shopping, and a ChatGPT ads test** · Facebook/Instagram paid boost $500 · PR/content production $400 · reserve $1,000. See `dfw-90-day-gtm-v2.md` for the itemized current split.
 
 ---
 
@@ -361,7 +372,7 @@ Ordered by impact on the top objective (Google AI Overviews/AI Mode/Gemini citat
 3. **`llms.txt` rewrite + robots.txt explicit AI-bot allowances + Bing Webmaster Tools/IndexNow** (§9/§10) — cheap, high-leverage plumbing; don't publish the new `llms.txt` until the DFW routes it references actually exist.
 4. **Gravel Driveway Hub wave 1** (§9) — hub page + the first ~10 spokes that don't require confirmed DFW pricing (cost overview, best gravel, calculator, depth guide, crusher-run-vs-#57, maintenance, ton coverage, drainage, gravel-vs-asphalt).
 5. **DFW partner outreach + price book v2** (§2A, §8) — sign 2–3 partner yards, finalize `docs/metro/research/dfw-pricing-v2.md`, and flip `dallasFortWorth.ts` from placeholder to confirmed pricing — this gates the DFW-specific AEO spokes, the Cost Index asset, and honest Google Shopping regional prices.
-6. **GBP service-area business setup for DFW** (§11) — zero cost, default destination for the highest-intent "gravel delivery [suburb]" search.
+6. ~~GBP service-area business setup for DFW~~ **REMOVED — owner decision 2026-09-28: no DFW GBP.** Replacement: Google Shopping regional listings (§5) + Gravel Driveway Hub/AEO content (§9) as the highest-intent "gravel delivery [suburb]" intercepts; see `docs/metro/research/dfw-90-day-gtm-v2.md` Weeks 1–2.
 7. **ChatGPT ads controlled test** (§11) — once the DFW metro landing page and zone pricing are live, so ZIP-targeted spend lands on a page that reflects the right price.
 8. **Review/photo engine** — wire the existing photo-of-drop SMS flow to a review ask (§4 organic idea #2), seeding the E-E-A-T and trust signals §9's content plan depends on.
 

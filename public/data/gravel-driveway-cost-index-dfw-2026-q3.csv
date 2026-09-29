@@ -1,0 +1,23 @@
+slug,name,category,unit,yard_n_sellers,yard_min,yard_median,yard_max,broker_delivered_n_sellers,broker_delivered_min,broker_delivered_median,broker_delivered_max,sample_start_date,sample_end_date,source_note
+pea-gravel,"Pea Gravel (3/8"")",gravel,ton,6,50,71.43,110,3,99.61,106.77,132.4,2026-09-27,2026-09-28,
+57-limestone,#57 Crushed Limestone,gravel,ton,8,39.29,64.29,95,3,75.08,84.54,135.34,2026-09-27,2026-09-28,
+flex-base,Flex Base / Road Base,gravel,ton,5,24.99,46.43,90.71,3,44.82,84.5,127.29,2026-09-27,2026-09-28,
+decomposed-granite,Decomposed Granite,gravel,ton,8,66.42,100.72,153.57,3,104.4,121.92,125.89,2026-09-27,2026-09-28,"Wide yard-class spread includes at least one colored/""black"" DG variant pooled with natural DG — treat the median as a rougher estimate than the seller count alone suggests."
+rip-rap,Rip Rap,gravel,ton,1,67.86,67.86,67.86,1,78.43,114.71,150.99,2026-09-27,2026-09-28,
+river-rock,"River Rock 1-3""",gravel,ton,6,49.29,102.5,375,3,61.46,233.36,346.96,2026-09-27,2026-09-28,"Wide yard-class spread ($49–$375/ton) reflects real size-grade variance (native river rock vs. 3-5"" decorative blends), not a data error — treat the median as a blended average across grades."
+mason-sand,Mason Sand,sand,ton,8,48.15,57.41,100,3,78.43,86.2,96.64,2026-09-27,2026-09-28,
+bank-sand,Bank Sand (fill),sand,ton,,,,,1,72.04,72.04,72.04,2026-09-27,2026-09-28,No DFW yard-class rows found in the current dataset; the yard figure is carried over from an earlier single-seller scrape and is the lowest-confidence number in this index.
+concrete-sand,Concrete Sand,sand,ton,4,54.07,59.26,71.11,2,61.92,69.28,76.63,2026-09-27,2026-09-28,Broker-delivered sample is thin (2 sellers) and sits close to the yard median — this is the one slug where MGG's proposed delivered price does not clear the broker-delivered median at the current premium rate.
+play-sand,Play / Playground Sand,sand,ton,1,71.85,71.85,71.85,3,78.43,94.74,108.5,2026-09-27,2026-09-28,
+washed-sand,Washed Sand,sand,ton,2,5.56,58.34,111.11,2,61.92,85.21,108.5,2026-09-27,2026-09-28,
+native-hardwood,Double-Shred Native Hardwood,mulch,yd,10,26,41,70,3,62.87,94.1,153.71,2026-09-27,2026-09-28,
+black-dyed,Black Dyed Mulch,mulch,yd,5,43,45,70,2,62.87,108.29,153.71,2026-09-27,2026-09-28,
+brown-dyed,Brown Dyed Mulch,mulch,yd,2,43,48,53,,,,,2026-09-27,2026-09-28,"No broker-delivered sellers found for this material — broker column is not comparable, yard-class only."
+dyed-red,Red Dyed Mulch,mulch,yd,5,38,46,53,2,62.87,99.71,136.55,2026-09-27,2026-09-28,
+cedar,Cedar Mulch,mulch,yd,3,55,59,65,1,78.3,78.3,78.3,2026-09-27,2026-09-28,
+pine-bark,Pine Bark Mulch,mulch,yd,3,50,55,63,1,78.3,78.3,78.3,2026-09-27,2026-09-28,
+playground-mulch,Playground Mulch,mulch,yd,2,17.99,44.99,52,2,78.3,139.9,201.49,2026-09-27,2026-09-28,
+sandy-loam,Sandy Loam Topsoil,soil,yd,10,10,45,65,4,17,82.69,105.88,2026-09-27,2026-09-28,
+garden-mix,Garden / Raised-Bed Mix,soil,yd,9,40.99,62.5,176,2,104.22,105.12,113.55,2026-09-27,2026-09-28,
+compost,Compost,soil,yd,6,40,52.5,70,1,67.87,73.4,78.92,2026-09-27,2026-09-28,
+select-fill,Select Fill Dirt,soil,yd,6,3.5,27.97,46.67,4,10,54.91,63.44,2026-09-27,2026-09-28,

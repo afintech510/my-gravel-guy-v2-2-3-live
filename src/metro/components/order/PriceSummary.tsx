@@ -4,8 +4,13 @@ import type { UseMetroOrderReturn } from '../../hooks/useMetroOrder';
 
 /** One delivered price — the premium is folded in, never itemized. */
 export function PriceSummary({ order }: { order: UseMetroOrderReturn }) {
-  const { metro, category, quoteResult } = order;
+  const { metro, category, quoteResult, checkoutEnabled, priceChangeQuote } = order;
   if (!category || !quoteResult) return null;
+
+  // If create-metro-checkout came back with a fresher price (PRICE_CHANGED), show that
+  // total instead of the client's — the customer confirms it explicitly in DetailsStep.
+  const displayTotal = checkoutEnabled && priceChangeQuote ? priceChangeQuote.total : quoteResult.total;
+  const priceUpdated = checkoutEnabled && priceChangeQuote != null;
 
   const feesNote = [
     quoteResult.saturdayFee > 0 ? `+${formatMoney(quoteResult.saturdayFee)} Saturday` : null,
@@ -39,8 +44,11 @@ export function PriceSummary({ order }: { order: UseMetroOrderReturn }) {
           )}
           <div className="mt-3 flex items-baseline justify-between border-t border-black/10 pt-3">
             <span className="text-sm font-bold text-[#0F1115]">Total</span>
-            <span className="text-xl font-extrabold text-[#0F1115]">{formatMoney(quoteResult.total)}</span>
+            <span className="text-xl font-extrabold text-[#0F1115]">{formatMoney(displayTotal)}</span>
           </div>
+          {priceUpdated && (
+            <p className="mt-2 text-xs font-medium text-amber-700">Price updated — please confirm below.</p>
+          )}
           {!metro.priceBookConfirmed && (
             <p className="mt-3 text-xs text-[#0F1115]/50">
               Estimated delivered price — confirmed by text before we charge anything.
@@ -56,7 +64,7 @@ export function PriceSummary({ order }: { order: UseMetroOrderReturn }) {
             {quoteResult.quantity} {formatUnit(category.unit, quoteResult.quantity)}
             {feesNote ? ` · ${feesNote}` : ''}
           </p>
-          <p className="shrink-0 text-lg font-extrabold text-[#0F1115]">{formatMoney(quoteResult.total)}</p>
+          <p className="shrink-0 text-lg font-extrabold text-[#0F1115]">{formatMoney(displayTotal)}</p>
         </div>
         {!metro.priceBookConfirmed && (
           <p className="mt-1 text-[11px] text-[#0F1115]/50">

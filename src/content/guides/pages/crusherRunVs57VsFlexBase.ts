@@ -13,6 +13,7 @@ export const crusherRunVs57VsFlexBase: GuideContent = {
   howWeKnow:
     "Eastern LM's yard team stocks and delivers crusher run and #57 stone every week, and DFW yards stock the flex-base equivalent — these compaction and use notes come from that hands-on material experience.",
   lastUpdated: '2026-09-28',
+  group: 'Materials & Comparisons',
   faqs: [
     {
       question: 'Can I use just #57 stone for my whole driveway?',

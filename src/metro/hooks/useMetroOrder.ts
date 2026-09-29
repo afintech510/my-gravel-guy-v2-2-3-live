@@ -3,7 +3,9 @@ import { trackEvent } from '@/utils/analytics';
 import type { CategorySlug, DeliveryZone, MaterialCategory, MaterialVariant, Metro, QuoteResult, SellUnit } from '../types';
 import { findZoneByZip, getCategory, getVariant, quote as computeQuote } from '../lib/pricing';
 import { getDeliveryDayOptions, type DeliveryDayOption } from '../lib/dates';
-import { submitMetroOrderRequest, submitMetroWaitlist } from '../services/metroQuoteService';
+import { submitMetroOrderRequest, submitMetroWaitlist, type MetroOrderSubmission } from '../services/metroQuoteService';
+import { isMetroCheckoutEnabled, startMetroCheckout, type MetroCheckoutResult, type StartMetroCheckoutDeps } from '../services/metroCheckoutService';
+import type { MetroServerQuote } from '../checkout/contract';
 
 export type OrderStep =
   | 'zip'
@@ -51,6 +53,13 @@ export interface UseMetroOrderOptions {
    */
   initialQuantity?: number;
   initialQuantityUnit?: SellUnit;
+  /**
+   * Redirect target for a successful checkout — defaults to `window.location.href =`.
+   * Overridable so tests can assert on the URL without touching jsdom navigation.
+   */
+  navigate?: (url: string) => void;
+  /** Test-only override for the checkout service's own dependencies (invoke, backup, UTM). */
+  checkoutDeps?: StartMetroCheckoutDeps;
 }
 
 /** Round to the nearest half unit — matches quantityForArea's rounding in lib/pricing.ts. */
@@ -79,6 +88,16 @@ export function useMetroOrder(metro: Metro, options: UseMetroOrderOptions = {}) 
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
+  /** Set when create-metro-checkout rejects the client's price with a fresher server
+   * quote (PRICE_CHANGED). Non-null means "show the new price and ask the customer to
+   * confirm again" — submit() never auto-redirects in this state. */
+  const [priceChangeQuote, setPriceChangeQuote] = useState<MetroServerQuote | null>(null);
+
+  /** Stripe checkout is only attempted once this metro's price book is confirmed AND the
+   * env flag is on — both are false for every metro today, so this stays false and submit()
+   * behaves exactly as before. See metroCheckoutService.isMetroCheckoutEnabled. */
+  const checkoutEnabled = useMemo(() => isMetroCheckoutEnabled(metro), [metro]);
+  const navigateToCheckout = options.navigate ?? ((url: string) => { window.location.href = url; });
 
   const category: MaterialCategory | undefined = categorySlug ? getCategory(metro, categorySlug) : undefined;
   const variant: MaterialVariant | undefined = category && variantSlug ? getVariant(category, variantSlug) : undefined;
@@ -191,6 +210,48 @@ export function useMetroOrder(metro: Metro, options: UseMetroOrderOptions = {}) 
     setContact(EMPTY_CONTACT);
     setSubmitted(false);
     setSubmitError(null);
+    setPriceChangeQuote(null);
+  }
+
+  /** Existing quote-request pipeline (DB row + SMS/Slack alert + emails) — unchanged
+   * behavior, also used as the transparent fallback when checkout is enabled but the
+   * server declines it for a non-customer-facing reason (fallback_quote). */
+  async function submitQuoteRequest(input: MetroOrderSubmission) {
+    try {
+      const result = await submitMetroOrderRequest(input);
+
+      if (result.success) {
+        setSubmitted(true);
+        setStep('confirmed');
+        trackEvent('form_submit', 'Quote', `metro:${metro.slug}`, 1);
+        trackEvent('generate_lead', 'metro_order', `${metro.slug}:${input.category.slug}:${input.variant.slug}`);
+      } else {
+        setSubmitError(result.error || 'Something went wrong submitting your request. Please try again.');
+      }
+    } catch (err) {
+      setSubmitError((err as Error).message || 'Something went wrong submitting your request.');
+    }
+  }
+
+  async function handleCheckoutResult(result: MetroCheckoutResult, input: MetroOrderSubmission) {
+    switch (result.kind) {
+      case 'redirect':
+        setPriceChangeQuote(null);
+        trackEvent('begin_checkout', 'metro_order', `${metro.slug}:${input.category.slug}:${input.variant.slug}`, Math.round(input.quote.total));
+        navigateToCheckout(result.url);
+        return;
+      case 'price_changed':
+        setPriceChangeQuote(result.serverQuote);
+        return;
+      case 'fallback_quote':
+        setPriceChangeQuote(null);
+        await submitQuoteRequest(input);
+        return;
+      case 'error':
+        setPriceChangeQuote(null);
+        setSubmitError(result.message);
+        return;
+    }
   }
 
   async function submit() {
@@ -216,35 +277,63 @@ export function useMetroOrder(metro: Metro, options: UseMetroOrderOptions = {}) 
       return;
     }
 
+    const input: MetroOrderSubmission = {
+      metro,
+      zip,
+      zone,
+      category,
+      variant,
+      quantity,
+      day,
+      street: contact.street,
+      dropNotes: contact.dropNotes,
+      name: contact.name,
+      email: contact.email,
+      mobile: contact.mobile,
+      quote: q,
+    };
+
+    setSubmitting(true);
+    setSubmitError(null);
+    setPriceChangeQuote(null);
+    try {
+      if (checkoutEnabled) {
+        const result = await startMetroCheckout(input, options.checkoutDeps);
+        await handleCheckoutResult(result, input);
+      } else {
+        await submitQuoteRequest(input);
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  /** Re-attempts checkout after a PRICE_CHANGED response, this time quoting the server's
+   * own total so it clears the tolerance check. Only meaningful while priceChangeQuote is
+   * set; a no-op otherwise. Never auto-called — the customer must explicitly confirm. */
+  async function confirmPriceChangeAndContinue() {
+    if (!priceChangeQuote || !zone || !category || !variant || !day) return;
+    const input: MetroOrderSubmission = {
+      metro,
+      zip,
+      zone,
+      category,
+      variant,
+      quantity,
+      day,
+      street: contact.street,
+      dropNotes: contact.dropNotes,
+      name: contact.name,
+      email: contact.email,
+      mobile: contact.mobile,
+      quote: { ...(quoteResult as QuoteResult), total: priceChangeQuote.total, basePrice: priceChangeQuote.basePrice, saturdayFee: priceChangeQuote.saturdayFee, rushFee: priceChangeQuote.rushFee, pricePerUnit: priceChangeQuote.pricePerUnit },
+    };
+
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const result = await submitMetroOrderRequest({
-        metro,
-        zip,
-        zone,
-        category,
-        variant,
-        quantity,
-        day,
-        street: contact.street,
-        dropNotes: contact.dropNotes,
-        name: contact.name,
-        email: contact.email,
-        mobile: contact.mobile,
-        quote: q,
-      });
-
-      if (result.success) {
-        setSubmitted(true);
-        setStep('confirmed');
-        trackEvent('form_submit', 'Quote', `metro:${metro.slug}`, 1);
-        trackEvent('generate_lead', 'metro_order', `${metro.slug}:${category.slug}:${variant.slug}`);
-      } else {
-        setSubmitError(result.error || 'Something went wrong submitting your request. Please try again.');
-      }
-    } catch (err) {
-      setSubmitError((err as Error).message || 'Something went wrong submitting your request.');
+      const result = await startMetroCheckout(input, options.checkoutDeps);
+      await handleCheckoutResult(result, input);
     } finally {
       setSubmitting(false);
     }
@@ -298,6 +387,9 @@ export function useMetroOrder(metro: Metro, options: UseMetroOrderOptions = {}) 
     submit,
     waitlistSubmitted,
     submitWaitlist,
+    checkoutEnabled,
+    priceChangeQuote,
+    confirmPriceChangeAndContinue,
   };
 }
 

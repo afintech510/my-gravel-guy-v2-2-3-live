@@ -32,6 +32,10 @@ export interface GuideContent {
   /** ISO date (YYYY-MM-DD) — used for Article datePublished/dateModified and the visible "Last updated" line */
   lastUpdated: string;
   faqs: GuideFaq[];
-  /** Present only on pages that also render a HowTo schema block (maintenance) */
+  /** Present only on pages that also render a HowTo schema block */
   howToSteps?: GuideHowToStep[];
+  /** Optional hub-page grouping label (e.g. "Cost & Planning"). Spokes without one fall
+   * back to a default "More guides" group on the hub. Optional so existing/external
+   * content objects (e.g. the Cost Index page) don't need to set it. */
+  group?: string;
 }

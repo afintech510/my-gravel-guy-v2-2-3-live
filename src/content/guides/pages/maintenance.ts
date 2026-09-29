@@ -13,6 +13,7 @@ export const maintenance: GuideContent = {
   howWeKnow:
     "These maintenance steps reflect what Eastern LM's yard team recommends to Long Island customers who've ordered fresh regrading material for the same driveway more than once since 2023.",
   lastUpdated: '2026-09-28',
+  group: 'Build, Maintain & Fix',
   howToSteps: [
     {
       name: 'Inspect twice a year',

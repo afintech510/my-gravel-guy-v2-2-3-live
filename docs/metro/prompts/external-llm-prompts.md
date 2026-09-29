@@ -2,6 +2,8 @@
 
 Use these to cross-check our in-house research. Each prompt ends with an output schema, so results can be merged into `docs/metro/research/data/dfw/` for comparison.
 
+> **Owner decision (2026-09-28) — no DFW Google Business Profile / Maps listing.** MGG has no DFW physical presence and GBP forbids virtual offices, so MGG will not create a DFW GBP or pursue GBP-dependent Local Services Ads (LSA). P3 (below) and the GBP/LSA prompts inside P6 remain useful **as competitor/map-pack research** (understanding how competitors like Hello Gravel, Gravel Monkey, and local yards rank) but their outputs should not be read as tasks for MGG's own DFW GBP setup — there isn't one. See `docs/metro/research/dfw-90-day-gtm-v2.md` for the current DFW plan and its non-GBP tactics.
+
 **Which tool for what**
 
 | Tool | Best at | Use it for |

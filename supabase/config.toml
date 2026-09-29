@@ -12,6 +12,15 @@ verify_jwt = false
 [functions.create-auth-hold]
 verify_jwt = false
 
+[functions.create-metro-checkout]
+verify_jwt = false
+
+[functions.verify-metro-payment]
+verify_jwt = false
+
+[functions.metro-stripe-webhook]
+verify_jwt = false
+
 [functions.process-abandoned-carts]
 verify_jwt = false
 

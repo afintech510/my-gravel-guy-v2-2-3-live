@@ -11,8 +11,9 @@ export const bestGravel: GuideContent = {
   directAnswer:
     "Number 57 crushed limestone is the most common driveway top stone: angular edges lock together for stability and it drains well. Crusher run and flex base compact harder as a base layer. Pea gravel looks decorative but shifts underfoot and is not recommended as a driveway's main surface, especially on slopes or under vehicle traffic.",
   howWeKnow:
-    "Eastern LM's yard team has loaded and delivered these exact materials — #57 stone, crusher run, and pea gravel — for thousands of Long Island driveway orders since 2023, and stocks the North Texas equivalents for DFW.",
+    "Eastern LM's yard team has loaded and delivered these exact materials — #57 stone, crusher run, and pea gravel — for thousands of Long Island driveway orders since 2023; the North Texas recommendations here reflect the same compaction and drainage principles applied to the flex-base and #57 limestone equivalents DFW-area yards commonly stock.",
   lastUpdated: '2026-09-28',
+  group: 'Materials & Comparisons',
   faqs: [
     {
       question: 'Is crusher run or #57 stone better for a driveway?',

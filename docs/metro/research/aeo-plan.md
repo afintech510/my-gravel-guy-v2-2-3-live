@@ -245,7 +245,7 @@ https://mygravelguy.com/sitemap.xml
 | Page type | Schema | Notes |
 |---|---|---|
 | Hub (`/gravel-driveways/`) | `CollectionPage` + `BreadcrumbList` | Links out to all spokes |
-| Metro landing (`/dallas-fort-worth`) | `LocalBusiness` (or `Service` if `LocalBusiness` overstates a physical DFW location before a partner yard is signed — **[REC] use `Service` with `areaServed` until a real DFW address/partner exists; don't claim a location MGG doesn't have**) + `BreadcrumbList` | Honesty-gated on partner status |
+| Metro landing (`/dallas-fort-worth`) | `Service` with `areaServed` (**not** `LocalBusiness` — per the 2026-09-28 owner decision, MGG has no DFW address/storefront of its own, signed partner yard or not, so `LocalBusiness` would overstate a physical DFW location MGG doesn't have) + `BreadcrumbList` | Long Island/ELM, which does have a real address, can use `LocalBusiness` on its own metro landing page — this row is DFW-specific |
 | Material spoke (`/dallas-fort-worth/gravel-delivery`) | `Product` or `Service` (reuse the `Product` JSON-LD block already built in `MarketMaterialPage.tsx` — same shape: price, availability, `MerchantReturnPolicy`) + `FAQPage` (`faqJsonLd` from `FaqSection.tsx`) | Reuse, don't reinvent |
 | Comparison/guide spokes (crusher-run-vs-57, depth guide, etc.) | `Article` + `FAQPage` where the page ends in a Q&A section | `Article.dateModified` must be real (ties to §3.1.5) |
 | HowTo spokes (maintenance, drainage) | `HowTo` | Step-by-step; Google explicitly supports rich results for this type |
@@ -273,8 +273,8 @@ https://mygravelguy.com/sitemap.xml
 ### 3.7 Off-site entity building
 
 **[REC]** — none of this is repo work; flagging as owner/marketing-agent action items, prioritized by effort:cost ratio:
-1. **Google Business Profile** for the DFW operation once a partner yard/address exists — GBP is a direct AI-Overview/Gemini local-pack input and currently MGG has no physical DFW presence to list (open question already logged in `HANDOFF-LOG.md`: DFW partner yard relationships).
-2. **`sameAs` schema** on the `Organization`/`LocalBusiness` markup linking every real owned profile (GBP, any verified social accounts, reviews.io/Trustindex if MGG sets one up) — directly mitigates the §2.3 brand-collision problem by giving engines an unambiguous entity graph to resolve "MyGravelGuy" against, rather than blending it with mygravelmonkey.com or thegravelguy.com.
+1. ~~**Google Business Profile** for the DFW operation once a partner yard/address exists~~ **REMOVED — owner decision 2026-09-28: no DFW GBP, even once a partner yard is signed.** MGG has no DFW physical presence of its own, and GBP forbids virtual offices, so an MGG-branded DFW GBP is never in scope — signing a partner yard does not change this (the partner yard's own GBP is a separate entity; MGG's DFW local-pack/AI-local-answer input for DFW is Google Shopping regional listings (§5) + the Gravel Driveway Hub/metro-town-page AEO content (§3.2), not a DFW GBP. With the partner's explicit consent, that partner's own GBP may name MyGravelGuy as an ordering option — see `docs/metro/research/dfw-90-day-gtm-v2.md`. Long Island's real ELM GBP is unaffected and still a direct AI-Overview/Gemini local-pack input for that metro.
+2. **`sameAs` schema** on the `Organization`/`LocalBusiness` markup linking every real owned profile (**Long Island/ELM's real GBP** — not a DFW GBP, which doesn't exist per the decision above — any verified social accounts, reviews.io/Trustindex if MGG sets one up) — directly mitigates the §2.3 brand-collision problem by giving engines an unambiguous entity graph to resolve "MyGravelGuy" against, rather than blending it with mygravelmonkey.com or thegravelguy.com.
 3. **YouTube how-to content** (driveway prep, coverage math, "what crusher run vs #57 looks like") — cheap to produce with real ELM/DFW yard footage, and video is a format Google's AI features and Gemini both surface as its own SERP feature, a second citation surface beyond text.
 4. **Reddit genuine participation** (r/landscaping, r/HomeImprovement, local DFW/Long Island subs) — answer real driveway-gravel threads with real expertise, link only when genuinely relevant. **[REC] explicit non-goal:** do not seed/plant questions or post as multiple accounts — Reddit's own anti-manipulation enforcement and reputational risk to a real operating business make this a hard line, and it would undercut the E-E-A-T story in §3.6 if discovered.
 5. **Local directories/citations** (data aggregators, Chamber of Commerce, TX/NY-specific trade directories) — standard NAP-consistency work, low effort, supports the entity-disambiguation goal in #2.
@@ -322,7 +322,7 @@ https://mygravelguy.com/sitemap.xml
 - Byline retrofit: attach named ELM/DFW operator authorship to all spokes shipped so far (§3.6).
 - Real delivery photos swapped in where stock images were used as placeholders.
 - `sameAs`/`Organization` schema pass addressing the §2.3 brand-collision risk.
-- Owner action: GBP setup once DFW partner yard exists; local directory/citation submissions.
+- Owner action: ~~GBP setup once DFW partner yard exists~~ **REMOVED — owner decision 2026-09-28: no DFW GBP ever, per §3.7.1**; local directory/citation submissions (still applies, GBP-independent).
 - `Dataset` schema finalized on the Cost Index once at least one metro's numbers are confirmed.
 
 ### Weeks 9–10 — ChatGPT/Perplexity-specific hardening + remaining Wave 1 rows
@@ -371,7 +371,7 @@ https://mygravelguy.com/sitemap.xml
 - Whether Cloudflare actually sits in front of the Hetzner VPS in production (blocks a clean §3.1.2 recommendation).
 - Current Bing Webmaster Tools / GSC verification status (not visible from the repo).
 - Current Cloudflare bot-management plan/settings, if applicable.
-- DFW partner yard status — blocks `LocalBusiness`/GBP work and confirmed pricing for the Cost Index (tracked as an existing open question in `docs/metro/HANDOFF-LOG.md`, not new to this plan).
+- DFW partner yard status — blocks confirmed pricing for the Cost Index (tracked as an existing open question in `docs/metro/HANDOFF-LOG.md`, not new to this plan). **No longer blocks GBP work — per the 2026-09-28 owner decision, DFW has no GBP work to unblock (§3.7.1); the `Service`-not-`LocalBusiness` schema guidance in §3.4 stands regardless of partner-yard status.**
 - Real-time confirmation of whether ChatGPT search still routes through Bing's index as of September 2026 — sourced to 2023-era reporting on the OpenAI/Microsoft partnership; the underlying architecture is not re-confirmed by a 2026 official source in this research pass.
 
 ---

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { GuidePageShell } from '@/components/guides/GuidePageShell';
 import { ComparisonTable } from '@/components/guides/ComparisonTable';
 import { DrivewayCostTable } from '@/components/guides/DrivewayCostTable';
@@ -25,6 +26,17 @@ export default function GravelDrivewayCost() {
           our pricing engine for both metros we currently serve.
         </p>
         <DrivewayCostTable />
+        <p className="text-sm text-[#0F1115]/70">
+          For a full breakdown of real delivered pricing by metro and material, see our{' '}
+          <Link to="/gravel-driveways/cost-index" className="underline">
+            Gravel Driveway Cost Index
+          </Link>
+          . For a truckload-by-truckload breakdown of what that pricing covers, see our{' '}
+          <Link to="/gravel-driveways/truckload-coverage-and-delivery-minimums" className="underline">
+            truckload coverage guide
+          </Link>
+          .
+        </p>
       </section>
     </GuidePageShell>
   );

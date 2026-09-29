@@ -13,6 +13,7 @@ export const cost: GuideContent = {
   howWeKnow:
     "The delivered-price table below is generated live from MyGravelGuy's own pricing engine — the same one used at checkout — not a generic national estimate.",
   lastUpdated: '2026-09-28',
+  group: 'Cost & Planning',
   faqs: [
     {
       question: 'Is material cost or delivery cost the bigger driver of price?',
