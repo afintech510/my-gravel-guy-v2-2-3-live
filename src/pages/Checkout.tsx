@@ -84,18 +84,20 @@ const Checkout = () => {
         delivery_instructions: item.deliveryInstructions
       }));
 
-      const { data, error } = await supabase
+      // rls-hotfix: anon SELECT on `orders` is being removed, so `.insert().select()` would come
+      // back empty under RLS even on a successful insert. This debug button only reports a count,
+      // which we already know client-side.
+      const { error } = await supabase
         .from('orders')
-        .insert(orderRecords)
-        .select();
+        .insert(orderRecords);
 
       if (error) {
         throw error;
       }
-      
+
       toast({
         title: "Database Test Successful!",
-        description: `Inserted ${data?.length || 0} test records`,
+        description: `Inserted ${orderRecords.length} test records`,
         className: "border-green-500 border-2"
       });
 

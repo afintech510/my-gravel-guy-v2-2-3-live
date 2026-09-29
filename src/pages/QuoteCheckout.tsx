@@ -15,6 +15,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { isRpcMissing } from '@/utils/rlsHotfixCompat';
 
 interface QuoteItem {
   id: string;
@@ -88,12 +89,33 @@ const QuoteCheckout = () => {
 
   const fetchQuoteData = async () => {
     try {
-      // Use pattern matching to fetch all related items (base + suffixed orders)
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .like('order_id', `${quoteId}%`)
-        .eq('status', 'Quote');
+      // rls-hotfix: anon SELECT on `orders` has been removed (F5 fix — anyone with the public
+      // anon key could previously `SELECT *` the entire orders table). This page's only access
+      // control was ever "knowledge of the quoteId string" (same as today — no email/token check
+      // added here, to avoid changing behavior in this hotfix); it's now served through a
+      // SECURITY DEFINER RPC scoped to `status = 'Quote'` rows matching this id prefix, instead of
+      // a raw table SELECT that RLS would otherwise block entirely.
+      // rls-hotfix: cast to `any` — this RPC isn't in the generated Supabase types (same pattern
+      // already used by src/hooks/useAuth.ts for check_user_admin_status). Update types.ts once
+      // the SQL below is applied and types are regenerated.
+      let { data, error } = await (supabase as any)
+        .rpc('get_quote_by_id', { p_quote_id: quoteId });
+
+      if (error && isRpcMissing(error)) {
+        // rls-hotfix TEMPORARY COMPAT SHIM: this app deploy can land before
+        // sql/rls-hotfix-stage0a.sql is applied (see docs/security/RLS-HOTFIX-RUNBOOK.md, step
+        // order). Until the RPC exists, fall back to the exact query this replaced so the page
+        // keeps working under TODAY's (pre-SQL) permissive policies. Once the RPC exists this
+        // branch never runs again (the RPC call above succeeds) — safe to delete after the SQL
+        // has been applied to production and confirmed via probe-anon-exposure.sh.
+        const fallback = await supabase
+          .from('orders')
+          .select('*')
+          .like('order_id', `${quoteId}%`)
+          .eq('status', 'Quote');
+        data = fallback.data;
+        error = fallback.error;
+      }
 
       if (error) throw error;
       
@@ -137,28 +159,43 @@ const QuoteCheckout = () => {
     
     setIsSavingDelivery(true);
     try {
-      // Update all quote items with the new delivery info
-      const updatePromises = quoteItems.map(item => 
-        supabase
-          .from('orders')
-          .update({
-            delivery_name: deliveryForm.delivery_name,
-            delivery_email: deliveryForm.delivery_email,
-            delivery_phone: deliveryForm.delivery_phone,
-            delivery_street: deliveryForm.delivery_street,
-            delivery_city: deliveryForm.delivery_city,
-            delivery_state: deliveryForm.delivery_state,
-            delivery_zip: deliveryForm.delivery_zip,
-            delivery_date: deliveryForm.delivery_date,
-            delivery_time_preference: deliveryForm.delivery_time_preference,
-            delivery_instructions: deliveryForm.delivery_instructions,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', item.id)
-      );
+      // rls-hotfix: anon UPDATE on `orders` has been removed for the same reason as the SELECT
+      // above (no ownership check existed — anyone could update any order's delivery fields via
+      // a raw PATCH). Replaced with a SECURITY DEFINER RPC scoped to `status = 'Quote'` rows
+      // matching this quoteId prefix, restricted to only the delivery_* columns (mirrors exactly
+      // what this handler used to PATCH directly).
+      // rls-hotfix: cast to `any` — see note in fetchQuoteData above.
+      const deliveryPayload = {
+        delivery_name: deliveryForm.delivery_name,
+        delivery_email: deliveryForm.delivery_email,
+        delivery_phone: deliveryForm.delivery_phone,
+        delivery_street: deliveryForm.delivery_street,
+        delivery_city: deliveryForm.delivery_city,
+        delivery_state: deliveryForm.delivery_state,
+        delivery_zip: deliveryForm.delivery_zip,
+        delivery_date: deliveryForm.delivery_date,
+        delivery_time_preference: deliveryForm.delivery_time_preference,
+        delivery_instructions: deliveryForm.delivery_instructions,
+      };
+      let { error: updateError } = await (supabase as any).rpc('update_quote_delivery_info', {
+        p_quote_id: quoteId,
+        p_delivery: deliveryPayload,
+      });
 
-      await Promise.all(updatePromises);
-      
+      if (updateError && isRpcMissing(updateError)) {
+        // rls-hotfix TEMPORARY COMPAT SHIM — see the matching note in fetchQuoteData above.
+        const updatePromises = quoteItems.map(item =>
+          supabase
+            .from('orders')
+            .update({ ...deliveryPayload, updated_at: new Date().toISOString() })
+            .eq('id', item.id)
+        );
+        const results = await Promise.all(updatePromises);
+        updateError = results.find(r => r.error)?.error ?? null;
+      }
+
+      if (updateError) throw updateError;
+
       // Update local state
       setQuoteItems(prev => prev.map(item => ({
         ...item,

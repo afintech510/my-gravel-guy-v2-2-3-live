@@ -160,16 +160,20 @@ export const createSpecMaterialQuote = async (quoteData: SpecMaterialQuoteData) 
   console.log('Inserting spec quote order:', orderRecord);
 
   try {
-    const { data, error } = await supabase
+    // rls-hotfix: anon SELECT on `orders` is being removed, so `.insert().select().single()`
+    // would return zero rows under RLS and `.single()` would throw. `orderRecord` already has
+    // everything the caller (SpecReservationForm.tsx) reads (`orderId`/`success`), so skip
+    // requesting the DB representation.
+    const { error } = await supabase
       .from('orders')
-      .insert([orderRecord])
-      .select()
-      .single();
+      .insert([orderRecord]);
 
     if (error) {
       console.error('Error creating spec quote:', error);
       throw error;
     }
+
+    const data = orderRecord;
 
     // Also create a lead entry for the supplier quotes system
     try {

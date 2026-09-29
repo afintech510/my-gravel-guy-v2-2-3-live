@@ -149,11 +149,18 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
       }
     });
 
-    // Attempt database insert
-    const { data, error } = await supabase
+    // Attempt database insert.
+    // rls-hotfix: this is the anonymous checkout insert (PaymentSuccess.tsx -> handleDatabaseInsert)
+    // that MUST keep working with no functional change under the hotfix. Anon INSERT on `orders`
+    // stays exactly as permissive as today, but anon SELECT is being removed, so `.insert().select()`
+    // would come back with zero rows (Postgres RLS governs INSERT...RETURNING via the SELECT policy)
+    // even though the row was actually inserted. Every field the callers of insertOrderToDatabase
+    // read (PaymentSuccess.tsx's handleDatabaseInsert/transformOrderDataForEmail) is already present
+    // in `orderRecords` (built client-side above), except the DB-generated `id`, which is only ever
+    // used as a React list key — synthesize a stable one from order_id+index instead.
+    const { error } = await supabase
       .from('orders')
-      .insert(orderRecords)
-      .select();
+      .insert(orderRecords);
 
     if (error) {
       console.error('Enhanced database insert error details:', {
@@ -165,6 +172,11 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
       throw new Error(`Enhanced database insert failed: ${error.message}`);
     }
 
+    const data = orderRecords.map((record, index) => ({
+      ...record,
+      id: `${record.order_id}-${index}`,
+    }));
+
     console.log('Successfully created enhanced order records:', {
       insertedCount: data?.length || 0,
       sampleRecord: data?.[0] ? {
@@ -174,7 +186,7 @@ export const insertOrderToDatabase = async (orderData: OrderInsertData) => {
         stripe_payment_intent_id: data[0].stripe_payment_intent_id
       } : null
     });
-    
+
     return data;
 
   } catch (error) {

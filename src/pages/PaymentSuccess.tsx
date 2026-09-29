@@ -696,12 +696,14 @@ const PaymentSuccess = () => {
       
       console.log('Order records for checkout-style insert:', orderRecords);
       
-      // Direct database insert like checkout does
-      const { data, error } = await supabase
+      // Direct database insert like checkout does.
+      // rls-hotfix: anon SELECT on `orders` is being removed, so `.insert().select()` would come
+      // back empty under RLS even though the insert succeeded. Everything downstream (display,
+      // emails) only needs the fields already present in `orderRecords`.
+      const { error } = await supabase
         .from('orders')
-        .insert(orderRecords)
-        .select();
-      
+        .insert(orderRecords);
+
       if (error) {
         console.error('Checkout-style insert error:', error);
         toast({
@@ -711,9 +713,10 @@ const PaymentSuccess = () => {
         });
         return;
       }
-      
+
+      const data = orderRecords.map((record, index) => ({ ...record, id: `${record.order_id}-${index}` }));
       console.log('Checkout-style insert successful:', data);
-      
+
       // Transform to display format
       const displayOrders = data.map(order => ({
         id: order.id,

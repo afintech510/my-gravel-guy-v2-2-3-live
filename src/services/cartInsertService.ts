@@ -74,16 +74,20 @@ export const insertCartToDatabase = async (cartData: CartInsertData) => {
       return record;
     });
 
-    // Insert to database
-    const { data, error } = await supabase
+    // Insert to database.
+    // rls-hotfix: anon SELECT on `orders` is being removed, so `.insert().select()` would return
+    // zero rows (RLS applies the SELECT policy to RETURNING rows too) or throw. We already have
+    // every field we need client-side (cartRecords), so skip requesting the DB representation.
+    const { error } = await supabase
       .from('orders')
-      .insert(cartRecords)
-      .select();
+      .insert(cartRecords);
 
     if (error) {
       console.error('Cart database insert error:', error);
       throw new Error(`Cart database insert failed: ${error.message}`);
     }
+
+    const data = cartRecords;
 
     console.log('Successfully created cart records:', {
       insertedCount: data?.length || 0,
