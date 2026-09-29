@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { CheckCircle, Camera, Loader2, AlertCircle, Package, ShieldCheck, PenLine, Smartphone, Mail } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import StarRating from '@/components/reviews/StarRating';
+import { isRpcMissing } from '@/utils/rlsHotfixCompat';
 
 interface ConfirmationRecord {
   token: string;
@@ -239,11 +240,30 @@ const DeliveryConfirm: React.FC = () => {
     const load = async () => {
       try {
         setDebugInfo(`loading... token=${token.substring(0, 8)}... | UA=${navigator.userAgent.substring(0, 60)}`);
-        const { data, error } = await supabase
-          .from('delivery_confirmations')
-          .select('token, order_id, confirmed_at, confirmed_delivery, verified_at, product_name, quantity_tons, delivery_address, delivery_date, customer_name, stripe_payment_id, customer_phone, customer_email')
-          .eq('token', token)
-          .maybeSingle();
+        // rls-hotfix: `delivery_confirmations` had zero RLS — anyone with the public anon key
+        // could `SELECT *` and enumerate every row's token/PII with no token needed at all (the
+        // `.eq('token', token)` filter was only ever a client-side convention). RLS on this table
+        // now denies anon/authenticated SELECT entirely; this SECURITY DEFINER RPC is the only
+        // anon-reachable read path, and it still requires the exact token as an argument.
+        let { data: rows, error } = await (supabase as any)
+          .rpc('get_delivery_confirmation', { p_token: token });
+
+        if (error && isRpcMissing(error)) {
+          // rls-hotfix TEMPORARY COMPAT SHIM: this app deploy can land before
+          // sql/rls-hotfix-stage0a.sql is applied (see docs/security/RLS-HOTFIX-RUNBOOK.md).
+          // Until the RPC exists, fall back to the exact query this replaced so the page keeps
+          // working under TODAY's (pre-SQL) permissive policies. Safe to delete once the SQL has
+          // been applied to production and confirmed via probe-anon-exposure.sh.
+          const fallback = await supabase
+            .from('delivery_confirmations')
+            .select('token, order_id, confirmed_at, confirmed_delivery, verified_at, product_name, quantity_tons, delivery_address, delivery_date, customer_name, stripe_payment_id, customer_phone, customer_email')
+            .eq('token', token)
+            .maybeSingle();
+          rows = fallback.data ? [fallback.data] : [];
+          error = fallback.error;
+        }
+
+        const data = rows && rows.length > 0 ? rows[0] : null;
 
         console.log('[DeliveryConfirm] load result:', { data: !!data, error: error?.message, token });
         if (error || !data) {
@@ -343,19 +363,38 @@ const DeliveryConfirm: React.FC = () => {
         signatureUrl = sigUrlData.publicUrl;
       }
 
-      const { error: updateErr } = await supabase
-        .from('delivery_confirmations')
-        .update({
-          confirmed_at: new Date().toISOString(),
-          confirmed_delivery: true,
-          photo_url: photoUrl,
-          signature_url: signatureUrl,
-          rating: rating > 0 ? rating : null,
-          review_text: reviewText.trim() || null,
-          confirmed_location: location,
-          confirmed_user_agent: navigator.userAgent,
-        })
-        .eq('token', token);
+      // rls-hotfix: same reasoning as the load above — anon UPDATE on `delivery_confirmations` is
+      // now denied by RLS; this SECURITY DEFINER RPC re-validates the token server-side before
+      // writing, instead of a raw PATCH that anyone who could see (or guess) any token — no
+      // longer just "the right" token — could have issued.
+      let { error: updateErr } = await (supabase as any).rpc('confirm_delivery', {
+        p_token: token,
+        p_confirmed_delivery: true,
+        p_photo_url: photoUrl,
+        p_signature_url: signatureUrl,
+        p_rating: rating > 0 ? rating : null,
+        p_review_text: reviewText.trim() || null,
+        p_confirmed_location: location,
+        p_confirmed_user_agent: navigator.userAgent,
+      });
+
+      if (updateErr && isRpcMissing(updateErr)) {
+        // rls-hotfix TEMPORARY COMPAT SHIM — see the matching note in the load effect above.
+        const fallback = await supabase
+          .from('delivery_confirmations')
+          .update({
+            confirmed_at: new Date().toISOString(),
+            confirmed_delivery: true,
+            photo_url: photoUrl,
+            signature_url: signatureUrl,
+            rating: rating > 0 ? rating : null,
+            review_text: reviewText.trim() || null,
+            confirmed_location: location,
+            confirmed_user_agent: navigator.userAgent,
+          })
+          .eq('token', token);
+        updateErr = fallback.error;
+      }
 
       if (updateErr) throw updateErr;
       setPageState('success');

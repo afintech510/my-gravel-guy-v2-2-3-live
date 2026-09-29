@@ -73,17 +73,21 @@ export const createQuoteOrder = async (quoteData: QuoteOrderData) => {
   console.log('Inserting quote order record:', orderRecord);
 
   try {
-    const { data, error } = await supabase
+    // rls-hotfix: anon SELECT on `orders` is being removed, so `.insert().select().single()`
+    // would return zero rows under RLS (RETURNING is governed by the SELECT policy too) and
+    // `.single()` would throw on the empty result. We already built `orderRecord` client-side
+    // with everything callers need (see quoteEmailService.ts — only `orderId`/`success` are read),
+    // so skip requesting the DB representation.
+    const { error } = await supabase
       .from('orders')
-      .insert([orderRecord])
-      .select()
-      .single();
+      .insert([orderRecord]);
 
     if (error) {
       console.error('Error creating quote order:', error);
       throw error;
     }
 
+    const data = orderRecord;
     console.log('Quote order created successfully:', data);
     return { success: true, orderId, data };
   } catch (error) {
