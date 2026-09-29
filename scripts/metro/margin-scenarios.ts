@@ -1,23 +1,34 @@
 /**
- * DFW margin-scenario model — P1-MARGIN-SCENARIOS.
+ * DFW margin-scenario model — P1-MARGIN-SCENARIOS, extended by P2-PRICING-FLOOR
+ * (2026-09-28) with a `floor250` table modeling the owner's "$250/order" decision.
  *
  * Analysis-only script owned by this agent. Imports the REAL metro config and the REAL
  * `quote()` pricing engine (src/metro/config/dallasFortWorth.ts, src/metro/lib/pricing.ts)
- * so every number in docs/metro/research/dfw-margin-scenarios.md traces back to running
- * code, not hand math. Read-only on src/** and every other doc — writes nothing except
- * stdout (piped/redirected by the caller into the doc's tables).
+ * so every number in docs/metro/research/dfw-margin-scenarios.md and
+ * docs/metro/research/dfw-pricing-v3-floor.md traces back to running code, not hand math.
+ * Read-only on src/** and every other doc — writes nothing except stdout
+ * (piped/redirected by the caller into the doc's tables).
  *
  * Run: npx tsx scripts/metro/margin-scenarios.ts [table]
- *   table: main | qty | premium | delivery | matrix | cac | walkaway | all (default: all)
+ *   table: main | qty | premium | delivery | matrix | tiered | cac | walkaway | floor250 | v3compare | all (default: all)
  *
  * Background (see docs/metro/partners/economics.md, docs/metro/research/dfw-pricing-v2.md):
- * - dfwCatalog.ts's nodePricePerUnit = yard-class median x 0.85 (an ASSUMED wholesale
- *   discount that has not been negotiated with any partner).
+ * - Through the v2 pass, dfwCatalog.ts's nodePricePerUnit = yard-class median x 0.85 (an
+ *   ASSUMED wholesale discount that has not been negotiated with any partner).
  * - economics.md found that if a partner charges MGG its normal yard price (no 0.85
  *   discount), gross margin on a 10-unit order is only ~5-7%, and negative at +10% over
- *   median. This script generalizes that finding across all 22 SKUs, 3 quantities, 2
- *   zones, 4 partner-discount scenarios, 4 partner-delivery-cost scenarios, and 8 MGG
- *   pricing structures (5 premiumRates + 3 flat service-fee variants on top of 0.25).
+ *   median. The v2 analysis (tables below, still reproducible) generalized that finding
+ *   across all 22 SKUs, 3 quantities, 2 zones, 4 partner-discount scenarios, 4
+ *   partner-delivery-cost scenarios, and 8 MGG pricing structures (5 premiumRates + 3
+ *   flat service-fee variants on top of 0.25).
+ * - v3 (2026-09-28, "make at least $250/order" owner decision): the cost basis moved to
+ *   yard-median x 1.00 (no assumed discount — see WHOLESALE_FACTOR in
+ *   scripts/metro/catalog-from-proposal.mjs), each SKU got its own tiered premiumRate
+ *   (baked into dfwCatalog.ts as `premiumRate`, matching TIERED_PREMIUM below), and
+ *   `quote()` gained a `minMarginPerOrder` floor (dallasFortWorth.pricing, $250). The
+ *   `floor250` table below re-runs the same 22-SKU walk using the REAL current config
+ *   (tiered premium + $250 floor + 1.0x-yard-median cost basis) end to end, instead of
+ *   the manual TIERED_PREMIUM overrides the earlier tables use.
  */
 import { dallasFortWorth } from '../../src/metro/config/dallasFortWorth';
 import { quote, planLoads } from '../../src/metro/lib/pricing';
@@ -72,11 +83,16 @@ function allSkus(metro: Metro): SkuRow[] {
   return rows;
 }
 
-/** Yard median for a slug, falling back to nodePrice/0.85 for bank-sand (slug-stats yard_median is null; see dfw-pricing-v2.md "bank-sand remains ... carried over from the v1 scrape"). */
+// Must match the WHOLESALE_FACTOR default in scripts/metro/catalog-from-proposal.mjs —
+// dfwCatalog.ts's nodePricePerUnit = yard median x this factor (1.00 as of the v3 "$250
+// floor" pass; was 0.85 through v2).
+const CURRENT_WHOLESALE_FACTOR = 1.0;
+
+/** Yard median for a slug, falling back to nodePrice/CURRENT_WHOLESALE_FACTOR for bank-sand (slug-stats yard_median is null; see dfw-pricing-v2.md "bank-sand remains ... carried over from the v1 scrape"). */
 function yardMedianFor(sku: SkuRow): { value: number; fallback: boolean } {
   const stat = STATS[sku.variant.slug];
   if (stat && stat.yard_median != null) return { value: stat.yard_median, fallback: false };
-  return { value: sku.variant.nodePricePerUnit / 0.85, fallback: true };
+  return { value: sku.variant.nodePricePerUnit / CURRENT_WHOLESALE_FACTOR, fallback: true };
 }
 
 function brokerMedianFor(sku: SkuRow): number | null {
@@ -497,7 +513,7 @@ function tableWalkAway(metro: Metro) {
   console.log(
     `\n## TABLE WALK-AWAY — max partner material $/unit for >=${TARGET_MARGIN_PCT}% gross margin, recommended TIERED structure, dfw-core, 10-unit order\n`,
   );
-  console.log('| SKU | Tier premiumRate | Yard median $/unit | MGG price (10-unit) | Walk-away partner $/unit | Walk-away as % of yard median | Current 0.85x node price $/unit |');
+  console.log(`| SKU | Tier premiumRate | Yard median $/unit | MGG price (10-unit) | Walk-away partner $/unit | Walk-away as % of yard median | Current node price $/unit (yard median x ${CURRENT_WHOLESALE_FACTOR}) |`);
   console.log('|---|---:|---:|---:|---:|---:|---:|');
   for (const sku of allSkus(metro)) {
     const rate = TIERED_PREMIUM[sku.variant.slug];
@@ -510,6 +526,125 @@ function tableWalkAway(metro: Metro) {
         sku.variant.nodePricePerUnit,
       )} |`,
     );
+  }
+}
+
+// ---------------------------------------------------------------------------------------
+// Table: FLOOR250 — v3 "make at least $250/order" owner decision (2026-09-28). Unlike
+// tableTiered (which manually applies TIERED_PREMIUM on top of the v2 metro config),
+// this table runs the REAL current dallasFortWorth config end to end: each variant's own
+// baked-in premiumRate (src/metro/config/data/dfwCatalog.ts) plus quote()'s
+// minMarginPerOrder floor (dallasFortWorth.pricing, $250) and the 1.0x-yard-median cost
+// basis, with zero cloning/overrides. Partner cost here = the SAME cost basis quote()
+// itself uses (materialCost + deliveryCost, i.e. "partner charges MGG exactly its node
+// cost", the best-case/no-markup partner scenario) — real partner economics depend on
+// the discount/markup they actually quote, modeled separately in Table 7's matrix.
+// ---------------------------------------------------------------------------------------
+
+function tableFloor250(metro: Metro) {
+  console.log(
+    '\n## TABLE FLOOR250 — v3 $250/order floor, REAL current config (tiered premiumRate + minMarginPerOrder), 10-unit orders\n',
+  );
+  for (const zoneSlug of [ZONE_CHEAPEST, ZONE_FARTHEST]) {
+    console.log(`\n### Zone: ${zoneSlug}\n`);
+    console.log(
+      '| SKU | Tier premiumRate | Yard median | MGG price | Gross profit (quote()) | Floor applied? | Broker median (order) | Below broker? |',
+    );
+    console.log('|---|---:|---:|---:|---:|---|---:|---|');
+    let floorAppliedCount = 0;
+    let belowBrokerCount = 0;
+    let comparableCount = 0;
+    const grossProfits: number[] = [];
+    for (const sku of allSkus(metro)) {
+      const q = quote({ metro, categorySlug: sku.categorySlug, variantSlug: sku.variant.slug, quantity: 10, zoneSlug });
+      if (!q) throw new Error(`quote() null for ${sku.variant.slug}`);
+      const { value: yardMedian } = yardMedianFor(sku);
+      const brokerMedian = brokerMedianFor(sku);
+      const brokerOrderPrice = brokerMedian != null ? brokerMedian * 10 : null;
+      if (q.marginFloorApplied) floorAppliedCount++;
+      grossProfits.push(q.estimatedGrossProfit ?? 0);
+      if (brokerOrderPrice != null) {
+        comparableCount++;
+        if (q.basePrice < brokerOrderPrice) belowBrokerCount++;
+      }
+      console.log(
+        `| ${sku.variant.slug} | ${sku.variant.premiumRate ?? metro.pricing.premiumRate} | ${money(yardMedian)} | ${money(q.basePrice)} | ${money(
+          q.estimatedGrossProfit ?? 0,
+        )} | ${q.marginFloorApplied ? 'YES' : 'no'} | ${brokerOrderPrice != null ? money(brokerOrderPrice) : '—'} | ${
+          brokerOrderPrice == null ? 'no broker data' : q.basePrice < brokerOrderPrice ? 'YES' : 'NO'
+        } |`,
+      );
+    }
+    const minGrossProfit = Math.min(...grossProfits);
+    console.log(
+      `\n**${floorAppliedCount}/22 SKUs hit the $250 floor in this zone; ${belowBrokerCount}/${comparableCount} still below broker; minimum gross profit across all 22 SKUs = ${money(
+        minGrossProfit,
+      )} (must be >= $250).**\n`,
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------------------
+// Table: V3COMPARE — old (v2: flat premiumRate 0.25, nodePricePerUnit = yard median x
+// 0.85, no floor) vs new (v3: real current config — tiered premiumRate + minMarginPerOrder
+// $250 + nodePricePerUnit = yard median x 1.00) delivered price, for docs/metro/research/
+// dfw-pricing-v3-floor.md's required per-SKU table (3/10/20 units, dfw-core/dfw-outer).
+// The "old" metro is reconstructed here (not read from git history) by cloning the REAL
+// current config and undoing exactly the two v3 changes (wholesale factor, premium
+// tiering/floor) — every other field (zones, trucks, roundTo, fee rates) is untouched.
+// ---------------------------------------------------------------------------------------
+
+function buildOldMetro(metro: Metro): Metro {
+  const OLD_WHOLESALE_FACTOR = 0.85; // v2 value, see docs/metro/research/dfw-pricing-v2.md
+  const OLD_PREMIUM_RATE = 0.25; // flat, pre-tiering
+  return {
+    ...metro,
+    categories: metro.categories.map(category => ({
+      ...category,
+      variants: category.variants.map(variant => ({
+        ...variant,
+        // current nodePricePerUnit === yard median x 1.00 (v3), so dividing by 1.00 and
+        // re-multiplying by 0.85 recovers the exact v2 number without re-deriving it from
+        // slug-stats.json (keeps this in lockstep with whatever CURRENT_WHOLESALE_FACTOR is).
+        nodePricePerUnit: round2((variant.nodePricePerUnit / CURRENT_WHOLESALE_FACTOR) * OLD_WHOLESALE_FACTOR),
+        premiumRate: undefined, // v2 had no per-variant override
+      })),
+    })),
+    pricing: {
+      ...metro.pricing,
+      premiumRate: OLD_PREMIUM_RATE,
+      minMarginPerOrder: undefined,
+      paymentFeeRate: undefined,
+      paymentFeeFixed: undefined,
+    },
+  };
+}
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+function tableV3Compare(metro: Metro) {
+  const oldMetro = buildOldMetro(metro);
+  console.log('\n## TABLE V3COMPARE — old (v2, flat 0.25 premium, 0.85x cost basis, no floor) vs new (v3, tiered premium + $250 floor, 1.0x cost basis)\n');
+  for (const zoneSlug of [ZONE_CHEAPEST, ZONE_FARTHEST]) {
+    for (const quantity of [3, 10, 20] as const) {
+      console.log(`\n### Zone: ${zoneSlug}, quantity: ${quantity}\n`);
+      console.log('| SKU | Old price | New price | % change | Gross profit (new) | Broker median (order) | vs. broker |');
+      console.log('|---|---:|---:|---:|---:|---:|---|');
+      for (const sku of allSkus(metro)) {
+        const oldQ = quote({ metro: oldMetro, categorySlug: sku.categorySlug, variantSlug: sku.variant.slug, quantity, zoneSlug });
+        const newQ = quote({ metro, categorySlug: sku.categorySlug, variantSlug: sku.variant.slug, quantity, zoneSlug });
+        if (!oldQ || !newQ) throw new Error(`quote() null for ${sku.variant.slug} qty=${quantity} zone=${zoneSlug}`);
+        const pctChange = ((newQ.basePrice - oldQ.basePrice) / oldQ.basePrice) * 100;
+        const brokerMedian = brokerMedianFor(sku);
+        const brokerOrderPrice = brokerMedian != null ? brokerMedian * quantity : null;
+        const vsBroker = brokerOrderPrice == null ? 'no broker data' : newQ.basePrice < brokerOrderPrice ? 'below' : 'above';
+        console.log(
+          `| ${sku.variant.slug} | ${money(oldQ.basePrice)} | ${money(newQ.basePrice)} | ${pctChange >= 0 ? '+' : ''}${pctChange.toFixed(1)}% | ${money(
+            newQ.estimatedGrossProfit ?? 0,
+          )} | ${brokerOrderPrice != null ? money(brokerOrderPrice) : '—'} | ${vsBroker} |`,
+        );
+      }
+    }
   }
 }
 
@@ -529,3 +664,5 @@ if (which === 'matrix' || which === 'all') tableMatrix(metro);
 if (which === 'tiered' || which === 'all') tableTiered(metro);
 if (which === 'cac' || which === 'all') tableCac(metro);
 if (which === 'walkaway' || which === 'all') tableWalkAway(metro);
+if (which === 'floor250' || which === 'all') tableFloor250(metro);
+if (which === 'v3compare' || which === 'all') tableV3Compare(metro);

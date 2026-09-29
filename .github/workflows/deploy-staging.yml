@@ -1,0 +1,136 @@
+name: Deploy Staging
+
+# PREPARED BUT INACTIVE — see docs/metro/STAGING.md for the full runbook.
+#
+# `workflow_dispatch` ONLY: no `push:` trigger, so this never runs on its own (unlike
+# .github/workflows/deploy.yml, which auto-deploys production on every push to `main`). An owner
+# must run this by hand from the GitHub Actions UI ("Run workflow"), picking the branch to deploy
+# (normally feature/metro-ui) from the branch dropdown.
+#
+# Builds the image HERE, in CI — not on the shared Hetzner VPS. The VPS (docs/metro/STAGING.md
+# "VPS headroom") is shared with another production project, had well under 1GB of RAM truly free
+# and swap already in use at last check, and production's OWN deploy (deploy.yml) already builds
+# this same Playwright/Chromium-heavy image locally on that VPS on every push to main — adding a
+# second, independent build for staging on top of that is the exact risk this workflow avoids.
+# Pushes the built image to GHCR, then SSHes to the VPS to pull + restart ONLY the staging compose
+# project (/opt/mygravelguy-staging) — never touches /opt/mygravelguy (production).
+#
+# Uses SEPARATE secret names from deploy.yml's VPS_HOST/VPS_USER/VPS_SSH_KEY/VPS_PORT (documented
+# in docs/metro/STAGING.md "Owner runbook" / "Secrets") — same VPS, but keeping the credentials
+# distinct means a staging-scoped SSH key (e.g. one whose authorized_keys `command=` restricts it
+# to /opt/mygravelguy-staging) can be used without touching whatever key deploy.yml already has,
+# and there's no chance of this workflow accidentally being wired to affect production.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-mygravelguy-staging
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/afintech510/mygravelguy
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    name: Build (staging build args) + push to GHCR
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Staging-only VITE_* build args (Dockerfile ARGs — additive, see Dockerfile's comment
+      # above them). Production's own build (deploy.yml → docker-compose.yml on the VPS) passes
+      # NONE of these, so it is completely unaffected by this workflow existing.
+      #
+      # VITE_VERIFY_PAYMENT_FUNCTION / VITE_CREATE_AUTH_HOLD_FUNCTION point the live (non-metro)
+      # checkout path at the "-v2" edge functions another agent is building — see
+      # docs/metro/STAGING.md "Build args" for the current expected values; update these two
+      # build-arg lines if those function names change before staging is first stood up.
+      - name: Build + push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:staging
+            ${{ env.IMAGE }}:staging-${{ github.sha }}
+          build-args: |
+            VITE_METRO_CHECKOUT_ENABLED=true
+            VITE_STAGING=true
+            VITE_VERIFY_PAYMENT_FUNCTION=verify-payment-v2
+            VITE_CREATE_AUTH_HOLD_FUNCTION=create-auth-hold-v2
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to /opt/mygravelguy-staging over SSH
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Keeps /opt/mygravelguy-staging/docker-compose.yml in sync with the checked-in
+      # docker-compose.staging.yml on every deploy, without needing a git clone (and its .git/
+      # metadata, build context, etc.) on the VPS for the staging directory at all.
+      - name: Copy compose file to the VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.STAGING_VPS_HOST }}
+          username: ${{ secrets.STAGING_VPS_USER }}
+          key: ${{ secrets.STAGING_VPS_SSH_KEY }}
+          port: ${{ secrets.STAGING_VPS_PORT }}
+          source: "docker-compose.staging.yml"
+          target: "/opt/mygravelguy-staging/"
+          strip_components: 0
+
+      - name: Pull + (re)start staging container over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_VPS_HOST }}
+          username: ${{ secrets.STAGING_VPS_USER }}
+          key: ${{ secrets.STAGING_VPS_SSH_KEY }}
+          port: ${{ secrets.STAGING_VPS_PORT }}
+          command_timeout: 10m
+          script: |
+            set -e
+            cd /opt/mygravelguy-staging
+            mv docker-compose.staging.yml docker-compose.yml
+            # Only needed if ghcr.io/afintech510/mygravelguy is a PRIVATE package — skip/remove
+            # this step once the package is made public (docs/metro/STAGING.md "GHCR image
+            # visibility"). GHCR_READ_PAT needs only read:packages scope.
+            if [ -n "${GHCR_READ_PAT:-}" ]; then
+              echo "${GHCR_READ_PAT}" | docker login ghcr.io -u afintech510 --password-stdin
+            fi
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
+            docker compose ps
+            curl -fsS --max-time 10 --retry 4 --retry-delay 3 --retry-connrefused \
+              --resolve staging.mygravelguy.com:443:127.0.0.1 \
+              -u "${STAGING_BASIC_AUTH:-}" \
+              https://staging.mygravelguy.com/ >/dev/null \
+              && echo "health OK (staging.mygravelguy.com)" \
+              || echo "WARN: health check did not pass (deploy applied — check basic-auth creds/DNS/nginx block too)"
+          envs: GHCR_READ_PAT,STAGING_BASIC_AUTH
+        env:
+          GHCR_READ_PAT: ${{ secrets.GHCR_READ_PAT }}
+          STAGING_BASIC_AUTH: ${{ secrets.STAGING_BASIC_AUTH }}

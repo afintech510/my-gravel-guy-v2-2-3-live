@@ -15,6 +15,12 @@ export interface MaterialVariant {
   /** Swatch color used until real product photography is in place */
   swatch: string;
   popular?: boolean;
+  /**
+   * Per-variant override for `Metro.pricing.premiumRate` (e.g. DFW's tiered 0.25/0.35/0.45
+   * by SKU per docs/metro/research/dfw-margin-scenarios.md). Optional — metros/variants
+   * that don't set it (Long Island) keep using the metro-wide `premiumRate`.
+   */
+  premiumRate?: number;
 }
 
 export interface MaterialCategory {
@@ -93,6 +99,18 @@ export interface Metro {
     saturdayFeeRate: number;
     rushFeeRate: number;
     roundTo: number;
+    /**
+     * Minimum gross profit per order (USD), enforced as a price floor on top of the
+     * premium-based price: basePrice = max(cost * (1 + premiumRate), (cost +
+     * minMarginPerOrder + paymentFeeFixed) / (1 - paymentFeeRate)). Optional — metros that
+     * don't set this (Long Island) have no floor and price exactly as before. Owner
+     * decision 2026-09-28: DFW only, see docs/metro/research/dfw-pricing-v3-floor.md.
+     */
+    minMarginPerOrder?: number;
+    /** Stripe percentage fee (e.g. 0.029 for 2.9%), used by the minMarginPerOrder floor. */
+    paymentFeeRate?: number;
+    /** Stripe fixed fee in USD (e.g. 0.30), used by the minMarginPerOrder floor. */
+    paymentFeeFixed?: number;
   };
   phone: string;
   phoneHref: string;
@@ -130,4 +148,8 @@ export interface QuoteResult {
   pricePerUnit: number;
   belowMinimum: boolean;
   minUnits: number;
+  /** True when the metro's minMarginPerOrder floor (not the premium rate) set basePrice. */
+  marginFloorApplied?: boolean;
+  /** Estimated gross profit (basePrice - materialCost - deliveryCost - Stripe fee) when the metro configures a margin floor; undefined otherwise. */
+  estimatedGrossProfit?: number;
 }

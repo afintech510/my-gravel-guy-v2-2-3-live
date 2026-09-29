@@ -71,6 +71,10 @@ export interface MinimalStripeSession {
   amount_total?: number | null;
   payment_intent?: { id?: string | null; status?: string | null } | string | null;
   created?: number | null;
+  /** Stripe's own live/test signal for this session — undefined only for a caller that never set
+   * it (e.g. a hand-built test fixture); staging/test-mode conversion handling
+   * (metro-conversion-runner.ts) treats that as live, same as `livemode !== false`. */
+  livemode?: boolean | null;
 }
 
 export interface SessionValidationOk {
@@ -202,7 +206,7 @@ export const buildConfirmedOrder = (row: MetroOrderRow): MetroConfirmedOrder => 
 
 export const buildSuccessResponse = (
   row: MetroOrderRow,
-  status: 'authorized' | 'paid',
+  status: 'authorized' | 'paid' | 'test',
   alreadyProcessed: boolean,
 ): MetroVerifyResponse => ({
   success: true,

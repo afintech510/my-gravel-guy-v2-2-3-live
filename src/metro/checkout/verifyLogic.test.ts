@@ -278,6 +278,12 @@ describe('buildSuccessResponse / buildErrorResponse / buildReviewRequiredRespons
     expect(response.success && response.alreadyProcessed).toBe(true);
   });
 
+  it('builds a success response for a Stripe test-mode order with status "test"', () => {
+    const response = buildSuccessResponse(baseRow({ status: 'test' }), 'test', false);
+    expect(response).toMatchObject({ success: true, status: 'test', alreadyProcessed: false });
+    expect(httpStatusForResponse(response)).toBe(200);
+  });
+
   it('builds a review-required response as a mismatch-status failure, never a success', () => {
     const response = buildReviewRequiredResponse();
     expect(response).toEqual({

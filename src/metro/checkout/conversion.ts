@@ -175,15 +175,22 @@ export interface BuildOrderRowOpts {
   orderId: string;
   serverQuote: MetroServerQuote;
   request: MetroCheckoutRequest;
-  status: 'authorized' | 'paid' | 'review_required';
+  /** 'test' — Stripe TEST-mode checkout (session.livemode === false); never a real payment, and
+   * distinct from 'authorized'/'paid' so test orders can never be mistaken for real ones in the
+   * order pipeline (fulfillment, accounting, etc.) — see docs/metro/research/
+   * metro-checkout-server.md "Staging / test mode" for the cleanup query. */
+  status: 'authorized' | 'paid' | 'review_required' | 'test';
   stripeSessionId: string;
   stripePaymentIntentId: string | null;
   /** Set when status === 'review_required' — appended to notes, never sent to the customer. */
   reviewReason?: string;
+  /** Adds a 'test' tag (alongside the existing 'metro'/metroSlug tags) so test orders are easy to
+   * filter/bulk-delete without relying on status alone. */
+  isTestMode?: boolean;
 }
 
 export const buildMetroOrderRowFromMetadata = (opts: BuildOrderRowOpts): MetroOrderInsertRow => {
-  const { orderId, serverQuote, request, status, stripeSessionId, stripePaymentIntentId, reviewReason } = opts;
+  const { orderId, serverQuote, request, status, stripeSessionId, stripePaymentIntentId, reviewReason, isTestMode } = opts;
   const utm = request.utmData ?? {};
   const notes = [
     `Zone: ${serverQuote.zoneName} (${serverQuote.zoneSlug}).`,
@@ -191,6 +198,7 @@ export const buildMetroOrderRowFromMetadata = (opts: BuildOrderRowOpts): MetroOr
     serverQuote.saturdayFee > 0 ? `Saturday fee: $${serverQuote.saturdayFee.toFixed(2)}.` : null,
     serverQuote.rushFee > 0 ? `Rush fee: $${serverQuote.rushFee.toFixed(2)}.` : null,
     'metro-checkout v2 (post-payment insert).',
+    isTestMode ? '[TEST] Stripe test-mode checkout — not a real payment.' : null,
     reviewReason ? `[REVIEW REQUIRED] ${reviewReason}` : null,
   ]
     .filter((s): s is string => Boolean(s))
@@ -219,7 +227,7 @@ export const buildMetroOrderRowFromMetadata = (opts: BuildOrderRowOpts): MetroOr
     material_slug: `${serverQuote.categorySlug}/${serverQuote.variantSlug}`,
     saturday_fee_amount: serverQuote.saturdayFee,
     expedite_fee_amount: serverQuote.rushFee,
-    tags: ['metro', serverQuote.metroSlug],
+    tags: isTestMode ? ['metro', serverQuote.metroSlug, 'test'] : ['metro', serverQuote.metroSlug],
     billing_name: request.contact.name,
     billing_email: request.contact.email,
     stripe_session_id: stripeSessionId,

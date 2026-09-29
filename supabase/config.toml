@@ -12,6 +12,15 @@ verify_jwt = false
 [functions.create-auth-hold]
 verify_jwt = false
 
+# S1-LIVE-CHECKOUT-FIX: side-by-side v2 functions (docs/metro/research/live-checkout-v2.md).
+# verify-payment / create-auth-hold above are unmodified; these are opt-in via
+# src/services/checkoutFunctions.ts's VITE_VERIFY_PAYMENT_FUNCTION / VITE_CREATE_AUTH_HOLD_FUNCTION.
+[functions.create-auth-hold-v2]
+verify_jwt = false
+
+[functions.verify-payment-v2]
+verify_jwt = false
+
 [functions.create-metro-checkout]
 verify_jwt = false
 

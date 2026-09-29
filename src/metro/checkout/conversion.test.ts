@@ -184,6 +184,34 @@ describe('buildMetroOrderRowFromMetadata', () => {
     expect(row.notes).toContain('[REVIEW REQUIRED] amount_total mismatch');
   });
 
+  it('tags and annotates a test-mode row, keeping status distinct from authorized/paid', () => {
+    const row = buildMetroOrderRowFromMetadata({
+      orderId: 'ORDER-METRO-123-abc',
+      serverQuote,
+      request,
+      status: 'test',
+      stripeSessionId: 'cs_test_123',
+      stripePaymentIntentId: 'pi_test_123',
+      isTestMode: true,
+    });
+    expect(row.status).toBe('test');
+    expect(row.tags).toEqual(['metro', 'dallas-fort-worth', 'test']);
+    expect(row.notes).toContain('[TEST] Stripe test-mode checkout — not a real payment.');
+  });
+
+  it('omits the test tag/note for a normal (non-test) conversion', () => {
+    const row = buildMetroOrderRowFromMetadata({
+      orderId: 'ORDER-METRO-123-abc',
+      serverQuote,
+      request,
+      status: 'authorized',
+      stripeSessionId: 'cs_test_123',
+      stripePaymentIntentId: 'pi_123',
+    });
+    expect(row.tags).toEqual(['metro', 'dallas-fort-worth']);
+    expect(row.notes).not.toContain('[TEST]');
+  });
+
   it('defaults optional fields to null when absent', () => {
     const bare: MetroCheckoutRequest = { ...request, address: { ...request.address, city: undefined }, dropNotes: undefined, utmData: undefined };
     const row = buildMetroOrderRowFromMetadata({

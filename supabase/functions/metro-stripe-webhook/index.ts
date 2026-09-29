@@ -40,6 +40,7 @@ import {
   sendMetroConversionErrorAlert,
   sendMetroConversionNotifications,
 } from "../_shared/metro-conversion-runner.ts";
+import { resolveStripeModeForLivemode } from "../_shared/stripe-mode.ts";
 
 const jsonResponse = (body: unknown, status: number) =>
   new Response(JSON.stringify(body), { headers: { "Content-Type": "application/json" }, status });
@@ -49,12 +50,16 @@ serve(async (req) => {
     return new Response("Method not allowed", { status: 405 });
   }
 
-  const stripeSecretKey = Deno.env.get("stripe");
-  const webhookSecret = Deno.env.get("STRIPE_METRO_WEBHOOK_SECRET");
+  const stripeLiveSecretKey = Deno.env.get("stripe");
+  // Two signing secrets — one per Stripe account mode, since a TEST-mode Checkout Session (from
+  // staging) and a LIVE one are signed with different endpoint secrets even on the same webhook
+  // URL. See ../_shared/stripe-mode.ts for the mode-selection contract this mirrors.
+  const webhookSecretLive = Deno.env.get("STRIPE_METRO_WEBHOOK_SECRET");
+  const webhookSecretTest = Deno.env.get("STRIPE_METRO_WEBHOOK_SECRET_TEST");
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-  if (!stripeSecretKey || !webhookSecret || !supabaseUrl || !supabaseServiceRoleKey) {
+  if (!stripeLiveSecretKey || !supabaseUrl || !supabaseServiceRoleKey || (!webhookSecretLive && !webhookSecretTest)) {
     console.error("=== METRO STRIPE WEBHOOK: SERVER CONFIGURATION ERROR ===");
     // Still 500 here (not a signature problem) — Stripe will retry, which is desirable once
     // the misconfiguration is fixed.
@@ -64,22 +69,46 @@ serve(async (req) => {
   const signature = req.headers.get("stripe-signature");
   const rawBody = await req.text();
 
-  const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
+  // Only used to verify the signature below (constructEventAsync does no API call, so any
+  // syntactically-valid key string works here) — the REAL key used for subsequent Stripe API
+  // calls (paymentIntents.retrieve) is chosen below, once event.livemode is known.
+  const verifier = new Stripe(stripeLiveSecretKey, { apiVersion: "2023-10-16" });
+  const cryptoProvider = Stripe.createSubtleCryptoProvider();
 
-  let event: Stripe.Event;
-  try {
-    if (!signature) throw new Error("Missing stripe-signature header");
-    event = await stripe.webhooks.constructEventAsync(
-      rawBody,
-      signature,
-      webhookSecret,
-      undefined,
-      Stripe.createSubtleCryptoProvider(),
-    );
-  } catch (err) {
-    console.error("=== METRO STRIPE WEBHOOK: SIGNATURE VERIFICATION FAILED ===", err);
+  let event: Stripe.Event | undefined;
+  let lastVerifyError: unknown;
+  if (!signature) {
+    console.error("=== METRO STRIPE WEBHOOK: SIGNATURE VERIFICATION FAILED ===", "Missing stripe-signature header");
     return jsonResponse({ error: "Invalid signature" }, 400);
   }
+  // Try the live signing secret first, then the test one — fail closed (400) if neither verifies.
+  // This never falls back to trusting an unverified payload; it only tries two known-good secrets.
+  for (const webhookSecret of [webhookSecretLive, webhookSecretTest]) {
+    if (!webhookSecret) continue;
+    try {
+      event = await verifier.webhooks.constructEventAsync(rawBody, signature, webhookSecret, undefined, cryptoProvider);
+      break;
+    } catch (err) {
+      lastVerifyError = err;
+    }
+  }
+  if (!event) {
+    console.error("=== METRO STRIPE WEBHOOK: SIGNATURE VERIFICATION FAILED ===", lastVerifyError);
+    return jsonResponse({ error: "Invalid signature" }, 400);
+  }
+
+  // event.livemode is Stripe's own authoritative live/test signal — pick the matching API secret
+  // key for every Stripe call from here on (paymentIntents.retrieve below). Fail closed if the
+  // resolved mode's key isn't configured (e.g. a test event arrives but STRIPE_TEST_SECRET_KEY was
+  // never set) rather than silently using the wrong-mode key, which Stripe would reject anyway.
+  // Uses stripe-mode.ts's own default env getter (Deno.env.get) — reads the same "stripe"/
+  // STRIPE_TEST_SECRET_KEY env vars used everywhere else in this file/module.
+  const { mode: stripeMode, secretKey: stripeSecretKey } = resolveStripeModeForLivemode(event.livemode);
+  if (!stripeSecretKey) {
+    console.error("=== METRO STRIPE WEBHOOK: MISSING STRIPE SECRET KEY FOR MODE ===", { mode: stripeMode });
+    return jsonResponse({ error: "Server configuration error" }, 500);
+  }
+  const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
 
   // deno-lint-ignore no-explicit-any
   if (!isMetroCheckoutWebhookEvent(event as any)) {
@@ -111,16 +140,20 @@ serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const allowUnconfirmed = Deno.env.get("METRO_CHECKOUT_ALLOW_UNCONFIRMED") === "true";
+    // Same fail-closed gating as create-metro-checkout/verify-metro-payment: the unconfirmed-
+    // price-book bypass can only ever do anything for a TEST-mode event (event.livemode === false).
+    const isTestMode = event.livemode === false;
+    const allowUnconfirmed = Deno.env.get("METRO_CHECKOUT_ALLOW_UNCONFIRMED") === "true" && isTestMode;
     const minimalSession = {
       id: session.id,
       metadata: session.metadata,
       amount_total: session.amount_total,
       created: session.created,
       payment_intent: paymentIntent ? { id: paymentIntent.id, status: paymentIntent.status } : null,
+      livemode: event.livemode,
     };
 
-    const outcome = await convertMetroSession(supabase, minimalSession, orderId, { allowUnconfirmed });
+    const outcome = await convertMetroSession(supabase, minimalSession, orderId, { allowUnconfirmed, isTestMode });
 
     if (outcome.kind === "converted" || (outcome.kind === "review_required" && !outcome.alreadyProcessed)) {
       await sendMetroConversionNotifications(supabase, outcome).catch((err) => {
@@ -136,7 +169,7 @@ serve(async (req) => {
         orderId,
         sessionId: session.id,
       });
-      await sendMetroConversionErrorAlert(supabase, minimalSession, orderId, outcome.message).catch((err) => {
+      await sendMetroConversionErrorAlert(supabase, minimalSession, orderId, outcome.message, isTestMode).catch((err) => {
         console.error("=== METRO STRIPE WEBHOOK: ERROR ALERT THREW (non-fatal) ===", err);
       });
       return jsonResponse({ received: true, error: "internal error recording order, will retry" }, 500);

@@ -29,6 +29,14 @@
  *
  * Output: docs/metro/research/data/dfw/prices-final.csv
  * Run: node scripts/competitors/merge-prices.mjs
+ *
+ * NOTE on the wholesale factor: this script's per-slug stats (slug-stats.json, below)
+ * report the raw yard/broker medians with NO wholesale-discount factor applied — that
+ * factor (WHOLESALE_FACTOR, default 1.00 as of the 2026-09-28 "$250/order" owner
+ * decision, was 0.85 in the v2 pass) is applied downstream, as an explicit named
+ * constant/CLI arg, in scripts/metro/catalog-from-proposal.mjs when it derives
+ * dfwCatalog.ts's nodePricePerUnit from catalog-proposal-v2.json's medianPricePerUnit.
+ * See docs/metro/research/dfw-pricing-v3-floor.md.
  */
 
 import { existsSync, readFileSync, writeFileSync } from 'fs';

@@ -12,7 +12,7 @@ metro-stripe-webhook/index.ts`, `supabase/functions/_shared/metro-conversion-run
 `supabase/functions/_shared/metro-checkout.bundle.js` (generated, inspected directly for import
 statements), `src/metro/services/metroCheckoutService.ts`, `src/metro/services/
 metroPurchaseTracking.ts`, `src/metro/hooks/useMetroOrder.ts` (diff vs HEAD), `src/pages/metro/
-MetroOrderConfirmedPage.tsx`, `supabase/migrations/20260928170000_metro_orders_unique_session.sql`,
+MetroOrderConfirmedPage.tsx`, `supabase/migrations-drafts/20260928170000_metro_orders_unique_session.sql`,
 `supabase/config.toml`, `src/App.tsx` (diff), `public/robots.txt` (diff), plus `create-auth-hold/
 index.ts` and `verify-payment/index.ts` as unchanged reference points.
 

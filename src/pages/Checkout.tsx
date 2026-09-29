@@ -12,6 +12,7 @@ import CouponCode from '../components/cart/CouponCode';
 import PaymentMethodLogos from '../components/payment/PaymentMethodLogos';
 import type { OrderInsertData } from '../services/productTypes';
 import { trackEcommerce } from '../utils/analytics';
+import { getCreateAuthHoldFunctionName, isCheckoutV2Enabled } from '../services/checkoutFunctions';
 
 const Checkout = () => {
   const { items, total, discountTotal, clearCart, appliedCoupon, couponDiscount, depositOption, getPaymentTotal } = useCart();
@@ -383,14 +384,21 @@ const Checkout = () => {
         };
       }
       
-      const { data, error } = await supabase.functions.invoke('create-auth-hold', requestOptions);
-      
-      console.log('=== CREATE-AUTH-HOLD RESPONSE ===', { data, error });
-      
+      const createAuthHoldFunction = getCreateAuthHoldFunctionName();
+      const { data, error } = await supabase.functions.invoke(createAuthHoldFunction, requestOptions);
+
+      console.log('=== CREATE-AUTH-HOLD RESPONSE ===', { function: createAuthHoldFunction, data, error });
+
       if (error) {
+        // v2-only: create-auth-hold-v2 rejects a tampered/stale price with 409 PRICE_CHANGED
+        // instead of the generic 500 v1 always returns. v1 (env unset) never reaches this branch.
+        const status = (error as { context?: { status?: number } })?.context?.status;
+        if (isCheckoutV2Enabled() && status === 409) {
+          throw new Error('Prices have updated since you added these items to your cart. Please review your cart and try again.');
+        }
         throw new Error(`Authorization hold error: ${error.message}`);
       }
-      
+
       if (!data || !data.url) {
         console.log('Invalid response data:', data);
         throw new Error('Invalid response from payment service - no checkout URL received');

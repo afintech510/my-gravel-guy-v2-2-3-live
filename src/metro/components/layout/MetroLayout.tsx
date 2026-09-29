@@ -32,12 +32,28 @@ const FORCE_LIGHT_THEME: CSSProperties = {
   '--ring': '72 75% 51%',
 } as CSSProperties;
 
+// Staging banner (docs/metro/STAGING.md) — VITE_STAGING is only ever set 'true' in the staging
+// build (docker-compose.staging.yml's build arg), so this renders nowhere else, including local
+// dev (no .env entry for it) and production. Purely a visual "you are on staging, Stripe is in
+// TEST mode" reminder for whoever's testing — never a security boundary (basic-auth + noindex at
+// the reverse-proxy/HTML level, see STAGING.md, are what actually keep staging away from
+// customers/Google).
+function StagingBanner() {
+  if (import.meta.env.VITE_STAGING !== 'true') return null;
+  return (
+    <div className="fixed inset-x-0 top-0 z-50 bg-amber-400 py-1 text-center text-xs font-semibold text-black">
+      STAGING — Stripe test mode (no real charges)
+    </div>
+  );
+}
+
 export function MetroLayout({ metro, children }: { metro: Metro; children: ReactNode }) {
   return (
     <div
       className="flex min-h-screen flex-col bg-[#FAF9F6] font-sans text-[#0F1115]"
       style={FORCE_LIGHT_THEME}
     >
+      <StagingBanner />
       <MetroHeader metro={metro} />
       <main className="flex-1 pb-24 md:pb-0">{children}</main>
       <MetroFooter metro={metro} />

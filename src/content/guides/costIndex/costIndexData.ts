@@ -14,7 +14,7 @@
 // caveats (thin samples, excluded rows, unit-conversion notes) and
 // docs/metro/research/cost-index.md for the refresh procedure.
 //
-// Generated: 2026-09-28
+// Generated: 2026-09-29
 
 export interface CostIndexStat {
   /** Distinct sellers contributing to this figure */
@@ -54,7 +54,7 @@ export interface CostIndexMeta {
 }
 
 export const costIndexMeta: CostIndexMeta = {
-  generatedAt: "2026-09-28",
+  generatedAt: "2026-09-29",
   sampleStartDate: "2026-09-27",
   sampleEndDate: "2026-09-28",
   totalSellers: 27,

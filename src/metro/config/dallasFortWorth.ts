@@ -5,18 +5,21 @@
 // competitor price scrape (now 26 sellers / prices-final.csv) and its class-split
 // analysis, methodology and 10-unit price comparisons are written up in
 // docs/metro/research/dfw-pricing-v2.md — read that before changing any number below.
-// Node prices in ./data/dfwCatalog.ts are yard/producer-class medians × a 0.85
-// wholesale-discount assumption (never broker medians, which run higher for
-// small-minimum online-delivery resellers, and are reported separately in the doc).
-// pricing.premiumRate was cut from 0.35 to 0.25 in the v2 pass: the wider 26-seller
-// dataset shows a narrower yard-vs-broker-delivered spread than the original scrape for
-// several near-commodity materials (#57 limestone, decomposed granite, compost) — 0.35
-// would have priced those at or above the broker delivered median for a 10-unit order,
-// violating the one hard requirement (MGG must land below broker). Zone loadCost values
-// were re-checked against the same doc's DFW delivery-fee benchmarks and left unchanged
-// (still inside the $45-$200 real-fee band). See "premiumRate & zone loadCost
-// recommendation" in the doc for the full rationale and the one flagged exception
-// (concrete-sand, thin broker sample, does not clear broker even at 0.25).
+// v3 (2026-09-28, owner decision: "make at least $250/order"): node prices in
+// ./data/dfwCatalog.ts are now yard/producer-class medians × 1.00 (NO assumed wholesale
+// discount — see WHOLESALE_FACTOR in scripts/metro/catalog-from-proposal.mjs), a more
+// conservative cost basis than the v2 pass's 0.85 assumption, used until a signed
+// partner price sheet lands. Each variant now carries its own tiered `premiumRate`
+// (0.25 / 0.35 / 0.45 by SKU, per docs/metro/research/dfw-margin-scenarios.md Table 8)
+// instead of the flat 0.25 used through v2, AND pricing.minMarginPerOrder = 250 enforces
+// a $250 gross-profit floor on top of that premium — see
+// docs/metro/research/dfw-pricing-v3-floor.md for the full formula, cost-basis change,
+// and per-SKU price table. (v2 history: pricing.premiumRate was cut from 0.35 to 0.25 in
+// the v2 pass because the wider 26-seller dataset showed several near-commodity
+// materials — #57 limestone, decomposed granite, compost — priced at or above the
+// broker delivered median at 0.35; see docs/metro/research/dfw-pricing-v2.md.) Zone
+// loadCost values are unchanged from v2 (still inside the $45-$200 real-fee band per the
+// same doc's DFW delivery-fee benchmarks).
 // Do not surface priceBookConfirmed = true, and do not treat any number here as real
 // pricing, until a partner price sheet lands. Variant/material data lives in a separate
 // file, ./data/dfwCatalog.ts, specifically so it can be regenerated wholesale from the
@@ -123,11 +126,21 @@ export const dallasFortWorth: Metro = {
   ],
   trucks,
   pricing: {
+    // premiumRate here is the fallback for any variant without its own tiered override
+    // (see ./data/dfwCatalog.ts) — every current DFW variant sets premiumRate, so this
+    // value is effectively unused today, kept as a safe default for future SKUs.
     premiumRate: 0.25,
     additionalLoadDiscount: 0.25,
     saturdayFeeRate: 0.15,
     rushFeeRate: 0.15,
     roundTo: 5,
+    // Owner decision (2026-09-28): "make at least $250 per order" on DFW (partner-
+    // fulfilled) — see docs/metro/research/dfw-pricing-v3-floor.md. Long Island (ELM's
+    // own yard, different economics, typical order ~$300) intentionally has none of
+    // these three fields set, so quote() applies no floor there.
+    minMarginPerOrder: 250,
+    paymentFeeRate: 0.029,
+    paymentFeeFixed: 0.3,
   },
   phone: '(844) 624-0400',
   phoneHref: 'tel:+18446240400',

@@ -6,7 +6,7 @@
 // scripts/metro/export-metro-checkout-bundle.mjs's DTS_WHOLE_FILE_INCLUDES/DTS_CHERRY_PICKS for
 // exactly what's included and why.
 // Regenerate: node scripts/metro/export-metro-checkout-bundle.mjs
-// Generated: 2026-09-28T17:21:00.694Z
+// Generated: 2026-09-29T00:28:52.471Z
 
 // ─── from src/metro/checkout/contract.ts (included in full — self-contained) ───
 export declare const METRO_CHECKOUT_FUNCTION = "create-metro-checkout";
@@ -79,7 +79,9 @@ export interface MetroConfirmedOrder {
 export type MetroVerifyResponse = {
     success: true;
     orderId: string;
-    status: 'authorized' | 'paid';
+    /** 'test' — Stripe TEST-mode checkout (staging origin; session.livemode === false), never a
+     * real charge. See docs/metro/research/metro-checkout-server.md "Staging / test mode". */
+    status: 'authorized' | 'paid' | 'test';
     alreadyProcessed: boolean;
     order: MetroConfirmedOrder;
 } | {
@@ -203,6 +205,10 @@ export interface MinimalStripeSession {
         status?: string | null;
     } | string | null;
     created?: number | null;
+    /** Stripe's own live/test signal for this session — undefined only for a caller that never set
+     * it (e.g. a hand-built test fixture); staging/test-mode conversion handling
+     * (metro-conversion-runner.ts) treats that as live, same as `livemode !== false`. */
+    livemode?: boolean | null;
 }
 
 // ─── ParsedMetroCheckout, from src/metro/checkout/conversion.ts (cherry-picked) ───

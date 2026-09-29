@@ -12,6 +12,7 @@ import { sendBothOrderEmails } from '../services/emailService';
 import { useProductNameResolver } from '../hooks/useProductNameResolver';
 import { getProductById } from '../services/products/productQueries';
 import { trackEcommerce, trackGoogleAdsConversion, setEnhancedConversionData } from '../utils/analytics';
+import { getVerifyPaymentFunctionName, isCheckoutV2Enabled } from '../services/checkoutFunctions';
 
 interface OrderItem {
   id: string;
@@ -217,8 +218,8 @@ const PaymentSuccess = () => {
         if (stripeId) {
           console.log('=== PROCESSING WITH STRIPE ID ===', stripeId.substring(0, 20) + '...');
           
-          const { data, error } = await supabase.functions.invoke('verify-payment', {
-            body: { 
+          const { data, error } = await supabase.functions.invoke(getVerifyPaymentFunctionName(), {
+            body: {
               paymentIntentId: stripeId, // This handles both session_id and payment_intent
               orderId: quoteIdParam || finalOrderId || orderIdParam || checkoutOrderId,
               backupData: checkoutOrderBackup,
@@ -239,8 +240,8 @@ const PaymentSuccess = () => {
         else if (checkoutOrderId && checkoutOrderBackup) {
           console.log('=== PROCESSING WITH BACKUP DATA ONLY ===', checkoutOrderId);
           
-          const { data, error } = await supabase.functions.invoke('verify-payment', {
-            body: { 
+          const { data, error } = await supabase.functions.invoke(getVerifyPaymentFunctionName(), {
+            body: {
               orderId: quoteIdParam || finalOrderId || checkoutOrderId,
               fallbackMode: true,
               backupData: checkoutOrderBackup,
@@ -296,7 +297,10 @@ const PaymentSuccess = () => {
             setProcessingError(null);
             setDetailedError(null);
             
-            // Check if verification already handled the order (e.g., quote conversion)
+            // Check if verification already handled the order (e.g., quote conversion, or —
+            // always, on the v2 path — every order type: verify-payment-v2 creates the order
+            // rows and sends the confirmation/internal emails itself; see requirement (c)/(e) in
+            // the S1-LIVE-CHECKOUT-FIX brief and docs/metro/research/live-checkout-v2.md).
             if (data.orders && data.orders.length > 0) {
               console.log('=== ORDER DATA RECEIVED FROM VERIFICATION ===');
               const displayOrders = data.orders.map(order => ({
@@ -317,25 +321,38 @@ const PaymentSuccess = () => {
                 delivery_instructions: order.delivery_instructions,
                 status: order.status
               }));
-              
+
               setOrderItems(displayOrders);
               setDbInsertComplete(true);
-              
+
               // Check for deposit payment information
               if (data.orders[0]?.is_deposit_payment) {
                 setIsDepositPayment(true);
                 setDepositAmount(data.orders[0]?.deposit_amount || 199);
                 setOriginalOrderTotal(data.orders[0]?.balance_due ? data.orders[0].balance_due + (data.orders[0]?.deposit_amount || 199) : null);
               }
-              
-              // Send emails for the completed order
-              await handleEmailSending(data.orders, currentOrderId);
-            } 
-            // Now insert the order to database with enhanced Stripe ID extraction (for regular checkout)
-            else if (checkoutOrderBackup && !dbInsertComplete) {
+
+              if (isCheckoutV2Enabled()) {
+                // v2: trust the server response fully. verify-payment-v2 already inserted the
+                // order rows and sent both emails (once, on first creation only — see its
+                // idempotency handling); the client must NOT call handleDatabaseInsert or any
+                // direct `orders` insert, and must fire GA4/Ads purchase exactly once itself.
+                fireV2PurchaseTracking(data, currentOrderId);
+              } else {
+                // v1 (unchanged): this branch only ever fires today for the rare case
+                // verify-payment's DB write actually returns `orders` (see
+                // docs/metro/research/verify-payment-paymentstatus-bug.md) — send emails
+                // client-side exactly as before.
+                await handleEmailSending(data.orders, currentOrderId);
+              }
+            }
+            // Now insert the order to database with enhanced Stripe ID extraction (for regular
+            // checkout) — v1 (unchanged) only; the v2 path never falls through to a client-side
+            // insert (see above).
+            else if (checkoutOrderBackup && !dbInsertComplete && !isCheckoutV2Enabled()) {
               await handleDatabaseInsert(checkoutOrderBackup, currentOrderId, data, stripeId);
             }
-            
+
           } else if (data?.success === false && stripeId) {
             console.warn('Verification returned success: false', data);
             setProcessingError(data.error || 'Payment verification failed');
@@ -346,8 +363,8 @@ const PaymentSuccess = () => {
             setOrderId(currentOrderId);
             setVerificationMethod('fallback');
             setUsedFallback(true);
-            
-            if (checkoutOrderBackup && !dbInsertComplete) {
+
+            if (checkoutOrderBackup && !dbInsertComplete && !isCheckoutV2Enabled()) {
               await handleDatabaseInsert(checkoutOrderBackup, currentOrderId, {}, stripeId);
             }
           }
@@ -381,7 +398,87 @@ const PaymentSuccess = () => {
     }
   };
 
+  interface V2VerifyOrder {
+    product_name?: string;
+    quantity: number;
+    total_price: number;
+    contact_name?: string;
+    contact_email?: string;
+    contact_phone?: string;
+    delivery_address_street?: string;
+    delivery_address_city?: string;
+    delivery_address_state?: string;
+    delivery_address_zip?: string;
+  }
+  interface V2VerifyResponse {
+    orders?: V2VerifyOrder[];
+    total_amount?: number;
+    customer_email?: string;
+  }
+
+  /** v2 path: fires the GA4 `purchase` event + Google Ads conversion exactly once, sourced from
+   * verify-payment-v2's response (never from a client-side insert — v2 never calls
+   * insertOrderToDatabase/handleDatabaseInsert or any direct `orders` write). Same event shape
+   * and same `mgg_purchase_fired_<orderId>` localStorage dedupe key handleDatabaseInsert uses
+   * today, so a customer who somehow hits both paths across page loads still only fires once. */
+  const fireV2PurchaseTracking = (data: V2VerifyResponse, currentOrderId: string) => {
+    const orders: V2VerifyOrder[] = data.orders || [];
+    if (orders.length === 0) return;
+
+    const totalValue = typeof data.total_amount === 'number'
+      ? data.total_amount
+      : orders.reduce((sum, order) => sum + (order.total_price || 0), 0);
+
+    const purchaseFiredKey = `mgg_purchase_fired_${currentOrderId}`;
+    if (localStorage.getItem(purchaseFiredKey)) {
+      console.log('v2 purchase tracking already fired for:', currentOrderId);
+      return;
+    }
+
+    const firstOrder = orders[0];
+    if (firstOrder) {
+      const nameParts = (firstOrder.contact_name || '').split(' ');
+      setEnhancedConversionData({
+        email: firstOrder.contact_email || data.customer_email,
+        phone: firstOrder.contact_phone,
+        firstName: nameParts[0],
+        lastName: nameParts.slice(1).join(' '),
+        street: firstOrder.delivery_address_street,
+        city: firstOrder.delivery_address_city,
+        region: firstOrder.delivery_address_state,
+        postalCode: firstOrder.delivery_address_zip,
+        country: 'US',
+      });
+    }
+
+    if (window.gtag) {
+      window.gtag('event', 'purchase', {
+        transaction_id: currentOrderId,
+        value: totalValue,
+        currency: 'USD',
+        items: orders.map(order => ({
+          item_id: order.product_name,
+          item_name: order.product_name,
+          quantity: order.quantity,
+          price: order.quantity ? order.total_price / order.quantity : order.total_price,
+        })),
+      });
+    }
+
+    trackGoogleAdsConversion('purchase', totalValue, currentOrderId);
+
+    localStorage.setItem(purchaseFiredKey, 'true');
+    console.log('v2 purchase conversion tracked:', { orderId: currentOrderId, value: totalValue });
+  };
+
   const handleDatabaseInsert = async (checkoutOrderBackup: any, currentOrderId: string, verificationData: any, urlStripeId?: string) => {
+    if (isCheckoutV2Enabled()) {
+      // Belt-and-suspenders: every call site above already checks isCheckoutV2Enabled() before
+      // calling this function, but guarding here too makes it impossible for the v2 path to ever
+      // perform a direct client-side `orders` write, even if a future edit adds a new call site.
+      console.warn('handleDatabaseInsert: skipped — checkout-v2 is enabled, server already owns order creation.');
+      return;
+    }
     try {
       console.log('=== STARTING ENHANCED DATABASE INSERT ===');
       console.log('Verification data received:', verificationData);
@@ -596,6 +693,10 @@ const PaymentSuccess = () => {
   };
 
   const handleCheckoutStyleDatabaseInsert = async () => {
+    if (isCheckoutV2Enabled()) {
+      console.warn('handleCheckoutStyleDatabaseInsert: skipped — checkout-v2 is enabled, server already owns order creation.');
+      return;
+    }
     setTestingDbInsert(true);
     try {
       console.log('=== TESTING CHECKOUT-STYLE DATABASE INSERT ===');
@@ -760,6 +861,10 @@ const PaymentSuccess = () => {
   };
 
   const handleTestDatabaseInsert = async () => {
+    if (isCheckoutV2Enabled()) {
+      console.warn('handleTestDatabaseInsert: skipped — checkout-v2 is enabled, server already owns order creation.');
+      return;
+    }
     setTestingDbInsert(true);
     try {
       const result = await testEnhancedDatabaseInsert();
@@ -800,6 +905,11 @@ const PaymentSuccess = () => {
       // Only check essential conditions like the manual button
       if (autoInsertAttempted) {
         console.log('❌ Auto-insert already attempted, skipping');
+        return;
+      }
+
+      if (isCheckoutV2Enabled()) {
+        console.log('❌ checkout-v2 is enabled — server already owns order creation, skipping client-side auto-insert');
         return;
       }
 

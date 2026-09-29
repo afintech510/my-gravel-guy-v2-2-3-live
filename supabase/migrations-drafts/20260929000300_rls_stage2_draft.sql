@@ -1,0 +1,36 @@
+-- DRAFT — do not apply without owner review; see docs/metro/research/rls-audit.md
+--
+-- Stage 2 of the orders/PII RLS lockdown (S2-RLS-AUDIT). Most of the "admin dashboard only"
+-- exposure was already closed in Stage 0 (orders/delivery_confirmations/suppliers/
+-- order_status_history all got is_admin() policies immediately, since there was no anonymous
+-- flow to preserve for any of them). Stage 2 is intentionally small: it only tightens
+-- rate_limits, which Stage 0 left as is_admin()-readable out of caution.
+--
+-- Per docs/metro/research/rls-audit.md's Stage 2 discussion: rate_limits is internal
+-- abuse-control bookkeeping (client_id, function_name) written exclusively by edge functions
+-- using the service-role key (which bypasses RLS entirely — this table has zero references
+-- anywhere in src/ client code). There is no legitimate reason for even an authenticated admin
+-- to read it through the browser; recommend service_role-only.
+--
+-- This migration is OPTIONAL and can be skipped/deferred indefinitely without any security
+-- regression relative to Stage 0 — it's a "reduce blast radius further" tightening, not a fix
+-- for a live exposure. Apply only if the owner agrees no admin-dashboard feature currently
+-- displays rate-limit data (grep src/ for 'rate_limits' before applying to confirm nothing
+-- was added between Stage 0 and now).
+--
+-- ============================================================================================
+-- ROLLBACK:
+--
+--   drop policy if exists "rate_limits_admin_select" on public.rate_limits;
+--
+--   create policy "rate_limits_admin_select" on public.rate_limits
+--     for select
+--     using (is_admin());
+-- ============================================================================================
+
+drop policy if exists "rate_limits_admin_select" on public.rate_limits;
+
+-- No SELECT policy for anon/authenticated at all after this point — only service_role (which
+-- bypasses RLS by default) can read rate_limits. If an admin-dashboard rate-limit view is ever
+-- built, add a scoped is_admin() SELECT policy back at that time rather than reverting this
+-- migration wholesale.

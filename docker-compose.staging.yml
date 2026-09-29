@@ -1,0 +1,55 @@
+# docker-compose.staging.yml — STAGING deployment for the metro-ui branch. See
+# docs/metro/STAGING.md for the full architecture, DNS/TLS setup, and owner runbook.
+#
+# PREPARED BUT INACTIVE: nothing in this repo references this file automatically. It is not used
+# by production's docker-compose.yml, .github/workflows/deploy.yml (which only ever touches
+# /opt/mygravelguy), or any push trigger. It only does anything once an owner manually follows the
+# STAGING.md runbook (creates /opt/mygravelguy-staging on the VPS, copies this file there, sets
+# secrets, and either runs `docker compose up -d` there after a manual pull, or triggers
+# .github/workflows/deploy-staging.yml by hand — that workflow is `workflow_dispatch` only, no
+# push trigger, so it never runs on its own either).
+#
+# Key differences from the production docker-compose.yml (/opt/mygravelguy/docker-compose.yml):
+#   - `name:` gives this its own Compose PROJECT NAME (mygravelguy-staging) so `docker compose`
+#     commands run from /opt/mygravelguy-staging never touch production's containers/networks,
+#     even though both are compose v2 projects on the same host.
+#   - `image:` (pulled from GHCR), not `build:` — the image is built in CI
+#     (.github/workflows/deploy-staging.yml), with the staging VITE_* build args baked in, and
+#     pushed to ghcr.io/afintech510/mygravelguy:staging. This VPS is shared with another
+#     production project (Host Hampton) and is memory-constrained (see STAGING.md "VPS headroom"
+#     — under 1GB truly free at last check, with swap already in use); building the
+#     Playwright/Chromium image stage locally here — on top of what production's own
+#     `docker compose up -d --build` already does — risks starving other containers. Pulling a
+#     prebuilt image avoids that entirely: this compose file never runs `npm ci`/Chromium/vite on
+#     the VPS.
+#   - `mem_limit`/`memswap_limit`/`cpus` — a hard ceiling so a staging container (nginx serving
+#     static files — light at runtime) can never grow unbounded and crowd out production. These
+#     are the plain (non-swarm) Compose resource-limit keys, honored directly by `docker compose
+#     up` with no swarm/orchestration needed — unlike `deploy.resources.limits`, which historically
+#     required swarm mode on older Compose versions.
+#   - No `restart: unless-stopped` — staging is meant to be torn down when not actively in use
+#     (see STAGING.md "Teardown"), so it defaults to `no` (Compose's default) rather than
+#     auto-restarting indefinitely after a host reboot. Flip to `unless-stopped` if the owner wants
+#     staging to survive a VPS reboot during an active testing window.
+#
+# Shares the SAME `hosthampton_hampton_net` external network as production (so it can go through
+# the SAME shared `hampton_nginx` reverse-proxy container) — see nginx/staging.conf for the vhost
+# that routes staging.mygravelguy.com to this container, and STAGING.md for why re-using the
+# existing proxy (rather than standing up a second one) is the recommended approach.
+name: mygravelguy-staging
+
+services:
+  mygravelguy-staging:
+    image: ghcr.io/afintech510/mygravelguy:staging
+    container_name: mygravelguy_staging
+    expose:
+      - "80"
+    mem_limit: 256m
+    memswap_limit: 512m
+    cpus: 0.5
+    networks:
+      - hosthampton_hampton_net
+
+networks:
+  hosthampton_hampton_net:
+    external: true

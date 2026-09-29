@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-28T11:18:04.548Z",
+  "generatedAt": "2026-09-29T00:19:40.795Z",
   "siteBaseUrl": "https://mygravelguy.com",
   "brand": "MyGravelGuy",
   "referenceQuantity": 10,
@@ -294,31 +294,31 @@
           "availability": "out_of_stock",
           "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
           "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
-          "basePrice": 900,
+          "basePrice": 1115,
           "zonePrices": [
             {
               "zoneSlug": "dfw-core",
               "zoneName": "DFW Core (Dallas & Tarrant)",
-              "referenceQuantityPrice": 900,
+              "referenceQuantityPrice": 1115,
               "minOrderQuantity": 3,
-              "minOrderPrice": 335,
-              "pricePerUnit": 90
+              "minOrderPrice": 570,
+              "pricePerUnit": 111.5
             },
             {
               "zoneSlug": "dfw-north",
               "zoneName": "DFW North (Collin & Denton)",
-              "referenceQuantityPrice": 925,
+              "referenceQuantityPrice": 1140,
               "minOrderQuantity": 3,
-              "minOrderPrice": 355,
-              "pricePerUnit": 92.5
+              "minOrderPrice": 585,
+              "pricePerUnit": 114
             },
             {
               "zoneSlug": "dfw-outer",
               "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
-              "referenceQuantityPrice": 975,
+              "referenceQuantityPrice": 1195,
               "minOrderQuantity": 3,
-              "minOrderPrice": 395,
-              "pricePerUnit": 97.5
+              "minOrderPrice": 615,
+              "pricePerUnit": 119.5
             }
           ]
         },
@@ -341,31 +341,31 @@
           "availability": "out_of_stock",
           "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
           "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
-          "basePrice": 825,
+          "basePrice": 1035,
           "zonePrices": [
             {
               "zoneSlug": "dfw-core",
               "zoneName": "DFW Core (Dallas & Tarrant)",
-              "referenceQuantityPrice": 825,
+              "referenceQuantityPrice": 1035,
               "minOrderQuantity": 3,
-              "minOrderPrice": 315,
-              "pricePerUnit": 82.5
+              "minOrderPrice": 545,
+              "pricePerUnit": 103.5
             },
             {
               "zoneSlug": "dfw-north",
               "zoneName": "DFW North (Collin & Denton)",
-              "referenceQuantityPrice": 850,
+              "referenceQuantityPrice": 1055,
               "minOrderQuantity": 3,
-              "minOrderPrice": 330,
-              "pricePerUnit": 85
+              "minOrderPrice": 560,
+              "pricePerUnit": 105.5
             },
             {
               "zoneSlug": "dfw-outer",
               "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
-              "referenceQuantityPrice": 895,
+              "referenceQuantityPrice": 1095,
               "minOrderQuantity": 3,
-              "minOrderPrice": 370,
-              "pricePerUnit": 89.5
+              "minOrderPrice": 595,
+              "pricePerUnit": 109.5
             }
           ]
         },
@@ -388,31 +388,31 @@
           "availability": "out_of_stock",
           "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
           "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
-          "basePrice": 635,
+          "basePrice": 850,
           "zonePrices": [
             {
               "zoneSlug": "dfw-core",
               "zoneName": "DFW Core (Dallas & Tarrant)",
-              "referenceQuantityPrice": 635,
+              "referenceQuantityPrice": 850,
               "minOrderQuantity": 3,
-              "minOrderPrice": 255,
-              "pricePerUnit": 63.5
+              "minOrderPrice": 490,
+              "pricePerUnit": 85
             },
             {
               "zoneSlug": "dfw-north",
               "zoneName": "DFW North (Collin & Denton)",
-              "referenceQuantityPrice": 660,
+              "referenceQuantityPrice": 870,
               "minOrderQuantity": 3,
-              "minOrderPrice": 275,
-              "pricePerUnit": 66
+              "minOrderPrice": 505,
+              "pricePerUnit": 87
             },
             {
               "zoneSlug": "dfw-outer",
               "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
-              "referenceQuantityPrice": 705,
+              "referenceQuantityPrice": 910,
               "minOrderQuantity": 3,
-              "minOrderPrice": 315,
-              "pricePerUnit": 70.5
+              "minOrderPrice": 540,
+              "pricePerUnit": 91
             }
           ]
         },
@@ -435,31 +435,31 @@
           "availability": "out_of_stock",
           "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
           "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
-          "basePrice": 1210,
+          "basePrice": 1410,
           "zonePrices": [
             {
               "zoneSlug": "dfw-core",
               "zoneName": "DFW Core (Dallas & Tarrant)",
-              "referenceQuantityPrice": 1210,
+              "referenceQuantityPrice": 1410,
               "minOrderQuantity": 3,
-              "minOrderPrice": 430,
-              "pricePerUnit": 121
+              "minOrderPrice": 660,
+              "pricePerUnit": 141
             },
             {
               "zoneSlug": "dfw-north",
               "zoneName": "DFW North (Collin & Denton)",
-              "referenceQuantityPrice": 1235,
+              "referenceQuantityPrice": 1430,
               "minOrderQuantity": 3,
-              "minOrderPrice": 450,
-              "pricePerUnit": 123.5
+              "minOrderPrice": 675,
+              "pricePerUnit": 143
             },
             {
               "zoneSlug": "dfw-outer",
               "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
-              "referenceQuantityPrice": 1285,
+              "referenceQuantityPrice": 1475,
               "minOrderQuantity": 3,
-              "minOrderPrice": 485,
-              "pricePerUnit": 128.5
+              "minOrderPrice": 705,
+              "pricePerUnit": 147.5
             }
           ]
         },
@@ -482,31 +482,31 @@
           "availability": "out_of_stock",
           "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
           "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
-          "basePrice": 860,
+          "basePrice": 1075,
           "zonePrices": [
             {
               "zoneSlug": "dfw-core",
               "zoneName": "DFW Core (Dallas & Tarrant)",
-              "referenceQuantityPrice": 860,
+              "referenceQuantityPrice": 1075,
               "minOrderQuantity": 3,
-              "minOrderPrice": 325,
-              "pricePerUnit": 86
+              "minOrderPrice": 555,
+              "pricePerUnit": 107.5
             },
             {
               "zoneSlug": "dfw-north",
               "zoneName": "DFW North (Collin & Denton)",
-              "referenceQuantityPrice": 885,
+              "referenceQuantityPrice": 1095,
               "minOrderQuantity": 3,
-              "minOrderPrice": 345,
-              "pricePerUnit": 88.5
+              "minOrderPrice": 575,
+              "pricePerUnit": 109.5
             },
             {
               "zoneSlug": "dfw-outer",
               "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
-              "referenceQuantityPrice": 935,
+              "referenceQuantityPrice": 1145,
               "minOrderQuantity": 3,
-              "minOrderPrice": 380,
-              "pricePerUnit": 93.5
+              "minOrderPrice": 605,
+              "pricePerUnit": 114.5
             }
           ]
         },
@@ -529,31 +529,31 @@
           "availability": "out_of_stock",
           "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
           "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
-          "basePrice": 1230,
+          "basePrice": 1650,
           "zonePrices": [
             {
               "zoneSlug": "dfw-core",
               "zoneName": "DFW Core (Dallas & Tarrant)",
-              "referenceQuantityPrice": 1230,
+              "referenceQuantityPrice": 1650,
               "minOrderQuantity": 3,
-              "minOrderPrice": 435,
-              "pricePerUnit": 123
+              "minOrderPrice": 665,
+              "pricePerUnit": 165
             },
             {
               "zoneSlug": "dfw-north",
               "zoneName": "DFW North (Collin & Denton)",
-              "referenceQuantityPrice": 1255,
+              "referenceQuantityPrice": 1675,
               "minOrderQuantity": 3,
-              "minOrderPrice": 455,
-              "pricePerUnit": 125.5
+              "minOrderPrice": 680,
+              "pricePerUnit": 167.5
             },
             {
               "zoneSlug": "dfw-outer",
               "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
-              "referenceQuantityPrice": 1305,
+              "referenceQuantityPrice": 1735,
               "minOrderQuantity": 3,
-              "minOrderPrice": 490,
-              "pricePerUnit": 130.5
+              "minOrderPrice": 710,
+              "pricePerUnit": 173.5
             }
           ]
         },
@@ -576,31 +576,31 @@
           "availability": "out_of_stock",
           "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
           "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
-          "basePrice": 750,
+          "basePrice": 965,
           "zonePrices": [
             {
               "zoneSlug": "dfw-core",
               "zoneName": "DFW Core (Dallas & Tarrant)",
-              "referenceQuantityPrice": 750,
+              "referenceQuantityPrice": 965,
               "minOrderQuantity": 3,
-              "minOrderPrice": 290,
-              "pricePerUnit": 75
+              "minOrderPrice": 525,
+              "pricePerUnit": 96.5
             },
             {
               "zoneSlug": "dfw-north",
               "zoneName": "DFW North (Collin & Denton)",
-              "referenceQuantityPrice": 775,
+              "referenceQuantityPrice": 985,
               "minOrderQuantity": 3,
-              "minOrderPrice": 310,
-              "pricePerUnit": 77.5
+              "minOrderPrice": 540,
+              "pricePerUnit": 98.5
             },
             {
               "zoneSlug": "dfw-outer",
               "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
-              "referenceQuantityPrice": 825,
+              "referenceQuantityPrice": 1025,
               "minOrderQuantity": 3,
-              "minOrderPrice": 350,
-              "pricePerUnit": 82.5
+              "minOrderPrice": 570,
+              "pricePerUnit": 102.5
             }
           ]
         },
@@ -623,31 +623,31 @@
           "availability": "out_of_stock",
           "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
           "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
-          "basePrice": 685,
+          "basePrice": 900,
           "zonePrices": [
             {
               "zoneSlug": "dfw-core",
               "zoneName": "DFW Core (Dallas & Tarrant)",
-              "referenceQuantityPrice": 685,
+              "referenceQuantityPrice": 900,
               "minOrderQuantity": 3,
-              "minOrderPrice": 270,
-              "pricePerUnit": 68.5
+              "minOrderPrice": 505,
+              "pricePerUnit": 90
             },
             {
               "zoneSlug": "dfw-north",
               "zoneName": "DFW North (Collin & Denton)",
-              "referenceQuantityPrice": 710,
+              "referenceQuantityPrice": 920,
               "minOrderQuantity": 3,
-              "minOrderPrice": 290,
-              "pricePerUnit": 71
+              "minOrderPrice": 520,
+              "pricePerUnit": 92
             },
             {
               "zoneSlug": "dfw-outer",
               "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
-              "referenceQuantityPrice": 755,
+              "referenceQuantityPrice": 960,
               "minOrderQuantity": 3,
-              "minOrderPrice": 330,
-              "pricePerUnit": 75.5
+              "minOrderPrice": 550,
+              "pricePerUnit": 96
             }
           ]
         },
@@ -670,31 +670,31 @@
           "availability": "out_of_stock",
           "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
           "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
-          "basePrice": 770,
+          "basePrice": 985,
           "zonePrices": [
             {
               "zoneSlug": "dfw-core",
               "zoneName": "DFW Core (Dallas & Tarrant)",
-              "referenceQuantityPrice": 770,
+              "referenceQuantityPrice": 985,
               "minOrderQuantity": 3,
-              "minOrderPrice": 300,
-              "pricePerUnit": 77
+              "minOrderPrice": 530,
+              "pricePerUnit": 98.5
             },
             {
               "zoneSlug": "dfw-north",
               "zoneName": "DFW North (Collin & Denton)",
-              "referenceQuantityPrice": 795,
+              "referenceQuantityPrice": 1005,
               "minOrderQuantity": 3,
-              "minOrderPrice": 315,
-              "pricePerUnit": 79.5
+              "minOrderPrice": 545,
+              "pricePerUnit": 100.5
             },
             {
               "zoneSlug": "dfw-outer",
               "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
-              "referenceQuantityPrice": 845,
+              "referenceQuantityPrice": 1045,
               "minOrderQuantity": 3,
-              "minOrderPrice": 355,
-              "pricePerUnit": 84.5
+              "minOrderPrice": 575,
+              "pricePerUnit": 104.5
             }
           ]
         },
@@ -717,31 +717,31 @@
           "availability": "out_of_stock",
           "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
           "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
-          "basePrice": 905,
+          "basePrice": 1115,
           "zonePrices": [
             {
               "zoneSlug": "dfw-core",
               "zoneName": "DFW Core (Dallas & Tarrant)",
-              "referenceQuantityPrice": 905,
+              "referenceQuantityPrice": 1115,
               "minOrderQuantity": 3,
-              "minOrderPrice": 340,
-              "pricePerUnit": 90.5
+              "minOrderPrice": 570,
+              "pricePerUnit": 111.5
             },
             {
               "zoneSlug": "dfw-north",
               "zoneName": "DFW North (Collin & Denton)",
-              "referenceQuantityPrice": 930,
+              "referenceQuantityPrice": 1135,
               "minOrderQuantity": 3,
-              "minOrderPrice": 355,
-              "pricePerUnit": 93
+              "minOrderPrice": 585,
+              "pricePerUnit": 113.5
             },
             {
               "zoneSlug": "dfw-outer",
               "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
-              "referenceQuantityPrice": 975,
+              "referenceQuantityPrice": 1175,
               "minOrderQuantity": 3,
-              "minOrderPrice": 395,
-              "pricePerUnit": 97.5
+              "minOrderPrice": 615,
+              "pricePerUnit": 117.5
             }
           ]
         },
@@ -764,31 +764,31 @@
           "availability": "out_of_stock",
           "googleProductCategory": "Home & Garden > Lawn & Garden > Landscape & Garden Rocks & Stones",
           "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
-          "basePrice": 760,
+          "basePrice": 975,
           "zonePrices": [
             {
               "zoneSlug": "dfw-core",
               "zoneName": "DFW Core (Dallas & Tarrant)",
-              "referenceQuantityPrice": 760,
+              "referenceQuantityPrice": 975,
               "minOrderQuantity": 3,
-              "minOrderPrice": 295,
-              "pricePerUnit": 76
+              "minOrderPrice": 530,
+              "pricePerUnit": 97.5
             },
             {
               "zoneSlug": "dfw-north",
               "zoneName": "DFW North (Collin & Denton)",
-              "referenceQuantityPrice": 785,
+              "referenceQuantityPrice": 995,
               "minOrderQuantity": 3,
-              "minOrderPrice": 315,
-              "pricePerUnit": 78.5
+              "minOrderPrice": 545,
+              "pricePerUnit": 99.5
             },
             {
               "zoneSlug": "dfw-outer",
               "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
-              "referenceQuantityPrice": 835,
+              "referenceQuantityPrice": 1035,
               "minOrderQuantity": 3,
-              "minOrderPrice": 350,
-              "pricePerUnit": 83.5
+              "minOrderPrice": 575,
+              "pricePerUnit": 103.5
             }
           ]
         },
@@ -811,31 +811,31 @@
           "availability": "out_of_stock",
           "googleProductCategory": "Home & Garden > Lawn & Garden > Mulch",
           "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
-          "basePrice": 575,
+          "basePrice": 795,
           "zonePrices": [
             {
               "zoneSlug": "dfw-core",
               "zoneName": "DFW Core (Dallas & Tarrant)",
-              "referenceQuantityPrice": 575,
+              "referenceQuantityPrice": 795,
               "minOrderQuantity": 3,
-              "minOrderPrice": 240,
-              "pricePerUnit": 57.5
+              "minOrderPrice": 475,
+              "pricePerUnit": 79.5
             },
             {
               "zoneSlug": "dfw-north",
               "zoneName": "DFW North (Collin & Denton)",
-              "referenceQuantityPrice": 600,
+              "referenceQuantityPrice": 815,
               "minOrderQuantity": 3,
-              "minOrderPrice": 260,
-              "pricePerUnit": 60
+              "minOrderPrice": 490,
+              "pricePerUnit": 81.5
             },
             {
               "zoneSlug": "dfw-outer",
               "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
-              "referenceQuantityPrice": 650,
+              "referenceQuantityPrice": 855,
               "minOrderQuantity": 3,
-              "minOrderPrice": 295,
-              "pricePerUnit": 65
+              "minOrderPrice": 520,
+              "pricePerUnit": 85.5
             }
           ]
         },
@@ -858,31 +858,31 @@
           "availability": "out_of_stock",
           "googleProductCategory": "Home & Garden > Lawn & Garden > Mulch",
           "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
-          "basePrice": 620,
+          "basePrice": 840,
           "zonePrices": [
             {
               "zoneSlug": "dfw-core",
               "zoneName": "DFW Core (Dallas & Tarrant)",
-              "referenceQuantityPrice": 620,
+              "referenceQuantityPrice": 840,
               "minOrderQuantity": 3,
-              "minOrderPrice": 250,
-              "pricePerUnit": 62
+              "minOrderPrice": 485,
+              "pricePerUnit": 84
             },
             {
               "zoneSlug": "dfw-north",
               "zoneName": "DFW North (Collin & Denton)",
-              "referenceQuantityPrice": 645,
+              "referenceQuantityPrice": 860,
               "minOrderQuantity": 3,
-              "minOrderPrice": 270,
-              "pricePerUnit": 64.5
+              "minOrderPrice": 500,
+              "pricePerUnit": 86
             },
             {
               "zoneSlug": "dfw-outer",
               "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
-              "referenceQuantityPrice": 690,
+              "referenceQuantityPrice": 900,
               "minOrderQuantity": 3,
-              "minOrderPrice": 310,
-              "pricePerUnit": 69
+              "minOrderPrice": 535,
+              "pricePerUnit": 90
             }
           ]
         },
@@ -905,31 +905,31 @@
           "availability": "out_of_stock",
           "googleProductCategory": "Home & Garden > Lawn & Garden > Mulch",
           "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
-          "basePrice": 650,
+          "basePrice": 870,
           "zonePrices": [
             {
               "zoneSlug": "dfw-core",
               "zoneName": "DFW Core (Dallas & Tarrant)",
-              "referenceQuantityPrice": 650,
+              "referenceQuantityPrice": 870,
               "minOrderQuantity": 3,
-              "minOrderPrice": 260,
-              "pricePerUnit": 65
+              "minOrderPrice": 495,
+              "pricePerUnit": 87
             },
             {
               "zoneSlug": "dfw-north",
               "zoneName": "DFW North (Collin & Denton)",
-              "referenceQuantityPrice": 675,
+              "referenceQuantityPrice": 890,
               "minOrderQuantity": 3,
-              "minOrderPrice": 280,
-              "pricePerUnit": 67.5
+              "minOrderPrice": 510,
+              "pricePerUnit": 89
             },
             {
               "zoneSlug": "dfw-outer",
               "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
-              "referenceQuantityPrice": 725,
+              "referenceQuantityPrice": 930,
               "minOrderQuantity": 3,
-              "minOrderPrice": 320,
-              "pricePerUnit": 72.5
+              "minOrderPrice": 540,
+              "pricePerUnit": 93
             }
           ]
         },
@@ -952,31 +952,31 @@
           "availability": "out_of_stock",
           "googleProductCategory": "Home & Garden > Lawn & Garden > Mulch",
           "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
-          "basePrice": 630,
+          "basePrice": 850,
           "zonePrices": [
             {
               "zoneSlug": "dfw-core",
               "zoneName": "DFW Core (Dallas & Tarrant)",
-              "referenceQuantityPrice": 630,
+              "referenceQuantityPrice": 850,
               "minOrderQuantity": 3,
-              "minOrderPrice": 255,
-              "pricePerUnit": 63
+              "minOrderPrice": 490,
+              "pricePerUnit": 85
             },
             {
               "zoneSlug": "dfw-north",
               "zoneName": "DFW North (Collin & Denton)",
-              "referenceQuantityPrice": 655,
+              "referenceQuantityPrice": 870,
               "minOrderQuantity": 3,
-              "minOrderPrice": 275,
-              "pricePerUnit": 65.5
+              "minOrderPrice": 505,
+              "pricePerUnit": 87
             },
             {
               "zoneSlug": "dfw-outer",
               "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
-              "referenceQuantityPrice": 700,
+              "referenceQuantityPrice": 915,
               "minOrderQuantity": 3,
-              "minOrderPrice": 310,
-              "pricePerUnit": 70
+              "minOrderPrice": 535,
+              "pricePerUnit": 91.5
             }
           ]
         },
@@ -999,31 +999,31 @@
           "availability": "out_of_stock",
           "googleProductCategory": "Home & Garden > Lawn & Garden > Mulch",
           "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
-          "basePrice": 765,
+          "basePrice": 980,
           "zonePrices": [
             {
               "zoneSlug": "dfw-core",
               "zoneName": "DFW Core (Dallas & Tarrant)",
-              "referenceQuantityPrice": 765,
+              "referenceQuantityPrice": 980,
               "minOrderQuantity": 3,
-              "minOrderPrice": 295,
-              "pricePerUnit": 76.5
+              "minOrderPrice": 530,
+              "pricePerUnit": 98
             },
             {
               "zoneSlug": "dfw-north",
               "zoneName": "DFW North (Collin & Denton)",
-              "referenceQuantityPrice": 790,
+              "referenceQuantityPrice": 1000,
               "minOrderQuantity": 3,
-              "minOrderPrice": 315,
-              "pricePerUnit": 79
+              "minOrderPrice": 545,
+              "pricePerUnit": 100
             },
             {
               "zoneSlug": "dfw-outer",
               "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
-              "referenceQuantityPrice": 840,
+              "referenceQuantityPrice": 1040,
               "minOrderQuantity": 3,
-              "minOrderPrice": 355,
-              "pricePerUnit": 84
+              "minOrderPrice": 575,
+              "pricePerUnit": 104
             }
           ]
         },
@@ -1046,31 +1046,31 @@
           "availability": "out_of_stock",
           "googleProductCategory": "Home & Garden > Lawn & Garden > Mulch",
           "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
-          "basePrice": 725,
+          "basePrice": 940,
           "zonePrices": [
             {
               "zoneSlug": "dfw-core",
               "zoneName": "DFW Core (Dallas & Tarrant)",
-              "referenceQuantityPrice": 725,
+              "referenceQuantityPrice": 940,
               "minOrderQuantity": 3,
-              "minOrderPrice": 285,
-              "pricePerUnit": 72.5
+              "minOrderPrice": 520,
+              "pricePerUnit": 94
             },
             {
               "zoneSlug": "dfw-north",
               "zoneName": "DFW North (Collin & Denton)",
-              "referenceQuantityPrice": 750,
+              "referenceQuantityPrice": 960,
               "minOrderQuantity": 3,
-              "minOrderPrice": 305,
-              "pricePerUnit": 75
+              "minOrderPrice": 535,
+              "pricePerUnit": 96
             },
             {
               "zoneSlug": "dfw-outer",
               "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
-              "referenceQuantityPrice": 800,
+              "referenceQuantityPrice": 1000,
               "minOrderQuantity": 3,
-              "minOrderPrice": 340,
-              "pricePerUnit": 80
+              "minOrderPrice": 565,
+              "pricePerUnit": 100
             }
           ]
         },
@@ -1093,31 +1093,31 @@
           "availability": "out_of_stock",
           "googleProductCategory": "Home & Garden > Lawn & Garden > Mulch",
           "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
-          "basePrice": 620,
+          "basePrice": 835,
           "zonePrices": [
             {
               "zoneSlug": "dfw-core",
               "zoneName": "DFW Core (Dallas & Tarrant)",
-              "referenceQuantityPrice": 620,
+              "referenceQuantityPrice": 835,
               "minOrderQuantity": 3,
-              "minOrderPrice": 250,
-              "pricePerUnit": 62
+              "minOrderPrice": 485,
+              "pricePerUnit": 83.5
             },
             {
               "zoneSlug": "dfw-north",
               "zoneName": "DFW North (Collin & Denton)",
-              "referenceQuantityPrice": 645,
+              "referenceQuantityPrice": 855,
               "minOrderQuantity": 3,
-              "minOrderPrice": 270,
-              "pricePerUnit": 64.5
+              "minOrderPrice": 500,
+              "pricePerUnit": 85.5
             },
             {
               "zoneSlug": "dfw-outer",
               "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
-              "referenceQuantityPrice": 690,
+              "referenceQuantityPrice": 900,
               "minOrderQuantity": 3,
-              "minOrderPrice": 310,
-              "pricePerUnit": 69
+              "minOrderPrice": 535,
+              "pricePerUnit": 90
             }
           ]
         },
@@ -1140,31 +1140,31 @@
           "availability": "out_of_stock",
           "googleProductCategory": "Home & Garden > Lawn & Garden > Compost & Soil",
           "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
-          "basePrice": 620,
+          "basePrice": 840,
           "zonePrices": [
             {
               "zoneSlug": "dfw-core",
               "zoneName": "DFW Core (Dallas & Tarrant)",
-              "referenceQuantityPrice": 620,
+              "referenceQuantityPrice": 840,
               "minOrderQuantity": 3,
-              "minOrderPrice": 250,
-              "pricePerUnit": 62
+              "minOrderPrice": 485,
+              "pricePerUnit": 84
             },
             {
               "zoneSlug": "dfw-north",
               "zoneName": "DFW North (Collin & Denton)",
-              "referenceQuantityPrice": 645,
+              "referenceQuantityPrice": 860,
               "minOrderQuantity": 3,
-              "minOrderPrice": 270,
-              "pricePerUnit": 64.5
+              "minOrderPrice": 500,
+              "pricePerUnit": 86
             },
             {
               "zoneSlug": "dfw-outer",
               "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
-              "referenceQuantityPrice": 690,
+              "referenceQuantityPrice": 900,
               "minOrderQuantity": 3,
-              "minOrderPrice": 310,
-              "pricePerUnit": 69
+              "minOrderPrice": 535,
+              "pricePerUnit": 90
             }
           ]
         },
@@ -1187,31 +1187,31 @@
           "availability": "out_of_stock",
           "googleProductCategory": "Home & Garden > Lawn & Garden > Compost & Soil",
           "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
-          "basePrice": 805,
+          "basePrice": 1020,
           "zonePrices": [
             {
               "zoneSlug": "dfw-core",
               "zoneName": "DFW Core (Dallas & Tarrant)",
-              "referenceQuantityPrice": 805,
+              "referenceQuantityPrice": 1020,
               "minOrderQuantity": 3,
-              "minOrderPrice": 310,
-              "pricePerUnit": 80.5
+              "minOrderPrice": 540,
+              "pricePerUnit": 102
             },
             {
               "zoneSlug": "dfw-north",
               "zoneName": "DFW North (Collin & Denton)",
-              "referenceQuantityPrice": 830,
+              "referenceQuantityPrice": 1040,
               "minOrderQuantity": 3,
-              "minOrderPrice": 325,
-              "pricePerUnit": 83
+              "minOrderPrice": 555,
+              "pricePerUnit": 104
             },
             {
               "zoneSlug": "dfw-outer",
               "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
-              "referenceQuantityPrice": 880,
+              "referenceQuantityPrice": 1080,
               "minOrderQuantity": 3,
-              "minOrderPrice": 365,
-              "pricePerUnit": 88
+              "minOrderPrice": 585,
+              "pricePerUnit": 108
             }
           ]
         },
@@ -1234,31 +1234,31 @@
           "availability": "out_of_stock",
           "googleProductCategory": "Home & Garden > Lawn & Garden > Compost & Soil",
           "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
-          "basePrice": 700,
+          "basePrice": 915,
           "zonePrices": [
             {
               "zoneSlug": "dfw-core",
               "zoneName": "DFW Core (Dallas & Tarrant)",
-              "referenceQuantityPrice": 700,
+              "referenceQuantityPrice": 915,
               "minOrderQuantity": 3,
-              "minOrderPrice": 275,
-              "pricePerUnit": 70
+              "minOrderPrice": 510,
+              "pricePerUnit": 91.5
             },
             {
               "zoneSlug": "dfw-north",
               "zoneName": "DFW North (Collin & Denton)",
-              "referenceQuantityPrice": 725,
+              "referenceQuantityPrice": 935,
               "minOrderQuantity": 3,
-              "minOrderPrice": 295,
-              "pricePerUnit": 72.5
+              "minOrderPrice": 525,
+              "pricePerUnit": 93.5
             },
             {
               "zoneSlug": "dfw-outer",
               "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
-              "referenceQuantityPrice": 770,
+              "referenceQuantityPrice": 975,
               "minOrderQuantity": 3,
-              "minOrderPrice": 330,
-              "pricePerUnit": 77
+              "minOrderPrice": 555,
+              "pricePerUnit": 97.5
             }
           ]
         },
@@ -1281,31 +1281,31 @@
           "availability": "out_of_stock",
           "googleProductCategory": "Home & Garden > Lawn & Garden > Compost & Soil",
           "shippingNote": "Delivery included in the price shown for each zone; no separate shipping charge.",
-          "basePrice": 440,
+          "basePrice": 660,
           "zonePrices": [
             {
               "zoneSlug": "dfw-core",
               "zoneName": "DFW Core (Dallas & Tarrant)",
-              "referenceQuantityPrice": 440,
+              "referenceQuantityPrice": 660,
               "minOrderQuantity": 3,
-              "minOrderPrice": 200,
-              "pricePerUnit": 44
+              "minOrderPrice": 435,
+              "pricePerUnit": 66
             },
             {
               "zoneSlug": "dfw-north",
               "zoneName": "DFW North (Collin & Denton)",
-              "referenceQuantityPrice": 460,
+              "referenceQuantityPrice": 680,
               "minOrderQuantity": 3,
-              "minOrderPrice": 215,
-              "pricePerUnit": 46
+              "minOrderPrice": 450,
+              "pricePerUnit": 68
             },
             {
               "zoneSlug": "dfw-outer",
               "zoneName": "DFW Outer (Rockwall, Kaufman, Ellis & Johnson)",
-              "referenceQuantityPrice": 510,
+              "referenceQuantityPrice": 720,
               "minOrderQuantity": 3,
-              "minOrderPrice": 255,
-              "pricePerUnit": 51
+              "minOrderPrice": 480,
+              "pricePerUnit": 72
             }
           ]
         }

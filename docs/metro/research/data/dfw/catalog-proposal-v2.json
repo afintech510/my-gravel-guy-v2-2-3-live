@@ -6,9 +6,13 @@
     "unit": "ton",
     "competitorCount": 11,
     "medianPricePerUnit": 71.43,
-    "suggestedNodePricePerUnit": 60.72,
+    "suggestedNodePricePerUnit": 71.43,
     "shortDescription": "Rounded 3/8\" pea gravel for walkways, patios, fire pits and playgrounds.",
-    "bestFor": ["walkways", "patios", "fire pits"],
+    "bestFor": [
+      "walkways",
+      "patios",
+      "fire pits"
+    ],
     "swatch": "#C7B299",
     "popular": true,
     "sources": [
@@ -24,9 +28,13 @@
     "unit": "ton",
     "competitorCount": 13,
     "medianPricePerUnit": 64.29,
-    "suggestedNodePricePerUnit": 54.65,
+    "suggestedNodePricePerUnit": 64.29,
     "shortDescription": "Angular crushed limestone in the 3/4\"-1\" range, the DFW standard for drainage and driveway base.",
-    "bestFor": ["driveways", "drainage", "under-slab base"],
+    "bestFor": [
+      "driveways",
+      "drainage",
+      "under-slab base"
+    ],
     "swatch": "#A8A296",
     "popular": true,
     "sources": [
@@ -42,9 +50,13 @@
     "unit": "ton",
     "competitorCount": 10,
     "medianPricePerUnit": 46.43,
-    "suggestedNodePricePerUnit": 39.47,
+    "suggestedNodePricePerUnit": 46.43,
     "shortDescription": "Crushed limestone road base blended with fines that compacts into a solid driving surface.",
-    "bestFor": ["driveway base", "shed pads", "compaction base"],
+    "bestFor": [
+      "driveway base",
+      "shed pads",
+      "compaction base"
+    ],
     "swatch": "#B7A98F",
     "popular": true,
     "sources": [
@@ -60,9 +72,13 @@
     "unit": "ton",
     "competitorCount": 12,
     "medianPricePerUnit": 100.72,
-    "suggestedNodePricePerUnit": 85.61,
+    "suggestedNodePricePerUnit": 100.72,
     "shortDescription": "Fine, compactable granite stone with a natural tan color used for paths and patios.",
-    "bestFor": ["garden paths", "patios", "xeriscaping"],
+    "bestFor": [
+      "garden paths",
+      "patios",
+      "xeriscaping"
+    ],
     "swatch": "#C99A6C",
     "popular": true,
     "sources": [
@@ -78,9 +94,13 @@
     "unit": "ton",
     "competitorCount": 3,
     "medianPricePerUnit": 67.86,
-    "suggestedNodePricePerUnit": 57.68,
+    "suggestedNodePricePerUnit": 67.86,
     "shortDescription": "Large crushed limestone rip rap for erosion control on slopes and creek banks.",
-    "bestFor": ["erosion control", "creek banks", "drainage swales"],
+    "bestFor": [
+      "erosion control",
+      "creek banks",
+      "drainage swales"
+    ],
     "swatch": "#767672",
     "popular": false,
     "sources": [
@@ -94,9 +114,13 @@
     "unit": "ton",
     "competitorCount": 11,
     "medianPricePerUnit": 102.5,
-    "suggestedNodePricePerUnit": 87.13,
+    "suggestedNodePricePerUnit": 102.5,
     "shortDescription": "Smooth, rounded multi-color river stone in the 1\"-3\" range.",
-    "bestFor": ["landscape beds", "dry creek beds", "erosion control"],
+    "bestFor": [
+      "landscape beds",
+      "dry creek beds",
+      "erosion control"
+    ],
     "swatch": "#8C8C89",
     "popular": false,
     "sources": [
@@ -112,9 +136,13 @@
     "unit": "ton",
     "competitorCount": 12,
     "medianPricePerUnit": 57.41,
-    "suggestedNodePricePerUnit": 48.8,
+    "suggestedNodePricePerUnit": 57.41,
     "shortDescription": "Fine, washed sand used in masonry mortar and for leveling under pavers.",
-    "bestFor": ["mortar mix", "paver leveling", "sandboxes"],
+    "bestFor": [
+      "mortar mix",
+      "paver leveling",
+      "sandboxes"
+    ],
     "swatch": "#E3D3AC",
     "popular": true,
     "sources": [
@@ -130,9 +158,13 @@
     "unit": "ton",
     "competitorCount": 1,
     "medianPricePerUnit": 51.11,
-    "suggestedNodePricePerUnit": 43.44,
+    "suggestedNodePricePerUnit": 51.11,
     "shortDescription": "Unwashed sand pulled from a sand bank, used as general fill.",
-    "bestFor": ["fill", "grading", "backfill"],
+    "bestFor": [
+      "fill",
+      "grading",
+      "backfill"
+    ],
     "swatch": "#C9B98F",
     "popular": false,
     "sources": [
@@ -146,9 +178,13 @@
     "unit": "ton",
     "competitorCount": 7,
     "medianPricePerUnit": 59.26,
-    "suggestedNodePricePerUnit": 50.37,
+    "suggestedNodePricePerUnit": 59.26,
     "shortDescription": "Coarse, washed concrete sand for concrete mix and drainage layers.",
-    "bestFor": ["concrete mix", "drainage layers", "paver base"],
+    "bestFor": [
+      "concrete mix",
+      "drainage layers",
+      "paver base"
+    ],
     "swatch": "#D8C9A3",
     "popular": false,
     "sources": [
@@ -164,9 +200,12 @@
     "unit": "ton",
     "competitorCount": 4,
     "medianPricePerUnit": 71.85,
-    "suggestedNodePricePerUnit": 61.07,
+    "suggestedNodePricePerUnit": 71.85,
     "shortDescription": "Washed, screened play sand safe for sandboxes and play areas.",
-    "bestFor": ["sandboxes", "playgrounds"],
+    "bestFor": [
+      "sandboxes",
+      "playgrounds"
+    ],
     "swatch": "#F0E2B6",
     "popular": false,
     "sources": [
@@ -180,9 +219,12 @@
     "unit": "ton",
     "competitorCount": 5,
     "medianPricePerUnit": 58.34,
-    "suggestedNodePricePerUnit": 49.58,
+    "suggestedNodePricePerUnit": 58.34,
     "shortDescription": "Washed sand for masonry and general construction use.",
-    "bestFor": ["masonry", "construction backfill"],
+    "bestFor": [
+      "masonry",
+      "construction backfill"
+    ],
     "swatch": "#DCC896",
     "popular": false,
     "sources": [
@@ -197,9 +239,13 @@
     "unit": "yd",
     "competitorCount": 13,
     "medianPricePerUnit": 41,
-    "suggestedNodePricePerUnit": 34.85,
+    "suggestedNodePricePerUnit": 41,
     "shortDescription": "Double-shredded native hardwood mulch, the standard un-dyed landscape mulch.",
-    "bestFor": ["garden beds", "tree rings", "general landscaping"],
+    "bestFor": [
+      "garden beds",
+      "tree rings",
+      "general landscaping"
+    ],
     "swatch": "#6B4A32",
     "popular": true,
     "sources": [
@@ -215,9 +261,13 @@
     "unit": "yd",
     "competitorCount": 7,
     "medianPricePerUnit": 45,
-    "suggestedNodePricePerUnit": 38.25,
+    "suggestedNodePricePerUnit": 45,
     "shortDescription": "Hardwood mulch dyed black for a dark, uniform bed color that holds through the season.",
-    "bestFor": ["garden beds", "foundation plantings", "high-contrast borders"],
+    "bestFor": [
+      "garden beds",
+      "foundation plantings",
+      "high-contrast borders"
+    ],
     "swatch": "#2B2724",
     "popular": true,
     "sources": [
@@ -233,9 +283,13 @@
     "unit": "yd",
     "competitorCount": 2,
     "medianPricePerUnit": 48,
-    "suggestedNodePricePerUnit": 40.8,
+    "suggestedNodePricePerUnit": 48,
     "shortDescription": "Hardwood mulch dyed brown for a rich, natural-looking bed color that holds through the season.",
-    "bestFor": ["garden beds", "foundation plantings", "walkway borders"],
+    "bestFor": [
+      "garden beds",
+      "foundation plantings",
+      "walkway borders"
+    ],
     "swatch": "#4A3524",
     "popular": false,
     "sources": [
@@ -250,9 +304,12 @@
     "unit": "yd",
     "competitorCount": 7,
     "medianPricePerUnit": 46,
-    "suggestedNodePricePerUnit": 39.1,
+    "suggestedNodePricePerUnit": 46,
     "shortDescription": "Hardwood mulch dyed red/brown, a popular color choice alongside black and natural.",
-    "bestFor": ["flower beds", "curb appeal refresh"],
+    "bestFor": [
+      "flower beds",
+      "curb appeal refresh"
+    ],
     "swatch": "#8B3A2F",
     "popular": false,
     "sources": [
@@ -268,9 +325,13 @@
     "unit": "yd",
     "competitorCount": 4,
     "medianPricePerUnit": 59,
-    "suggestedNodePricePerUnit": 50.15,
+    "suggestedNodePricePerUnit": 59,
     "shortDescription": "Shredded cedar mulch with a natural reddish-brown color and characteristic cedar scent.",
-    "bestFor": ["garden beds", "play areas", "pest-averse plantings"],
+    "bestFor": [
+      "garden beds",
+      "play areas",
+      "pest-averse plantings"
+    ],
     "swatch": "#8A5A3C",
     "popular": false,
     "sources": [
@@ -286,9 +347,12 @@
     "unit": "yd",
     "competitorCount": 4,
     "medianPricePerUnit": 55,
-    "suggestedNodePricePerUnit": 46.75,
+    "suggestedNodePricePerUnit": 55,
     "shortDescription": "Chunky pine bark mulch for a coarser, longer-lasting ground cover.",
-    "bestFor": ["shrub beds", "erosion-prone slopes"],
+    "bestFor": [
+      "shrub beds",
+      "erosion-prone slopes"
+    ],
     "swatch": "#7B4B2A",
     "popular": false,
     "sources": [
@@ -304,9 +368,12 @@
     "unit": "yd",
     "competitorCount": 4,
     "medianPricePerUnit": 44.99,
-    "suggestedNodePricePerUnit": 38.24,
+    "suggestedNodePricePerUnit": 44.99,
     "shortDescription": "Engineered wood fiber mulch for fall-zone ground cover under play equipment.",
-    "bestFor": ["playgrounds", "school/park projects"],
+    "bestFor": [
+      "playgrounds",
+      "school/park projects"
+    ],
     "swatch": "#D2B48C",
     "popular": false,
     "sources": [
@@ -322,9 +389,13 @@
     "unit": "yd",
     "competitorCount": 15,
     "medianPricePerUnit": 45,
-    "suggestedNodePricePerUnit": 38.25,
+    "suggestedNodePricePerUnit": 45,
     "shortDescription": "Screened sandy loam topsoil blended for good drainage and general planting over DFW's heavy clay.",
-    "bestFor": ["new lawns", "grading", "general planting"],
+    "bestFor": [
+      "new lawns",
+      "grading",
+      "general planting"
+    ],
     "swatch": "#5B4A38",
     "popular": true,
     "sources": [
@@ -340,9 +411,13 @@
     "unit": "yd",
     "competitorCount": 12,
     "medianPricePerUnit": 62.5,
-    "suggestedNodePricePerUnit": 53.12,
+    "suggestedNodePricePerUnit": 62.5,
     "shortDescription": "Topsoil blended with compost for raised beds and vegetable gardens.",
-    "bestFor": ["raised beds", "vegetable gardens", "planter fill"],
+    "bestFor": [
+      "raised beds",
+      "vegetable gardens",
+      "planter fill"
+    ],
     "swatch": "#4A3B2A",
     "popular": false,
     "sources": [
@@ -358,9 +433,13 @@
     "unit": "yd",
     "competitorCount": 7,
     "medianPricePerUnit": 52.5,
-    "suggestedNodePricePerUnit": 44.63,
+    "suggestedNodePricePerUnit": 52.5,
     "shortDescription": "Decomposed organic matter used to amend and enrich existing soil.",
-    "bestFor": ["soil amendment", "topdressing", "garden beds"],
+    "bestFor": [
+      "soil amendment",
+      "topdressing",
+      "garden beds"
+    ],
     "swatch": "#3A2E22",
     "popular": false,
     "sources": [
@@ -376,9 +455,13 @@
     "unit": "yd",
     "competitorCount": 10,
     "medianPricePerUnit": 27.97,
-    "suggestedNodePricePerUnit": 23.77,
+    "suggestedNodePricePerUnit": 27.97,
     "shortDescription": "Clean, low-organic fill dirt used to raise or level grade.",
-    "bestFor": ["grading", "fill", "low spots"],
+    "bestFor": [
+      "grading",
+      "fill",
+      "low spots"
+    ],
     "swatch": "#6E5A44",
     "popular": false,
     "sources": [

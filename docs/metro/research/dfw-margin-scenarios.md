@@ -1,5 +1,16 @@
 # DFW Margin Scenarios — Partner Cost × MGG Pricing Structure
 
+## Owner decision: $250 floor (2026-09-28)
+
+The owner reviewed this doc's findings and decided: **"Let's bump pricing. We want to
+make at least $250 per order"** on DFW. Implemented as a `minMarginPerOrder: 250` price
+floor in `dallasFortWorth.pricing` (Long Island unchanged, config-gated so it's off there
+by default), on top of this doc's Table 8 tiered-premium recommendation (adopted
+verbatim: 0.25/0.35/0.45 by SKU) and a more conservative cost basis (node price = yard
+median × 1.00, not the 0.85 this doc used — see below). Full formula, per-SKU price
+table, and competitiveness/minimum-order analysis:
+**`docs/metro/research/dfw-pricing-v3-floor.md`**.
+
 Status: research/analysis, 2026-09-28. Author: P1-MARGIN-SCENARIOS. Analysis only — no
 code/config in `src/**` was changed to produce this doc. Every number below comes from
 running `scripts/metro/margin-scenarios.ts` (via `npx tsx`) against the real

@@ -56,9 +56,13 @@ export type ConversionOutcome =
   | { kind: "unpaid" }
   | { kind: "session_invalid"; status: "not_found" | "invalid"; message: string }
   | { kind: "metadata_invalid"; message: string }
-  | { kind: "converted"; row: MetroOrderRow; paymentStatus: "authorized" | "paid"; alreadyProcessed: false }
+  | { kind: "converted"; row: MetroOrderRow; paymentStatus: "authorized" | "paid" | "test"; alreadyProcessed: false; isTestMode: boolean }
   | { kind: "already_processed"; row: MetroOrderRow; alreadyProcessed: true }
-  | { kind: "review_required"; row: MetroOrderRow; alreadyProcessed: boolean; reason: string }
+  // isTestMode is only meaningful (and only ever read, by sendMetroConversionNotifications) when
+  // alreadyProcessed is false — the three alreadyProcessed:true construction sites below (an
+  // existing row found via the fast idempotency check, or either side of the insert-race
+  // tie-break) never send notifications, so they omit it.
+  | { kind: "review_required"; row: MetroOrderRow; alreadyProcessed: boolean; reason: string; isTestMode?: boolean }
   | { kind: "error"; message: string };
 
 /** A quote-shaped fallback used only in the extremely unlikely case where the metro/category/
@@ -114,8 +118,9 @@ export async function convertMetroSession(
   supabase: SupabaseClient,
   session: ConvertibleSession,
   expectedOrderId: string,
-  opts: { allowUnconfirmed: boolean },
+  opts: { allowUnconfirmed: boolean; isTestMode?: boolean },
 ): Promise<ConversionOutcome> {
+  const isTestMode = opts.isTestMode === true;
   const sessionValidation = validateSession(session, expectedOrderId);
   if (!sessionValidation.ok) {
     return { kind: "session_invalid", status: sessionValidation.status as "not_found" | "invalid", message: sessionValidation.error };
@@ -163,7 +168,12 @@ export async function convertMetroSession(
   const amountCheck = evaluateAmountAndPrice(session.amount_total, parsed.data.serverTotal, recomputedTotal);
 
   const quoteForRow = recomputedQuote ?? fallbackQuoteFromMetadata(parsed.data);
-  const status = amountCheck.ok ? paymentStatus : "review_required";
+  // Test-mode (Stripe TEST checkout, never a real charge) always records as 'test', regardless of
+  // the underlying PaymentIntent status — this keeps test rows visually/structurally distinct
+  // from 'authorized'/'paid' in the orders table and any downstream fulfillment/accounting query.
+  // An amount/price mismatch still routes to 'review_required' even in test mode (worth knowing
+  // about — it usually means a stale/tampered metadata blob) but IS tagged 'test' below.
+  const status = amountCheck.ok ? (isTestMode ? "test" : paymentStatus) : "review_required";
 
   const row = buildMetroOrderRowFromMetadata({
     orderId: parsed.data.orderId,
@@ -173,6 +183,7 @@ export async function convertMetroSession(
     stripeSessionId: session.id,
     stripePaymentIntentId: paymentIntentId,
     reviewReason: amountCheck.ok ? undefined : amountCheck.reason,
+    isTestMode,
   });
 
   const { data: insertedRows, error: insertError } = await supabase.from("orders").insert(row).select("*");
@@ -220,9 +231,9 @@ export async function convertMetroSession(
   }
 
   if (status === "review_required") {
-    return { kind: "review_required", row: myRow, alreadyProcessed: false, reason: amountCheck.reason ?? "unknown mismatch" };
+    return { kind: "review_required", row: myRow, alreadyProcessed: false, reason: amountCheck.reason ?? "unknown mismatch", isTestMode };
   }
-  return { kind: "converted", row: myRow, paymentStatus: status as "authorized" | "paid", alreadyProcessed: false };
+  return { kind: "converted", row: myRow, paymentStatus: status as "authorized" | "paid" | "test", alreadyProcessed: false, isTestMode };
 }
 
 /**
@@ -236,11 +247,12 @@ export async function convertMetroSession(
 export async function sendMetroConversionNotifications(supabase: SupabaseClient, outcome: ConversionOutcome): Promise<any> {
   if (outcome.kind === "review_required") {
     const data = toEmailData(outcome.row);
+    const subjectPrefix = outcome.isTestMode ? "[TEST] " : "";
     const result = await supabase.functions
       .invoke("send-email", {
         body: {
           to: "order.support@mygravelguy.com",
-          subject: `[REVIEW REQUIRED] Metro Order - ${data.customerName}`,
+          subject: `${subjectPrefix}[REVIEW REQUIRED] Metro Order - ${data.customerName}`,
           html: buildReviewRequiredInternalHtml(data, outcome.reason),
           type: "internal_notification",
           orderData: data,
@@ -260,11 +272,17 @@ export async function sendMetroConversionNotifications(supabase: SupabaseClient,
     return { customerEmail: false, internalEmail: false, skipped: "no_customer_email" };
   }
 
+  // Test-mode (Stripe TEST checkout — never a real charge) still emails the customer, so the
+  // whole flow (including the email templates) can be verified end-to-end on staging, but every
+  // subject is prefixed so nobody mistakes it for a real order — see docs/metro/research/
+  // metro-checkout-server.md "Staging / test mode".
+  const subjectPrefix = outcome.isTestMode ? "[TEST] " : "";
+
   const [customerResult, internalResult] = await Promise.allSettled([
     supabase.functions.invoke("send-email", {
       body: {
         to: data.customerEmail,
-        subject: `Order Confirmation - ${data.orderId}`,
+        subject: `${subjectPrefix}Order Confirmation - ${data.orderId}`,
         html: buildCustomerConfirmationHtml(data),
         type: "customer_confirmation",
         orderData: data,
@@ -273,7 +291,7 @@ export async function sendMetroConversionNotifications(supabase: SupabaseClient,
     supabase.functions.invoke("send-email", {
       body: {
         to: "order.support@mygravelguy.com",
-        subject: `New Metro Order - ${data.customerName}`,
+        subject: `${subjectPrefix}New Metro Order - ${data.customerName}`,
         html: buildInternalNotificationHtml(data),
         type: "internal_notification",
         orderData: data,
@@ -348,13 +366,15 @@ export async function sendMetroConversionErrorAlert(
   session: ConvertibleSession,
   orderId: string,
   dbErrorMessage: string,
+  isTestMode = false,
 ): Promise<{ internalEmail: boolean }> {
   const data = toErrorAlertData(session, orderId, dbErrorMessage);
+  const subjectPrefix = isTestMode ? "[TEST] " : "";
   const result = await supabase.functions
     .invoke("send-email", {
       body: {
         to: "order.support@mygravelguy.com",
-        subject: `[ORDER MAY BE LOST] Metro order insert failed - ${data.orderId}`,
+        subject: `${subjectPrefix}[ORDER MAY BE LOST] Metro order insert failed - ${data.orderId}`,
         html: buildOrderInsertFailedInternalHtml(data),
         type: "internal_notification",
         orderData: data,

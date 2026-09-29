@@ -56,6 +56,7 @@ import {
   validateVerifyRequest,
 } from "../_shared/metro-checkout.bundle.js";
 import { convertMetroSession, sendMetroConversionNotifications } from "../_shared/metro-conversion-runner.ts";
+import { resolveStripeModeForSessionId } from "../_shared/stripe-mode.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -75,11 +76,10 @@ serve(async (req) => {
   }
 
   try {
-    const stripeSecretKey = Deno.env.get("stripe");
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-    if (!stripeSecretKey || !supabaseUrl || !supabaseServiceRoleKey) {
+    if (!supabaseUrl || !supabaseServiceRoleKey) {
       const response = buildErrorResponse("error", "Server configuration error");
       return jsonResponse(response, httpStatusForResponse(response));
     }
@@ -101,6 +101,16 @@ serve(async (req) => {
     const { orderId } = requestValidation;
     const sessionId = (body.sessionId as string).trim();
 
+    // Key selection follows the session id Stripe itself issued (cs_test_… vs cs_…) — see
+    // ../_shared/stripe-mode.ts. Fail closed if the resolved mode's key isn't configured, same as
+    // create-metro-checkout: never silently retry with the other mode's key.
+    const { mode: stripeMode, secretKey: stripeSecretKey } = resolveStripeModeForSessionId(sessionId);
+    if (!stripeSecretKey) {
+      console.error("=== VERIFY METRO PAYMENT: MISSING STRIPE SECRET KEY FOR MODE ===", { mode: stripeMode });
+      const response = buildErrorResponse("error", "Server configuration error");
+      return jsonResponse(response, httpStatusForResponse(response));
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
@@ -116,9 +126,13 @@ serve(async (req) => {
       return jsonResponse(response, httpStatusForResponse(response));
     }
 
-    const allowUnconfirmed = Deno.env.get("METRO_CHECKOUT_ALLOW_UNCONFIRMED") === "true";
+    // session.livemode is Stripe's own authoritative live/test signal (more reliable than the
+    // cs_test_ id-prefix heuristic used above to pick the retrieval key) — used to gate both the
+    // METRO_CHECKOUT_ALLOW_UNCONFIRMED bypass and the order status/tags/notification prefix below.
+    const isTestMode = session.livemode === false;
+    const allowUnconfirmed = Deno.env.get("METRO_CHECKOUT_ALLOW_UNCONFIRMED") === "true" && isTestMode;
     // deno-lint-ignore no-explicit-any
-    const outcome = await convertMetroSession(supabase, session as any, orderId, { allowUnconfirmed });
+    const outcome = await convertMetroSession(supabase, session as any, orderId, { allowUnconfirmed, isTestMode });
 
     switch (outcome.kind) {
       case "unpaid": {
@@ -167,7 +181,7 @@ serve(async (req) => {
         return jsonResponse({ ...response, notifications: null }, httpStatusForResponse(response));
       }
       case "already_processed": {
-        const status = outcome.row.status === "paid" ? "paid" : "authorized";
+        const status = outcome.row.status === "paid" ? "paid" : outcome.row.status === "test" ? "test" : "authorized";
         const response = buildSuccessResponse(outcome.row, status, true);
         return jsonResponse({ ...response, notifications: null }, httpStatusForResponse(response));
       }

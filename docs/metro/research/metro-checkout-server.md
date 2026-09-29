@@ -252,7 +252,7 @@ call, not right after step 2) still apply. New for v3:
 
 ### Migration decision
 
-`supabase/migrations/20260928170000_metro_orders_unique_session.sql` adds an **optional** partial
+`supabase/migrations-drafts/20260928170000_metro_orders_unique_session.sql` adds an **optional** partial
 unique index on `orders(stripe_session_id) WHERE order_id LIKE 'ORDER-METRO-%'` — **not applied**
 by this agent (no live DB access; migrations in this repo are applied manually/via CI outside
 this session). It's safe to apply at any time (scoped to a prefix with zero existing rows) and
@@ -288,6 +288,131 @@ changes). Owner: review and run via your normal migration-apply step whenever co
   verdict). This feature is `create-metro-checkout`/`verify-metro-payment`/`metro-stripe-webhook`
   only, fully isolated from `verify-payment`, and stays gated dark
   (`priceBookConfirmed: false` for every metro) regardless.
+
+## Staging / test mode (2026-09-28, ST-STAGING agent)
+
+Full staging setup (VPS architecture, DNS, TLS, basic-auth, CI deploy workflow, owner runbook) is
+in `docs/metro/STAGING.md`. This section covers the server-side Stripe live/test split those
+staging requests actually exercise.
+
+### How live/test mode is selected
+
+`supabase/functions/_shared/stripe-mode.ts` (orchestrator-authored contract) is now wired into all
+three metro Stripe functions:
+
+- **`create-metro-checkout`**: `resolveStripeModeForOrigin(req.headers.get("origin"))`. A request's
+  `Origin` header in `STAGING_ORIGINS` (comma-separated, e.g.
+  `https://staging.mygravelguy.com`) → **test mode**, `STRIPE_TEST_SECRET_KEY`. Everything else
+  (including a missing/unrecognized Origin) → **live mode**, `stripe` (the existing live key env
+  var, unchanged). Fails closed with a 500 if the resolved mode's key isn't configured — a staging
+  request never silently falls back to the live key.
+- **`verify-metro-payment`**: `resolveStripeModeForSessionId(sessionId)` picks the key used to
+  *retrieve* the session (a `cs_test_…` id → test key). Once the session comes back, the
+  authoritative signal for everything downstream (order status/tags/notification subject, and the
+  `METRO_CHECKOUT_ALLOW_UNCONFIRMED` gate — see below) is Stripe's own `session.livemode`, not the
+  id-prefix heuristic.
+- **`metro-stripe-webhook`**: tries `STRIPE_METRO_WEBHOOK_SECRET` (live) then
+  `STRIPE_METRO_WEBHOOK_SECRET_TEST` (test) to verify the inbound signature — fails closed (400)
+  if neither verifies. Once verified, `event.livemode` (Stripe's own signal, from the *verified*
+  event, not the raw payload) picks which API secret key (`stripe` vs `STRIPE_TEST_SECRET_KEY`) is
+  used for the subsequent `paymentIntents.retrieve` call — fails closed (500) if that mode's key
+  isn't configured.
+- A new additive helper, `resolveStripeModeForLivemode(livemode, env?)`, was added to
+  `stripe-mode.ts` for the webhook's event.livemode-based lookup (same fail-closed contract as the
+  other two `resolveStripeModeFor*` functions; the exported API those two already had was not
+  changed).
+
+### `METRO_CHECKOUT_ALLOW_UNCONFIRMED` can no longer enable unconfirmed LIVE checkouts
+
+Before this change, `METRO_CHECKOUT_ALLOW_UNCONFIRMED=true` alone was enough to let
+`create-metro-checkout` quote (and `verify-metro-payment`/`metro-stripe-webhook` recompute) a price
+for a metro whose price book isn't confirmed yet (`priceBookConfirmed: false`) — a real risk if
+that env var were ever left on in production. It's now gated on test mode too, in all three
+functions:
+
+```
+allowUnconfirmed = (METRO_CHECKOUT_ALLOW_UNCONFIRMED === "true") && (mode === "test")
+```
+
+`mode` comes from `resolveStripeModeForOrigin` in `create-metro-checkout` (staging Origin) and from
+the verified `session.livemode`/`event.livemode` in `verify-metro-payment`/`metro-stripe-webhook`.
+**The env var name and its owner-facing meaning are unchanged** — it's still "allow checkout
+against an unconfirmed price book" — it just now can only ever do that for a staging/test-mode
+request, never for a real customer on `mygravelguy.com`. A forgotten `METRO_CHECKOUT_ALLOW_UNCONFIRMED=true`
+left set in the Supabase project's env is now inert for live traffic.
+
+### Origin allowlist for redirect URLs
+
+`create-metro-checkout`'s success/cancel URLs (`resolveMetroCheckoutOrigin`, `serverQuote.ts`) now
+allowlist `STAGING_ORIGINS` in addition to the existing hardcoded origins and
+`METRO_CHECKOUT_EXTRA_ORIGINS` — otherwise a staging checkout's Stripe redirect would silently fall
+back to `https://mygravelguy.com` after payment instead of returning to staging.
+
+### Test-mode order behavior
+
+A session Stripe itself marks as test (`session.livemode === false` / `event.livemode === false`,
+i.e. it went through Stripe **TEST mode**, meaning **no real charge ever occurred**) converts to an
+`orders` row differently from a normal conversion (`supabase/functions/_shared/
+metro-conversion-runner.ts`'s `convertMetroSession` / `sendMetroConversionNotifications`, plus
+`buildMetroOrderRowFromMetadata` in `src/metro/checkout/conversion.ts`):
+
+- **`status: 'test'`** — never `'authorized'`/`'paid'`, even though the underlying test
+  PaymentIntent did reach `requires_capture`/`succeeded`. Keeps test rows structurally
+  distinguishable from real orders in every downstream query (fulfillment dashboards, accounting
+  exports, etc.) without needing to also filter on tags. An amount/price mismatch in test mode
+  still routes to `'review_required'` (worth knowing about) rather than `'test'`.
+- **`tags`**: `['metro', <metroSlug>, 'test']` instead of `['metro', <metroSlug>]` — the `'test'`
+  tag is additive so metro/metroSlug-based dashboard filtering still works unchanged; filtering on
+  `'test'` (or on `status = 'test'`, which is simpler and sufficient on its own) finds every test
+  order.
+- **`notes`** gets an extra `[TEST] Stripe test-mode checkout — not a real payment.` sentence.
+- **Notifications**: both the customer confirmation email and the internal
+  `order.support@mygravelguy.com` email still send (so the whole flow, including the email
+  templates, can be verified end-to-end from staging) — every subject line gets a `[TEST] ` prefix
+  (`sendMetroConversionNotifications`) so nobody mistakes one for a real order. The
+  `review_required` internal alert and the G1 order-insert-failure alert
+  (`sendMetroConversionErrorAlert`) get the same prefix when the underlying session was test-mode.
+- The client response (`MetroVerifyResponse`, `src/metro/checkout/contract.ts`) gained `'test'` as
+  a third possible value of the success variant's `status` field (`'authorized' | 'paid' | 'test'`)
+  — `MetroOrderConfirmedPage.tsx` was not changed and needs no change: it only branches on
+  `response.success`/`response.status === 'unpaid'`, never on the specific authorized/paid/test
+  value, so a test-mode order already renders the normal success view.
+
+### Cleanup SQL for test orders
+
+Test orders are real rows in the shared **production** `orders` table (there is only one Supabase
+project — see `docs/metro/STAGING.md` "Shared Supabase" risk) — periodically clean them out:
+
+```sql
+-- Preview what would be deleted:
+select order_id, created_at, status, tags, total_price, delivery_email
+from orders
+where status = 'test'
+order by created_at desc;
+
+-- Delete:
+delete from orders where status = 'test';
+```
+
+(`status = 'test'` alone is sufficient and simpler than also matching on `tags @> '{test}'` — every
+row this pass ever writes with the `'test'` tag also has `status = 'test'`, by construction above.)
+
+### Client staging banner
+
+`src/metro/components/layout/MetroLayout.tsx` renders a small fixed "STAGING — Stripe test mode"
+banner when `import.meta.env.VITE_STAGING === 'true'` — set only by the staging build (see
+`docs/metro/STAGING.md`'s build args). Purely a visual reminder for testers; not a security
+boundary (basic-auth + noindex at the proxy/HTML level are what keep staging away from real
+customers/Google — see STAGING.md).
+
+### What was deliberately NOT changed
+
+`supabase/functions/verify-payment*`, `create-auth-hold*`, `src/pages/PaymentSuccess.tsx`,
+`src/metro/lib/**`, `src/metro/config/**`, `src/metro/types.ts` — none of the live
+`/cart → /checkout → /payment-success` flow, and none of the metro price-book/pricing-engine
+internals, were touched by this pass. `stripe-mode.ts`'s existing exported API
+(`parseOrigins`, `isStagingOrigin`, `resolveStripeModeForOrigin`, `resolveStripeModeForSessionId`)
+is unchanged; only the new `resolveStripeModeForLivemode` export was added.
 
 ## 2026-09-28 redesign: metro is fully isolated from `verify-payment`
 

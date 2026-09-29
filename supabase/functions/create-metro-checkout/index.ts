@@ -41,6 +41,7 @@ import {
   resolveMetroCheckoutOrigin,
   sanitizeCheckoutRequest,
 } from "../_shared/metro-checkout.bundle.js";
+import { resolveStripeModeForOrigin } from "../_shared/stripe-mode.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -84,11 +85,22 @@ serve(async (req) => {
   }
 
   try {
-    const stripeSecretKey = Deno.env.get("stripe");
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
 
-    if (!stripeSecretKey || !supabaseUrl || !supabaseAnonKey) {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return jsonResponse({ error: "Server configuration error", code: "SERVER_ERROR" }, 500);
+    }
+
+    // Stripe live/test mode follows the request Origin (see ../_shared/stripe-mode.ts):
+    // STAGING_ORIGINS is the ONLY thing that can put a request into test mode — everything else
+    // (including a missing/unrecognized Origin) stays live, exactly as before this change.
+    const originHeader = req.headers.get("origin");
+    const { mode: stripeMode, secretKey: stripeSecretKey } = resolveStripeModeForOrigin(originHeader);
+    if (!stripeSecretKey) {
+      // Fail closed — never silently fall back to the live key for a staging/test-mode request,
+      // and never proceed without a key at all for a live request either.
+      console.error("=== METRO CHECKOUT: MISSING STRIPE SECRET KEY FOR MODE ===", { mode: stripeMode });
       return jsonResponse({ error: "Server configuration error", code: "SERVER_ERROR" }, 500);
     }
 
@@ -102,7 +114,12 @@ serve(async (req) => {
       return jsonResponse({ error: "Invalid JSON in request body", code: "INVALID_INPUT" }, 400);
     }
 
-    const allowUnconfirmed = Deno.env.get("METRO_CHECKOUT_ALLOW_UNCONFIRMED") === "true";
+    // METRO_CHECKOUT_ALLOW_UNCONFIRMED is an owner staging override to let checkout run against
+    // an unconfirmed price book — it must never be able to enable that for a LIVE checkout, so
+    // it's gated on test mode (i.e. the request Origin being in STAGING_ORIGINS) in addition to
+    // the env var itself. A misconfigured/forgotten-on env var can therefore never expose
+    // unconfirmed pricing to real customers; it only ever does anything on staging.
+    const allowUnconfirmed = Deno.env.get("METRO_CHECKOUT_ALLOW_UNCONFIRMED") === "true" && stripeMode === "test";
     const now = new Date();
 
     // Sanitize once, up front — buildServerQuote also sanitizes internally (idempotent), but we
@@ -126,10 +143,13 @@ serve(async (req) => {
     const serverQuote = quoteResult.quote;
     const orderId = generateMetroOrderId(now);
 
-    const origin = resolveMetroCheckoutOrigin(
-      req.headers.get("origin"),
-      Deno.env.get("METRO_CHECKOUT_EXTRA_ORIGINS"),
-    );
+    // Origin allowlist for the success/cancel redirect URLs must include staging origins too
+    // (STAGING_ORIGINS — same env var stripe-mode.ts reads to decide live vs test) so a staging
+    // checkout doesn't fall back to the production METRO_CHECKOUT_DEFAULT_ORIGIN after payment.
+    const extraOrigins = [Deno.env.get("METRO_CHECKOUT_EXTRA_ORIGINS"), Deno.env.get("STAGING_ORIGINS")]
+      .filter(Boolean)
+      .join(",");
+    const origin = resolveMetroCheckoutOrigin(originHeader, extraOrigins);
     const cancelPath = resolveCancelPath(request.cancelPath);
     const contactEmail = request.contact.email;
     // Captured server-side from the real request header rather than trusted from the client

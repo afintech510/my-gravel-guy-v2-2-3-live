@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { dallasFortWorth } from '../config/dallasFortWorth';
 import { longIsland } from '../config/longIsland';
@@ -61,7 +64,7 @@ describe('quote — DFW', () => {
     expect(result!.deliveryCost).toBeCloseTo(firstLoadCost + secondLoadCost, 5);
   });
 
-  it('applies the premium rate and rounds the base price up to roundTo', () => {
+  it('applies the variant premium rate (tiered override) and rounds the base price up to roundTo', () => {
     const result = quote({
       metro: dallasFortWorth,
       categorySlug: 'gravel',
@@ -70,20 +73,24 @@ describe('quote — DFW', () => {
       zoneSlug: 'dfw-core',
     });
     expect(result).not.toBeNull();
-    const peaGravelPrice = getVariant(dfwGravel, 'pea-gravel')!.nodePricePerUnit;
-    const materialCost = 10 * peaGravelPrice;
-    const deliveryCost = 85 * 1.8; // single load in the large truck (10t fits, but finisher picks smallest that fits)
-    // recompute using the same truck-selection rule as planLoads to avoid hardcoding truck choice
+    const peaGravelVariant = getVariant(dfwGravel, 'pea-gravel')!;
+    const materialCost = 10 * peaGravelVariant.nodePricePerUnit;
+    // recompute delivery using the same truck-selection rule as planLoads to avoid hardcoding truck choice
     const loads = result!.loads;
     const expectedDelivery = loads.reduce(
       (sum, l, i) => sum + (i === 0 ? 85 * l.truck.deliveryCostFactor : 85 * l.truck.deliveryCostFactor * 0.75),
       0,
     );
-    const { premiumRate } = dallasFortWorth.pricing;
-    const expectedBase = Math.ceil((materialCost + expectedDelivery + (materialCost + expectedDelivery) * premiumRate) / 5) * 5;
+    // pea-gravel carries its own tiered premiumRate override (0.35) — confirm the engine
+    // actually uses it, not the metro-wide default.
+    expect(peaGravelVariant.premiumRate).toBeDefined();
+    const cost = materialCost + expectedDelivery;
+    const premiumPrice = cost * (1 + peaGravelVariant.premiumRate!);
+    const { paymentFeeRate, paymentFeeFixed, minMarginPerOrder } = dallasFortWorth.pricing;
+    const floorPrice = (cost + minMarginPerOrder! + paymentFeeFixed!) / (1 - paymentFeeRate!);
+    const expectedBase = Math.ceil(Math.max(premiumPrice, floorPrice) / 5) * 5;
     expect(result!.basePrice).toBe(expectedBase);
     expect(result!.basePrice % 5).toBe(0);
-    void deliveryCost;
   });
 
   it('adds Saturday and rush fees on top of the base price', () => {
@@ -236,5 +243,194 @@ describe('sample quotes referenced in the handoff log', () => {
     })!;
     expect(result.unit).toBe('yd');
     expect(result.belowMinimum).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------------------
+// DFW $250/order gross-profit floor (owner decision, 2026-09-28) —
+// docs/metro/research/dfw-pricing-v3-floor.md.
+// gross profit = basePrice - materialCost - deliveryCost - stripeFee(basePrice), where
+// stripeFee(p) = p * paymentFeeRate + paymentFeeFixed.
+// ---------------------------------------------------------------------------------------
+describe('quote — DFW $250 margin floor', () => {
+  const { paymentFeeRate, paymentFeeFixed, minMarginPerOrder } = dallasFortWorth.pricing;
+
+  it('is configured only on DFW, not on Long Island', () => {
+    expect(dallasFortWorth.pricing.minMarginPerOrder).toBe(250);
+    expect(dallasFortWorth.pricing.paymentFeeRate).toBe(0.029);
+    expect(dallasFortWorth.pricing.paymentFeeFixed).toBe(0.3);
+    expect(longIsland.pricing.minMarginPerOrder).toBeUndefined();
+    expect(longIsland.pricing.paymentFeeRate).toBeUndefined();
+    expect(longIsland.pricing.paymentFeeFixed).toBeUndefined();
+  });
+
+  it('applies the floor for a small/cheap order (select-fill, min-qty, dfw-core) and clears >= $250 gross profit', () => {
+    const soilCategory = getCategory(dallasFortWorth, 'soil')!;
+    const zone = dallasFortWorth.zones.find(z => z.slug === 'dfw-core')!;
+    const result = quote({
+      metro: dallasFortWorth,
+      categorySlug: 'soil',
+      variantSlug: 'select-fill',
+      quantity: zone.minUnits,
+      zoneSlug: 'dfw-core',
+    })!;
+    expect(result).not.toBeNull();
+    const variant = getVariant(soilCategory, 'select-fill')!;
+    const cost = result.materialCost + result.deliveryCost;
+    const premiumPrice = cost * (1 + variant.premiumRate!);
+    const floorPrice = (cost + minMarginPerOrder! + paymentFeeFixed!) / (1 - paymentFeeRate!);
+    expect(floorPrice).toBeGreaterThan(premiumPrice); // the floor, not the tiered premium, should bind here
+    expect(result.marginFloorApplied).toBe(true);
+    expect(result.estimatedGrossProfit).toBeGreaterThanOrEqual(minMarginPerOrder! - 1e-6);
+  });
+
+  it('does not apply the floor for a large, high-value order where the tiered premium already clears $250 (river-rock, 30 units, dfw-outer)', () => {
+    const gravelCategory = getCategory(dallasFortWorth, 'gravel')!;
+    const result = quote({
+      metro: dallasFortWorth,
+      categorySlug: 'gravel',
+      variantSlug: 'river-rock',
+      quantity: 30,
+      zoneSlug: 'dfw-outer',
+    })!;
+    expect(result).not.toBeNull();
+    const variant = getVariant(gravelCategory, 'river-rock')!;
+    const cost = result.materialCost + result.deliveryCost;
+    const premiumPrice = cost * (1 + variant.premiumRate!);
+    const floorPrice = (cost + minMarginPerOrder! + paymentFeeFixed!) / (1 - paymentFeeRate!);
+    expect(premiumPrice).toBeGreaterThan(floorPrice); // the tiered premium alone already clears the floor
+    expect(result.marginFloorApplied).toBe(false);
+    expect(result.estimatedGrossProfit).toBeGreaterThanOrEqual(minMarginPerOrder! - 1e-6);
+  });
+
+  it('premium always equals basePrice - materialCost - deliveryCost, even when the floor is what set basePrice', () => {
+    const result = quote({
+      metro: dallasFortWorth,
+      categorySlug: 'soil',
+      variantSlug: 'select-fill',
+      quantity: 3,
+      zoneSlug: 'dfw-core',
+    })!;
+    expect(result.marginFloorApplied).toBe(true);
+    expect(result.premium).toBeCloseTo(result.basePrice - result.materialCost - result.deliveryCost, 6);
+  });
+
+  it('clears >= $250 estimated gross profit for every DFW SKU x zone x quantity combination', () => {
+    const quantities = [3, 5, 10, 15, 20, 30]; // 3 == every DFW zone's minUnits today
+    let checked = 0;
+    for (const category of dallasFortWorth.categories) {
+      for (const variant of category.variants) {
+        for (const zone of dallasFortWorth.zones) {
+          const zoneQuantities = new Set([zone.minUnits, ...quantities]);
+          for (const quantity of zoneQuantities) {
+            const result = quote({
+              metro: dallasFortWorth,
+              categorySlug: category.slug,
+              variantSlug: variant.slug,
+              quantity,
+              zoneSlug: zone.slug,
+            });
+            expect(result).not.toBeNull();
+            expect(result!.estimatedGrossProfit).toBeDefined();
+            expect(
+              result!.estimatedGrossProfit!,
+              `${variant.slug} x ${zone.slug} x qty=${quantity}: gross profit ${result!.estimatedGrossProfit} < $250`,
+            ).toBeGreaterThanOrEqual(minMarginPerOrder! - 1e-6);
+            checked++;
+          }
+        }
+      }
+    }
+    // 22 SKUs x 3 zones x 6 quantities (every DFW zone's minUnits today is 3, already in
+    // the fixed quantities list, so the per-zone Set dedupes to 6, not 7)
+    expect(checked).toBe(22 * 3 * 6);
+  });
+});
+
+// ---------------------------------------------------------------------------------------
+// Long Island must price EXACTLY as before the DFW $250 floor change — LI has no
+// minMarginPerOrder/paymentFeeRate/paymentFeeFixed configured, so quote() should take the
+// same premium-only code path it always did. Compared against a snapshot of every LI
+// (category, variant, zone, quantity) quote taken immediately before this change.
+// ---------------------------------------------------------------------------------------
+describe('quote — Long Island unaffected by the DFW margin floor', () => {
+  interface SnapshotEntry {
+    unit: string;
+    quantity: number;
+    materialCost: number;
+    deliveryCost: number;
+    premium: number;
+    basePrice: number;
+    saturdayFee: number;
+    rushFee: number;
+    total: number;
+    pricePerUnit: number;
+    belowMinimum: boolean;
+    minUnits: number;
+    loadsCount: number;
+  }
+
+  const snapshotPath = join(dirname(fileURLToPath(import.meta.url)), '__fixtures__', 'liQuotesSnapshot.json');
+  const snapshot: Record<string, SnapshotEntry | null> = JSON.parse(readFileSync(snapshotPath, 'utf8'));
+  const QUANTITIES = [1, 3, 5, 10, 15, 20, 30];
+
+  it('snapshot fixture covers every LI (category, variant, zone, quantity) combination', () => {
+    const expectedKeys = longIsland.categories.length
+      ? longIsland.categories.reduce(
+          (n, c) => n + c.variants.length * longIsland.zones.length * QUANTITIES.length,
+          0,
+        )
+      : 0;
+    expect(Object.keys(snapshot)).toHaveLength(expectedKeys);
+  });
+
+  it('every LI quote is byte-identical to its pre-change snapshot', () => {
+    let checked = 0;
+    for (const category of longIsland.categories) {
+      for (const variant of category.variants) {
+        for (const zone of longIsland.zones) {
+          for (const quantity of QUANTITIES) {
+            const key = `${category.slug}|${variant.slug}|${zone.slug}|${quantity}`;
+            const before = snapshot[key];
+            expect(before, `missing snapshot entry for ${key}`).not.toBeUndefined();
+            const result = quote({
+              metro: longIsland,
+              categorySlug: category.slug,
+              variantSlug: variant.slug,
+              zoneSlug: zone.slug,
+              quantity,
+            });
+            if (before === null) {
+              expect(result).toBeNull();
+            } else {
+              expect(result).not.toBeNull();
+              expect(result!.unit).toBe(before.unit);
+              expect(result!.quantity).toBe(before.quantity);
+              expect(result!.materialCost).toBe(before.materialCost);
+              expect(result!.deliveryCost).toBe(before.deliveryCost);
+              // `premium` is now always derived as basePrice - materialCost - deliveryCost
+              // (a formula change that applies engine-wide, not just to DFW, so the floor's
+              // uplift shows up as premium too) — recompute the pre-change equivalent from
+              // the snapshot's own (unchanged) fields rather than comparing the old
+              // pre-rounding `premium` value directly.
+              expect(result!.premium).toBe(before.basePrice - before.materialCost - before.deliveryCost);
+              expect(result!.basePrice).toBe(before.basePrice);
+              expect(result!.saturdayFee).toBe(before.saturdayFee);
+              expect(result!.rushFee).toBe(before.rushFee);
+              expect(result!.total).toBe(before.total);
+              expect(result!.pricePerUnit).toBe(before.pricePerUnit);
+              expect(result!.belowMinimum).toBe(before.belowMinimum);
+              expect(result!.minUnits).toBe(before.minUnits);
+              expect(result!.loads).toHaveLength(before.loadsCount);
+              // No margin floor exists on Long Island, so quote() must not add these fields.
+              expect(result!.marginFloorApplied).toBeUndefined();
+              expect(result!.estimatedGrossProfit).toBeUndefined();
+            }
+            checked++;
+          }
+        }
+      }
+    }
+    expect(checked).toBe(Object.keys(snapshot).length);
   });
 });

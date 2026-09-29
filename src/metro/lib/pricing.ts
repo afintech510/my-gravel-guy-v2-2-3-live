@@ -11,7 +11,12 @@ import type {
 } from '../types';
 
 // Delivered-price engine for metro pages.
-// price = (material + delivery loads) × (1 + premium), rounded up; Saturday / rush add on top.
+// price = max( cost × (1 + premiumRate), a minMarginPerOrder gross-profit floor when the
+// metro configures one ), rounded up; Saturday / rush add on top. `premiumRate` may be
+// overridden per variant (DFW's tiered 0.25/0.35/0.45 by SKU). The floor guarantees
+// gross profit ≥ metro.pricing.minMarginPerOrder after Stripe fees — see "Owner decision
+// ($250 floor)" in docs/metro/research/dfw-pricing-v3-floor.md. Metros that don't set
+// minMarginPerOrder (Long Island) price exactly as before, floor-free.
 // Delivery cost follows the ELM model: first load full zone cost, extra loads discounted.
 
 export const getCategory = (metro: Metro, slug: CategorySlug): MaterialCategory | undefined =>
@@ -67,7 +72,16 @@ export const quote = (input: QuoteInput): QuoteResult | null => {
   const zone = getZone(metro, input.zoneSlug);
   if (!category || !variant || !zone || quantity <= 0) return null;
 
-  const { premiumRate, additionalLoadDiscount, saturdayFeeRate, rushFeeRate, roundTo } = metro.pricing;
+  const {
+    premiumRate,
+    additionalLoadDiscount,
+    saturdayFeeRate,
+    rushFeeRate,
+    roundTo,
+    minMarginPerOrder,
+    paymentFeeRate,
+    paymentFeeFixed,
+  } = metro.pricing;
 
   const loads = planLoads(quantity, metro.trucks, category);
   const deliveryCost = loads.reduce((sum, load, i) => {
@@ -76,10 +90,32 @@ export const quote = (input: QuoteInput): QuoteResult | null => {
   }, 0);
 
   const materialCost = quantity * variant.nodePricePerUnit;
-  const premium = (materialCost + deliveryCost) * premiumRate;
-  const basePrice = roundUpTo(materialCost + deliveryCost + premium, roundTo);
+  const cost = materialCost + deliveryCost;
+  const effectivePremiumRate = variant.premiumRate ?? premiumRate;
+  const premiumPrice = cost * (1 + effectivePremiumRate);
+
+  // Minimum-gross-profit floor (DFW, owner decision 2026-09-28): solve for the price at
+  // which basePrice - cost - stripeFee(basePrice) == minMarginPerOrder, where
+  // stripeFee(p) = p * paymentFeeRate + paymentFeeFixed. Only active when the metro
+  // configures all three fields — Long Island (none set) is unaffected.
+  const hasMarginFloor = minMarginPerOrder != null && paymentFeeRate != null && paymentFeeFixed != null;
+  const floorPrice = hasMarginFloor
+    ? (cost + minMarginPerOrder! + paymentFeeFixed!) / (1 - paymentFeeRate!)
+    : null;
+
+  const marginFloorApplied = floorPrice != null && floorPrice > premiumPrice;
+  const rawPrice = marginFloorApplied ? floorPrice! : premiumPrice;
+
+  // roundUpTo only ever increases the price, so the floor (already satisfied by rawPrice)
+  // is never undercut by rounding.
+  const basePrice = roundUpTo(rawPrice, roundTo);
+  const premium = basePrice - materialCost - deliveryCost;
   const saturdayFee = input.saturday ? roundUpTo(basePrice * saturdayFeeRate, roundTo) : 0;
   const rushFee = input.speed === 'rush' ? roundUpTo(basePrice * rushFeeRate, roundTo) : 0;
+
+  const estimatedGrossProfit = hasMarginFloor
+    ? basePrice - cost - (basePrice * paymentFeeRate! + paymentFeeFixed!)
+    : undefined;
 
   return {
     unit: category.unit,
@@ -95,6 +131,7 @@ export const quote = (input: QuoteInput): QuoteResult | null => {
     pricePerUnit: basePrice / quantity,
     belowMinimum: quantity < zone.minUnits,
     minUnits: zone.minUnits,
+    ...(hasMarginFloor ? { marginFloorApplied, estimatedGrossProfit } : {}),
   };
 };
 

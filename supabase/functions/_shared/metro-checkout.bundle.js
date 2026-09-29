@@ -2,7 +2,7 @@
 // Source: src/metro/checkout/bundleEntry.ts (re-exports serverQuote.ts + verifyLogic.ts,
 // + their transitive src/metro/** imports)
 // Regenerate: node scripts/metro/export-metro-checkout-bundle.mjs
-// Generated: 2026-09-28T17:20:59.753Z
+// Generated: 2026-09-29T00:28:51.364Z
 
 
 // src/metro/checkout/contract.ts
@@ -95,52 +95,58 @@ var dfwCatalog = {
       name: 'Pea Gravel (3/8")',
       shortDescription: 'Rounded 3/8" pea gravel for walkways, patios, fire pits and playgrounds.',
       bestFor: ["walkways", "patios", "fire pits"],
-      nodePricePerUnit: 60.72,
+      nodePricePerUnit: 71.43,
       swatch: "#C7B299",
-      popular: true
+      popular: true,
+      premiumRate: 0.35
     },
     {
       slug: "57-limestone",
       name: "#57 Crushed Limestone",
       shortDescription: 'Angular crushed limestone in the 3/4"-1" range, the DFW standard for drainage and driveway base.',
       bestFor: ["driveways", "drainage", "under-slab base"],
-      nodePricePerUnit: 54.65,
+      nodePricePerUnit: 64.29,
       swatch: "#A8A296",
-      popular: true
+      popular: true,
+      premiumRate: 0.25
     },
     {
       slug: "flex-base",
       name: "Flex Base / Road Base",
       shortDescription: "Crushed limestone road base blended with fines that compacts into a solid driving surface.",
       bestFor: ["driveway base", "shed pads", "compaction base"],
-      nodePricePerUnit: 39.47,
+      nodePricePerUnit: 46.43,
       swatch: "#B7A98F",
-      popular: true
+      popular: true,
+      premiumRate: 0.35
     },
     {
       slug: "decomposed-granite",
       name: "Decomposed Granite",
       shortDescription: "Fine, compactable granite stone with a natural tan color used for paths and patios.",
       bestFor: ["garden paths", "patios", "xeriscaping"],
-      nodePricePerUnit: 85.61,
+      nodePricePerUnit: 100.72,
       swatch: "#C99A6C",
-      popular: true
+      popular: true,
+      premiumRate: 0.25
     },
     {
       slug: "rip-rap",
       name: "Rip Rap",
       shortDescription: "Large crushed limestone rip rap for erosion control on slopes and creek banks.",
       bestFor: ["erosion control", "creek banks", "drainage swales"],
-      nodePricePerUnit: 57.68,
-      swatch: "#767672"
+      nodePricePerUnit: 67.86,
+      swatch: "#767672",
+      premiumRate: 0.35
     },
     {
       slug: "river-rock",
       name: 'River Rock 1-3"',
       shortDescription: 'Smooth, rounded multi-color river stone in the 1"-3" range.',
       bestFor: ["landscape beds", "dry creek beds", "erosion control"],
-      nodePricePerUnit: 87.13,
-      swatch: "#8C8C89"
+      nodePricePerUnit: 102.5,
+      swatch: "#8C8C89",
+      premiumRate: 0.45
     }
   ],
   sand: [
@@ -149,41 +155,46 @@ var dfwCatalog = {
       name: "Mason Sand",
       shortDescription: "Fine, washed sand used in masonry mortar and for leveling under pavers.",
       bestFor: ["mortar mix", "paver leveling", "sandboxes"],
-      nodePricePerUnit: 48.8,
+      nodePricePerUnit: 57.41,
       swatch: "#E3D3AC",
-      popular: true
+      popular: true,
+      premiumRate: 0.35
     },
     {
       slug: "bank-sand",
       name: "Bank Sand (fill)",
       shortDescription: "Unwashed sand pulled from a sand bank, used as general fill.",
       bestFor: ["fill", "grading", "backfill"],
-      nodePricePerUnit: 43.44,
-      swatch: "#C9B98F"
+      nodePricePerUnit: 51.11,
+      swatch: "#C9B98F",
+      premiumRate: 0.25
     },
     {
       slug: "concrete-sand",
       name: "Concrete Sand",
       shortDescription: "Coarse, washed concrete sand for concrete mix and drainage layers.",
       bestFor: ["concrete mix", "drainage layers", "paver base"],
-      nodePricePerUnit: 50.37,
-      swatch: "#D8C9A3"
+      nodePricePerUnit: 59.26,
+      swatch: "#D8C9A3",
+      premiumRate: 0.25
     },
     {
       slug: "play-sand",
       name: "Play / Playground Sand",
       shortDescription: "Washed, screened play sand safe for sandboxes and play areas.",
       bestFor: ["sandboxes", "playgrounds"],
-      nodePricePerUnit: 61.07,
-      swatch: "#F0E2B6"
+      nodePricePerUnit: 71.85,
+      swatch: "#F0E2B6",
+      premiumRate: 0.25
     },
     {
       slug: "washed-sand",
       name: "Washed Sand",
       shortDescription: "Washed sand for masonry and general construction use.",
       bestFor: ["masonry", "construction backfill"],
-      nodePricePerUnit: 49.58,
-      swatch: "#DCC896"
+      nodePricePerUnit: 58.34,
+      swatch: "#DCC896",
+      premiumRate: 0.35
     }
   ],
   mulch: [
@@ -192,58 +203,65 @@ var dfwCatalog = {
       name: "Double-Shred Native Hardwood",
       shortDescription: "Double-shredded native hardwood mulch, the standard un-dyed landscape mulch.",
       bestFor: ["garden beds", "tree rings", "general landscaping"],
-      nodePricePerUnit: 34.85,
+      nodePricePerUnit: 41,
       swatch: "#6B4A32",
-      popular: true
+      popular: true,
+      premiumRate: 0.45
     },
     {
       slug: "black-dyed",
       name: "Black Dyed Mulch",
       shortDescription: "Hardwood mulch dyed black for a dark, uniform bed color that holds through the season.",
       bestFor: ["garden beds", "foundation plantings", "high-contrast borders"],
-      nodePricePerUnit: 38.25,
+      nodePricePerUnit: 45,
       swatch: "#2B2724",
-      popular: true
+      popular: true,
+      premiumRate: 0.45
     },
     {
       slug: "brown-dyed",
       name: "Brown Dyed Mulch",
       shortDescription: "Hardwood mulch dyed brown for a rich, natural-looking bed color that holds through the season.",
       bestFor: ["garden beds", "foundation plantings", "walkway borders"],
-      nodePricePerUnit: 40.8,
-      swatch: "#4A3524"
+      nodePricePerUnit: 48,
+      swatch: "#4A3524",
+      premiumRate: 0.35
     },
     {
       slug: "dyed-red",
       name: "Red Dyed Mulch",
       shortDescription: "Hardwood mulch dyed red/brown, a popular color choice alongside black and natural.",
       bestFor: ["flower beds", "curb appeal refresh"],
-      nodePricePerUnit: 39.1,
-      swatch: "#8B3A2F"
+      nodePricePerUnit: 46,
+      swatch: "#8B3A2F",
+      premiumRate: 0.45
     },
     {
       slug: "cedar",
       name: "Cedar Mulch",
       shortDescription: "Shredded cedar mulch with a natural reddish-brown color and characteristic cedar scent.",
       bestFor: ["garden beds", "play areas", "pest-averse plantings"],
-      nodePricePerUnit: 50.15,
-      swatch: "#8A5A3C"
+      nodePricePerUnit: 59,
+      swatch: "#8A5A3C",
+      premiumRate: 0.25
     },
     {
       slug: "pine-bark",
       name: "Pine Bark Mulch",
       shortDescription: "Chunky pine bark mulch for a coarser, longer-lasting ground cover.",
       bestFor: ["shrub beds", "erosion-prone slopes"],
-      nodePricePerUnit: 46.75,
-      swatch: "#7B4B2A"
+      nodePricePerUnit: 55,
+      swatch: "#7B4B2A",
+      premiumRate: 0.35
     },
     {
       slug: "playground-mulch",
       name: "Playground Mulch",
       shortDescription: "Engineered wood fiber mulch for fall-zone ground cover under play equipment.",
       bestFor: ["playgrounds", "school/park projects"],
-      nodePricePerUnit: 38.24,
-      swatch: "#D2B48C"
+      nodePricePerUnit: 44.99,
+      swatch: "#D2B48C",
+      premiumRate: 0.45
     }
   ],
   soil: [
@@ -252,33 +270,37 @@ var dfwCatalog = {
       name: "Sandy Loam Topsoil",
       shortDescription: "Screened sandy loam topsoil blended for good drainage and general planting over DFW's heavy clay.",
       bestFor: ["new lawns", "grading", "general planting"],
-      nodePricePerUnit: 38.25,
+      nodePricePerUnit: 45,
       swatch: "#5B4A38",
-      popular: true
+      popular: true,
+      premiumRate: 0.35
     },
     {
       slug: "garden-mix",
       name: "Garden / Raised-Bed Mix",
       shortDescription: "Topsoil blended with compost for raised beds and vegetable gardens.",
       bestFor: ["raised beds", "vegetable gardens", "planter fill"],
-      nodePricePerUnit: 53.12,
-      swatch: "#4A3B2A"
+      nodePricePerUnit: 62.5,
+      swatch: "#4A3B2A",
+      premiumRate: 0.35
     },
     {
       slug: "compost",
       name: "Compost",
       shortDescription: "Decomposed organic matter used to amend and enrich existing soil.",
       bestFor: ["soil amendment", "topdressing", "garden beds"],
-      nodePricePerUnit: 44.63,
-      swatch: "#3A2E22"
+      nodePricePerUnit: 52.5,
+      swatch: "#3A2E22",
+      premiumRate: 0.25
     },
     {
       slug: "select-fill",
       name: "Select Fill Dirt",
       shortDescription: "Clean, low-organic fill dirt used to raise or level grade.",
       bestFor: ["grading", "fill", "low spots"],
-      nodePricePerUnit: 23.77,
-      swatch: "#6E5A44"
+      nodePricePerUnit: 27.97,
+      swatch: "#6E5A44",
+      premiumRate: 0.35
     }
   ]
 };
@@ -374,11 +396,21 @@ var dallasFortWorth = {
   ],
   trucks,
   pricing: {
+    // premiumRate here is the fallback for any variant without its own tiered override
+    // (see ./data/dfwCatalog.ts) — every current DFW variant sets premiumRate, so this
+    // value is effectively unused today, kept as a safe default for future SKUs.
     premiumRate: 0.25,
     additionalLoadDiscount: 0.25,
     saturdayFeeRate: 0.15,
     rushFeeRate: 0.15,
-    roundTo: 5
+    roundTo: 5,
+    // Owner decision (2026-09-28): "make at least $250 per order" on DFW (partner-
+    // fulfilled) — see docs/metro/research/dfw-pricing-v3-floor.md. Long Island (ELM's
+    // own yard, different economics, typical order ~$300) intentionally has none of
+    // these three fields set, so quote() applies no floor there.
+    minMarginPerOrder: 250,
+    paymentFeeRate: 0.029,
+    paymentFeeFixed: 0.3
   },
   phone: "(844) 624-0400",
   phoneHref: "tel:+18446240400"
@@ -787,17 +819,34 @@ var quote = (input) => {
   const variant = category && getVariant(category, input.variantSlug);
   const zone = getZone(metro, input.zoneSlug);
   if (!category || !variant || !zone || quantity <= 0) return null;
-  const { premiumRate, additionalLoadDiscount, saturdayFeeRate, rushFeeRate, roundTo } = metro.pricing;
+  const {
+    premiumRate,
+    additionalLoadDiscount,
+    saturdayFeeRate,
+    rushFeeRate,
+    roundTo,
+    minMarginPerOrder,
+    paymentFeeRate,
+    paymentFeeFixed
+  } = metro.pricing;
   const loads = planLoads(quantity, metro.trucks, category);
   const deliveryCost = loads.reduce((sum, load, i) => {
     const loadCost = zone.loadCost * load.truck.deliveryCostFactor;
     return sum + (i === 0 ? loadCost : loadCost * (1 - additionalLoadDiscount));
   }, 0);
   const materialCost = quantity * variant.nodePricePerUnit;
-  const premium = (materialCost + deliveryCost) * premiumRate;
-  const basePrice = roundUpTo(materialCost + deliveryCost + premium, roundTo);
+  const cost = materialCost + deliveryCost;
+  const effectivePremiumRate = variant.premiumRate ?? premiumRate;
+  const premiumPrice = cost * (1 + effectivePremiumRate);
+  const hasMarginFloor = minMarginPerOrder != null && paymentFeeRate != null && paymentFeeFixed != null;
+  const floorPrice = hasMarginFloor ? (cost + minMarginPerOrder + paymentFeeFixed) / (1 - paymentFeeRate) : null;
+  const marginFloorApplied = floorPrice != null && floorPrice > premiumPrice;
+  const rawPrice = marginFloorApplied ? floorPrice : premiumPrice;
+  const basePrice = roundUpTo(rawPrice, roundTo);
+  const premium = basePrice - materialCost - deliveryCost;
   const saturdayFee = input.saturday ? roundUpTo(basePrice * saturdayFeeRate, roundTo) : 0;
   const rushFee = input.speed === "rush" ? roundUpTo(basePrice * rushFeeRate, roundTo) : 0;
+  const estimatedGrossProfit = hasMarginFloor ? basePrice - cost - (basePrice * paymentFeeRate + paymentFeeFixed) : void 0;
   return {
     unit: category.unit,
     quantity,
@@ -811,7 +860,8 @@ var quote = (input) => {
     total: basePrice + saturdayFee + rushFee,
     pricePerUnit: basePrice / quantity,
     belowMinimum: quantity < zone.minUnits,
-    minUnits: zone.minUnits
+    minUnits: zone.minUnits,
+    ...hasMarginFloor ? { marginFloorApplied, estimatedGrossProfit } : {}
   };
 };
 var formatUnit = (unit, quantity) => unit === "ton" ? quantity === 1 ? "ton" : "tons" : quantity === 1 ? "yard" : "yards";
@@ -1332,7 +1382,7 @@ var parseMetroCheckoutMetadata = (metadata) => {
 };
 var metadataKeyCount = METRO_CHECKOUT_METADATA_KEYS.length;
 var buildMetroOrderRowFromMetadata = (opts) => {
-  const { orderId, serverQuote, request, status, stripeSessionId, stripePaymentIntentId, reviewReason } = opts;
+  const { orderId, serverQuote, request, status, stripeSessionId, stripePaymentIntentId, reviewReason, isTestMode } = opts;
   const utm = request.utmData ?? {};
   const notes = [
     `Zone: ${serverQuote.zoneName} (${serverQuote.zoneSlug}).`,
@@ -1340,6 +1390,7 @@ var buildMetroOrderRowFromMetadata = (opts) => {
     serverQuote.saturdayFee > 0 ? `Saturday fee: $${serverQuote.saturdayFee.toFixed(2)}.` : null,
     serverQuote.rushFee > 0 ? `Rush fee: $${serverQuote.rushFee.toFixed(2)}.` : null,
     "metro-checkout v2 (post-payment insert).",
+    isTestMode ? "[TEST] Stripe test-mode checkout \u2014 not a real payment." : null,
     reviewReason ? `[REVIEW REQUIRED] ${reviewReason}` : null
   ].filter((s) => Boolean(s)).join(" ");
   return {
@@ -1365,7 +1416,7 @@ var buildMetroOrderRowFromMetadata = (opts) => {
     material_slug: `${serverQuote.categorySlug}/${serverQuote.variantSlug}`,
     saturday_fee_amount: serverQuote.saturdayFee,
     expedite_fee_amount: serverQuote.rushFee,
-    tags: ["metro", serverQuote.metroSlug],
+    tags: isTestMode ? ["metro", serverQuote.metroSlug, "test"] : ["metro", serverQuote.metroSlug],
     billing_name: request.contact.name,
     billing_email: request.contact.email,
     stripe_session_id: stripeSessionId,

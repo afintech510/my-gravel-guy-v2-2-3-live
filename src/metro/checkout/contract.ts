@@ -167,7 +167,9 @@ export type MetroVerifyResponse =
   | {
       success: true;
       orderId: string;
-      status: 'authorized' | 'paid';
+      /** 'test' — Stripe TEST-mode checkout (staging origin; session.livemode === false), never a
+       * real charge. See docs/metro/research/metro-checkout-server.md "Staging / test mode". */
+      status: 'authorized' | 'paid' | 'test';
       alreadyProcessed: boolean;
       order: MetroConfirmedOrder;
     }
