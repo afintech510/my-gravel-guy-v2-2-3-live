@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyGravelGuy — DFW &amp; Long Island Pricing Heatmap</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: #f9f9f7;
+    color: #0b0b0b;
+  }
+  .viz-root {
+    --surface-1:      #fcfcfb;
+    --page:           #f9f9f7;
+    --ink-primary:    #0b0b0b;
+    --ink-secondary:  #52514e;
+    --ink-muted:      #898781;
+    --gridline:       #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border-ring:    rgba(11,11,11,0.10);
+    --gray-mid:       #f0efec;
+    --accent-outline: #0b0b0b;
+    color-scheme: light;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 20px 24px 48px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      --surface-1:      #1a1a19;
+      --page:           #0d0d0d;
+      --ink-primary:    #ffffff;
+      --ink-secondary:  #c3c2b7;
+      --ink-muted:      #898781;
+      --gridline:       #2c2c2a;
+      --baseline:       #383835;
+      --border-ring:    rgba(255,255,255,0.10);
+      --gray-mid:       #383835;
+      --accent-outline: #ffffff;
+      color-scheme: dark;
+    }
+    body { background: #0d0d0d; color: #ffffff; }
+  }
+
+  h1 { font-size: 18px; font-weight: 600; margin: 0 0 4px; color: var(--ink-primary); }
+  .subhead { font-size: 13px; color: var(--ink-secondary); margin: 0 0 20px; }
+
+  /* ---- controls row ---- */
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    background: var(--surface-1);
+    border: 1px solid var(--border-ring);
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+  .control { display: flex; flex-direction: column; gap: 4px; }
+  .control label { font-size: 11px; font-weight: 600; color: var(--ink-secondary); text-transform: uppercase; letter-spacing: 0.03em; }
+  .control select, .control button {
+    font-family: inherit; font-size: 13px; padding: 6px 10px;
+    border: 1px solid var(--baseline); border-radius: 6px;
+    background: var(--surface-1); color: var(--ink-primary);
+  }
+  .control.checkbox { flex-direction: row; align-items: center; gap: 6px; }
+  .control.checkbox label { text-transform: none; font-size: 13px; font-weight: 500; }
+  .spacer { flex: 1; }
+  .btn-toggle {
+    cursor: pointer;
+  }
+  .btn-toggle[aria-pressed="true"] { background: var(--ink-primary); color: var(--surface-1); border-color: var(--ink-primary); }
+
+  /* ---- stat tiles ---- */
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .tile {
+    background: var(--surface-1); border: 1px solid var(--border-ring); border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .tile .tile-label { font-size: 11px; color: var(--ink-secondary); margin: 0 0 6px; }
+  .tile .tile-value { font-size: 22px; font-weight: 600; color: var(--ink-primary); line-height: 1.15; white-space: nowrap; }
+  .tile .tile-sub { font-size: 11px; color: var(--ink-muted); margin-top: 3px; }
+
+  @media (max-width: 640px) {
+    .viz-root { padding: 14px 12px 32px; }
+    .controls { flex-direction: column; align-items: stretch; }
+    .controls .control { width: 100%; }
+    .controls .control select { width: 100%; }
+    .spacer { display: none; }
+    .tiles { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .tile { padding: 10px; }
+    .tile .tile-value { font-size: 17px; }
+    .legend-row { gap: 10px; }
+  }
+
+  /* ---- legend ---- */
+  .legend-row { display: flex; align-items: center; gap: 16px; margin-bottom: 10px; font-size: 12px; color: var(--ink-secondary); flex-wrap: wrap; }
+  .legend-scale { display: flex; align-items: center; gap: 8px; }
+  .legend-gradient { width: 180px; height: 12px; border-radius: 3px; border: 1px solid var(--border-ring); }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--border-ring); display: inline-block; }
+  .legend-hatch {
+    background-image: repeating-linear-gradient(45deg, var(--ink-muted) 0, var(--ink-muted) 1.5px, transparent 1.5px, transparent 6px);
+    opacity: 0.55;
+  }
+  .legend-floor {
+    background: var(--gray-mid);
+    outline: 2px solid var(--accent-outline);
+    outline-offset: -2px;
+  }
+  .col-highlight-note { display: flex; align-items: center; gap: 6px; }
+  .col-highlight-swatch { width: 18px; height: 12px; border: 2px solid #c98500; border-radius: 2px; background: transparent; }
+
+  /* ---- grid wrapper ---- */
+  .grid-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border-ring);
+    border-radius: 8px;
+    background: var(--surface-1);
+  }
+  table.heatmap { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 900px; font-size: 12px; }
+  table.heatmap caption { text-align: left; padding: 8px 12px; font-size: 12px; color: var(--ink-secondary); }
+
+  table.heatmap th, table.heatmap td { padding: 0; border-bottom: 1px solid var(--gridline); border-right: 1px solid var(--gridline); }
+  table.heatmap thead th {
+    position: sticky; top: 0; z-index: 3;
+    background: var(--surface-1);
+    color: var(--ink-secondary);
+    font-weight: 600; font-size: 11px;
+    padding: 8px 6px; text-align: center;
+    border-bottom: 1px solid var(--baseline);
+    white-space: nowrap;
+  }
+  table.heatmap thead th.row-label-head {
+    position: sticky; left: 0; top: 0; z-index: 4;
+    text-align: left; padding-left: 12px; min-width: 220px;
+  }
+  table.heatmap tbody th.row-label {
+    position: sticky; left: 0; z-index: 2;
+    background: var(--surface-1);
+    text-align: left; padding: 7px 12px; font-weight: 500;
+    color: var(--ink-primary);
+    white-space: nowrap; min-width: 220px;
+    border-right: 1px solid var(--baseline);
+  }
+  table.heatmap tbody th.row-label .unit-tag { color: var(--ink-muted); font-weight: 400; font-size: 11px; }
+  tr.category-row th {
+    position: sticky; left: 0; z-index: 2;
+    background: var(--page);
+    color: var(--ink-secondary);
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    padding: 6px 12px; text-align: left;
+    border-right: none;
+  }
+  tr.category-row td { background: var(--page); border-right: none; }
+
+  td.cell {
+    position: relative;
+    min-width: 78px; height: 34px;
+    text-align: center; vertical-align: middle;
+    font-weight: 600; font-size: 12px;
+    cursor: default;
+    outline-offset: -2px;
+  }
+  td.cell:focus-visible { outline: 2px solid #2a78d6; outline-offset: -2px; }
+  td.cell .cell-value { position: relative; z-index: 1; padding: 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+  td.cell.below-min::after {
+    content: ""; position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(45deg, rgba(11,11,11,0.14) 0, rgba(11,11,11,0.14) 1.5px, transparent 1.5px, transparent 6px);
+    pointer-events: none;
+  }
+  @media (prefers-color-scheme: dark) {
+    td.cell.below-min::after {
+      background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.18) 0, rgba(255,255,255,0.18) 1.5px, transparent 1.5px, transparent 6px);
+    }
+  }
+  td.cell.floor-cell { outline: 2px solid var(--accent-outline); }
+  td.cell.floor-cell::before {
+    content: ""; position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(45deg, var(--ink-muted) 0, var(--ink-muted) 1.5px, transparent 1.5px, transparent 6px);
+    opacity: 0.35;
+    pointer-events: none;
+  }
+  td.cell.no-data {
+    background: repeating-linear-gradient(135deg, var(--gridline) 0, var(--gridline) 3px, var(--surface-1) 3px, var(--surface-1) 8px);
+    color: var(--ink-muted); font-weight: 500;
+  }
+  td.cell.rec-min-col, th.rec-min-col {
+    box-shadow: inset 2px 0 0 #c98500, inset -2px 0 0 #c98500;
+  }
+  thead th.rec-min-col { color: #c98500; }
+
+  /* plain/table view */
+  .grid-wrap.plain-mode td.cell {
+    background: var(--surface-1) !important;
+    color: var(--ink-primary) !important;
+    border: 1px solid var(--gridline);
+  }
+  .grid-wrap.plain-mode td.cell.below-min::after,
+  .grid-wrap.plain-mode td.cell.floor-cell::before { display: none; }
+  .grid-wrap.plain-mode td.cell.no-data { background: var(--surface-1) !important; }
+  .grid-wrap.plain-mode tbody tr:nth-child(even) td.cell { background: var(--page) !important; }
+
+  .footnote { font-size: 11px; color: var(--ink-muted); margin-top: 8px; }
+
+  /* tooltip */
+  #tooltip {
+    position: fixed; z-index: 50; pointer-events: none;
+    background: var(--ink-primary); color: var(--surface-1);
+    font-size: 12px; line-height: 1.5; padding: 10px 12px; border-radius: 6px;
+    max-width: 280px; box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    opacity: 0; transition: opacity 0.08s ease;
+  }
+  #tooltip.visible { opacity: 1; }
+  #tooltip .tt-title { font-weight: 700; margin-bottom: 4px; }
+  #tooltip .tt-row { display: flex; justify-content: space-between; gap: 12px; }
+  #tooltip .tt-row .tt-label { opacity: 0.75; }
+  #tooltip .tt-row .tt-val { font-weight: 600; }
+
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+</style>
+</head>
+<body>
+<div class="viz-root" id="root">
+  <h1>DFW &amp; Long Island — full pricing heatmap</h1>
+  <p class="subhead">Every zone × variant × order-quantity delivered price cell, computed from the real <code>quote()</code> engine and the real metro configs. Read-only visualization — no pricing logic lives here.</p>
+
+  <div class="controls" role="group" aria-label="Filters">
+    <div class="control">
+      <label for="ctl-metro">Metro</label>
+      <select id="ctl-metro"></select>
+    </div>
+    <div class="control">
+      <label for="ctl-zone">Zone</label>
+      <select id="ctl-zone"></select>
+    </div>
+    <div class="control">
+      <label for="ctl-metric">Metric</label>
+      <select id="ctl-metric"></select>
+    </div>
+    <div class="spacer"></div>
+    <div class="control checkbox">
+      <input type="checkbox" id="ctl-showvalues" checked>
+      <label for="ctl-showvalues">Show values</label>
+    </div>
+    <div class="control">
+      <label>&nbsp;</label>
+      <button type="button" id="ctl-tableview" class="btn-toggle" aria-pressed="false">Table view</button>
+    </div>
+  </div>
+
+  <div class="tiles" id="tiles" aria-live="polite"></div>
+
+  <div class="legend-row" id="legend"></div>
+
+  <div class="grid-wrap" id="grid-wrap">
+    <table class="heatmap" id="heatmap-table">
+      <caption id="table-caption"></caption>
+      <thead id="heatmap-thead"></thead>
+      <tbody id="heatmap-tbody"></tbody>
+    </table>
+  </div>
+  <p class="footnote" id="footnote"></p>
+</div>
+
+<div id="tooltip" role="tooltip"></div>
+
+<script>
+"use strict";
+const DATA = __HEATMAP_DATA_JSON__;
+
+/* ---------------------------------------------------------------------- */
+/* Validated palette (dataviz skill) — see docs/metro/pricing/README.md   */
+/* ---------------------------------------------------------------------- */
+const SEQ_BLUE_LIGHT = ["#cde2fb","#b7d3f6","#9ec5f4","#86b6ef","#6da7ec","#5598e7","#3987e5","#2a78d6","#256abf","#1c5cab","#184f95","#104281","#0d366b"];
+const SEQ_BLUE_DARK  = ["#0d366b","#104281","#184f95","#1c5cab","#256abf","#2a78d6","#3987e5","#5598e7","#6da7ec","#86b6ef","#9ec5f4","#b7d3f6","#cde2fb"];
+const DIV_BLUE_ARM_LIGHT = ["#86b6ef","#5598e7","#2a78d6","#1c5cab","#104281"];
+const DIV_RED_ARM_LIGHT  = ["#fd8c84","#e26c65","#c64946","#a92126","#8c0000"];
+const DIV_BLUE_ARM_DARK  = ["#184f95","#256abf","#3987e5","#6da7ec","#9ec5f4"];
+const DIV_RED_ARM_DARK   = ["#a61b23","#cd524e","#ee7a73","#ff968e","#ffc2b9"];
+const GRAY_MID_LIGHT = "#f0efec";
+const GRAY_MID_DARK  = "#383835";
+const DIVERGING_CLAMP = DATA.divergingClampPct || 60;
+
+function prefersDark() { return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches; }
+
+/* ---------------------------------------------------------------------- */
+/* Color helpers                                                          */
+/* ---------------------------------------------------------------------- */
+function hexToRgb(hex) {
+  const h = hex.replace("#", "");
+  return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+}
+function rgbToHex([r,g,b]) {
+  const c = [r,g,b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2,"0"));
+  return "#" + c.join("");
+}
+function lerpRgb(hexA, hexB, t) {
+  const a = hexToRgb(hexA), b = hexToRgb(hexB);
+  return rgbToHex([a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t]);
+}
+function interpolateStops(stops, t) {
+  t = Math.max(0, Math.min(1, t));
+  const n = stops.length - 1;
+  if (n <= 0) return stops[0];
+  const pos = t * n;
+  const i = Math.min(n - 1, Math.floor(pos));
+  const localT = pos - i;
+  return lerpRgb(stops[i], stops[i+1], localT);
+}
+function sequentialColor(value, min, max, dark) {
+  const stops = dark ? SEQ_BLUE_DARK : SEQ_BLUE_LIGHT;
+  const t = max > min ? (value - min) / (max - min) : 0.5;
+  return interpolateStops(stops, t);
+}
+function divergingColor(pct, dark) {
+  const grayHex = dark ? GRAY_MID_DARK : GRAY_MID_LIGHT;
+  const blueArm = dark ? DIV_BLUE_ARM_DARK : DIV_BLUE_ARM_LIGHT;
+  const redArm  = dark ? DIV_RED_ARM_DARK  : DIV_RED_ARM_LIGHT;
+  const clamped = Math.max(-DIVERGING_CLAMP, Math.min(DIVERGING_CLAMP, pct));
+  const t = clamped / DIVERGING_CLAMP; // -1..1
+  if (t >= 0) return interpolateStops([grayHex, ...redArm], t);
+  return interpolateStops([grayHex, ...blueArm], -t);
+}
+function srgbChannelToLin(c) { c /= 255; return c <= 0.04045 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); }
+function relLuminance(hex) {
+  const [r,g,b] = hexToRgb(hex).map(srgbChannelToLin);
+  return 0.2126*r + 0.7152*g + 0.0722*b;
+}
+function contrastRatio(hexA, hexB) {
+  const a = relLuminance(hexA), b = relLuminance(hexB);
+  const [hi, lo] = a > b ? [a,b] : [b,a];
+  return (hi + 0.05) / (lo + 0.05);
+}
+function inkFor(bgHex) {
+  const white = "#ffffff", black = "#0b0b0b";
+  return contrastRatio(bgHex, white) >= contrastRatio(bgHex, black) ? white : black;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Formatting                                                             */
+/* ---------------------------------------------------------------------- */
+function money(n, decimals) {
+  decimals = decimals || 0;
+  const sign = n < 0 ? "−" : "";
+  return sign + "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+function signedPct(n, decimals) {
+  decimals = decimals == null ? 0 : decimals;
+  const sign = n > 0 ? "+" : n < 0 ? "−" : "";
+  return sign + Math.abs(n).toFixed(decimals) + "%";
+}
+function pctPlain(n, decimals) {
+  decimals = decimals == null ? 1 : decimals;
+  return n.toFixed(decimals) + "%";
+}
+function unitAbbrev(unit) { return unit === "ton" ? "t" : "yd"; }
+function unitLabel(unit) { return unit === "ton" ? "ton" : "yard"; }
+
+/* ---------------------------------------------------------------------- */
+/* Metric definitions                                                     */
+/* ---------------------------------------------------------------------- */
+const METRICS = [
+  {
+    id: "total", label: "Delivered total $", kind: "sequential",
+    get: cell => cell.total,
+    format: cell => money(cell.total),
+    legendTitle: "Delivered total (everyday price, no Saturday/rush)",
+  },
+  {
+    id: "perUnit", label: "$ per unit", kind: "sequential",
+    get: cell => cell.pricePerUnit,
+    format: (cell, unit) => money(cell.pricePerUnit, 0) + "/" + unitAbbrev(unit),
+    legendTitle: "Price per unit",
+  },
+  {
+    id: "grossProfit", label: "Gross profit $", kind: "sequential",
+    get: cell => cell.grossProfit,
+    format: cell => money(cell.grossProfit),
+    legendTitle: "Gross profit after Stripe fee (2.9% + $0.30)",
+  },
+  {
+    id: "marginPct", label: "Margin %", kind: "sequential",
+    get: cell => cell.marginPct,
+    format: cell => pctPlain(cell.marginPct),
+    legendTitle: "Gross margin % of delivered total",
+  },
+  {
+    id: "vsBroker", label: "vs broker median %", kind: "diverging",
+    get: cell => cell.brokerCompare.available ? cell.brokerCompare.diffPct : null,
+    format: cell => cell.brokerCompare.available ? signedPct(cell.brokerCompare.diffPct) : "no data",
+    legendTitle: "% difference vs broker-delivered median (blue = below/competitive, red = above), clamped ±" + DIVERGING_CLAMP + "%",
+  },
+  {
+    id: "floorApplied", label: "Floor applied", kind: "binary",
+    get: cell => cell.floorApplied,
+    format: cell => money(cell.grossProfit) + (cell.floorApplied ? " ·F" : ""),
+    legendTitle: "$250 minimum-gross-profit floor — outlined + hatched cells hit the floor (value shown is gross profit)",
+  },
+];
+
+/* ---------------------------------------------------------------------- */
+/* State                                                                  */
+/* ---------------------------------------------------------------------- */
+const state = {
+  metroSlug: DATA.metros[0].slug,
+  zoneSlug: DATA.metros[0].zones[0].slug,
+  metricId: "total",
+  showValues: true,
+  tableView: false,
+};
+
+function currentMetro() { return DATA.metros.find(m => m.slug === state.metroSlug); }
+function currentMetric() { return METRICS.find(m => m.id === state.metricId); }
+
+/* ---------------------------------------------------------------------- */
+/* Populate controls                                                      */
+/* ---------------------------------------------------------------------- */
+const elMetro = document.getElementById("ctl-metro");
+const elZone = document.getElementById("ctl-zone");
+const elMetric = document.getElementById("ctl-metric");
+const elShowValues = document.getElementById("ctl-showvalues");
+const elTableToggle = document.getElementById("ctl-tableview");
+
+for (const m of DATA.metros) {
+  const opt = document.createElement("option");
+  opt.value = m.slug;
+  opt.textContent = m.name;
+  elMetro.appendChild(opt);
+}
+for (const met of METRICS) {
+  const opt = document.createElement("option");
+  opt.value = met.id;
+  opt.textContent = met.label;
+  elMetric.appendChild(opt);
+}
+function populateZones() {
+  elZone.innerHTML = "";
+  for (const z of currentMetro().zones) {
+    const opt = document.createElement("option");
+    opt.value = z.slug;
+    opt.textContent = z.name + " (min " + z.minUnits + ")";
+    elZone.appendChild(opt);
+  }
+  elZone.value = state.zoneSlug;
+}
+elMetro.value = state.metroSlug;
+populateZones();
+elMetric.value = state.metricId;
+
+elMetro.addEventListener("change", () => {
+  state.metroSlug = elMetro.value;
+  state.zoneSlug = currentMetro().zones[0].slug;
+  populateZones();
+  renderAll();
+});
+elZone.addEventListener("change", () => { state.zoneSlug = elZone.value; renderAll(); });
+elMetric.addEventListener("change", () => { state.metricId = elMetric.value; renderAll(); });
+elShowValues.addEventListener("change", () => { state.showValues = elShowValues.checked; renderAll(); });
+elTableToggle.addEventListener("click", () => {
+  state.tableView = !state.tableView;
+  elTableToggle.setAttribute("aria-pressed", String(state.tableView));
+  elTableToggle.textContent = state.tableView ? "Heatmap view" : "Table view";
+  document.getElementById("grid-wrap").classList.toggle("plain-mode", state.tableView);
+});
+
+/* ---------------------------------------------------------------------- */
+/* Stat tiles                                                             */
+/* ---------------------------------------------------------------------- */
+function median(nums) {
+  if (!nums.length) return 0;
+  const s = [...nums].sort((a,b) => a-b);
+  const mid = Math.floor(s.length/2);
+  return s.length % 2 ? s[mid] : (s[mid-1]+s[mid])/2;
+}
+function renderTiles() {
+  const metro = currentMetro();
+  const allCells = [];
+  for (const row of metro.rows) {
+    for (const cell of row.cellsByZone[state.zoneSlug]) {
+      allCells.push({ cell, row });
+    }
+  }
+  const tiles = document.getElementById("tiles");
+  tiles.innerHTML = "";
+
+  // Tile 1: below broker
+  const comparable = allCells.filter(x => x.cell.brokerCompare.available);
+  const below = comparable.filter(x => x.cell.brokerCompare.label === "below");
+  const t1val = comparable.length ? below.length + " / " + comparable.length : "n/a";
+  const t1sub = comparable.length ? pctPlain((below.length/comparable.length)*100) + " of comparable cells" : "no broker data for this metro";
+
+  // Tile 2: floor binds
+  const floorBinds = allCells.filter(x => x.cell.floorApplied);
+  const t2val = metro.hasFloor ? floorBinds.length + " / " + allCells.length : "n/a";
+  const t2sub = metro.hasFloor ? pctPlain((floorBinds.length/allCells.length)*100) + " of cells hit the $" + metro.floorAmount + " floor" : "no margin floor configured";
+
+  // Tile 3: median margin %
+  const margins = allCells.map(x => x.cell.marginPct);
+  const t3val = pctPlain(median(margins));
+
+  // Tile 4: lowest-profit cell
+  let lowest = allCells[0];
+  for (const x of allCells) if (x.cell.grossProfit < lowest.cell.grossProfit) lowest = x;
+  const t4val = money(lowest.cell.grossProfit);
+  const t4sub = lowest.row.variantName + " @ " + lowest.cell.quantity + unitAbbrev(lowest.row.unit);
+
+  const defs = [
+    ["Cells below broker median", t1val, t1sub],
+    ["Cells where floor binds", t2val, t2sub],
+    ["Median margin %", t3val, allCells.length + " cells in this zone"],
+    ["Lowest-profit cell", t4val, t4sub],
+  ];
+  for (const [label, val, sub] of defs) {
+    const div = document.createElement("div");
+    div.className = "tile";
+    const l = document.createElement("p"); l.className = "tile-label"; l.textContent = label;
+    const v = document.createElement("p"); v.className = "tile-value"; v.textContent = val;
+    const s = document.createElement("p"); s.className = "tile-sub"; s.textContent = sub;
+    div.append(l, v, s);
+    tiles.appendChild(div);
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Legend                                                                 */
+/* ---------------------------------------------------------------------- */
+function renderLegend(domain) {
+  const metric = currentMetric();
+  const dark = prefersDark();
+  const legend = document.getElementById("legend");
+  legend.innerHTML = "";
+
+  const title = document.createElement("span");
+  title.textContent = metric.legendTitle;
+  legend.appendChild(title);
+
+  if (metric.kind === "sequential") {
+    const wrap = document.createElement("div");
+    wrap.className = "legend-scale";
+    const grad = document.createElement("div");
+    grad.className = "legend-gradient";
+    const stops = dark ? SEQ_BLUE_DARK : SEQ_BLUE_LIGHT;
+    grad.style.background = "linear-gradient(to right, " + stops.join(",") + ")";
+    const lo = document.createElement("span"); lo.textContent = metric.id === "marginPct" ? pctPlain(domain.min) : money(domain.min);
+    const hi = document.createElement("span"); hi.textContent = metric.id === "marginPct" ? pctPlain(domain.max) : money(domain.max);
+    wrap.append(lo, grad, hi);
+    legend.appendChild(wrap);
+  } else if (metric.kind === "diverging") {
+    const wrap = document.createElement("div");
+    wrap.className = "legend-scale";
+    const grayHex = dark ? GRAY_MID_DARK : GRAY_MID_LIGHT;
+    const blueArm = dark ? DIV_BLUE_ARM_DARK : DIV_BLUE_ARM_LIGHT;
+    const redArm  = dark ? DIV_RED_ARM_DARK  : DIV_RED_ARM_LIGHT;
+    const stops = [...blueArm].reverse().concat([grayHex], redArm);
+    const grad = document.createElement("div");
+    grad.className = "legend-gradient";
+    grad.style.background = "linear-gradient(to right, " + stops.join(",") + ")";
+    const lo = document.createElement("span"); lo.textContent = "−" + DIVERGING_CLAMP + "%";
+    const hi = document.createElement("span"); hi.textContent = "+" + DIVERGING_CLAMP + "%";
+    wrap.append(lo, grad, hi);
+    legend.appendChild(wrap);
+    const note = document.createElement("span");
+    note.textContent = "blue = below broker (competitive) · red = above broker";
+    legend.appendChild(note);
+  } else if (metric.kind === "binary") {
+    const item1 = document.createElement("span"); item1.className = "legend-item";
+    const sw1 = document.createElement("span"); sw1.className = "legend-swatch legend-floor";
+    const lb1 = document.createElement("span"); lb1.textContent = "floor applied";
+    item1.append(sw1, lb1);
+    legend.appendChild(item1);
+  }
+
+  const hatchItem = document.createElement("span");
+  hatchItem.className = "legend-item";
+  const hatchSw = document.createElement("span");
+  hatchSw.className = "legend-swatch legend-hatch";
+  const hatchLb = document.createElement("span");
+  hatchLb.textContent = "below zone minimum order";
+  hatchItem.append(hatchSw, hatchLb);
+  legend.appendChild(hatchItem);
+
+  const recNote = document.createElement("span");
+  recNote.className = "col-highlight-note";
+  const recSw = document.createElement("span");
+  recSw.className = "col-highlight-swatch";
+  const recLb = document.createElement("span");
+  recLb.textContent = "recommended new DFW minimum (8–10 units)";
+  recNote.append(recSw, recLb);
+  legend.appendChild(recNote);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Tooltip                                                                */
+/* ---------------------------------------------------------------------- */
+const tooltip = document.getElementById("tooltip");
+function ttRow(label, val) {
+  const row = document.createElement("div");
+  row.className = "tt-row";
+  const l = document.createElement("span"); l.className = "tt-label"; l.textContent = label;
+  const v = document.createElement("span"); v.className = "tt-val"; v.textContent = val;
+  row.append(l, v);
+  return row;
+}
+function showTooltip(anchorEl, row, cell, zoneName) {
+  tooltip.innerHTML = "";
+  const title = document.createElement("div");
+  title.className = "tt-title";
+  title.textContent = row.variantName + " — " + zoneName + " — " + cell.quantity + " " + unitLabel(row.unit) + (cell.quantity === 1 ? "" : "s");
+  tooltip.appendChild(title);
+  tooltip.appendChild(ttRow("Delivered total", money(cell.total)));
+  tooltip.appendChild(ttRow("Price / unit", money(cell.pricePerUnit) + "/" + unitAbbrev(row.unit)));
+  tooltip.appendChild(ttRow("Material cost", money(cell.materialCost)));
+  tooltip.appendChild(ttRow("Delivery cost", money(cell.deliveryCost)));
+  tooltip.appendChild(ttRow("Partner cost (total)", money(cell.partnerCost)));
+  tooltip.appendChild(ttRow("Gross profit (post-Stripe)", money(cell.grossProfit)));
+  tooltip.appendChild(ttRow("Margin %", pctPlain(cell.marginPct)));
+  tooltip.appendChild(ttRow("$250 floor applied", cell.floorApplied ? "yes" : "no"));
+  tooltip.appendChild(ttRow("Truck plan", cell.loadsText));
+  tooltip.appendChild(ttRow("Below zone minimum", cell.belowMinimum ? "yes (min " + row.__minUnits + ")" : "no"));
+  tooltip.appendChild(ttRow("vs broker median", cell.brokerCompare.available
+    ? signedPct(cell.brokerCompare.diffPct) + " (" + money(cell.brokerCompare.orderPrice) + ")"
+    : cell.brokerCompare.reason));
+  tooltip.appendChild(ttRow("vs yard (self-pickup)", cell.yardCompare.available
+    ? signedPct(cell.yardCompare.diffPct) + " (" + money(cell.yardCompare.orderPrice) + ")"
+    : cell.yardCompare.reason));
+
+  const rect = anchorEl.getBoundingClientRect();
+  tooltip.style.left = Math.min(window.innerWidth - 300, rect.left) + "px";
+  tooltip.style.top = (rect.bottom + 8) + "px";
+  tooltip.classList.add("visible");
+}
+function hideTooltip() { tooltip.classList.remove("visible"); }
+
+/* ---------------------------------------------------------------------- */
+/* Grid render                                                            */
+/* ---------------------------------------------------------------------- */
+function computeDomain(metro, metric) {
+  let min = Infinity, max = -Infinity;
+  for (const row of metro.rows) {
+    for (const cell of row.cellsByZone[state.zoneSlug]) {
+      const v = metric.get(cell);
+      if (v == null) continue;
+      if (v < min) min = v;
+      if (v > max) max = v;
+    }
+  }
+  if (min === Infinity) { min = 0; max = 1; }
+  return { min, max };
+}
+
+function renderGrid() {
+  const metro = currentMetro();
+  const metric = currentMetric();
+  const zone = metro.zones.find(z => z.slug === state.zoneSlug);
+  const dark = prefersDark();
+  const domain = metric.kind === "sequential" ? computeDomain(metro, metric) : { min: 0, max: 0 };
+
+  document.getElementById("table-caption").textContent =
+    metro.name + " — " + zone.name + " — " + metric.label + " (min order " + zone.minUnits + " " + unitLabel(metro.categories[0].unit) + "-equivalent units)";
+
+  const thead = document.getElementById("heatmap-thead");
+  thead.innerHTML = "";
+  const headRow = document.createElement("tr");
+  const cornerTh = document.createElement("th");
+  cornerTh.className = "row-label-head";
+  cornerTh.scope = "col";
+  cornerTh.textContent = "Variant";
+  headRow.appendChild(cornerTh);
+  for (const q of DATA.quantities) {
+    const th = document.createElement("th");
+    th.scope = "col";
+    th.textContent = String(q);
+    if (DATA.recommendedMinQuantities.includes(q)) th.classList.add("rec-min-col");
+    headRow.appendChild(th);
+  }
+  thead.appendChild(headRow);
+
+  const tbody = document.getElementById("heatmap-tbody");
+  tbody.innerHTML = "";
+
+  let lastCategory = null;
+  for (const row of metro.rows) {
+    if (row.categorySlug !== lastCategory) {
+      lastCategory = row.categorySlug;
+      const cat = metro.categories.find(c => c.slug === lastCategory);
+      const catRow = document.createElement("tr");
+      catRow.className = "category-row";
+      const th = document.createElement("th");
+      th.colSpan = DATA.quantities.length + 1;
+      th.textContent = cat.name + " — sold by the " + unitLabel(cat.unit);
+      catRow.appendChild(th);
+      tbody.appendChild(catRow);
+    }
+
+    const tr = document.createElement("tr");
+    const rowTh = document.createElement("th");
+    rowTh.scope = "row";
+    rowTh.className = "row-label";
+    rowTh.textContent = row.variantName;
+    const tag = document.createElement("span");
+    tag.className = "unit-tag";
+    tag.textContent = " · " + unitLabel(row.unit);
+    rowTh.appendChild(tag);
+    tr.appendChild(rowTh);
+
+    const cells = row.cellsByZone[zone.slug];
+    for (let i = 0; i < cells.length; i++) {
+      const cell = cells[i];
+      row.__minUnits = zone.minUnits;
+      const td = document.createElement("td");
+      td.className = "cell";
+      td.tabIndex = 0;
+      if (DATA.recommendedMinQuantities.includes(cell.quantity)) td.classList.add("rec-min-col");
+      if (cell.belowMinimum) td.classList.add("below-min");
+
+      let bg = null;
+      let noData = false;
+      if (metric.kind === "sequential") {
+        const v = metric.get(cell);
+        bg = sequentialColor(v, domain.min, domain.max, dark);
+      } else if (metric.kind === "diverging") {
+        const v = metric.get(cell);
+        if (v == null) { noData = true; }
+        else bg = divergingColor(v, dark);
+      } else if (metric.kind === "binary") {
+        bg = dark ? "#1a1a19" : "#f0efec";
+        if (cell.floorApplied) td.classList.add("floor-cell");
+      }
+
+      if (noData) {
+        td.classList.add("no-data");
+      } else if (bg) {
+        td.style.background = bg;
+        td.style.color = inkFor(bg);
+      }
+
+      const span = document.createElement("span");
+      span.className = "cell-value";
+      if (noData) {
+        span.textContent = "no data";
+      } else if (state.showValues) {
+        span.textContent = metric.format(cell, row.unit) + (cell.belowMinimum ? " *" : "");
+      }
+      td.appendChild(span);
+
+      td.addEventListener("mouseenter", () => showTooltip(td, row, cell, zone.name));
+      td.addEventListener("mouseleave", hideTooltip);
+      td.addEventListener("focus", () => showTooltip(td, row, cell, zone.name));
+      td.addEventListener("blur", hideTooltip);
+
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+
+  document.getElementById("footnote").textContent =
+    "* below the zone's minimum order (" + zone.minUnits + " " + unitLabel(metro.categories[0].unit) + "-equivalent units) — shown for reference, not a live-quotable order. ·F = the $250 gross-profit floor set this cell's price.";
+}
+
+function renderAll() {
+  renderTiles();
+  const metro = currentMetro();
+  const metric = currentMetric();
+  const domain = metric.kind === "sequential" ? computeDomain(metro, metric) : { min: 0, max: 0 };
+  renderLegend(domain);
+  renderGrid();
+}
+
+renderAll();
+if (window.matchMedia) {
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", renderAll);
+}
+</script>
+</body>
+</html>
